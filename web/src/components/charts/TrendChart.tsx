@@ -2,25 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { OhlcBar } from "@/lib/prisma";
-import {
-  SciChartSurface,
-  NumericAxis,
-  CategoryAxis,
-  FastCandlestickRenderableSeries,
-  OhlcDataSeries,
-  ZoomPanModifier,
-  ZoomExtentsModifier,
-  MouseWheelZoomModifier,
-  LegendModifier,
-  ELegendPlacement,
-  ELegendOrientation,
-  RolloverModifier,
-  XyScatterRenderableSeries,
-  TrianglePointMarker,
-  SquarePointMarker,
-  EllipsePointMarker,
-  XyDataSeries
-} from "scichart";
 
 // Extended type for OhlcBar with trend indicators
 interface OhlcBarWithTrends extends OhlcBar {
@@ -40,207 +21,158 @@ interface TrendChartProps {
 const BULLISH_COLOR = "#00C49F"; // Green for bullish candles
 const BEARISH_COLOR = "#FF8042"; // Red/orange for bearish candles
 const CHART_BACKGROUND = "#131722";
-const TEXT_COLOR = "#D9D9D9";
 
-// Initialize license token - using free Community license
-const initSciChart = async () => {
-  try {
-    // Use SciChart's free Community Key
-    await SciChartSurface.useWasmFromCDN();
-  } catch (e) {
-    console.error("Error initializing SciChart:", e);
-  }
-};
+// Fixed chart ID to avoid dynamic generation issues
+const CHART_ID = "sciChartDiv";
 
 const TrendChart: React.FC<TrendChartProps> = ({ 
-  data, 
+  data = [], 
   height = 400 
 }) => {
-  const sciChartSurfaceRef = useRef<SciChartSurface | undefined>();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // Initialize SciChart
   useEffect(() => {
-    (async () => {
-      await initSciChart();
-      setIsInitialized(true);
-    })();
-  }, []);
-
-  // Create and update chart when data changes or after initialization
-  useEffect(() => {
-    if (!isInitialized || !containerRef.current) return;
+    let sciChartSurface: any = null;
     
-    // Clean up any existing chart
-    if (sciChartSurfaceRef.current) {
-      sciChartSurfaceRef.current.delete();
-      sciChartSurfaceRef.current = undefined;
-    }
-    
-    // Initialize chart
-    const initChart = async () => {
+    const createChart = async () => {
       try {
-        // Create the SciChartSurface
-        const divElement = containerRef.current;
-        if (!divElement) return;
+        // First, make sure our chart div exists and clear previous instances
+        const chartDiv = document.getElementById(CHART_ID);
+        if (!chartDiv) {
+          setError("Chart container not found");
+          return null;
+        }
         
-        const { sciChartSurface, wasmContext } = await SciChartSurface.create(divElement);
-        sciChartSurfaceRef.current = sciChartSurface;
+        // Import SciChart
+        const SciChart = await import('scichart');
         
-        // Set chart background color
+        // Load WASM modules
+        await SciChart.SciChartSurface.useWasmFromCDN();
+        
+        // Create the surface using the fixed ID
+        const { sciChartSurface, wasmContext } = await SciChart.SciChartSurface.create(CHART_ID);
         sciChartSurface.background = CHART_BACKGROUND;
         
-        // Create X axis with category labels for time
-        const xAxis = new CategoryAxis(wasmContext);
-        xAxis.labelStyle = { color: TEXT_COLOR };
+        // Create X axis - use DateTimeAxis for timestamps
+        const xAxis = new SciChart.DateTimeNumericAxis(wasmContext);
+        xAxis.visibleRangeChangeAnimation = new SciChart.NumberRange(0, 0);
         sciChartSurface.xAxes.add(xAxis);
         
-        // Create Y axis for price data
-        const yAxis = new NumericAxis(wasmContext);
-        yAxis.labelStyle = { color: TEXT_COLOR };
-        // Configure decimal places
-        yAxis.labelProvider.formatLabel = (dataValue) => dataValue.toFixed(2);
+        // Create Y axis - price axis
+        const yAxis = new SciChart.NumericAxis(wasmContext);
+        yAxis.growBy = new SciChart.NumberRange(0.1, 0.1); // Add padding
         sciChartSurface.yAxes.add(yAxis);
         
-        // Prepare OHLC data series
-        const ohlcDataSeries = new OhlcDataSeries(wasmContext);
+        // Create OHLC data series
+        const ohlcDataSeries = new SciChart.OhlcDataSeries(wasmContext);
         
-        // Add data points
-        data.forEach((bar, index) => {
-          ohlcDataSeries.append(
-            index,            // X value (index)
-            bar.open,         // Open
-            bar.high,         // High
-            bar.low,          // Low
-            bar.close         // Close
-          );
-        });
+        // Add the data points from the props
+        if (data && data.length > 0) {
+          // Convert data for bulk update (more efficient)
+          const timestamps = data.map(bar => new Date(bar.timestamp).getTime());
+          const opens = data.map(bar => bar.open);
+          const highs = data.map(bar => bar.high);
+          const lows = data.map(bar => bar.low);
+          const closes = data.map(bar => bar.close);
+          
+          // Add data in bulk
+          ohlcDataSeries.appendRange(timestamps, opens, highs, lows, closes);
+          
+          // Set the initial visible range to show all data
+          const startDate = timestamps[0];
+          const endDate = timestamps[timestamps.length - 1];
+          xAxis.visibleRange = new SciChart.NumberRange(startDate, endDate);
+        }
         
-        // Create candlestick series
-        const candlestickSeries = new FastCandlestickRenderableSeries(wasmContext, {
-          dataSeries: ohlcDataSeries,
-          strokeThickness: 1,
-          dataPointWidth: 0.7
-        });
+        // Create and configure the candlestick series
+        const candlestickSeries = new SciChart.FastCandlestickRenderableSeries(wasmContext);
         
-        // Set colors (using setters instead of direct properties)
+        // Set the data series
+        candlestickSeries.dataSeries = ohlcDataSeries;
+        
+        // Set appearance
+        candlestickSeries.dataPointWidth = 0.7;
+        candlestickSeries.stroke = "#FFFFFF";
+        candlestickSeries.strokeThickness = 1;
+        
+        // Set colors
+        candlestickSeries.fillUp = BULLISH_COLOR;
+        candlestickSeries.fillDown = BEARISH_COLOR;
         candlestickSeries.strokeUp = BULLISH_COLOR;
         candlestickSeries.strokeDown = BEARISH_COLOR;
-        // Use brushes for fill color
-        candlestickSeries.style.fillUpBrush = BULLISH_COLOR;
-        candlestickSeries.style.fillDownBrush = BEARISH_COLOR;
         
-        // Create trend indicators as scatter series
-        
-        // Uptrend starts
-        const createTrendSeries = (
-          trendProperty: keyof OhlcBarWithTrends, 
-          name: string, 
-          color: string, 
-          markerType: "triangle" | "square" | "ellipse",
-          priceFactor: number
-        ) => {
-          // Only create if we have data points
-          if (!data.some(bar => bar[trendProperty])) return;
-          
-          // Create data series
-          const trendSeries = new XyDataSeries(wasmContext);
-          trendSeries.dataSeriesName = name;
-          
-          // Add data points
-          data.forEach((bar, index) => {
-            if (bar[trendProperty]) {
-              // For uptrend indicators, position below the price bar
-              // For downtrend indicators, position above the price bar
-              const yValue = priceFactor < 1 ? bar.low * priceFactor : bar.high * priceFactor;
-              trendSeries.append(index, yValue);
-            }
-          });
-          
-          // Create point marker
-          let pointMarker;
-          if (markerType === "triangle") {
-            pointMarker = new TrianglePointMarker(wasmContext, {
-              width: 7,
-              height: 7,
-              strokeThickness: 2,
-              fill: color,
-              stroke: color
-            });
-          } else if (markerType === "square") {
-            pointMarker = new SquarePointMarker(wasmContext, {
-              width: 10,
-              height: 10,
-              strokeThickness: 2,
-              fill: color,
-              stroke: color
-            });
-          } else {
-            pointMarker = new EllipsePointMarker(wasmContext, {
-              width: 8,
-              height: 8,
-              strokeThickness: 2,
-              fill: color,
-              stroke: color
-            });
-          }
-          
-          // Create scatter series with the marker
-          const scatterSeries = new XyScatterRenderableSeries(wasmContext, {
-            dataSeries: trendSeries,
-            pointMarker
-          });
-          
-          // Add to chart
-          sciChartSurface.renderableSeries.add(scatterSeries);
-        };
-        
-        // Create trend indicators
-        createTrendSeries("uptrendStart", "Uptrend Start", BULLISH_COLOR, "triangle", 0.999);
-        createTrendSeries("downtrendStart", "Downtrend Start", BEARISH_COLOR, "triangle", 1.001);
-        createTrendSeries("highestDowntrendStart", "Highest Downtrend", "#FF0000", "square", 1.002);
-        createTrendSeries("unbrokenUptrendStart", "Unbroken Uptrend", "#00FF00", "square", 0.998);
-        createTrendSeries("uptrendToHigh", "Key Level", "#0088FE", "ellipse", 1.003);
-        
-        // Add candlestick series to chart
+        // Add the series to the chart
         sciChartSurface.renderableSeries.add(candlestickSeries);
         
-        // Add interactive modifiers
+        // Add chart modifiers for interactivity
         sciChartSurface.chartModifiers.add(
-          new ZoomPanModifier(),
-          new ZoomExtentsModifier(),
-          new MouseWheelZoomModifier(),
-          new LegendModifier({
-            placement: ELegendPlacement.TopRight,
-            orientation: ELegendOrientation.Vertical
-          }),
-          new RolloverModifier()
+          new SciChart.ZoomPanModifier(),
+          new SciChart.ZoomExtentsModifier(),
+          new SciChart.MouseWheelZoomModifier()
         );
-      } catch (error) {
-        console.error("Error creating SciChart:", error);
+        
+        // Auto-zoom to show all data
+        sciChartSurface.zoomExtents();
+        
+        // Return the surface for cleanup
+        return sciChartSurface;
+      } catch (err) {
+        console.error('SciChart creation error:', err);
+        setError('Failed to initialize chart');
+        return null;
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    initChart();
+    // Use setTimeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      createChart().then(chart => {
+        sciChartSurface = chart;
+      });
+    }, 100);
     
-    // Cleanup
+    // Cleanup function
     return () => {
-      if (sciChartSurfaceRef.current) {
-        sciChartSurfaceRef.current.delete();
+      clearTimeout(timer);
+      
+      if (sciChartSurface) {
+        try {
+          sciChartSurface.delete();
+        } catch (err) {
+          console.error('Error during chart cleanup:', err);
+        }
       }
     };
-  }, [data, isInitialized]);
-
+  }, [data]); // Re-initialize when data changes
+  
   return (
     <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-opacity-50 bg-gray-800 z-10">
+          <p className="text-white">Loading chart...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-opacity-50 bg-gray-800 z-10">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
+      
       <div 
-        ref={containerRef} 
+        id={CHART_ID}
         style={{ width: "100%", height: `${height}px` }}
+        className="bg-gray-900"
       />
       
       <div className="mt-2 text-sm text-center text-gray-500">
         <p>Drag to pan • Use mouse wheel to zoom • Double-click to reset view</p>
+        {data && data.length > 0 ? 
+          <p className="text-xs mt-1">Showing {data.length} bars</p> : 
+          <p className="text-xs mt-1 text-red-500">No data available</p>
+        }
       </div>
     </div>
   );
