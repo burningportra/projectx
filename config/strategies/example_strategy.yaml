@@ -1,0 +1,70 @@
+# Example OHLC-based Strategy Configuration
+
+# Strategy metadata
+name: "MultiTimeframe OHLC Example"
+description: "Example strategy using multi-timeframe OHLC price action"
+version: "1.0.0"
+enabled: false  # Set to true to enable
+
+# Target market
+contract_id: "CON.F.US.RTY.Z24"  # Russell 2000 December 2024
+
+# Timeframes used by this strategy
+timeframes:
+  primary: "1h"     # Primary timeframe for signals
+  secondary: "4h"   # Secondary timeframe for confirmation
+
+# Entry conditions
+entry_conditions:
+  # Long entry: Current 1h close > previous 1h close AND current 4h close > 4h SMA(20)
+  long:
+    - type: "price_comparison"
+      timeframe: "1h"
+      condition: "close > close[1]"  # Current close > previous close
+      
+    - type: "price_comparison"
+      timeframe: "4h"
+      condition: "close > sma(close, 20)"  # Current close > 20-period SMA
+      
+  # Short entry: Current 1h close < previous 1h close AND current 4h close < 4h SMA(20)
+  short:
+    - type: "price_comparison"
+      timeframe: "1h"
+      condition: "close < close[1]"  # Current close < previous close
+      
+    - type: "price_comparison"
+      timeframe: "4h"
+      condition: "close < sma(close, 20)"  # Current close < 20-period SMA
+
+# Exit conditions
+exit_conditions:
+  # Long exit: Current 1h close < previous 1h low
+  long:
+    - type: "price_comparison"
+      timeframe: "1h"
+      condition: "close < low[1]"  # Current close < previous low
+      
+  # Short exit: Current 1h close > previous 1h high
+  short:
+    - type: "price_comparison"
+      timeframe: "1h"
+      condition: "close > high[1]"  # Current close > previous high
+
+# Position sizing
+position_sizing:
+  type: "fixed"   # Fixed size
+  size: 1         # 1 contract
+  
+# Risk management (overrides global settings)
+risk_management:
+  stop_loss_percent: 0.5       # 0.5% stop loss
+  take_profit_percent: 1.0     # 1.0% take profit
+  trailing_stop: false         # No trailing stop
+  max_positions: 1             # Maximum 1 position at a time
+  max_daily_loss_percent: 2.0  # 2% max daily loss
+
+# Time windows for trading (optional)
+time_windows:
+  - start_time: "09:30:00"  # Market open
+    end_time: "16:00:00"    # Market close
+    days: ["Mon", "Tue", "Wed", "Thu", "Fri"] 

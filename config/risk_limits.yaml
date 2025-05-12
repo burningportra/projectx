@@ -1,0 +1,53 @@
+# ProjectX Automated Trading System Risk Limits
+
+# Global risk limits (applied to all strategies)
+global:
+  # Maximum number of concurrent positions
+  max_positions: 5
+  
+  # Maximum total capital at risk (percentage of account)
+  max_capital_at_risk_percent: 10.0
+  
+  # Daily loss limit (percentage of account)
+  daily_loss_limit_percent: 3.0
+  
+  # Maximum size per position (in contract units)
+  max_position_size: 5
+  
+  # Maximum drawdown before auto-shutdown (percentage)
+  max_drawdown_percent: 5.0
+  
+  # Per-market limits
+  markets:
+    # RTY (Russell 2000)
+    "RTY":
+      max_position_size: 3
+      max_capital_at_risk_percent: 5.0
+    
+    # ES (S&P 500)
+    "ES":
+      max_position_size: 2
+      max_capital_at_risk_percent: 5.0
+    
+    # NQ (Nasdaq)
+    "NQ":
+      max_position_size: 2
+      max_capital_at_risk_percent: 5.0
+
+# Default per-strategy risk limits
+# These can be overridden in individual strategy configs
+strategy_defaults:
+  # Maximum position size (in contract units)
+  max_position_size: 1
+  
+  # Stop loss percentage from entry price
+  stop_loss_percent: 1.0
+  
+  # Take profit percentage from entry price
+  take_profit_percent: 2.0
+  
+  # Daily loss limit per strategy (percentage of account)
+  daily_loss_limit_percent: 1.0
+  
+  # Maximum concurrent positions per strategy
+  max_positions: 1 

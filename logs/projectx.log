@@ -1,0 +1,296 @@
+2025-05-12 11:52:25,134 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:52:25,135 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:52:25,135 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 11:52:25,137 - projectx - WARNING - No API token found. Please set the PROJECTX_API_TOKEN environment variable or add it to your configuration.
+2025-05-12 11:52:36,950 - projectx - INFO - Exiting due to missing API token.
+2025-05-12 11:54:26,010 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:54:26,011 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:54:26,011 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 11:54:26,013 - projectx - WARNING - No API token found. Please set the PROJECTX_API_TOKEN environment variable or add it to your configuration.
+2025-05-12 11:54:37,300 - projectx - INFO - Exiting due to missing API token.
+2025-05-12 11:55:20,228 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:55:20,229 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:55:20,229 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 11:57:42,519 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:57:42,520 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:57:42,520 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 11:58:32,278 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:58:32,278 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:58:32,278 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 11:59:18,043 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:59:18,044 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 11:59:18,044 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:01:26,146 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:01:26,147 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:01:26,147 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:03:34,101 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:03:34,102 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:03:34,102 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:04:52,580 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:04:52,581 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:04:52,581 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:05:55,876 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:05:55,877 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:05:55,877 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:05:56,002 - projectx - ERROR - Error starting trading system: Login failed: Login failed: None
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 107, in _login
+    raise ApiError(
+    ...<2 lines>...
+    )
+src.core.exceptions.ApiError: Login failed: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/start_trading.py", line 48, in start_trading
+    await app.run()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 205, in run
+    await self.bootstrap_historical_data()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 89, in bootstrap_historical_data
+    async with self.gateway_client:
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 51, in __aenter__
+    await self._ensure_auth()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 69, in _ensure_auth
+    await self._login()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 126, in _login
+    raise ApiError(f"Login failed: {str(e)}")
+src.core.exceptions.ApiError: Login failed: Login failed: None
+2025-05-12 12:07:07,974 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:07:07,975 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:07:07,975 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:07:08,176 - projectx - ERROR - Error starting trading system: Login failed: Login failed: None
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 111, in _login
+    raise ApiError(
+    ...<2 lines>...
+    )
+src.core.exceptions.ApiError: Login failed: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/start_trading.py", line 48, in start_trading
+    await app.run()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 205, in run
+    await self.bootstrap_historical_data()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 89, in bootstrap_historical_data
+    async with self.gateway_client:
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 51, in __aenter__
+    await self._ensure_auth()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 69, in _ensure_auth
+    await self._login()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 130, in _login
+    raise ApiError(f"Login failed: {str(e)}")
+src.core.exceptions.ApiError: Login failed: Login failed: None
+2025-05-12 12:10:58,416 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:10:58,417 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:10:58,417 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:10:58,627 - projectx - ERROR - Error starting trading system: Login failed: Login failed: None
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 113, in _login
+    raise ApiError(
+    ...<2 lines>...
+    )
+src.core.exceptions.ApiError: Login failed: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/kevtrinh/Github/projectx/start_trading.py", line 48, in start_trading
+    await app.run()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 205, in run
+    await self.bootstrap_historical_data()
+  File "/Users/kevtrinh/Github/projectx/src/main.py", line 89, in bootstrap_historical_data
+    async with self.gateway_client:
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 53, in __aenter__
+    await self._ensure_auth()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 71, in _ensure_auth
+    await self._login()
+  File "/Users/kevtrinh/Github/projectx/src/data/ingestion/gateway_client.py", line 132, in _login
+    raise ApiError(f"Login failed: {str(e)}")
+src.core.exceptions.ApiError: Login failed: Login failed: None
+2025-05-12 12:12:58,853 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:12:58,854 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:12:58,854 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:15:04,835 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:15:04,835 - projectx - INFO - Logging initialized: INFO level
+2025-05-12 12:15:04,835 - projectx - INFO - Starting ProjectX trading system...
+2025-05-12 12:17:00,702 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:17:00,702 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:17:00,702 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:19:33,451 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:19:33,451 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:19:33,452 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:33:26,108 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:33:26,109 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:33:26,109 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:37:42,927 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:37:42,927 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:37:42,928 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:40:05,244 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:40:05,245 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:40:05,245 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:42:53,508 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:42:53,508 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:42:53,508 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:45:31,226 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:45:31,227 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:45:31,227 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:49:39,720 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:49:39,720 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:49:39,720 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:49:39,722 - projectx - INFO - start_trading.py:49 - Running in historical data mode only (no real-time updates)
+2025-05-12 12:51:11,711 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:51:11,711 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:51:11,711 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:51:11,713 - projectx - INFO - start_trading.py:49 - Running in historical data mode only (no real-time updates)
+2025-05-12 12:52:50,770 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:52:50,771 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 12:52:50,771 - projectx - INFO - start_trading.py:25 - Starting ProjectX trading system...
+2025-05-12 12:52:50,773 - projectx - INFO - start_trading.py:49 - Running in historical data mode only (no real-time updates)
+2025-05-12 12:55:47,779 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:00:12,416 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:00:12,417 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 13:00:12,589 - projectx - INFO - download_historical.py:61 - Authentication successful
+2025-05-12 13:00:12,589 - projectx - INFO - download_historical.py:66 - Downloading ES 5m data...
+2025-05-12 13:00:12,636 - projectx - ERROR - download_historical.py:86 - Error downloading ES 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:12,636 - projectx - INFO - download_historical.py:66 - Downloading ES 15m data...
+2025-05-12 13:00:12,675 - projectx - ERROR - download_historical.py:86 - Error downloading ES 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:12,675 - projectx - INFO - download_historical.py:66 - Downloading ES 1h data...
+2025-05-12 13:00:12,718 - projectx - ERROR - download_historical.py:86 - Error downloading ES 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:12,718 - projectx - INFO - download_historical.py:66 - Downloading ES 4h data...
+2025-05-12 13:00:12,757 - projectx - ERROR - download_historical.py:86 - Error downloading ES 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:12,757 - projectx - INFO - download_historical.py:66 - Downloading ES 1d data...
+2025-05-12 13:00:12,799 - projectx - ERROR - download_historical.py:86 - Error downloading ES 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:12,799 - projectx - INFO - download_historical.py:66 - Downloading NQ 5m data...
+2025-05-12 13:00:12,839 - projectx - ERROR - download_historical.py:86 - Error downloading NQ 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:12,839 - projectx - INFO - download_historical.py:66 - Downloading NQ 15m data...
+2025-05-12 13:00:12,877 - projectx - ERROR - download_historical.py:86 - Error downloading NQ 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:12,877 - projectx - INFO - download_historical.py:66 - Downloading NQ 1h data...
+2025-05-12 13:00:12,917 - projectx - ERROR - download_historical.py:86 - Error downloading NQ 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:12,917 - projectx - INFO - download_historical.py:66 - Downloading NQ 4h data...
+2025-05-12 13:00:12,958 - projectx - ERROR - download_historical.py:86 - Error downloading NQ 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:12,958 - projectx - INFO - download_historical.py:66 - Downloading NQ 1d data...
+2025-05-12 13:00:13,003 - projectx - ERROR - download_historical.py:86 - Error downloading NQ 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:13,003 - projectx - INFO - download_historical.py:66 - Downloading YM 5m data...
+2025-05-12 13:00:13,040 - projectx - ERROR - download_historical.py:86 - Error downloading YM 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,040 - projectx - INFO - download_historical.py:66 - Downloading YM 15m data...
+2025-05-12 13:00:13,079 - projectx - ERROR - download_historical.py:86 - Error downloading YM 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,079 - projectx - INFO - download_historical.py:66 - Downloading YM 1h data...
+2025-05-12 13:00:13,121 - projectx - ERROR - download_historical.py:86 - Error downloading YM 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,121 - projectx - INFO - download_historical.py:66 - Downloading YM 4h data...
+2025-05-12 13:00:13,163 - projectx - ERROR - download_historical.py:86 - Error downloading YM 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,163 - projectx - INFO - download_historical.py:66 - Downloading YM 1d data...
+2025-05-12 13:00:13,201 - projectx - ERROR - download_historical.py:86 - Error downloading YM 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:13,202 - projectx - INFO - download_historical.py:66 - Downloading RTY 5m data...
+2025-05-12 13:00:13,242 - projectx - ERROR - download_historical.py:86 - Error downloading RTY 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,242 - projectx - INFO - download_historical.py:66 - Downloading RTY 15m data...
+2025-05-12 13:00:13,281 - projectx - ERROR - download_historical.py:86 - Error downloading RTY 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,281 - projectx - INFO - download_historical.py:66 - Downloading RTY 1h data...
+2025-05-12 13:00:13,320 - projectx - ERROR - download_historical.py:86 - Error downloading RTY 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,320 - projectx - INFO - download_historical.py:66 - Downloading RTY 4h data...
+2025-05-12 13:00:13,358 - projectx - ERROR - download_historical.py:86 - Error downloading RTY 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,358 - projectx - INFO - download_historical.py:66 - Downloading RTY 1d data...
+2025-05-12 13:00:13,404 - projectx - ERROR - download_historical.py:86 - Error downloading RTY 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:13,404 - projectx - INFO - download_historical.py:66 - Downloading CL 5m data...
+2025-05-12 13:00:13,442 - projectx - ERROR - download_historical.py:86 - Error downloading CL 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,442 - projectx - INFO - download_historical.py:66 - Downloading CL 15m data...
+2025-05-12 13:00:13,481 - projectx - ERROR - download_historical.py:86 - Error downloading CL 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,482 - projectx - INFO - download_historical.py:66 - Downloading CL 1h data...
+2025-05-12 13:00:13,521 - projectx - ERROR - download_historical.py:86 - Error downloading CL 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,521 - projectx - INFO - download_historical.py:66 - Downloading CL 4h data...
+2025-05-12 13:00:13,559 - projectx - ERROR - download_historical.py:86 - Error downloading CL 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,559 - projectx - INFO - download_historical.py:66 - Downloading CL 1d data...
+2025-05-12 13:00:13,606 - projectx - ERROR - download_historical.py:86 - Error downloading CL 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:13,606 - projectx - INFO - download_historical.py:66 - Downloading GC 5m data...
+2025-05-12 13:00:13,642 - projectx - ERROR - download_historical.py:86 - Error downloading GC 5m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,642 - projectx - INFO - download_historical.py:66 - Downloading GC 15m data...
+2025-05-12 13:00:13,680 - projectx - ERROR - download_historical.py:86 - Error downloading GC 15m: Unexpected error: API returned error: None
+2025-05-12 13:00:13,680 - projectx - INFO - download_historical.py:66 - Downloading GC 1h data...
+2025-05-12 13:00:13,721 - projectx - ERROR - download_historical.py:86 - Error downloading GC 1h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,721 - projectx - INFO - download_historical.py:66 - Downloading GC 4h data...
+2025-05-12 13:00:13,758 - projectx - ERROR - download_historical.py:86 - Error downloading GC 4h: Unexpected error: API returned error: None
+2025-05-12 13:00:13,758 - projectx - INFO - download_historical.py:66 - Downloading GC 1d data...
+2025-05-12 13:00:13,797 - projectx - ERROR - download_historical.py:86 - Error downloading GC 1d: Unexpected error: API returned error: None
+2025-05-12 13:00:13,797 - projectx - INFO - download_historical.py:88 - Historical data download complete
+2025-05-12 13:01:12,605 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:01:12,605 - projectx - INFO - test_connection.py:24 - Testing API connection...
+2025-05-12 13:01:12,780 - projectx - INFO - test_connection.py:39 - ✓ Authentication successful!
+2025-05-12 13:01:12,780 - projectx - INFO - test_connection.py:52 - Testing contract formats...
+2025-05-12 13:01:12,780 - projectx - INFO - test_connection.py:54 - Testing contract format: ES
+2025-05-12 13:01:12,821 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: ES - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:12,821 - projectx - INFO - test_connection.py:54 - Testing contract format: ESM24
+2025-05-12 13:01:12,863 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: ESM24 - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:12,863 - projectx - INFO - test_connection.py:54 - Testing contract format: ES.M24
+2025-05-12 13:01:12,905 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: ES.M24 - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:12,905 - projectx - INFO - test_connection.py:54 - Testing contract format: CON.F.US.ES.M24
+2025-05-12 13:01:12,951 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: CON.F.US.ES.M24 - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:12,951 - projectx - INFO - test_connection.py:54 - Testing contract format: ES.MES
+2025-05-12 13:01:13,011 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: ES.MES - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:13,012 - projectx - INFO - test_connection.py:54 - Testing contract format: M.ES
+2025-05-12 13:01:13,059 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: M.ES - Error: Unexpected error: API returned error: None
+2025-05-12 13:01:13,059 - projectx - INFO - test_connection.py:54 - Testing contract format: MES
+2025-05-12 13:01:13,098 - projectx - ERROR - test_connection.py:68 - ✗ Format failed: MES - Error: Unexpected error: API returned error: None
+2025-05-12 13:02:14,712 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:02:14,712 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 13:02:14,967 - projectx - INFO - download_historical.py:56 - Authentication successful
+2025-05-12 13:02:14,967 - projectx - INFO - download_historical.py:61 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 13:02:15,087 - projectx - INFO - download_historical.py:76 - ✓ Downloaded 500 bars for CON.F.US.MES.M25 5m
+2025-05-12 13:02:15,087 - projectx - INFO - download_historical.py:61 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 13:02:15,170 - projectx - INFO - download_historical.py:76 - ✓ Downloaded 500 bars for CON.F.US.MES.M25 15m
+2025-05-12 13:02:15,170 - projectx - INFO - download_historical.py:61 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 13:02:15,326 - projectx - INFO - download_historical.py:76 - ✓ Downloaded 500 bars for CON.F.US.MES.M25 1h
+2025-05-12 13:02:15,326 - projectx - INFO - download_historical.py:61 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 13:02:15,389 - projectx - INFO - download_historical.py:76 - ✓ Downloaded 239 bars for CON.F.US.MES.M25 4h
+2025-05-12 13:02:15,389 - projectx - INFO - download_historical.py:61 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 13:02:15,453 - projectx - INFO - download_historical.py:76 - ✓ Downloaded 39 bars for CON.F.US.MES.M25 1d
+2025-05-12 13:02:15,453 - projectx - INFO - download_historical.py:83 - Historical data download complete
+2025-05-12 13:22:16,762 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:22:16,762 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 13:22:16,764 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 13:22:17,065 - projectx - INFO - download_historical.py:60 - Authentication successful
+2025-05-12 13:22:17,065 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 13:22:17,186 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 5m: Failed to store bars: invalid input for query argument $2: '2025-05-12T17:15:00+00:00' (expected a datetime.date or datetime.datetime instance, got 'str')
+2025-05-12 13:22:17,186 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 13:22:17,267 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 15m: Failed to store bars: invalid input for query argument $2: '2025-05-12T17:00:00+00:00' (expected a datetime.date or datetime.datetime instance, got 'str')
+2025-05-12 13:22:17,267 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 13:22:17,424 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 1h: Failed to store bars: invalid input for query argument $2: '2025-05-12T16:00:00+00:00' (expected a datetime.date or datetime.datetime instance, got 'str')
+2025-05-12 13:22:17,424 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 13:22:17,487 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 4h: Failed to store bars: invalid input for query argument $2: '2025-05-12T14:00:00+00:00' (expected a datetime.date or datetime.datetime instance, got 'str')
+2025-05-12 13:22:17,487 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 13:22:17,544 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 1d: Failed to store bars: invalid input for query argument $2: '2025-05-09T00:00:00+00:00' (expected a datetime.date or datetime.datetime instance, got 'str')
+2025-05-12 13:22:17,544 - projectx - INFO - download_historical.py:87 - Historical data download complete - data stored in TimescaleDB
+2025-05-12 13:23:38,331 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:23:38,331 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 13:23:38,334 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 13:23:38,572 - projectx - INFO - download_historical.py:60 - Authentication successful
+2025-05-12 13:23:38,572 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 13:23:38,722 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 5m: Failed to store bars: there is no unique or exclusion constraint matching the ON CONFLICT specification
+2025-05-12 13:23:38,723 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 13:23:38,813 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 15m: Failed to store bars: there is no unique or exclusion constraint matching the ON CONFLICT specification
+2025-05-12 13:23:38,813 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 13:23:38,880 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 1h: Failed to store bars: there is no unique or exclusion constraint matching the ON CONFLICT specification
+2025-05-12 13:23:38,880 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 13:23:38,945 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 4h: Failed to store bars: there is no unique or exclusion constraint matching the ON CONFLICT specification
+2025-05-12 13:23:38,946 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 13:23:39,002 - projectx - ERROR - download_historical.py:85 - Error downloading CON.F.US.MES.M25 1d: Failed to store bars: there is no unique or exclusion constraint matching the ON CONFLICT specification
+2025-05-12 13:23:39,002 - projectx - INFO - download_historical.py:87 - Historical data download complete - data stored in TimescaleDB
+2025-05-12 13:25:41,115 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 13:25:41,115 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 13:25:41,118 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 13:25:41,386 - projectx - INFO - download_historical.py:60 - Authentication successful
+2025-05-12 13:25:41,386 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 13:25:41,561 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 13:25:41,561 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 13:25:41,653 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 13:25:41,653 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 13:25:41,727 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 1h in TimescaleDB
+2025-05-12 13:25:41,728 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 13:25:41,797 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 239 bars for CON.F.US.MES.M25 4h in TimescaleDB
+2025-05-12 13:25:41,797 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 13:25:41,851 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 39 bars for CON.F.US.MES.M25 1d in TimescaleDB
+2025-05-12 13:25:41,851 - projectx - INFO - download_historical.py:87 - Historical data download complete - data stored in TimescaleDB

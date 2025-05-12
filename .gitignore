@@ -1,0 +1,11 @@
+node_modules
+# Keep environment variables out of version control
+.env
+timescale_data
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
