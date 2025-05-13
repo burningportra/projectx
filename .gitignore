@@ -9,3 +9,8 @@ timescale_data
 .env.development
 .env.test
 .env.production
+web/src/generated/prisma/runtime/library.d.ts
+web/src/generated/prisma/runtime/index-browser.d.ts
+web/src/generated/prisma/package.json
+web/src/generated/prisma/index.js
+web/src/generated/prisma/edge.js
