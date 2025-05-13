@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model OhlcBar {
+  id             Int      @id @default(autoincrement())
+  contractId     String   @map("contract_id")
+  timestamp      DateTime
+  open           Float
+  high           Float
+  low            Float
+  close          Float
+  volume         Float?
+  timeframeUnit  Int      @map("timeframe_unit")
+  timeframeValue Int      @map("timeframe_value")
+
+  @@index([contractId, timeframeUnit, timeframeValue])
+  @@map("ohlc_bars")
+}
+
+model TrendPoint {
+  id         Int      @id @default(autoincrement())
+  contractId String   @map("contract_id")
+  timestamp  DateTime
+  price      Float
+  type       String
+  timeframe  String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([contractId, timestamp, type])
+  @@index([contractId, timeframe])
+  @@map("trend_points")
+}

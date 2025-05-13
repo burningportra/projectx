@@ -1,0 +1,141 @@
+{
+  "strategy": {
+    "id": "59ab1274-2730-411a-a7dc-bbc5f0e2341d",
+    "name": "S&P 500 Breakout Strategy",
+    "description": "A breakout strategy for S&P 500 micro futures",
+    "status": "active",
+    "rule_set_id": "9f189974-55cc-4c81-8efc-4d29946b7bbd",
+    "contract_ids": [
+      "CON.F.US.MES.M25"
+    ],
+    "timeframes": [
+      "5m"
+    ],
+    "risk_settings": {
+      "position_size": 1.0,
+      "max_loss": 100.0,
+      "daily_loss_limit": 500.0,
+      "max_positions": 2
+    },
+    "created_at": "2025-05-12T19:44:58.215910",
+    "updated_at": "2025-05-12T19:44:58.216533"
+  },
+  "rule_set": {
+    "id": "9f189974-55cc-4c81-8efc-4d29946b7bbd",
+    "name": "S&P 500 Breakout Strategy Ruleset",
+    "description": "Rules for S&P 500 breakout strategy",
+    "rules": [
+      {
+        "id": "breakout_rule_1",
+        "name": "S&P 500 Breakout Above 4200",
+        "description": "Triggers when S&P 500 closes above 4200",
+        "timeframe": "5m",
+        "contract_id": "CON.F.US.MES.M25",
+        "comparisons": [
+          {
+            "price_point": {
+              "reference": "close",
+              "lookback": 0
+            },
+            "operator": "cross_above",
+            "target": {
+              "fixed_value": 4200.0,
+              "price_point": null
+            }
+          }
+        ],
+        "time_windows": [
+          {
+            "start_time": "09:30",
+            "end_time": "16:00",
+            "time_zone": "America/New_York",
+            "days_of_week": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        ],
+        "required_bars": 5
+      },
+      {
+        "id": "pullback_rule_1",
+        "name": "S&P 500 Pullback",
+        "description": "Triggers when S&P 500 pulls back below the previous bar's high",
+        "timeframe": "5m",
+        "contract_id": "CON.F.US.MES.M25",
+        "comparisons": [
+          {
+            "price_point": {
+              "reference": "close",
+              "lookback": 0
+            },
+            "operator": "cross_below",
+            "target": {
+              "fixed_value": null,
+              "price_point": {
+                "reference": "high",
+                "lookback": 1
+              }
+            }
+          }
+        ],
+        "time_windows": [
+          {
+            "start_time": "09:30",
+            "end_time": "16:00",
+            "time_zone": "America/New_York",
+            "days_of_week": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        ],
+        "required_bars": 5
+      },
+      {
+        "id": "volume_rule_1",
+        "name": "High Volume",
+        "description": "Triggers when volume is higher than previous bar",
+        "timeframe": "5m",
+        "contract_id": "CON.F.US.MES.M25",
+        "comparisons": [
+          {
+            "price_point": {
+              "reference": "volume",
+              "lookback": 0
+            },
+            "operator": ">",
+            "target": {
+              "fixed_value": null,
+              "price_point": {
+                "reference": "volume",
+                "lookback": 1
+              }
+            }
+          }
+        ],
+        "time_windows": [
+          {
+            "start_time": "09:30",
+            "end_time": "16:00",
+            "time_zone": "America/New_York",
+            "days_of_week": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        ],
+        "required_bars": 5
+      }
+    ]
+  }
+}

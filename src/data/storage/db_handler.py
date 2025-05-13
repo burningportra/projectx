@@ -282,11 +282,26 @@ class DBHandler:
         await self.ensure_setup()
         
         try:
+            # Filter out bars that already exist in the database
+            bars_to_insert = []
+            
+            for bar in bars:
+                # Check if this bar already exists in the database
+                existing = await self._bar_exists(bar)
+                if not existing:
+                    bars_to_insert.append(bar)
+            
+            if not bars_to_insert:
+                logger.info("All bars already exist in database, skipping insertion")
+                return 0
+            
+            logger.info(f"Inserting {len(bars_to_insert)} new bars out of {len(bars)} total")
+            
             if self.use_timescale:
                 async with self.pg_pool.acquire() as conn:
                     # Use a simpler insert without ON CONFLICT for bulk inserts
                     records = []
-                    for bar in bars:
+                    for bar in bars_to_insert:
                         # Ensure timestamp is a datetime object, not a string
                         if isinstance(bar.t, str):
                             timestamp = datetime.fromisoformat(bar.t)
@@ -310,7 +325,7 @@ class DBHandler:
             else:
                 # Prepare the batch insert for SQLite
                 values = []
-                for bar in bars:
+                for bar in bars_to_insert:
                     timestamp = bar.t.isoformat() if isinstance(bar.t, datetime) else bar.t
                     values.append((
                         bar.contract_id, timestamp, bar.o, bar.h, bar.l, bar.c, bar.v,
@@ -327,11 +342,60 @@ class DBHandler:
                 
                 await self.sqlite_conn.commit()
                 
-            return len(bars)
+            return len(bars_to_insert)
             
         except Exception as e:
             logger.error(f"Error storing {len(bars)} bars: {str(e)}")
             raise DatabaseError(f"Failed to store bars: {str(e)}")
+            
+    async def _bar_exists(self, bar: Bar) -> bool:
+        """
+        Check if a bar already exists in the database.
+        
+        Args:
+            bar: The Bar object to check
+            
+        Returns:
+            True if the bar exists, False otherwise
+        """
+        # Format the timestamp appropriately for the database
+        if self.use_timescale:
+            # Ensure timestamp is a datetime object for PostgreSQL
+            if isinstance(bar.t, str):
+                timestamp = datetime.fromisoformat(bar.t)
+            else:
+                timestamp = bar.t
+        else:
+            # Convert to ISO string for SQLite
+            timestamp = bar.t.isoformat() if isinstance(bar.t, datetime) else bar.t
+        
+        try:
+            if self.use_timescale:
+                async with self.pg_pool.acquire() as conn:
+                    exists = await conn.fetchval("""
+                        SELECT EXISTS(
+                            SELECT 1 FROM ohlc_bars
+                            WHERE contract_id = $1
+                            AND timeframe_unit = $2
+                            AND timeframe_value = $3
+                            AND timestamp = $4
+                        )
+                    """, bar.contract_id, bar.timeframe_unit, bar.timeframe_value, timestamp)
+                    return exists
+            else:
+                cursor = await self.sqlite_conn.execute("""
+                    SELECT COUNT(*) FROM ohlc_bars
+                    WHERE contract_id = ?
+                    AND timeframe_unit = ?
+                    AND timeframe_value = ?
+                    AND timestamp = ?
+                """, (bar.contract_id, bar.timeframe_unit, bar.timeframe_value, timestamp))
+                row = await cursor.fetchone()
+                return row[0] > 0
+        except Exception as e:
+            logger.warning(f"Error checking if bar exists: {str(e)}")
+            # If there's an error, let's be safe and assume the bar doesn't exist
+            return False
             
     async def get_bars(
         self,

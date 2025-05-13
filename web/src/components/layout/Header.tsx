@@ -14,6 +14,7 @@ export default function Header({ activePath }: HeaderProps) {
     { name: 'Strategies', href: '/strategies' },
     { name: 'Positions', href: '/positions' },
     { name: 'Trends', href: '/trends' },
+    { name: 'Trend Starts', href: '/trendstarts' },
     { name: 'Performance', href: '/performance' },
   ];
 

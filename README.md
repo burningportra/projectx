@@ -63,19 +63,78 @@ rule = Rule(
 
 ### Prerequisites
 - Python 3.8+
-- Docker (for TimescaleDB)
+- Docker Desktop (for TimescaleDB)
 - ProjectX Gateway API credentials
 
 ### Installation
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Copy `env.template` to `.env` and set your API credentials
-4. Set up your database:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/projectx.git
+   cd projectx
+   ```
+
+2. Set up Python environment:
+   ```bash
+   # Create and activate virtual environment
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+3. Install Docker Desktop:
+   - Download and install from [Docker's website](https://www.docker.com/products/docker-desktop)
+   - Or install via Homebrew: `brew install --cask docker`
+   - Launch Docker Desktop from Applications
+   - Complete initial setup and wait for Docker to start running
+
+4. Configure environment:
+   ```bash
+   # Copy environment template
+   cp env.template .env
+   
+   # Edit .env with your API credentials
+   nano .env  # or use your preferred text editor
+   ```
+
+5. Set up your database:
    - For SQLite: No additional setup required
-   - For TimescaleDB: Run `./run_timescaledb_docker.sh`
+   - For TimescaleDB:
+     ```bash
+     # Make the script executable
+     chmod +x ./run_timescaledb_docker.sh
+     
+     # Run TimescaleDB container
+     ./run_timescaledb_docker.sh
+     
+     # Verify TimescaleDB is running
+     docker ps | grep timescaledb
+     ```
 
 ### Usage
-1. Download historical data: `python download_historical.py`
+1. Download historical data:
+   ```bash
+   # Basic historical data download (last 30 days of 5m data)
+   python download_historical.py
+   
+   # Download extensive historical data (multiple timeframes with custom settings)
+   python download_historical.py --max-requests 50 --batch-size 1000
+   
+   # Custom date range with specific contracts and timeframes
+   python download_historical.py --start-date 2024-01-01 --end-date 2025-05-13 --contracts "CON.F.US.MES.M25,CON.F.US.ENQ.M25" --timeframes "5m,1h,1d"
+   
+   # See all available options
+   python download_historical.py --help
+   ```
+   
+   The enhanced download script supports:
+   - Downloading data in batches for greater historical coverage
+   - Customizable date ranges and timeframes
+   - Support for multiple contracts
+   - Rate-limiting to avoid API throttling
+   - Smart batching to download the maximum amount of data
+
 2. Create trading strategy: `python src/create_strategy.py`
 3. Start the trading system: `python src/main.py`
 

@@ -1,6 +1,8 @@
-# Proposed Project Structure
+# Current Project Structure
 
-This document outlines the recommended file and directory structure for the automated trading system, based on the requirements and todos defined in `automated_trading_prd.md`.
+This document outlines the current implementation structure of the ProjectX trading system, including both the Python backend for data processing and trading, and the Next.js frontend for user interface.
+
+## Backend Structure
 
 ```
 projectx/
@@ -10,7 +12,7 @@ projectx/
 │   │   ├── __init__.py
 │   │   ├── config.py            # Load configuration (env vars, files)
 │   │   ├── logging_config.py    # Configure application logging
-│   │   └── exceptions.py        # Custom exception classes
+│   │   ├── exceptions.py        # Custom exception classes
 │   │   └── utils.py             # Common utility functions
 │   │
 │   ├── data/                  # Market data handling module
@@ -22,127 +24,157 @@ projectx/
 │   │   ├── storage/             # Database interaction (schemas, queries)
 │   │   │   ├── __init__.py
 │   │   │   ├── db_handler.py      # Generic DB connection/session handler
-│   │   │   └── schemas.py         # Database table schemas (e.g., SQLAlchemy models)
+│   │   │   └── schemas.py         # Database table schemas
 │   │   ├── aggregation.py       # Multi-timeframe data aggregation logic
 │   │   ├── validation.py        # Data validation rules and implementation
-│   │   └── caching.py           # Caching mechanism (e.g., Redis integration)
+│   │   └── caching.py           # Caching mechanism for time series data
 │   │
-│   ├── strategies/            # Trading strategies and rule engine module
+│   ├── strategies/            # Trading strategies directory
 │   │   ├── __init__.py
-│   │   ├── models.py            # Pydantic models for Strategy, Rule definitions
-│   │   ├── engine.py            # Core rule evaluation engine
-│   │   ├── rules/               # Directory for individual rule implementations
-│   │   │   ├── __init__.py
-│   │   │   └── base_rule.py       # Base class for rules
-│   │   ├── versioning.py        # Strategy version control logic
-│   │   └── backtesting/         # Backtesting framework components (Advanced)
-│   │       ├── __init__.py
-│   │       └── engine.py          # Backtesting engine logic
+│   │   └── base_strategy.py     # Base class for strategies
+│   │
+│   ├── strategy/              # Strategy management and rule engine
+│   │   ├── __init__.py
+│   │   ├── rule_engine.py       # Core rule evaluation engine
+│   │   ├── strategy_service.py  # Strategy management service
 │   │
 │   ├── execution/             # Order execution and position management module
 │   │   ├── __init__.py
-│   │   ├── models.py            # Pydantic models for Order, Position, Fill
-│   │   ├── gateway_interface.py # Interface to ProjectX Trading API
 │   │   ├── position_manager.py  # Position state tracking and P&L calculation
-│   │   ├── order_handler.py     # Order submission, modification, cancellation logic
-│   │   └── state_manager.py     # Handles overall trading state persistence
+│   │   └── strategy_executor.py # Strategy execution logic
 │   │
 │   ├── risk/                  # Risk management module
 │   │   ├── __init__.py
-│   │   ├── models.py            # Pydantic models for Risk Limits
-│   │   ├── strategy_limits.py   # Per-strategy limit checking logic
-│   │   ├── global_monitor.py    # Global risk exposure monitoring
-│   │   └── emergency_stop.py    # Emergency stop mechanism
+│   │   └── risk_manager.py      # Risk limits and monitoring
 │   │
-│   ├── api/                   # Optional: API endpoints if exposing functionality externally
+│   ├── api/                   # API endpoints for frontend integration
 │   │   ├── __init__.py
-│   │   ├── routes/              # API route definitions (e.g., FastAPI routers)
-│   │   │   ├── __init__.py
-│   │   │   ├── strategies.py
-│   │   │   └── positions.py
-│   │   └── ws_handler.py        # WebSocket handling for real-time updates to UI
+│   │   └── server.py            # FastAPI server implementation
 │   │
 │   └── services/              # Higher-level services coordinating components
 │       ├── __init__.py
-│       ├── trading_service.py   # Orchestrates data -> strategy -> execution flow
-│       ├── monitoring_service.py # System health/performance monitoring service
-│       └── alert_service.py     # Handles sending alerts
+│       └── service_registry.py  # Service discovery and coordination
 │
-├── tests/                   # Automated tests
+├── tests/                     # Automated tests
 │   ├── __init__.py
-│   ├── conftest.py            # Pytest fixtures and configuration
-│   ├── data/                  # Fixtures for test data
-│   ├── unit/                  # Unit tests per module
-│   │   ├── test_data.py
-│   │   ├── test_strategies.py
-│   │   ├── test_execution.py
-│   │   └── test_risk.py
-│   ├── integration/           # Integration tests (module interactions)
-│   │   └── test_trading_flow.py
-│   └── stress/                # Stress and performance tests
-│       └── test_high_frequency.py
+│   ├── test_auth.py             # Authentication tests
+│   ├── test_auth_app.py         # Auth app tests
+│   └── test_connection.py       # Connection tests
 │
-├── docs/                    # Project documentation
-│   ├── automated_trading_prd.md
-│   └── project_structure.md   # This file
+├── docs/                      # Project documentation
+│   ├── automated_trading_prd.md  # Product requirements
+│   └── project_structure.md     # This file
 │
-├── config/                  # Configuration files
-│   ├── settings.yaml          # Main application settings
-│   ├── strategies/            # Directory for strategy configurations
-│   │   └── example_strategy.yaml
-│   └── risk_limits.yaml       # Risk limit configurations
+├── config/                    # Configuration files
+│   ├── settings.yaml           # Main application settings
+│   └── strategies/             # Strategy configurations
 │
-├── scripts/                 # Utility and maintenance scripts
-│   ├── run_backtest.py
-│   ├── db_migrate.py          # Database migration scripts
-│   └── deploy.sh              # Deployment script example
+├── logs/                      # Application logs directory
 │
-├── .env.example             # Example environment variables
-├── .gitignore               # Git ignore file
-├── requirements.txt         # Python dependencies
-└── README.md                # Project overview, setup, and usage instructions
+├── timescale_data/            # TimescaleDB data (for Docker deployment)
+│
+├── venv/                      # Python virtual environment
+│
+├── download_historical.py     # Script for downloading historical market data
+├── start_trading.py           # Script for starting the trading system
+├── run_timescaledb_docker.sh  # Script to run TimescaleDB in Docker
+│
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Docker configuration
+└── README.md                  # Project overview
 ```
 
-## Rationale
+## Frontend Structure
 
-*   **`src/` Directory:** Contains all the application's source code, keeping the root directory clean.
-*   **Modularity:** Code is broken down into distinct modules (`data`, `strategies`, `execution`, `risk`, `api`, `services`) based on functionality. This improves organization and allows for independent development and testing.
-*   **Separation of Concerns:** Each module has a clear responsibility (e.g., `data` handles market data, `execution` handles orders).
-*   **Core Components:** The `core/` directory holds shared logic like configuration loading, logging setup, and custom exceptions, reducing redundancy.
-*   **Models:** Pydantic models (`models.py` in each module) provide data validation and structure.
-*   **Clear Interfaces:** Modules like `gateway_client.py` and `gateway_interface.py` define clear boundaries for interacting with external APIs.
-*   **Testing:** A dedicated `tests/` directory mirrors the `src/` structure, making it easy to locate tests for specific modules. Includes unit, integration, and stress test categories.
-*   **Configuration:** A `config/` directory keeps configuration files separate from the code, allowing for easier management across different environments.
-*   **Scripts:** A `scripts/` directory for operational tasks like database migrations, backtesting runs, or deployment.
-*   **Documentation:** `docs/` contains high-level project documentation. Code-level documentation should reside within the source files as docstrings.
+```
+projectx/web/
+├── src/                       # Source code for the Next.js frontend
+│   ├── app/                   # Next.js app directory
+│   │   ├── api/               # API route handlers
+│   │   │   ├── market-data/   # Market data API endpoints
+│   │   │   ├── positions/     # Positions API endpoints
+│   │   │   ├── strategies/    # Strategies API endpoints
+│   │   │   └── orders/        # Orders API endpoints
+│   │   │
+│   │   ├── strategies/        # Strategies page
+│   │   ├── positions/         # Positions page
+│   │   ├── trends/            # Trends analysis page
+│   │   │   └── page.tsx       # Trends page component
+│   │   │
+│   │   ├── globals.css        # Global styles
+│   │   ├── layout.tsx         # Root layout component
+│   │   └── page.tsx           # Home page component
+│   │
+│   ├── components/            # React components
+│   │   ├── charts/            # Chart components
+│   │   │   └── TrendChartContainer.tsx  # Container for trend charts
+│   │   │
+│   │   ├── layout/            # Layout components
+│   │   │   ├── Header.tsx     # Navigation header component
+│   │   │   └── Layout.tsx     # Page layout wrapper
+│   │   │
+│   │   ├── strategies/        # Strategy-related components
+│   │   └── ui/                # UI components (buttons, cards, etc.)
+│   │
+│   └── hooks/                 # Custom React hooks
+│       └── useData.js         # Data fetching hooks
+│
+├── public/                    # Static assets
+├── prisma/                    # Prisma ORM configuration
+│
+├── .next/                     # Next.js build output
+├── node_modules/              # NPM dependencies
+│
+├── package.json               # NPM package configuration
+├── package-lock.json          # NPM lock file
+├── next.config.ts             # Next.js configuration
+└── tsconfig.json              # TypeScript configuration
+```
 
-This structure provides a solid foundation for building a complex, maintainable, and testable automated trading system. 
+## System Architecture
 
-## Interfacing with a Next.js Frontend
+The ProjectX trading system is composed of two main parts:
 
-A Next.js frontend application can interact with this Python backend primarily through two mechanisms:
+1. **Python Backend**:
+   - Handles market data processing, strategy execution, and trading logic
+   - Uses TimescaleDB for efficient time-series data storage
+   - Provides a REST API using FastAPI for frontend integration
+   - Downloads and processes historical data
+   - Manages trading strategies and positions
 
-1.  **REST API (via `src/api/`)**:
-    *   The Next.js app will make standard HTTP requests (GET, POST, PUT, etc.) to the API endpoints defined in `src/api/routes/` (e.g., `/api/strategies`, `/api/positions`).
-    *   This is suitable for actions initiated by the user, such as:
-        *   Loading initial data (list of strategies, positions).
-        *   Creating or modifying strategy configurations.
-        *   Manually closing positions or triggering emergency stops.
-        *   Fetching historical data or performance reports.
-    *   The Python backend (likely using a framework like FastAPI or Flask) will handle these requests, interact with the relevant service layers (`src/services/`), and return JSON responses.
+2. **Next.js Frontend**:
+   - Provides a modern, responsive user interface
+   - Communicates with the backend via REST API
+   - Displays real-time market data and positions
+   - Visualizes trading data with interactive charts
+   - Allows strategy management and monitoring
 
-2.  **WebSockets (via `src/api/ws_handler.py`)**:
-    *   The Next.js app will establish a WebSocket connection to the endpoint managed by `src/api/ws_handler.py`.
-    *   This connection is used for pushing real-time updates *from* the backend *to* the frontend, enabling a dynamic user experience. Examples include:
-        *   Live market data updates (if needed directly in the UI).
-        *   Real-time position updates (current price, P&L).
-        *   Notifications about strategy signals or rule triggers.
-        *   System status alerts or error messages.
-    *   The Python backend will push relevant events (e.g., strategy updates, position changes sourced from `src/services/`) through the WebSocket connection to all connected frontend clients.
+## Integration Points
 
-**Typical Workflow:**
+The frontend and backend communicate primarily through:
 
-*   The Next.js app loads initial state via REST API calls upon page load.
-*   It establishes a WebSocket connection to receive continuous real-time updates.
-*   User actions in the Next.js UI trigger further REST API calls to the backend.
-*   The backend processes actions, potentially updates its state, and pushes relevant real-time changes back to the frontend via WebSockets. 
+1. **REST API**:
+   - The Python backend exposes endpoints at http://127.0.0.1:8000
+   - The Next.js frontend makes requests to these endpoints for data
+   - Key endpoints include:
+     - `/api/strategies` - For strategy management
+     - `/api/positions` - For position monitoring
+     - `/api/orders` - For order history and management
+
+2. **Database**:
+   - The backend writes market data to TimescaleDB
+   - The frontend can also directly query the database for certain data needs via Prisma
+
+## Deployment Approach
+
+The system can be deployed in multiple ways:
+
+1. **Local Development**:
+   - Python backend runs locally with `python -m src.api.server`
+   - Next.js frontend runs with `npm run dev` in the web directory
+   - TimescaleDB runs in Docker via `run_timescaledb_docker.sh`
+
+2. **Production**:
+   - Python backend can be containerized using the Dockerfile
+   - Next.js frontend can be built and deployed to a static hosting service
+   - TimescaleDB can be run on a dedicated instance or cloud service 

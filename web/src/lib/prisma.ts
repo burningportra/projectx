@@ -1,42 +1,18 @@
 // This is a simplified version that works with Next.js
 // Using type definitions instead of direct imports
 
-// Mock Prisma client for Next.js development
-// This allows our component types to work while we develop the actual DB integration
-const prisma = {
-  ohlcBar: {
-    findMany: async ({ where, orderBy, take }: any) => {
-      console.log("Prisma mock findMany called with:", { where, orderBy, take });
-      
-      // Return mock data for development
-      const mockBars: OhlcBar[] = Array.from({ length: take || 100 }, (_, i) => {
-        const date = new Date();
-        date.setMinutes(date.getMinutes() - (take || 100) + i);
-        
-        const basePrice = 4200 + Math.random() * 50;
-        const open = basePrice;
-        const close = basePrice + (Math.random() * 10 - 5);
-        const high = Math.max(open, close) + Math.random() * 5;
-        const low = Math.min(open, close) - Math.random() * 5;
-        
-        return {
-          id: i,
-          contractId: where?.contractId || "CON.F.US.MES.M25",
-          timestamp: date,
-          open,
-          high,
-          low,
-          close,
-          volume: Math.floor(Math.random() * 1000),
-          timeframeUnit: where?.timeframeUnit || 2,
-          timeframeValue: where?.timeframeValue || 5
-        };
-      });
-      
-      return mockBars;
-    }
-  }
-};
+import { PrismaClient } from '@prisma/client';
+
+// Use PrismaClient singleton to prevent too many client instances during development
+// https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
+
+// PrismaClient is attached to global when possible to prevent
+// exhausting your database connection limit due to hot reloads
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma = globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
 
@@ -52,4 +28,16 @@ export interface OhlcBar {
   volume: number | null;
   timeframeUnit: number;
   timeframeValue: number;
+}
+
+// Type definitions for TrendPoint
+export interface TrendPoint {
+  id: number;
+  contractId: string;
+  timestamp: Date;
+  price: number;
+  type: string;  // uptrendStart, downtrendStart, highestDowntrendStart, unbrokenUptrendStart, uptrendToHigh
+  timeframe: string; // Format: "5m", "1h", etc.
+  createdAt: Date;
+  updatedAt: Date;
 } 

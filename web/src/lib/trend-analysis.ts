@@ -1,4 +1,16 @@
-import { OhlcBar } from "./prisma";
+// Define OhlcBar type here instead of importing from prisma
+interface OhlcBar {
+  id: number;
+  contractId: string;
+  timestamp: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number | null;
+  timeframeUnit: number;
+  timeframeValue: number;
+}
 
 /**
  * Calculate whether a bar shows the start of an uptrend

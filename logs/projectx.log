@@ -294,3 +294,428 @@ src.core.exceptions.ApiError: Login failed: Login failed: None
 2025-05-12 13:25:41,797 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1d data...
 2025-05-12 13:25:41,851 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 39 bars for CON.F.US.MES.M25 1d in TimescaleDB
 2025-05-12 13:25:41,851 - projectx - INFO - download_historical.py:87 - Historical data download complete - data stored in TimescaleDB
+2025-05-12 19:43:13,407 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 19:43:13,410 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 19:43:13,415 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 19:43:13,606 - projectx - ERROR - download_historical.py:90 - Authentication failed: Missing username for authentication
+2025-05-12 19:43:54,923 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 19:43:54,923 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 19:43:54,926 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 19:43:55,146 - projectx - ERROR - download_historical.py:90 - Authentication failed: Login failed: Invalid API key or username (Error Code 3)
+2025-05-12 19:44:44,343 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 19:44:44,344 - projectx - INFO - download_historical.py:25 - Starting historical data download...
+2025-05-12 19:44:44,346 - projectx - INFO - download_historical.py:36 - Using TimescaleDB for data storage
+2025-05-12 19:44:44,642 - projectx - INFO - download_historical.py:60 - Authentication successful
+2025-05-12 19:44:44,642 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 19:44:44,806 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 19:44:44,806 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 19:44:44,912 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 19:44:44,912 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 19:44:45,078 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 500 bars for CON.F.US.MES.M25 1h in TimescaleDB
+2025-05-12 19:44:45,078 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 19:44:45,148 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 240 bars for CON.F.US.MES.M25 4h in TimescaleDB
+2025-05-12 19:44:45,148 - projectx - INFO - download_historical.py:65 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 19:44:45,202 - projectx - INFO - download_historical.py:80 - ✓ Downloaded and stored 39 bars for CON.F.US.MES.M25 1d in TimescaleDB
+2025-05-12 19:44:45,203 - projectx - INFO - download_historical.py:87 - Historical data download complete - data stored in TimescaleDB
+2025-05-12 20:06:51,274 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 20:06:51,275 - projectx - INFO - download_historical.py:44 - Starting enhanced historical data download...
+2025-05-12 20:06:51,278 - projectx - INFO - download_historical.py:55 - Using TimescaleDB for data storage
+2025-05-12 20:06:51,321 - projectx - INFO - download_historical.py:67 - End date set to current time: 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:06:51,510 - projectx - INFO - download_historical.py:86 - Authentication successful
+2025-05-12 20:06:51,510 - projectx - INFO - download_historical.py:94 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 20:06:51,510 - projectx - INFO - download_historical.py:117 - Calculated start date for 5m: 2025-04-13T00:06:51.321355+00:00
+2025-05-12 20:06:51,510 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-04-13T00:06:51.321355+00:00 to 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:06:51,679 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:52,681 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-04-07T08:44:59+00:00 to 2025-05-07T08:44:59+00:00
+2025-05-12 20:06:52,827 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:53,829 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-03-27T01:58:06.678645+00:00 to 2025-05-01T17:19:59+00:00
+2025-05-12 20:06:53,986 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:54,988 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-03-12T04:46:14.357290+00:00 to 2025-04-28T02:54:59+00:00
+2025-05-12 20:06:55,121 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:56,123 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-02-19T16:09:22.035935+00:00 to 2025-04-22T11:29:59+00:00
+2025-05-12 20:06:56,277 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:57,279 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-01-23T12:07:29.714580+00:00 to 2025-04-15T20:04:59+00:00
+2025-05-12 20:06:57,432 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:58,434 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-12-21T17:40:37.393225+00:00 to 2025-04-10T05:39:59+00:00
+2025-05-12 20:06:58,580 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:06:59,583 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-11-13T07:48:45.071870+00:00 to 2025-04-04T14:14:59+00:00
+2025-05-12 20:06:59,730 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:07:00,731 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-10-02T07:31:52.750515+00:00 to 2025-03-31T23:49:59+00:00
+2025-05-12 20:07:00,866 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:07:01,869 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-08-15T15:50:00.429160+00:00 to 2025-03-26T08:24:59+00:00
+2025-05-12 20:07:01,999 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:07:03,000 - projectx - INFO - download_historical.py:188 - Completed CON.F.US.MES.M25 5m: 10000 bars with 10 requests
+2025-05-12 20:07:05,002 - projectx - INFO - download_historical.py:94 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 20:07:05,002 - projectx - INFO - download_historical.py:117 - Calculated start date for 15m: 2025-03-14T00:06:51.321355+00:00
+2025-05-12 20:07:05,002 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-03-14T00:06:51.321355+00:00 to 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:07:05,150 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:07:06,151 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-02-27T02:59:59+00:00 to 2025-04-28T02:59:59+00:00
+2025-05-12 20:07:06,287 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:07:07,289 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-01-25T08:38:06.678645+00:00 to 2025-04-10T05:44:59+00:00
+2025-05-12 20:07:07,441 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:07:08,443 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-12-08T17:01:14.357290+00:00 to 2025-03-26T08:29:59+00:00
+2025-05-12 20:07:08,563 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 685 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:07:09,565 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-10-12T14:54:22.035935+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-12 20:07:09,627 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,627 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-09-12T14:54:22.035935+00:00 to 2024-10-12T14:54:22.035935+00:00
+2025-05-12 20:07:09,676 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,676 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-08-13T14:54:22.035935+00:00 to 2024-09-12T14:54:22.035935+00:00
+2025-05-12 20:07:09,722 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,722 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-07-14T14:54:22.035935+00:00 to 2024-08-13T14:54:22.035935+00:00
+2025-05-12 20:07:09,765 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,765 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-06-14T14:54:22.035935+00:00 to 2024-07-14T14:54:22.035935+00:00
+2025-05-12 20:07:09,807 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,807 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-05-15T14:54:22.035935+00:00 to 2024-06-14T14:54:22.035935+00:00
+2025-05-12 20:07:09,844 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:09,844 - projectx - INFO - download_historical.py:188 - Completed CON.F.US.MES.M25 15m: 3685 bars with 10 requests
+2025-05-12 20:07:11,846 - projectx - INFO - download_historical.py:94 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 20:07:11,847 - projectx - INFO - download_historical.py:117 - Calculated start date for 1h: 2025-02-12T00:06:51.321355+00:00
+2025-05-12 20:07:11,847 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-02-12T00:06:51.321355+00:00 to 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:07:11,967 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 922 bars for CON.F.US.MES.M25 1h in TimescaleDB
+2025-05-12 20:07:12,968 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-12-16T21:59:59+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-12 20:07:13,022 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,022 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-11-16T21:59:59+00:00 to 2024-12-16T21:59:59+00:00
+2025-05-12 20:07:13,065 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,065 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-10-17T21:59:59+00:00 to 2024-11-16T21:59:59+00:00
+2025-05-12 20:07:13,111 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,111 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-09-17T21:59:59+00:00 to 2024-10-17T21:59:59+00:00
+2025-05-12 20:07:13,153 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,153 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-08-18T21:59:59+00:00 to 2024-09-17T21:59:59+00:00
+2025-05-12 20:07:13,197 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,197 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-07-19T21:59:59+00:00 to 2024-08-18T21:59:59+00:00
+2025-05-12 20:07:13,242 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,243 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-06-19T21:59:59+00:00 to 2024-07-19T21:59:59+00:00
+2025-05-12 20:07:13,284 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,284 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-05-20T21:59:59+00:00 to 2024-06-19T21:59:59+00:00
+2025-05-12 20:07:13,326 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,326 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-04-20T21:59:59+00:00 to 2024-05-20T21:59:59+00:00
+2025-05-12 20:07:13,373 - projectx - WARNING - download_historical.py:142 - No valid bars retrieved in this batch
+2025-05-12 20:07:13,373 - projectx - INFO - download_historical.py:188 - Completed CON.F.US.MES.M25 1h: 922 bars with 10 requests
+2025-05-12 20:07:15,374 - projectx - INFO - download_historical.py:94 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 20:07:15,374 - projectx - INFO - download_historical.py:117 - Calculated start date for 4h: 2025-02-12T00:06:51.321355+00:00
+2025-05-12 20:07:15,374 - projectx - INFO - download_historical.py:127 - Requesting batch: 2025-02-12T00:06:51.321355+00:00 to 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:07:15,445 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 241 bars for CON.F.US.MES.M25 4h in TimescaleDB
+2025-05-12 20:07:15,445 - projectx - INFO - download_historical.py:162 - Reached likely beginning of available data for CON.F.US.MES.M25 4h
+2025-05-12 20:07:15,445 - projectx - INFO - download_historical.py:188 - Completed CON.F.US.MES.M25 4h: 241 bars with 0 requests
+2025-05-12 20:07:17,446 - projectx - INFO - download_historical.py:94 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 20:07:17,447 - projectx - INFO - download_historical.py:117 - Calculated start date for 1d: 2024-05-13T00:06:51.321355+00:00
+2025-05-12 20:07:17,447 - projectx - INFO - download_historical.py:127 - Requesting batch: 2024-05-13T00:06:51.321355+00:00 to 2025-05-13T00:06:51.321355+00:00
+2025-05-12 20:07:17,498 - projectx - INFO - download_historical.py:156 - ✓ Downloaded and stored 40 bars for CON.F.US.MES.M25 1d in TimescaleDB
+2025-05-12 20:07:17,498 - projectx - INFO - download_historical.py:162 - Reached likely beginning of available data for CON.F.US.MES.M25 1d
+2025-05-12 20:07:17,498 - projectx - INFO - download_historical.py:188 - Completed CON.F.US.MES.M25 1d: 40 bars with 0 requests
+2025-05-12 20:07:19,500 - projectx - INFO - download_historical.py:193 - Historical data download complete - 14888 total bars stored in TimescaleDB
+2025-05-12 20:53:05,051 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-12 20:53:05,052 - projectx - INFO - download_historical.py:49 - Starting enhanced historical data download...
+2025-05-12 20:53:05,055 - projectx - INFO - download_historical.py:60 - Using TimescaleDB for data storage
+2025-05-12 20:53:05,113 - projectx - INFO - download_historical.py:72 - End date set to current time: 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:05,113 - projectx - INFO - download_historical.py:85 - Using timeframes from config: ['5m', '15m', '1h', '4h', '1d']
+2025-05-12 20:53:05,315 - projectx - INFO - download_historical.py:97 - Authentication successful
+2025-05-12 20:53:05,315 - projectx - INFO - download_historical.py:105 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-12 20:53:05,315 - projectx - INFO - download_historical.py:135 - Calculated start date for 5m: 2025-04-13T00:53:05.113104+00:00 (30 days back)
+2025-05-12 20:53:05,315 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-04-13T00:53:05.113104+00:00 to 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:05,598 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:06,600 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-04-07T09:29:59+00:00 to 2025-05-07T09:29:59+00:00
+2025-05-12 20:53:06,818 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:07,820 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-03-27T02:41:52.886896+00:00 to 2025-05-01T18:04:59+00:00
+2025-05-12 20:53:08,073 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:09,075 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-03-12T05:28:46.773792+00:00 to 2025-04-28T03:39:59+00:00
+2025-05-12 20:53:09,305 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:10,307 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-02-19T16:50:40.660688+00:00 to 2025-04-22T12:14:59+00:00
+2025-05-12 20:53:10,573 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:11,576 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-01-23T12:47:34.547584+00:00 to 2025-04-15T20:49:59+00:00
+2025-05-12 20:53:11,838 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:12,840 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-12-21T18:19:28.434480+00:00 to 2025-04-10T06:24:59+00:00
+2025-05-12 20:53:13,065 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:14,067 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-11-13T08:26:22.321376+00:00 to 2025-04-04T14:59:59+00:00
+2025-05-12 20:53:14,323 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:15,325 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-10-02T08:08:16.208272+00:00 to 2025-04-01T00:34:59+00:00
+2025-05-12 20:53:15,560 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:16,562 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-08-15T16:25:10.095168+00:00 to 2025-03-26T09:09:59+00:00
+2025-05-12 20:53:16,775 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:17,777 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-06-23T09:17:03.982064+00:00 to 2025-03-20T17:44:59+00:00
+2025-05-12 20:53:17,986 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:18,987 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-04-27T11:43:57.868960+00:00 to 2025-03-17T03:19:59+00:00
+2025-05-12 20:53:19,061 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 63 bars for CON.F.US.MES.M25 5m in TimescaleDB
+2025-05-12 20:53:19,061 - projectx - INFO - download_historical.py:180 - Reached likely beginning of available data for CON.F.US.MES.M25 5m
+2025-05-12 20:53:19,061 - projectx - INFO - download_historical.py:206 - Completed CON.F.US.MES.M25 5m: 11063 bars with 11 requests
+2025-05-12 20:53:21,062 - projectx - INFO - download_historical.py:105 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-12 20:53:21,063 - projectx - INFO - download_historical.py:135 - Calculated start date for 15m: 2025-03-14T00:53:05.113104+00:00 (60 days back)
+2025-05-12 20:53:21,063 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-03-14T00:53:05.113104+00:00 to 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:21,275 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:53:22,277 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-02-27T03:44:59+00:00 to 2025-04-28T03:44:59+00:00
+2025-05-12 20:53:22,465 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:53:23,470 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-01-25T09:21:52.886896+00:00 to 2025-04-10T06:29:59+00:00
+2025-05-12 20:53:23,660 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 1000 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:53:24,662 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-12-08T17:43:46.773792+00:00 to 2025-03-26T09:14:59+00:00
+2025-05-12 20:53:24,817 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 688 bars for CON.F.US.MES.M25 15m in TimescaleDB
+2025-05-12 20:53:25,819 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-10-12T14:50:40.660688+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-12 20:53:25,895 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:25,895 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-09-12T14:50:40.660688+00:00 to 2024-10-12T14:50:40.660688+00:00
+2025-05-12 20:53:25,956 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:25,956 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-08-13T14:50:40.660688+00:00 to 2024-09-12T14:50:40.660688+00:00
+2025-05-12 20:53:26,014 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,015 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-07-14T14:50:40.660688+00:00 to 2024-08-13T14:50:40.660688+00:00
+2025-05-12 20:53:26,068 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,069 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-06-14T14:50:40.660688+00:00 to 2024-07-14T14:50:40.660688+00:00
+2025-05-12 20:53:26,119 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,119 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-05-15T14:50:40.660688+00:00 to 2024-06-14T14:50:40.660688+00:00
+2025-05-12 20:53:26,168 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,168 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-04-15T14:50:40.660688+00:00 to 2024-05-15T14:50:40.660688+00:00
+2025-05-12 20:53:26,218 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,218 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-03-16T14:50:40.660688+00:00 to 2024-04-15T14:50:40.660688+00:00
+2025-05-12 20:53:26,269 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,269 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-02-15T14:50:40.660688+00:00 to 2024-03-16T14:50:40.660688+00:00
+2025-05-12 20:53:26,323 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,324 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-01-16T14:50:40.660688+00:00 to 2024-02-15T14:50:40.660688+00:00
+2025-05-12 20:53:26,378 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,379 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-12-17T14:50:40.660688+00:00 to 2024-01-16T14:50:40.660688+00:00
+2025-05-12 20:53:26,430 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,430 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-11-17T14:50:40.660688+00:00 to 2023-12-17T14:50:40.660688+00:00
+2025-05-12 20:53:26,480 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,481 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-10-18T14:50:40.660688+00:00 to 2023-11-17T14:50:40.660688+00:00
+2025-05-12 20:53:26,536 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,537 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-09-18T14:50:40.660688+00:00 to 2023-10-18T14:50:40.660688+00:00
+2025-05-12 20:53:26,589 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,590 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-08-19T14:50:40.660688+00:00 to 2023-09-18T14:50:40.660688+00:00
+2025-05-12 20:53:26,642 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,642 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-07-20T14:50:40.660688+00:00 to 2023-08-19T14:50:40.660688+00:00
+2025-05-12 20:53:26,713 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,713 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-06-20T14:50:40.660688+00:00 to 2023-07-20T14:50:40.660688+00:00
+2025-05-12 20:53:26,764 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,764 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-05-21T14:50:40.660688+00:00 to 2023-06-20T14:50:40.660688+00:00
+2025-05-12 20:53:26,810 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,810 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-04-21T14:50:40.660688+00:00 to 2023-05-21T14:50:40.660688+00:00
+2025-05-12 20:53:26,860 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,861 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-03-22T14:50:40.660688+00:00 to 2023-04-21T14:50:40.660688+00:00
+2025-05-12 20:53:26,906 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,906 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-02-20T14:50:40.660688+00:00 to 2023-03-22T14:50:40.660688+00:00
+2025-05-12 20:53:26,952 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:26,952 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-01-21T14:50:40.660688+00:00 to 2023-02-20T14:50:40.660688+00:00
+2025-05-12 20:53:27,002 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,003 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-12-22T14:50:40.660688+00:00 to 2023-01-21T14:50:40.660688+00:00
+2025-05-12 20:53:27,055 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,055 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-11-22T14:50:40.660688+00:00 to 2022-12-22T14:50:40.660688+00:00
+2025-05-12 20:53:27,108 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,109 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-10-23T14:50:40.660688+00:00 to 2022-11-22T14:50:40.660688+00:00
+2025-05-12 20:53:27,161 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,161 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-09-23T14:50:40.660688+00:00 to 2022-10-23T14:50:40.660688+00:00
+2025-05-12 20:53:27,214 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,214 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-08-24T14:50:40.660688+00:00 to 2022-09-23T14:50:40.660688+00:00
+2025-05-12 20:53:27,264 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,264 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-07-25T14:50:40.660688+00:00 to 2022-08-24T14:50:40.660688+00:00
+2025-05-12 20:53:27,314 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,314 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-06-25T14:50:40.660688+00:00 to 2022-07-25T14:50:40.660688+00:00
+2025-05-12 20:53:27,366 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,367 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-05-26T14:50:40.660688+00:00 to 2022-06-25T14:50:40.660688+00:00
+2025-05-12 20:53:27,521 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,521 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-04-26T14:50:40.660688+00:00 to 2022-05-26T14:50:40.660688+00:00
+2025-05-12 20:53:27,572 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,572 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-03-27T14:50:40.660688+00:00 to 2022-04-26T14:50:40.660688+00:00
+2025-05-12 20:53:27,622 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,622 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-02-25T14:50:40.660688+00:00 to 2022-03-27T14:50:40.660688+00:00
+2025-05-12 20:53:27,672 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,672 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-01-26T14:50:40.660688+00:00 to 2022-02-25T14:50:40.660688+00:00
+2025-05-12 20:53:27,722 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,722 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-12-27T14:50:40.660688+00:00 to 2022-01-26T14:50:40.660688+00:00
+2025-05-12 20:53:27,771 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,771 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-11-27T14:50:40.660688+00:00 to 2021-12-27T14:50:40.660688+00:00
+2025-05-12 20:53:27,817 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,818 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-10-28T14:50:40.660688+00:00 to 2021-11-27T14:50:40.660688+00:00
+2025-05-12 20:53:27,864 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,864 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-09-28T14:50:40.660688+00:00 to 2021-10-28T14:50:40.660688+00:00
+2025-05-12 20:53:27,913 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,914 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-08-29T14:50:40.660688+00:00 to 2021-09-28T14:50:40.660688+00:00
+2025-05-12 20:53:27,967 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:27,967 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-07-30T14:50:40.660688+00:00 to 2021-08-29T14:50:40.660688+00:00
+2025-05-12 20:53:28,028 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,029 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-06-30T14:50:40.660688+00:00 to 2021-07-30T14:50:40.660688+00:00
+2025-05-12 20:53:28,082 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,082 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-05-31T14:50:40.660688+00:00 to 2021-06-30T14:50:40.660688+00:00
+2025-05-12 20:53:28,131 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,131 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-05-01T14:50:40.660688+00:00 to 2021-05-31T14:50:40.660688+00:00
+2025-05-12 20:53:28,184 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,184 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-04-01T14:50:40.660688+00:00 to 2021-05-01T14:50:40.660688+00:00
+2025-05-12 20:53:28,234 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,234 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-03-02T14:50:40.660688+00:00 to 2021-04-01T14:50:40.660688+00:00
+2025-05-12 20:53:28,286 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,286 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-01-31T14:50:40.660688+00:00 to 2021-03-02T14:50:40.660688+00:00
+2025-05-12 20:53:28,334 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:28,334 - projectx - INFO - download_historical.py:206 - Completed CON.F.US.MES.M25 15m: 3688 bars with 50 requests
+2025-05-12 20:53:30,335 - projectx - INFO - download_historical.py:105 - Downloading CON.F.US.MES.M25 1h data...
+2025-05-12 20:53:30,336 - projectx - INFO - download_historical.py:135 - Calculated start date for 1h: 2025-02-12T00:53:05.113104+00:00 (90 days back)
+2025-05-12 20:53:30,336 - projectx - INFO - download_historical.py:145 - Requesting batch: 2025-02-12T00:53:05.113104+00:00 to 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:30,584 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 922 bars for CON.F.US.MES.M25 1h in TimescaleDB
+2025-05-12 20:53:31,586 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-12-16T21:59:59+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-12 20:53:31,643 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,643 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-11-16T21:59:59+00:00 to 2024-12-16T21:59:59+00:00
+2025-05-12 20:53:31,698 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,698 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-10-17T21:59:59+00:00 to 2024-11-16T21:59:59+00:00
+2025-05-12 20:53:31,751 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,751 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-09-17T21:59:59+00:00 to 2024-10-17T21:59:59+00:00
+2025-05-12 20:53:31,802 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,803 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-08-18T21:59:59+00:00 to 2024-09-17T21:59:59+00:00
+2025-05-12 20:53:31,851 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,851 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-07-19T21:59:59+00:00 to 2024-08-18T21:59:59+00:00
+2025-05-12 20:53:31,899 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,899 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-06-19T21:59:59+00:00 to 2024-07-19T21:59:59+00:00
+2025-05-12 20:53:31,953 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:31,954 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-05-20T21:59:59+00:00 to 2024-06-19T21:59:59+00:00
+2025-05-12 20:53:32,061 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,062 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-04-20T21:59:59+00:00 to 2024-05-20T21:59:59+00:00
+2025-05-12 20:53:32,115 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,115 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-03-21T21:59:59+00:00 to 2024-04-20T21:59:59+00:00
+2025-05-12 20:53:32,179 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,180 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-02-20T21:59:59+00:00 to 2024-03-21T21:59:59+00:00
+2025-05-12 20:53:32,234 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,234 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-01-21T21:59:59+00:00 to 2024-02-20T21:59:59+00:00
+2025-05-12 20:53:32,296 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,296 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-12-22T21:59:59+00:00 to 2024-01-21T21:59:59+00:00
+2025-05-12 20:53:32,354 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,354 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-11-22T21:59:59+00:00 to 2023-12-22T21:59:59+00:00
+2025-05-12 20:53:32,402 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,402 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-10-23T21:59:59+00:00 to 2023-11-22T21:59:59+00:00
+2025-05-12 20:53:32,452 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,452 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-09-23T21:59:59+00:00 to 2023-10-23T21:59:59+00:00
+2025-05-12 20:53:32,510 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,511 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-08-24T21:59:59+00:00 to 2023-09-23T21:59:59+00:00
+2025-05-12 20:53:32,567 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,568 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-07-25T21:59:59+00:00 to 2023-08-24T21:59:59+00:00
+2025-05-12 20:53:32,617 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,617 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-06-25T21:59:59+00:00 to 2023-07-25T21:59:59+00:00
+2025-05-12 20:53:32,674 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,674 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-05-26T21:59:59+00:00 to 2023-06-25T21:59:59+00:00
+2025-05-12 20:53:32,727 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,727 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-04-26T21:59:59+00:00 to 2023-05-26T21:59:59+00:00
+2025-05-12 20:53:32,776 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,777 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-03-27T21:59:59+00:00 to 2023-04-26T21:59:59+00:00
+2025-05-12 20:53:32,828 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,829 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-02-25T21:59:59+00:00 to 2023-03-27T21:59:59+00:00
+2025-05-12 20:53:32,879 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,880 - projectx - INFO - download_historical.py:145 - Requesting batch: 2023-01-26T21:59:59+00:00 to 2023-02-25T21:59:59+00:00
+2025-05-12 20:53:32,930 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,930 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-12-27T21:59:59+00:00 to 2023-01-26T21:59:59+00:00
+2025-05-12 20:53:32,982 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:32,982 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-11-27T21:59:59+00:00 to 2022-12-27T21:59:59+00:00
+2025-05-12 20:53:33,034 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,034 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-10-28T21:59:59+00:00 to 2022-11-27T21:59:59+00:00
+2025-05-12 20:53:33,083 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,084 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-09-28T21:59:59+00:00 to 2022-10-28T21:59:59+00:00
+2025-05-12 20:53:33,131 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,131 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-08-29T21:59:59+00:00 to 2022-09-28T21:59:59+00:00
+2025-05-12 20:53:33,182 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,182 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-07-30T21:59:59+00:00 to 2022-08-29T21:59:59+00:00
+2025-05-12 20:53:33,238 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,238 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-06-30T21:59:59+00:00 to 2022-07-30T21:59:59+00:00
+2025-05-12 20:53:33,305 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,306 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-05-31T21:59:59+00:00 to 2022-06-30T21:59:59+00:00
+2025-05-12 20:53:33,353 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,354 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-05-01T21:59:59+00:00 to 2022-05-31T21:59:59+00:00
+2025-05-12 20:53:33,407 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,407 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-04-01T21:59:59+00:00 to 2022-05-01T21:59:59+00:00
+2025-05-12 20:53:33,458 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,458 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-03-02T21:59:59+00:00 to 2022-04-01T21:59:59+00:00
+2025-05-12 20:53:33,505 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,505 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-01-31T21:59:59+00:00 to 2022-03-02T21:59:59+00:00
+2025-05-12 20:53:33,556 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,556 - projectx - INFO - download_historical.py:145 - Requesting batch: 2022-01-01T21:59:59+00:00 to 2022-01-31T21:59:59+00:00
+2025-05-12 20:53:33,610 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,610 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-12-02T21:59:59+00:00 to 2022-01-01T21:59:59+00:00
+2025-05-12 20:53:33,658 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,658 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-11-02T21:59:59+00:00 to 2021-12-02T21:59:59+00:00
+2025-05-12 20:53:33,709 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,709 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-10-03T21:59:59+00:00 to 2021-11-02T21:59:59+00:00
+2025-05-12 20:53:33,758 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,758 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-09-03T21:59:59+00:00 to 2021-10-03T21:59:59+00:00
+2025-05-12 20:53:33,821 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,821 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-08-04T21:59:59+00:00 to 2021-09-03T21:59:59+00:00
+2025-05-12 20:53:33,871 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,871 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-07-05T21:59:59+00:00 to 2021-08-04T21:59:59+00:00
+2025-05-12 20:53:33,934 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:33,934 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-06-05T21:59:59+00:00 to 2021-07-05T21:59:59+00:00
+2025-05-12 20:53:34,004 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,004 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-05-06T21:59:59+00:00 to 2021-06-05T21:59:59+00:00
+2025-05-12 20:53:34,070 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,070 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-04-06T21:59:59+00:00 to 2021-05-06T21:59:59+00:00
+2025-05-12 20:53:34,140 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,140 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-03-07T21:59:59+00:00 to 2021-04-06T21:59:59+00:00
+2025-05-12 20:53:34,190 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,190 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-02-05T21:59:59+00:00 to 2021-03-07T21:59:59+00:00
+2025-05-12 20:53:34,237 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,237 - projectx - INFO - download_historical.py:145 - Requesting batch: 2021-01-06T21:59:59+00:00 to 2021-02-05T21:59:59+00:00
+2025-05-12 20:53:34,293 - projectx - WARNING - download_historical.py:160 - No valid bars retrieved in this batch
+2025-05-12 20:53:34,293 - projectx - INFO - download_historical.py:206 - Completed CON.F.US.MES.M25 1h: 922 bars with 50 requests
+2025-05-12 20:53:36,294 - projectx - INFO - download_historical.py:105 - Downloading CON.F.US.MES.M25 4h data...
+2025-05-12 20:53:36,294 - projectx - INFO - download_historical.py:135 - Calculated start date for 4h: 2024-11-14T00:53:05.113104+00:00 (180 days back)
+2025-05-12 20:53:36,295 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-11-14T00:53:05.113104+00:00 to 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:36,373 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 241 bars for CON.F.US.MES.M25 4h in TimescaleDB
+2025-05-12 20:53:36,373 - projectx - INFO - download_historical.py:180 - Reached likely beginning of available data for CON.F.US.MES.M25 4h
+2025-05-12 20:53:36,373 - projectx - INFO - download_historical.py:206 - Completed CON.F.US.MES.M25 4h: 241 bars with 0 requests
+2025-05-12 20:53:38,374 - projectx - INFO - download_historical.py:105 - Downloading CON.F.US.MES.M25 1d data...
+2025-05-12 20:53:38,375 - projectx - INFO - download_historical.py:135 - Calculated start date for 1d: 2024-05-13T00:53:05.113104+00:00 (365 days back)
+2025-05-12 20:53:38,375 - projectx - INFO - download_historical.py:145 - Requesting batch: 2024-05-13T00:53:05.113104+00:00 to 2025-05-13T00:53:05.113104+00:00
+2025-05-12 20:53:38,441 - projectx - INFO - download_historical.py:174 - ✓ Downloaded and stored 40 bars for CON.F.US.MES.M25 1d in TimescaleDB
+2025-05-12 20:53:38,442 - projectx - INFO - download_historical.py:180 - Reached likely beginning of available data for CON.F.US.MES.M25 1d
+2025-05-12 20:53:38,442 - projectx - INFO - download_historical.py:206 - Completed CON.F.US.MES.M25 1d: 40 bars with 0 requests
+2025-05-12 20:53:40,443 - projectx - INFO - download_historical.py:211 - Historical data download complete - 15954 total bars stored in TimescaleDB
+2025-05-13 00:53:04,842 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-13 00:53:04,842 - projectx - INFO - download_historical.py:51 - Starting enhanced historical data download (with duplicate prevention)...
+2025-05-13 00:53:04,842 - projectx - INFO - download_historical.py:52 - Will attempt to download as far back as possible for each timeframe
+2025-05-13 00:53:04,845 - projectx - INFO - download_historical.py:63 - Using TimescaleDB for data storage
+2025-05-13 00:53:05,106 - projectx - INFO - download_historical.py:75 - End date set to current time: 2025-05-13T04:53:05.106744+00:00
+2025-05-13 00:53:05,106 - projectx - INFO - download_historical.py:88 - Using timeframes from config: ['5m', '15m', '1h', '4h', '1d']
+2025-05-13 00:53:05,371 - projectx - INFO - download_historical.py:100 - Authentication successful
+2025-05-13 00:53:05,371 - projectx - INFO - download_historical.py:108 - Downloading CON.F.US.MES.M25 5m data...
+2025-05-13 00:53:05,372 - projectx - INFO - download_historical.py:138 - Initial start date for 5m: 2025-03-14T04:53:05.106744+00:00 (60 days back)
+2025-05-13 00:53:05,372 - projectx - INFO - download_historical.py:149 - Requesting batch 1/200: 2025-03-14T04:53:05.106744+00:00 to 2025-05-13T04:53:05.106744+00:00
+2025-05-13 00:53:06,348 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:06,349 - projectx - INFO - download_historical.py:201 - New date range: 2025-03-08T13:29:59+00:00 to 2025-05-07T13:29:59+00:00
+2025-05-13 00:53:07,350 - projectx - INFO - download_historical.py:149 - Requesting batch 2/200: 2025-03-08T13:29:59+00:00 to 2025-05-07T13:29:59+00:00
+2025-05-13 00:53:08,368 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:08,369 - projectx - INFO - download_historical.py:201 - New date range: 2025-02-25T07:41:52.893256+00:00 to 2025-05-01T23:04:59+00:00
+2025-05-13 00:53:09,370 - projectx - INFO - download_historical.py:149 - Requesting batch 3/200: 2025-02-25T07:41:52.893256+00:00 to 2025-05-01T23:04:59+00:00
+2025-05-13 00:53:10,624 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:10,625 - projectx - INFO - download_historical.py:201 - New date range: 2025-02-10T10:28:46.786512+00:00 to 2025-04-28T07:39:59+00:00
+2025-05-13 00:53:11,626 - projectx - INFO - download_historical.py:149 - Requesting batch 4/200: 2025-02-10T10:28:46.786512+00:00 to 2025-04-28T07:39:59+00:00
+2025-05-13 00:53:12,914 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:12,916 - projectx - INFO - download_historical.py:201 - New date range: 2025-01-20T21:50:40.679768+00:00 to 2025-04-22T16:14:59+00:00
+2025-05-13 00:53:13,917 - projectx - INFO - download_historical.py:149 - Requesting batch 5/200: 2025-01-20T21:50:40.679768+00:00 to 2025-04-22T16:14:59+00:00
+2025-05-13 00:53:15,344 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:15,345 - projectx - INFO - download_historical.py:201 - New date range: 2024-12-24T18:47:34.573024+00:00 to 2025-04-16T01:49:59+00:00
+2025-05-13 00:53:16,351 - projectx - INFO - download_historical.py:149 - Requesting batch 6/200: 2024-12-24T18:47:34.573024+00:00 to 2025-04-16T01:49:59+00:00
+2025-05-13 00:53:17,968 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:17,971 - projectx - INFO - download_historical.py:201 - New date range: 2024-11-22T00:19:28.466280+00:00 to 2025-04-10T10:24:59+00:00
+2025-05-13 00:53:18,972 - projectx - INFO - download_historical.py:149 - Requesting batch 7/200: 2024-11-22T00:19:28.466280+00:00 to 2025-04-10T10:24:59+00:00
+2025-05-13 00:53:20,794 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:20,794 - projectx - INFO - download_historical.py:201 - New date range: 2024-10-14T14:26:22.359536+00:00 to 2025-04-04T18:59:59+00:00
+2025-05-13 00:53:21,796 - projectx - INFO - download_historical.py:149 - Requesting batch 8/200: 2024-10-14T14:26:22.359536+00:00 to 2025-04-04T18:59:59+00:00
+2025-05-13 00:53:23,784 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:23,784 - projectx - INFO - download_historical.py:201 - New date range: 2024-09-02T14:08:16.252792+00:00 to 2025-04-01T04:34:59+00:00
+2025-05-13 00:53:24,785 - projectx - INFO - download_historical.py:149 - Requesting batch 9/200: 2024-09-02T14:08:16.252792+00:00 to 2025-04-01T04:34:59+00:00
+2025-05-13 00:53:27,130 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:27,130 - projectx - INFO - download_historical.py:201 - New date range: 2024-07-16T22:25:10.146048+00:00 to 2025-03-26T13:09:59+00:00
+2025-05-13 00:53:28,131 - projectx - INFO - download_historical.py:149 - Requesting batch 10/200: 2024-07-16T22:25:10.146048+00:00 to 2025-03-26T13:09:59+00:00
+2025-05-13 00:53:30,312 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:30,313 - projectx - INFO - download_historical.py:201 - New date range: 2024-05-24T16:17:04.039304+00:00 to 2025-03-20T22:44:59+00:00
+2025-05-13 00:53:31,314 - projectx - INFO - download_historical.py:149 - Requesting batch 11/200: 2024-05-24T16:17:04.039304+00:00 to 2025-03-20T22:44:59+00:00
+2025-05-13 00:53:33,839 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:33,840 - projectx - INFO - download_historical.py:201 - New date range: 2024-03-28T18:43:57.932560+00:00 to 2025-03-17T07:19:59+00:00
+2025-05-13 00:53:34,841 - projectx - INFO - download_historical.py:149 - Requesting batch 12/200: 2024-03-28T18:43:57.932560+00:00 to 2025-03-17T07:19:59+00:00
+2025-05-13 00:53:35,210 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 111 new bars out of 111 retrieved for CON.F.US.MES.M25 5m
+2025-05-13 00:53:35,210 - projectx - INFO - download_historical.py:190 - Reached likely beginning of available data for CON.F.US.MES.M25 5m
+2025-05-13 00:53:35,210 - projectx - INFO - download_historical.py:221 - Completed CON.F.US.MES.M25 5m: 11111 new bars with 11 requests
+2025-05-13 00:53:37,213 - projectx - INFO - download_historical.py:108 - Downloading CON.F.US.MES.M25 15m data...
+2025-05-13 00:53:37,214 - projectx - INFO - download_historical.py:138 - Initial start date for 15m: 2025-01-13T04:53:05.106744+00:00 (120 days back)
+2025-05-13 00:53:37,214 - projectx - INFO - download_historical.py:149 - Requesting batch 1/200: 2025-01-13T04:53:05.106744+00:00 to 2025-05-13T04:53:05.106744+00:00
+2025-05-13 00:53:39,726 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 15m
+2025-05-13 00:53:39,729 - projectx - INFO - download_historical.py:201 - New date range: 2024-12-29T07:44:59+00:00 to 2025-04-28T07:44:59+00:00
+2025-05-13 00:53:40,731 - projectx - INFO - download_historical.py:149 - Requesting batch 2/200: 2024-12-29T07:44:59+00:00 to 2025-04-28T07:44:59+00:00
+2025-05-13 00:53:41,924 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 15m
+2025-05-13 00:53:41,925 - projectx - INFO - download_historical.py:201 - New date range: 2024-11-26T13:21:52.893256+00:00 to 2025-04-10T10:29:59+00:00
+2025-05-13 00:53:42,926 - projectx - INFO - download_historical.py:149 - Requesting batch 3/200: 2024-11-26T13:21:52.893256+00:00 to 2025-04-10T10:29:59+00:00
+2025-05-13 00:53:44,169 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 15m
+2025-05-13 00:53:44,170 - projectx - INFO - download_historical.py:201 - New date range: 2024-10-09T21:43:46.786512+00:00 to 2025-03-26T13:14:59+00:00
+2025-05-13 00:53:45,171 - projectx - INFO - download_historical.py:149 - Requesting batch 4/200: 2024-10-09T21:43:46.786512+00:00 to 2025-03-26T13:14:59+00:00
+2025-05-13 00:53:46,212 - projectx - INFO - download_historical.py:184 - ✓ Downloaded and stored 704 new bars out of 704 retrieved for CON.F.US.MES.M25 15m
+2025-05-13 00:53:46,213 - projectx - INFO - download_historical.py:201 - New date range: 2024-08-13T14:50:40.679768+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-13 00:53:47,214 - projectx - INFO - download_historical.py:149 - Requesting batch 5/200: 2024-08-13T14:50:40.679768+00:00 to 2025-03-16T21:59:59+00:00
+2025-05-13 00:53:47,282 - projectx - WARNING - download_historical.py:164 - No valid bars retrieved in this batch

@@ -133,6 +133,17 @@ exports.Prisma.OhlcBarScalarFieldEnum = {
   timeframeValue: 'timeframeValue'
 };
 
+exports.Prisma.TrendPointScalarFieldEnum = {
+  id: 'id',
+  contractId: 'contractId',
+  timestamp: 'timestamp',
+  price: 'price',
+  type: 'type',
+  timeframe: 'timeframe',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -150,7 +161,8 @@ exports.Prisma.NullsOrder = {
 
 
 exports.Prisma.ModelName = {
-  OhlcBar: 'OhlcBar'
+  OhlcBar: 'OhlcBar',
+  TrendPoint: 'TrendPoint'
 };
 
 /**

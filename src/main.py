@@ -277,16 +277,15 @@ class TradingApp:
         self.logger.info("Starting strategy evaluation loop")
         
         while True:
-                try:
+            try:
                 # Evaluate active strategies and execute trades if needed
                 await self.strategy_executor.evaluate_strategies()
-                    
-                except Exception as e:
+            except Exception as e:
                 self.logger.error(f"Error in strategy evaluation: {str(e)}", exc_info=True)
-                
+            
             # Wait before next evaluation
             await asyncio.sleep(5)  # Evaluate every 5 seconds
-            
+    
     async def process_rule_results(self, strategy, results):
         """Process rule evaluation results."""
         # This method is no longer needed as StrategyExecutor handles rule execution
