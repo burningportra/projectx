@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useId, useCallback, FC, ReactNode } from "react";
-import { createChart, IChartApi, ISeriesApi, CandlestickData, UTCTimestamp, SeriesMarker, Time, LineStyle, CrosshairMode, SeriesType } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, CandlestickData, UTCTimestamp, SeriesMarker, Time, LineStyle, CrosshairMode, SeriesType, CandlestickSeries, LineSeries } from 'lightweight-charts';
 
 // Define OhlcBar type here instead of importing from prisma
 interface OhlcBar {
@@ -19,6 +19,8 @@ interface OhlcBar {
 
 // Extended type for OhlcBar with trend indicators
 interface OhlcBarWithTrends extends OhlcBar {
+  // Note: uptrendStart and downtrendStart can coexist on the same candle
+  // This represents a "dual trend" scenario where price action shows characteristics of both trend types
   uptrendStart: boolean;
   downtrendStart: boolean;
   highestDowntrendStart: boolean;
@@ -50,6 +52,17 @@ const DOWNTREND_START_COLOR = "#f97316"; // Orange
 const HIGHEST_DOWNTREND_COLOR = "#ef4444"; // Red
 const UNBROKEN_UPTREND_COLOR = "#16a34a"; // Dark green
 const KEY_LEVEL_COLOR = "#3b82f6"; // Blue
+const DUAL_TREND_COLOR = "#9333ea"; // Purple for candles with both up and down trends
+
+// Add an interface for our custom marker data
+interface MarkerData {
+  time: Time;
+  position: 'aboveBar' | 'belowBar' | 'inBar';
+  color: string;
+  shape: 'circle' | 'square' | 'arrowUp' | 'arrowDown';
+  text?: string;
+  size?: number;
+}
 
 // Helper function to convert UTC to Eastern Time (EST/EDT) - may still be needed for display
 const convertToEasternTime = (date: Date): Date => {
@@ -83,16 +96,240 @@ interface TrendTrainingTableProps {
   debugTimestamp: (timestamp: any) => string;
 }
 
+// Custom markers configuration
+const TREND_MARKERS = {
+  uptrendStart: {
+    shape: 'arrowUp' as const,
+    color: UPTREND_START_COLOR,
+    position: 'belowBar' as const,
+    text: '▲Up',
+  },
+  downtrendStart: {
+    shape: 'arrowDown' as const,
+    color: DOWNTREND_START_COLOR,
+    position: 'aboveBar' as const,
+    text: '▼Down',
+  },
+  dualTrend: {
+    shape: 'circle' as const,
+    color: DUAL_TREND_COLOR,
+    position: 'inBar' as const,
+    text: '◆Dual',
+  },
+  highestDowntrendStart: {
+    shape: 'square' as const,
+    color: HIGHEST_DOWNTREND_COLOR,
+    position: 'aboveBar' as const,
+    text: '■High',
+  },
+  unbrokenUptrendStart: {
+    shape: 'circle' as const,
+    color: UNBROKEN_UPTREND_COLOR,
+    position: 'belowBar' as const,
+    text: '●Unbrk',
+  },
+  uptrendToHigh: {
+    shape: 'square' as const,
+    color: KEY_LEVEL_COLOR,
+    position: 'aboveBar' as const,
+    text: '■UpH',
+  },
+};
+
 // Placeholder for TrendTrainingTable - replace with actual implementation
-const TrendTrainingTable: FC<TrendTrainingTableProps> = (props) => {
-    return (
-    <div className="trend-training-table-placeholder">
-      <p>Trend Training Table (Placeholder)</p>
-      {props.data && <p>Bars: {props.data.length}</p>}
-      {props.selectedCandle && <p>Selected: {JSON.stringify(props.selectedCandle)}</p>}
+const TrendTrainingTable: FC<TrendTrainingTableProps> = React.memo((props) => {
+  const {
+    data, 
+    selectedCandle, 
+    setSelectedCandle,
+    onConfirmTrend,
+    onRemoveTrend,
+    timeframe,
+    isUpdating,
+    formatTimestampToEastern,
+  } = props;
+
+  // Filter data to only show bars with trend indicators
+  const trendBars = React.useMemo(() => {
+    return data.filter(bar => 
+      bar.uptrendStart || 
+      bar.downtrendStart || 
+      bar.highestDowntrendStart || 
+      bar.unbrokenUptrendStart || 
+      bar.uptrendToHigh
+    );
+  }, [data]);
+
+  // Handle clicking on a trend bar in the table
+  const handleSelectTrendBar = (bar: OhlcBarWithTrends, index: number) => {
+    const timestamp = bar.timestamp instanceof Date 
+      ? bar.timestamp.getTime() 
+      : new Date(bar.timestamp).getTime();
+      
+    setSelectedCandle({
+      index,
+      timestamp,
+      bar
+    });
+  };
+
+  return (
+    <div className="trend-training-table mt-4 overflow-hidden">
+      <h3 className="text-lg font-medium mb-2">Trend Training</h3>
+      {selectedCandle && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <h4 className="text-sm font-medium mb-1">Selected Candle</h4>
+          <div className="text-xs space-y-1">
+            <div>Time: {formatTimestampToEastern(selectedCandle.timestamp)}</div>
+            <div className="font-mono">
+              O: {selectedCandle.bar.open.toFixed(2)} H: {selectedCandle.bar.high.toFixed(2)} L: {selectedCandle.bar.low.toFixed(2)} C: {selectedCandle.bar.close.toFixed(2)}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button
+                onClick={() => onConfirmTrend('uptrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50"
+              >
+                Mark Uptrend Start
+              </button>
+              <button
+                onClick={() => onConfirmTrend('downtrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded disabled:opacity-50"
+              >
+                Mark Downtrend Start
+              </button>
+              <button
+                onClick={() => onConfirmTrend('highestDowntrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-50"
+              >
+                Mark Highest Downtrend
+              </button>
+              <button
+                onClick={() => onConfirmTrend('unbrokenUptrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-green-800 hover:bg-green-900 text-white rounded disabled:opacity-50"
+              >
+                Mark Unbroken Uptrend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {trendBars.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                <th className="text-left p-2">Time</th>
+                <th className="text-right p-2">Price</th>
+                <th className="text-left p-2">Trend Type</th>
+                <th className="text-center p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trendBars.map((bar, idx) => {
+                const timestamp = bar.timestamp instanceof Date 
+                  ? bar.timestamp.getTime() 
+                  : new Date(bar.timestamp).getTime();
+                
+                // Find index in original data array
+                const originalIndex = data.findIndex(d => {
+                  const dTime = d.timestamp instanceof Date 
+                    ? d.timestamp.getTime() 
+                    : new Date(d.timestamp).getTime();
+                  return dTime === timestamp;
+                });
+                
+                return (
+                  <tr 
+                    key={`${timestamp}-${idx}`}
+                    className={`border-b border-gray-200 dark:border-gray-700 cursor-pointer 
+                      hover:bg-gray-100 dark:hover:bg-gray-700 
+                      ${selectedCandle && selectedCandle.timestamp === timestamp ? 
+                        'bg-blue-100 dark:bg-blue-800/30' : ''}`}
+                    onClick={() => handleSelectTrendBar(bar, originalIndex)}
+                  >
+                    <td className="p-2">{formatTimestampToEastern(timestamp)}</td>
+                    <td className="p-2 text-right font-mono">
+                      {bar.open.toFixed(2)} → {bar.close.toFixed(2)}
+                    </td>
+                    <td className="p-2">
+                      {bar.uptrendStart && bar.downtrendStart && <span className="inline-block mr-1 text-purple-500">◆Dual</span>}
+                      {bar.uptrendStart && <span className="inline-block mr-1 text-green-600">▲Up</span>}
+                      {bar.downtrendStart && <span className="inline-block mr-1 text-orange-500">▼Down</span>}
+                      {bar.highestDowntrendStart && <span className="inline-block mr-1 text-red-500">■High</span>}
+                      {bar.unbrokenUptrendStart && <span className="inline-block mr-1 text-green-700">●Unbroken</span>}
+                      {bar.uptrendToHigh && <span className="inline-block mr-1 text-blue-500">■UpH</span>}
+                    </td>
+                    <td className="p-2 text-center">
+                      <div className="flex justify-center gap-1">
+                        {bar.uptrendStart && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveTrend(bar, 'uptrendStart');
+                            }}
+                            disabled={isUpdating}
+                            className="px-1 py-0.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded disabled:opacity-50"
+                          >
+                            ✕ Up
+                          </button>
+                        )}
+                        {bar.downtrendStart && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveTrend(bar, 'downtrendStart');
+                            }}
+                            disabled={isUpdating}
+                            className="px-1 py-0.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded disabled:opacity-50"
+                          >
+                            ✕ Down
+                          </button>
+                        )}
+                        {bar.highestDowntrendStart && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveTrend(bar, 'highestDowntrendStart');
+                            }}
+                            disabled={isUpdating}
+                            className="px-1 py-0.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded disabled:opacity-50"
+                          >
+                            ✕ High
+                          </button>
+                        )}
+                        {bar.unbrokenUptrendStart && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveTrend(bar, 'unbrokenUptrendStart');
+                            }}
+                            disabled={isUpdating}
+                            className="px-1 py-0.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded disabled:opacity-50"
+                          >
+                            ✕ Unbroken
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="p-4 text-center text-gray-500 border border-gray-200 dark:border-gray-700 rounded">
+          No trend indicators found. Click on candles in the chart to mark trend points.
+        </div>
+      )}
     </div>
   );
-};
+});
 
 // Add a utility function to normalize dates for daily timeframes
 const normalizeDateForDaily = (date: Date | string | number): string => {
@@ -140,7 +377,6 @@ const deduplicateOhlcData = (data: OhlcBarWithTrends[], isDaily: boolean): OhlcB
   return uniqueBars;
 };
 
-
 const TrendChart: React.FC<TrendChartProps> = ({ 
   data = [], 
   height = 400,
@@ -171,11 +407,19 @@ const TrendChart: React.FC<TrendChartProps> = ({
   const [clickPosition, setClickPosition] = useState<{x: number, y: number} | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>("");
   
-  // Deduplicate data based on timeframe
-  const isDailyTimeframe = timeframe.endsWith("d") || timeframe.endsWith("w") || timeframe.endsWith("M");
-  const processedData = deduplicateOhlcData(data, isDailyTimeframe);
+  // Add a ref to track marker series for cleanup
+  const markerSeriesRefs = useRef<ISeriesApi<"Line">[]>([]);
+  
+  // Update training mode when prop changes
+  useEffect(() => {
+    setTrainingMode(enableTraining);
+  }, [enableTraining]);
 
-  // Helper function to format timestamps in Eastern Time (for display)
+  // Deduplicate data based on timeframe - memoized to prevent recalculation on every render
+  const isDailyTimeframe = timeframe.endsWith("d") || timeframe.endsWith("w") || timeframe.endsWith("M");
+  const processedData = React.useMemo(() => deduplicateOhlcData(data, isDailyTimeframe), [data, isDailyTimeframe]);
+  
+  // Memoize formatting functions to prevent unnecessary rerenders
   const formatTimestampToEastern = useCallback((timestamp: number): string => {
     try {
       const date = new Date(timestamp);
@@ -191,7 +435,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
     }
   }, []);
   
-  // Helper to inspect raw timestamp value
+  // Also memoize the debug timestamp function
   const debugTimestamp = useCallback((timestamp: any): string => {
     try {
       if (timestamp instanceof Date) return `Date object: ${timestamp.toISOString()}`;
@@ -202,9 +446,42 @@ const TrendChart: React.FC<TrendChartProps> = ({
       return `Error inspecting timestamp: ${e}`;
     }
   }, []);
+
+  // Function to confirm trend for selected candle
+  const confirmTrendPoint = useCallback(async (trendType: string) => {
+    if (!selectedCandle || !onTrendConfirmed) {
+      console.error("Cannot confirm trend: no candle selected or no callback provided");
+      setError(!selectedCandle ? "No candle selected" : "Confirmation callback not provided");
+      return;
+    }
+    
+    setIsUpdating(true);
+    try {
+      const trendPoint = {
+        timestamp: selectedCandle.timestamp, // This is already a JS ms timestamp
+        price: trendType.includes('uptrend') || trendType === 'unbrokenUptrendStart' ? 
+          selectedCandle.bar.low : 
+          selectedCandle.bar.high,
+        type: trendType,
+        index: selectedCandle.index,
+        timeframe: timeframe // Pass current chart timeframe
+      };
+      
+      console.log(`Confirming trend point for LWC:`, trendPoint);
+      await onTrendConfirmed(trendPoint);
+      setSelectedCandle(null); // Reset selection
+      setError(null);
+      // Optionally trigger a re-fetch or data update if confirmation changes underlying data
+    } catch (err) {
+      console.error("Error confirming trend point:", err);
+      setError(`Failed to confirm trend: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [selectedCandle, onTrendConfirmed, timeframe]);
   
   // Function to handle removing a trend indicator
-  const removeTrendPoint = async (bar: OhlcBarWithTrends, trendType: string) => {
+  const removeTrendPoint = useCallback(async (bar: OhlcBarWithTrends, trendType: string) => {
     if (!onTrendRemoved) {
       console.error("Cannot remove trend: no callback provided");
       setError("No removal callback provided");
@@ -247,9 +524,9 @@ const TrendChart: React.FC<TrendChartProps> = ({
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, [onTrendRemoved, processedData, formatTimestampToEastern, timeframe]);
 
-  const renderTrainingTable = () => {
+  const renderTrainingTable = useCallback(() => {
     if (!enableTraining || !processedData || processedData.length === 0) return null;
     
     return (
@@ -266,18 +543,23 @@ const TrendChart: React.FC<TrendChartProps> = ({
         debugTimestamp={debugTimestamp}
       />
     );
-  };
-  
+  }, [enableTraining, processedData, selectedCandle, confirmTrendPoint, 
+      removeTrendPoint, timeframe, timeframes, isUpdating, 
+      formatTimestampToEastern, debugTimestamp]);
+
+  // Update loading state when data changes
   useEffect(() => {
-    if (enableTraining !== trainingMode) {
-      setTrainingMode(enableTraining);
+    if (data.length === 0) {
+      setIsLoading(true);
     }
-  }, [enableTraining, trainingMode]);
-  
+  }, [data]);
+
   // Effect for initializing and updating the chart
   useEffect(() => {
     if (!chartContainerRef.current || processedData.length === 0) {
-      setIsLoading(processedData.length === 0 && data.length > 0);
+      if (processedData.length === 0 && data.length > 0) {
+        setIsLoading(true);
+      }
       if (data.length > 0 && processedData.length === 0) {
         console.warn("Original data has items, but processedData is empty.");
       }
@@ -289,194 +571,574 @@ const TrendChart: React.FC<TrendChartProps> = ({
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    
-    // Initialize or update chart instance
-    if (!chartApiRef.current) {
-      chartApiRef.current = createChart(chartContainerRef.current, {
-        width: chartContainerRef.current.clientWidth,
-        height: height,
-        layout: {
-          background: { color: CHART_BACKGROUND },
-          textColor: TEXT_COLOR,
-        },
-        grid: {
-          vertLines: { color: '#2B2B43' },
-          horzLines: { color: '#2B2B43' },
-        },
-        timeScale: {
-          borderColor: '#484848',
-          timeVisible: true,
-          secondsVisible: timeframe.includes('m') || timeframe.includes('s'),
-        },
-        crosshair: {
-          mode: CrosshairMode.Magnet,
-        },
-      });
-    } else {
-      chartApiRef.current.applyOptions({ width: chartContainerRef.current.clientWidth, height });
-    }
-    
-    const chart = chartApiRef.current; // chart is guaranteed to be IChartApi here
+    // Create a cleanup flag to prevent state updates after unmounting
+    let isComponentMounted = true;
 
-    // Initialize or update series instance
-    if (!seriesApiRef.current) {
-      seriesApiRef.current = chart.addCandlestickSeries({ // This should now work
-        upColor: BULLISH_COLOR,
-        downColor: BEARISH_COLOR,
-        borderDownColor: BEARISH_COLOR,
-        borderUpColor: BULLISH_COLOR,
-        wickDownColor: BEARISH_COLOR,
-        wickUpColor: BULLISH_COLOR,
-      });
-    } 
-    // else { 
-      // If series exists, it will be updated by setData. 
-      // If options need to change, use seriesApiRef.current.applyOptions(...)
-    // }
-    
-    const series = seriesApiRef.current; // series is guaranteed to be ISeriesApi<"Candlestick"> here
-    if (!series) { // Should not happen if logic above is correct
-        console.error("Series API reference is null after initialization attempt.");
-        setError("Failed to initialize chart series.");
-            setIsLoading(false);
+    const initializeChart = () => {
+      if (!isComponentMounted) return;
+      
+      // Set loading state at the beginning
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        if (!chartContainerRef.current) return;
+
+        // Initialize or update chart instance
+        if (!chartApiRef.current) {
+          const chart = createChart(chartContainerRef.current, {
+            width: chartContainerRef.current.clientWidth,
+            height: height,
+            layout: {
+              background: { color: CHART_BACKGROUND },
+              textColor: TEXT_COLOR,
+            },
+            grid: {
+              vertLines: { color: '#2B2B43' },
+              horzLines: { color: '#2B2B43' },
+            },
+            timeScale: {
+              borderColor: '#484848',
+              timeVisible: true,
+              secondsVisible: timeframe.includes('m') || timeframe.includes('s'),
+            },
+            crosshair: {
+              mode: CrosshairMode.Magnet,
+            },
+          });
+          chartApiRef.current = chart;
+          
+          try {
+            // Add candlestick series using the correct API for lightweight-charts v5.x
+            const candleSeries = chart.addSeries(CandlestickSeries, {
+              upColor: BULLISH_COLOR,
+              downColor: BEARISH_COLOR,
+              borderVisible: true,
+              borderUpColor: BULLISH_COLOR,
+              borderDownColor: BEARISH_COLOR,
+              wickUpColor: BULLISH_COLOR,
+              wickDownColor: BEARISH_COLOR,
+            });
+            
+            seriesApiRef.current = candleSeries;
+          } catch (seriesError) {
+            console.error("Error creating candlestick series:", seriesError);
+            if (isComponentMounted) {
+              setError(`Failed to create chart series: ${seriesError instanceof Error ? seriesError.message : String(seriesError)}`);
+              setIsLoading(false);
+            }
             return;
           }
-          
-    const trendPointsForCallback: {timestamp: number; price: number; type: string; index: number}[] = [];
-    
-    const chartDataWithMarkers: CandlestickData[] = processedData.map((bar, index) => {
-      const timestamp = bar.timestamp instanceof Date ? bar.timestamp : new Date(bar.timestamp);
-      let timeValue: Time;
-      if (isDailyTimeframe) {
-        timeValue = normalizeDateForDaily(timestamp) as Time;
-          } else {
-        timeValue = (timestamp.getTime() / 1000) as UTCTimestamp;
-      }
-      
-      const markersForThisBar: SeriesMarker<Time>[] = [];
-      const addSeriesMarker = (type: string, priceVal: number, color: string, shape: 'arrowUp' | 'arrowDown' | 'circle' | 'square', text: string, position: 'aboveBar' | 'belowBar') => {
-        markersForThisBar.push({
-          time: timeValue, 
-          position: position,
-          color: color,
-          shape: shape,
-          text: text, 
-        });
-        trendPointsForCallback.push({
-          timestamp: timestamp.getTime(),
-          price: priceVal,
-          type,
-          index
-        });
-      };
-
-      if (bar.uptrendStart && bar.low) addSeriesMarker("Uptrend Start", bar.low, UPTREND_START_COLOR, 'arrowUp', 'UpS', 'belowBar');
-      if (bar.downtrendStart && bar.high) addSeriesMarker("Downtrend Start", bar.high, DOWNTREND_START_COLOR, 'arrowDown', 'DnS', 'aboveBar');
-      if (bar.highestDowntrendStart && bar.high) addSeriesMarker("Highest Downtrend", bar.high, HIGHEST_DOWNTREND_COLOR, 'arrowDown', 'HDn', 'aboveBar');
-      if (bar.unbrokenUptrendStart && bar.low) addSeriesMarker("Unbroken Uptrend", bar.low, UNBROKEN_UPTREND_COLOR, 'circle', 'UnUp', 'belowBar');
-      if (bar.uptrendToHigh && bar.high) addSeriesMarker("Uptrend to High", bar.high, KEY_LEVEL_COLOR, 'square', 'UpH', 'aboveBar');
-      
-      return {
-        time: timeValue,
-        open: bar.open,
-        high: bar.high,
-        low: bar.low,
-        close: bar.close,
-        // @ts-ignore 
-        markers: markersForThisBar.length > 0 ? markersForThisBar : undefined 
-      };
-    }).sort((a, b) => {
-        const timeA = typeof a.time === 'string' ? new Date(a.time).getTime() : (typeof a.time === 'number' ? a.time * 1000 : 0);
-        const timeB = typeof b.time === 'string' ? new Date(b.time).getTime() : (typeof b.time === 'number' ? b.time * 1000 : 0);
-        return timeA - timeB;
-    });
-
-    series.setData(chartDataWithMarkers.length > 0 ? chartDataWithMarkers : []);
-    if(chartDataWithMarkers.length === 0) {
-        setError("No valid data to display on the chart.");
-    }
-
-    if (onTrendPointsDetected && trendPointsForCallback.length > 0) {
-      onTrendPointsDetected(trendPointsForCallback);
-    }
-
-    const clickHandler = (param: any) => {
-      if (!trainingMode || !param.point || !param.time) {
-        // param.point gives {x, y} coordinates
-        // param.time gives the time of the point on the time scale
-        // param.logical gives the logical index from the left of the chart
-        // param.seriesData is a map of series to their data points at that time.
-        if (trainingMode && !param.time) {
-          console.log("Chart clicked, but no specific bar identified by Lightweight Charts.");
+        } else {
+          chartApiRef.current.applyOptions({ 
+            width: chartContainerRef.current.clientWidth, 
+            height 
+          });
         }
-        return;
-      }
 
-      // param.time is a UTCTimestamp (seconds) or a business day string (YYYY-MM-DD)
-      // We need to find the corresponding bar in our original `processedData`
-      let clickedBarIndex = -1;
-      let clickedBarData: OhlcBarWithTrends | null = null;
-      let originalTimestampValue: number | null = null;
-
-      if (typeof param.time === 'string') { // Daily/Weekly/Monthly
-        const clickedDateStr = param.time;
-        clickedBarIndex = processedData.findIndex(b => normalizeDateForDaily(b.timestamp) === clickedDateStr);
-      } else { // Intraday (UTCTimestamp in seconds)
-        const clickedTimeSeconds = param.time;
-        clickedBarIndex = processedData.findIndex(b => {
-          const barTime = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
-          return Math.floor(barTime.getTime() / 1000) === clickedTimeSeconds;
-        });
-      }
-
-      if (clickedBarIndex !== -1) {
-        clickedBarData = processedData[clickedBarIndex];
-        originalTimestampValue = (clickedBarData.timestamp instanceof Date ? clickedBarData.timestamp : new Date(clickedBarData.timestamp)).getTime();
+        const chart = chartApiRef.current;
+        const series = seriesApiRef.current;
         
-        setSelectedCandle({
-          index: clickedBarIndex,
-          timestamp: originalTimestampValue, // Use original JS timestamp for consistency
-          bar: clickedBarData,
-          // Add LWC specific info if needed, e.g., param.logical
+        if (!series) {
+          console.error("Series API reference is null after initialization attempt.");
+          if (isComponentMounted) {
+            setError("Failed to initialize chart series.");
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // Create a local variable to collect trend points, but don't update state yet
+        const localTrendPoints: {timestamp: number; price: number; type: string; index: number}[] = [];
+        
+        const chartDataWithMarkers: CandlestickData[] = processedData.map((bar, index) => {
+          const timestamp = bar.timestamp instanceof Date ? bar.timestamp : new Date(bar.timestamp);
+          let timeValue: Time;
+          if (isDailyTimeframe) {
+            timeValue = normalizeDateForDaily(timestamp) as Time;
+          } else {
+            timeValue = (timestamp.getTime() / 1000) as UTCTimestamp;
+          }
+          
+          // Define markers array and custom bar styling
+          const markers: SeriesMarker<Time>[] = [];
+          let customBarColor: string | undefined = undefined;
+          let customWickColor: string | undefined = undefined;
+          let customBorderColor: string | undefined = undefined;
+          
+          // First check for dual trend (both up and down)
+          if (bar.uptrendStart && bar.downtrendStart) {
+            // Special case: Dual trend (both up and down)
+            const marker = TREND_MARKERS.dualTrend;
+            markers.push({
+              time: timeValue,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+            });
+            
+            localTrendPoints.push({
+              timestamp: timestamp.getTime(),
+              price: (bar.high + bar.low) / 2, // Middle price point
+              type: 'dualTrend',
+              index
+            });
+            
+            // Set custom bar colors for this dual trend type
+            customBarColor = DUAL_TREND_COLOR;
+            customWickColor = DUAL_TREND_COLOR;
+            customBorderColor = DUAL_TREND_COLOR;
+          } 
+          // Then handle individual trend types
+          else {
+            if (bar.uptrendStart) {
+              const marker = TREND_MARKERS.uptrendStart;
+              markers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+              
+              // Add this trend point to our collection for callback
+              localTrendPoints.push({
+                timestamp: timestamp.getTime(),
+                price: bar.low,
+                type: 'uptrendStart',
+                index
+              });
+              
+              // Set custom bar colors for this trend type
+              customBarColor = UPTREND_START_COLOR;
+              customWickColor = UPTREND_START_COLOR;
+              customBorderColor = UPTREND_START_COLOR;
+            }
+            
+            if (bar.downtrendStart) {
+              const marker = TREND_MARKERS.downtrendStart;
+              markers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+              
+              localTrendPoints.push({
+                timestamp: timestamp.getTime(),
+                price: bar.high,
+                type: 'downtrendStart',
+                index
+              });
+              
+              // Set custom bar colors for this trend type if not already set by uptrendStart
+              if (!customBarColor) {
+                customBarColor = DOWNTREND_START_COLOR;
+                customWickColor = DOWNTREND_START_COLOR;
+                customBorderColor = DOWNTREND_START_COLOR;
+              }
+            }
+          }
+          
+          if (bar.highestDowntrendStart) {
+            const marker = TREND_MARKERS.highestDowntrendStart;
+            markers.push({
+              time: timeValue,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+            });
+            
+            localTrendPoints.push({
+              timestamp: timestamp.getTime(),
+              price: bar.high,
+              type: 'highestDowntrendStart',
+              index
+            });
+            
+            // Set custom bar colors for this trend type
+            customBarColor = HIGHEST_DOWNTREND_COLOR;
+            customWickColor = HIGHEST_DOWNTREND_COLOR;
+            customBorderColor = HIGHEST_DOWNTREND_COLOR;
+          }
+          
+          if (bar.unbrokenUptrendStart) {
+            const marker = TREND_MARKERS.unbrokenUptrendStart;
+            markers.push({
+              time: timeValue,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+            });
+            
+            localTrendPoints.push({
+              timestamp: timestamp.getTime(),
+              price: bar.low,
+              type: 'unbrokenUptrendStart',
+              index
+            });
+            
+            // Set custom bar colors for this trend type
+            customBarColor = UNBROKEN_UPTREND_COLOR;
+            customWickColor = UNBROKEN_UPTREND_COLOR;
+            customBorderColor = UNBROKEN_UPTREND_COLOR;
+          }
+          
+          if (bar.uptrendToHigh) {
+            const marker = TREND_MARKERS.uptrendToHigh;
+            markers.push({
+              time: timeValue,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+            });
+            
+            localTrendPoints.push({
+              timestamp: timestamp.getTime(),
+              price: bar.high,
+              type: 'uptrendToHigh',
+              index
+            });
+            
+            // Set custom bar colors for this trend type
+            customBarColor = KEY_LEVEL_COLOR;
+            customWickColor = KEY_LEVEL_COLOR;
+            customBorderColor = KEY_LEVEL_COLOR;
+          }
+
+          // Create the bar data with potential custom styling
+          const barData: CandlestickData = {
+            time: timeValue,
+            open: bar.open,
+            high: bar.high,
+            low: bar.low,
+            close: bar.close
+          };
+
+          // Add custom styling if this is a trend bar
+          if (customBarColor) {
+            // @ts-ignore - Add custom properties for bar coloring
+            barData.color = customBarColor;
+            // @ts-ignore
+            barData.wickColor = customWickColor;
+            // @ts-ignore
+            barData.borderColor = customBorderColor;
+          }
+          
+          // Instead of attaching markers to bar data, collect them for the series
+          return barData;
+        }).sort((a, b) => {
+          const timeA = typeof a.time === 'string' ? new Date(a.time).getTime() : (typeof a.time === 'number' ? a.time * 1000 : 0);
+          const timeB = typeof b.time === 'string' ? new Date(b.time).getTime() : (typeof b.time === 'number' ? b.time * 1000 : 0);
+          return timeA - timeB;
         });
-        setDebugInfo(`Selected: ${formatTimestampToEastern(originalTimestampValue)}`);
 
-        // Highlight selected candle - LWC doesn't have direct "highlight annotation" like SciChart.
-        // We can re-set markers or use price lines. For now, selection is managed in the table.
-        // A more visual way would be to draw a temporary price line or a custom HTML marker.
+        // Define the resize handler
+        const handleResize = () => {
+          if (chartContainerRef.current && chartApiRef.current) {
+            chartApiRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+          }
+        };
+        window.addEventListener('resize', handleResize);
 
-      } else {
-        console.warn("Could not map click time to data point:", param.time);
-        setDebugInfo("Could not map click to data.");
-        setSelectedCandle(null);
+        // Update series data
+        try {
+          series.setData(chartDataWithMarkers.length > 0 ? chartDataWithMarkers : []);
+          
+          // Clean up previous markers if they exist
+          if (markerSeriesRefs.current.length > 0 && chartApiRef.current) {
+            console.log(`Cleaning up ${markerSeriesRefs.current.length} previous markers`);
+            markerSeriesRefs.current.forEach(markerSeries => {
+              try {
+                chartApiRef.current?.removeSeries(markerSeries);
+              } catch (e) {
+                console.warn("Error removing marker series:", e);
+              }
+            });
+            markerSeriesRefs.current = [];
+          }
+          
+          // Collect all markers from all bars
+          const allMarkers: SeriesMarker<Time>[] = [];
+          processedData.forEach((bar, index) => {
+            const timestamp = bar.timestamp instanceof Date ? bar.timestamp : new Date(bar.timestamp);
+            let timeValue: Time;
+            if (isDailyTimeframe) {
+              timeValue = normalizeDateForDaily(timestamp) as Time;
+            } else {
+              timeValue = (timestamp.getTime() / 1000) as UTCTimestamp;
+            }
+            
+            if (bar.uptrendStart) {
+              const marker = TREND_MARKERS.uptrendStart;
+              allMarkers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+            }
+            
+            if (bar.downtrendStart) {
+              const marker = TREND_MARKERS.downtrendStart;
+              allMarkers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+            }
+            
+            if (bar.highestDowntrendStart) {
+              const marker = TREND_MARKERS.highestDowntrendStart;
+              allMarkers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+            }
+            
+            if (bar.unbrokenUptrendStart) {
+              const marker = TREND_MARKERS.unbrokenUptrendStart;
+              allMarkers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+            }
+            
+            if (bar.uptrendToHigh) {
+              const marker = TREND_MARKERS.uptrendToHigh;
+              allMarkers.push({
+                time: timeValue,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+              });
+            }
+          });
+          
+          // Set markers on the series correctly
+          if (allMarkers.length > 0 && chartApiRef.current) {
+            console.log(`Setting ${allMarkers.length} markers on chart`);
+            
+            // For Lightweight Charts v5+, we need a different approach for markers
+            // Create a specific marker series
+            // Create a marker renderer using a line series with custom markers
+            try {
+              const chart = chartApiRef.current; // Store reference to avoid null checks
+              // Add markers near their respective price points
+              allMarkers.forEach(marker => {
+                // Find the bar that corresponds to this marker time
+                const barForMarker = processedData.find(bar => {
+                  const barTime = bar.timestamp instanceof Date ? 
+                    bar.timestamp : new Date(bar.timestamp);
+                  let barTimeValue;
+                  if (isDailyTimeframe) {
+                    barTimeValue = normalizeDateForDaily(barTime) as Time;
+                  } else {
+                    barTimeValue = (barTime.getTime() / 1000) as UTCTimestamp;
+                  }
+                  return barTimeValue === marker.time;
+                });
+                
+                if (barForMarker) {
+                  // Create a point series for the marker - use standard options only
+                  const markerSeries = chart.addSeries(LineSeries, {
+                    color: marker.color,
+                    lastValueVisible: false,
+                    priceLineVisible: false,
+                    lineVisible: false,
+                    // Add internal name for debugging and series management
+                    title: `${marker.text}-${new Date(barForMarker.timestamp).toISOString().split('T')[0]}`,
+                    // Use dot-style markers which are supported in all LWC versions
+                    pointMarkersVisible: true,
+                    pointMarkersRadius: 5,
+                  });
+                  
+                  // Save reference for cleanup
+                  markerSeriesRefs.current.push(markerSeries);
+                  
+                  // Add a single point with a custom marker - directly on the bar
+                  // Get the appropriate price point based on marker type
+                  let markerPrice: number;
+                  if (marker.position === 'aboveBar') {
+                    markerPrice = barForMarker.high; // Exact high price of the bar
+                  } else if (marker.position === 'belowBar') {
+                    markerPrice = barForMarker.low; // Exact low price of the bar
+                  } else {
+                    // For other positions, use close price
+                    markerPrice = barForMarker.close;
+                  }
+                  
+                  // Create marker data with appropriate shape
+                  markerSeries.setData([
+                    {
+                      time: marker.time,
+                      value: markerPrice,
+                    }
+                  ]);
+                  
+                  // Log marker creation for debugging
+                  console.log(`Created marker: ${marker.text} at ${new Date(barForMarker.timestamp).toLocaleDateString()} Price: ${markerPrice}`);
+                  
+           
+
+                  // Create a second marker series with a different visualization
+                  // This gives us different visual elements at the same point
+                  try {
+                    // Create a constant line series for visual effect
+                    const highlightSeries = chart.addSeries(LineSeries, {
+                      color: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white
+                      lineVisible: false,
+                      lastValueVisible: false,
+                      priceLineVisible: false,
+                      // Better visual dots (fallback for older LWC versions)
+                      pointMarkersVisible: true,
+                      pointMarkersRadius: 3,
+                      title: `highlight-${marker.text}`,
+                    });
+                    
+                    // Add to tracked series for cleanup
+                    markerSeriesRefs.current.push(highlightSeries);
+                    
+                    // Add the highlight point
+                    highlightSeries.setData([{
+                      time: marker.time,
+                      value: markerPrice,
+                    }]);
+                  } catch (highlightErr) {
+                    console.warn("Could not create highlight marker:", highlightErr);
+                  }
+                }
+              });
+            } catch (markerError) {
+              console.error("Error setting up markers:", markerError);
+            }
+          }
+        } catch (dataError) {
+          console.error("Error setting chart data:", dataError);
+          if (isComponentMounted) {
+            setError(`Failed to set chart data: ${dataError instanceof Error ? dataError.message : String(dataError)}`);
+          }
+        }
+        
+        if (chartDataWithMarkers.length === 0) {
+          if (isComponentMounted) {
+            setError("No valid data to display on the chart.");
+          }
+        }
+        
+        // Set loading to false once the chart is fully initialized
+        if (isComponentMounted) {
+          setIsLoading(false);
+        }
+        
+        // Setup event handlers if needed
+        if (isComponentMounted && trainingMode) {
+          const clickHandler = (param: any) => {
+            if (!trainingMode || !param.point || !param.time) {
+              if (trainingMode && !param.time) {
+                console.log("Chart clicked, but no specific bar identified by Lightweight Charts.");
+              }
+              return;
+            }
+            
+            // Find the clicked bar
+            let clickedBarIndex = -1;
+            let clickedBarData: OhlcBarWithTrends | null = null;
+            let originalTimestampValue: number | null = null;
+            
+            try {
+              if (typeof param.time === 'string') {
+                // Daily timeframes (YYYY-MM-DD format)
+                const clickedDateStr = param.time;
+                clickedBarIndex = processedData.findIndex(b => normalizeDateForDaily(b.timestamp) === clickedDateStr);
+              } else {
+                // Intraday timeframes (seconds timestamp)
+                const clickedTimeSeconds = param.time;
+                clickedBarIndex = processedData.findIndex(b => {
+                  const barTime = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+                  return Math.floor(barTime.getTime() / 1000) === clickedTimeSeconds;
+                });
+              }
+              
+              if (clickedBarIndex !== -1) {
+                clickedBarData = processedData[clickedBarIndex];
+                originalTimestampValue = (clickedBarData.timestamp instanceof Date ? clickedBarData.timestamp : new Date(clickedBarData.timestamp)).getTime();
+                
+                setSelectedCandle({
+                  index: clickedBarIndex,
+                  timestamp: originalTimestampValue,
+                  bar: clickedBarData
+                });
+                setDebugInfo(`Selected: ${formatTimestampToEastern(originalTimestampValue)}`);
+              } else {
+                console.warn("Could not map click time to data point:", param.time);
+                setDebugInfo("Could not map click to data.");
+                setSelectedCandle(null);
+              }
+            } catch (clickError) {
+              console.error("Error handling chart click:", clickError);
+            }
+          };
+          
+          chart.subscribeClick(clickHandler);
+          
+          // Store the click handler reference for cleanup
+          const currentClickHandler = clickHandler; 
+          
+          // Use a delayed callback for trend points to avoid render loop issues
+          if (onTrendPointsDetected && localTrendPoints.length > 0) {
+            const pointsToSend = [...localTrendPoints];
+            setTimeout(() => {
+              if (isComponentMounted && onTrendPointsDetected) {
+                onTrendPointsDetected(pointsToSend);
+              }
+            }, 0);
+          }
+        }
+        
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          // Any other cleanup needed
+        };
+      } catch (err) {
+        console.error("Error initializing chart:", err);
+        if (isComponentMounted) {
+          setError(`Chart initialization failed: ${err instanceof Error ? err.message : String(err)}`);
+          setIsLoading(false);
+        }
       }
     };
-
-    let currentClickHandler = clickHandler;
-    if (trainingMode) {
-      chart.subscribeClick(currentClickHandler);
-    }
-
-    const handleResize = () => {
-      if (chartContainerRef.current && chartApiRef.current) {
-        chartApiRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
-      }
-    };
-    window.addEventListener('resize', handleResize);
     
-    setIsLoading(false);
-
+    // Call initialize function with a short delay to avoid render issues
+    const initTimeout = setTimeout(initializeChart, 0);
+    
+    // Cleanup function
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (chartApiRef.current && currentClickHandler) {
-        chartApiRef.current.unsubscribeClick(currentClickHandler);
-      }
+      isComponentMounted = false;
+      clearTimeout(initTimeout);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedData, height, trainingMode, timeframe, onTrendPointsDetected, formatTimestampToEastern, isDailyTimeframe]);
+  }, [processedData, height, trainingMode, timeframe, isDailyTimeframe]);
 
+  // Whenever onTrendPointsDetected changes (like on first mount), avoid re-rendering chart
+  useEffect(() => {
+    // This is intentionally empty to capture onTrendPointsDetected changes
+    // without triggering chart reinitialization
+  }, [onTrendPointsDetected]);
 
   // Effect for full chart cleanup on unmount
   useEffect(() => {
@@ -491,62 +1153,55 @@ const TrendChart: React.FC<TrendChartProps> = ({
   }, []);
 
   
-  // Function to confirm trend for selected candle
-  const confirmTrendPoint = async (trendType: string) => {
-    if (!selectedCandle || !onTrendConfirmed) {
-      console.error("Cannot confirm trend: no candle selected or no callback provided");
-      setError(!selectedCandle ? "No candle selected" : "Confirmation callback not provided");
-      return;
-    }
-    
-    setIsUpdating(true);
-    try {
-      const trendPoint = {
-        timestamp: selectedCandle.timestamp, // This is already a JS ms timestamp
-        price: trendType.includes('uptrend') || trendType === 'unbrokenUptrendStart' ? 
-          selectedCandle.bar.low : 
-          selectedCandle.bar.high,
-        type: trendType,
-        index: selectedCandle.index,
-        timeframe: timeframe // Pass current chart timeframe
-      };
-      
-      console.log(`Confirming trend point for LWC:`, trendPoint);
-        await onTrendConfirmed(trendPoint);
-      setSelectedCandle(null); // Reset selection
-        setError(null);
-      // Optionally trigger a re-fetch or data update if confirmation changes underlying data
-    } catch (err) {
-      console.error("Error confirming trend point:", err);
-      setError(`Failed to confirm trend: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-  
   // Render training UI overlay
-  const renderTrainingControls = (): ReactNode => {
+  const renderTrainingControls = useCallback((): ReactNode => {
     if (!enableTraining) return null;
-    // Placeholder for actual TrainingControls implementation
-    // This should ideally use the selectedCandle state to display info and buttons
+    
     return (
-      <div className="training-controls-placeholder">
-        <h3>Trend Training Controls (Placeholder)</h3>
-            {selectedCandle ? (
-          <div>
-            <p>Selected: Index {selectedCandle.index}, Time: {formatTimestampToEastern(selectedCandle.timestamp)}</p>
-            <p>O: {selectedCandle.bar.open.toFixed(2)} H: {selectedCandle.bar.high.toFixed(2)} L: {selectedCandle.bar.low.toFixed(2)} C: {selectedCandle.bar.close.toFixed(2)}</p>
-            {/* Add buttons for confirming trend types */}
-            <button onClick={() => confirmTrendPoint('uptrendStart')} disabled={isUpdating}>Mark Uptrend Start</button>
-            {/* ... other buttons ... */}
-              </div>
-            ) : (
-          <p>Click on a candle in the chart to select it for training.</p>
+      <div className="training-controls p-2 bg-gray-100 dark:bg-gray-800 rounded">
+        <h3 className="text-sm font-medium mb-2">Trend Training Controls</h3>
+        {selectedCandle ? (
+          <div className="space-y-2">
+            <p className="text-xs">Selected: Index {selectedCandle.index}, Time: {formatTimestampToEastern(selectedCandle.timestamp)}</p>
+            <p className="text-xs">O: {selectedCandle.bar.open.toFixed(2)} H: {selectedCandle.bar.high.toFixed(2)} L: {selectedCandle.bar.low.toFixed(2)} C: {selectedCandle.bar.close.toFixed(2)}</p>
+            <div className="flex flex-wrap gap-1 mt-1">
+              <button 
+                onClick={() => confirmTrendPoint('uptrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50"
+              >
+                Mark Uptrend Start
+              </button>
+              <button 
+                onClick={() => confirmTrendPoint('downtrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded disabled:opacity-50"
+              >
+                Mark Downtrend Start
+              </button>
+              <button 
+                onClick={() => confirmTrendPoint('highestDowntrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-50"
+              >
+                Mark Highest Downtrend
+              </button>
+              <button 
+                onClick={() => confirmTrendPoint('unbrokenUptrendStart')}
+                disabled={isUpdating}
+                className="px-2 py-1 text-xs bg-green-800 hover:bg-green-900 text-white rounded disabled:opacity-50"
+              >
+                Mark Unbroken Uptrend
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs">Click on a candle in the chart to select it for training.</p>
         )}
-        {isUpdating && <p>Updating...</p>}
+        {isUpdating && <p className="text-xs mt-2 text-blue-500">Updating...</p>}
       </div>
     );
-  };
+  }, [enableTraining, selectedCandle, isUpdating, formatTimestampToEastern, confirmTrendPoint]);
   
   return (
     <div className="space-y-4">
@@ -569,13 +1224,9 @@ const TrendChart: React.FC<TrendChartProps> = ({
           ref={chartContainerRef}
           style={{ width: "100%", height: `${height}px` }}
           className="bg-gray-900"
-          // Removed direct onClick from here as LWC handles its own click events
         />
         
-        {/* Visual indicator of click position for debugging - LWC click provides data directly */}
-        {/* {trainingMode && clickPosition && ( ... )} */}
-        
-        {/* Debug info overlay */}
+        {/* Training mode debug overlay */}
         {trainingMode && (
           <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-2 rounded text-xs z-40 max-w-xs max-h-32 overflow-auto">
             <div>Training active: {trainingMode ? "YES" : "NO"}</div>
@@ -587,16 +1238,10 @@ const TrendChart: React.FC<TrendChartProps> = ({
       
       {renderTrainingTable()}
       
-      {/* Tooltip styling is generally handled by LWC's default, or custom HTML tooltips via API */}
-      {/* Removed <style> block for SciChart tooltips */}
-      
       <div className="text-sm text-center text-gray-500">
         <p>Drag to pan • Use mouse wheel to zoom • Double-click to reset view • Hover for details</p>
         {processedData && processedData.length > 0 ? (
-          <>
-            <p className="text-xs mt-1">Showing {processedData.length} bars</p>
-            {/* Lightweight Charts handles time scale display, so remove "with compressed time" etc. unless we add custom logic for it */}
-          </>
+          <p className="text-xs mt-1">Showing {processedData.length} bars</p>
         ) : (
           <p className="text-xs mt-1 text-red-500">No data available</p>
         )}

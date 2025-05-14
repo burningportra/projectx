@@ -25,6 +25,11 @@ from src.data.validation import validate_bars
 
 
 # Default timeframes to download if none specified
+# These are string representations that map to the database as follows:
+# - "Xm" = timeframe_unit=2 (minute), timeframe_value=X
+# - "Xh" = timeframe_unit=3 (hour), timeframe_value=X
+# - "Xd" = timeframe_unit=4 (day), timeframe_value=X
+# - "Xw" = timeframe_unit=5 (week), timeframe_value=X
 DEFAULT_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
 
 

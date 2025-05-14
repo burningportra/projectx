@@ -148,7 +148,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/kevtrinh/Github/projectx/web/src/generated/prisma",
+      "value": "/Users/kevtrinh/Code/projectx/web/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -162,11 +162,12 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/kevtrinh/Github/projectx/web/prisma/schema.prisma",
+    "sourceFilePath": "/Users/kevtrinh/Code/projectx/web/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.7.0",
@@ -186,7 +187,7 @@ const config = {
   },
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel OhlcBar {\n  id             Int      @id @default(autoincrement())\n  contractId     String   @map(\"contract_id\")\n  timestamp      DateTime @db.Timestamptz(6)\n  open           Float\n  high           Float\n  low            Float\n  close          Float\n  volume         Float?\n  timeframeUnit  Int      @map(\"timeframe_unit\")\n  timeframeValue Int      @map(\"timeframe_value\")\n\n  @@index([contractId], map: \"idx_bars_contract\")\n  @@index([contractId, timeframeUnit, timeframeValue], map: \"idx_bars_contract_timeframe\")\n  @@index([timeframeUnit, timeframeValue], map: \"idx_bars_timeframe\")\n  @@map(\"ohlc_bars\")\n}\n\nmodel TrendPoint {\n  id         Int      @id @default(autoincrement())\n  contractId String   @map(\"contract_id\")\n  timestamp  DateTime @db.Timestamptz(6)\n  price      Float\n  type       String\n  timeframe  String\n  createdAt  DateTime @default(now()) @map(\"created_at\")\n  updatedAt  DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([contractId, timestamp, type])\n  @@index([contractId, timeframe])\n  @@map(\"trend_points\")\n}\n",
   "inlineSchemaHash": "0666b6ca42c42fedacae0fcc742552e1bb89d4f3375f0d988556b177d3eb0e4d",
-  "copyEngine": true
+  "copyEngine": false
 }
 
 const fs = require('fs')
@@ -223,9 +224,3 @@ const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
-// file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "src/generated/prisma/libquery_engine-darwin-arm64.dylib.node")
-// file annotations for bundling tools to include these files
-path.join(__dirname, "schema.prisma");
-path.join(process.cwd(), "src/generated/prisma/schema.prisma")

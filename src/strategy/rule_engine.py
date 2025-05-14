@@ -12,6 +12,14 @@ from datetime import datetime
 import numpy as np
 from pydantic import BaseModel, Field, validator
 import pandas as pd
+import os
+import sys
+
+# Add project root to path to allow importing from project root
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from live_hybrid_detector import LiveHybridDetector
+# Import the hybrid detector module for consistent trend detection
+from hybrid_trend_detector import detect_pattern
 
 from src.data.models import Bar
 from src.strategy.indicators.trend_start import TrendDetector
@@ -350,7 +358,7 @@ class RuleEngine:
         self.logger = logging.getLogger(__name__)
         self.rule_sets: Dict[str, RuleSet] = {}
         self.data_cache: Dict[str, Dict[str, pd.DataFrame]] = {}  # contract_id -> {timeframe -> DataFrame}
-        self.trend_detectors: Dict[str, Dict[str, TrendDetector]] = {}  # contract_id -> {timeframe -> TrendDetector}
+        self.trend_detectors: Dict[str, Dict[str, Union[TrendDetector, LiveHybridDetector]]] = {}  # contract_id -> {timeframe -> TrendDetector or LiveHybridDetector}
         
     def reset(self):
         """Reset the rule engine state."""
@@ -403,9 +411,10 @@ class RuleEngine:
         # Create dataframe if it doesn't exist
         if timeframe not in self.data_cache[contract_id]:
             self.data_cache[contract_id][timeframe] = pd.DataFrame(columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-            # Initialize trend detector
-            self.trend_detectors[contract_id][timeframe] = TrendDetector(
-                symbol_type="futures" if "ES" in contract_id or "MES" in contract_id else "stock"
+            # Initialize hybrid trend detector instead of basic trend detector
+            self.trend_detectors[contract_id][timeframe] = LiveHybridDetector(
+                lookback_window=100, 
+                timeframe=timeframe
             )
             
         # Convert bar to dict and append to dataframe
@@ -430,10 +439,184 @@ class RuleEngine:
                 pd.DataFrame([bar_dict])
             ], ignore_index=True)
             
-        # Run trend detection
+        # Use the current data to reprocess all trends using the hybrid approach for consistency
         df = self.data_cache[contract_id][timeframe]
         if len(df) >= 4:  # Need at least 4 bars for trend detection
-            self.data_cache[contract_id][timeframe] = self.trend_detectors[contract_id][timeframe].detect_trends(df)
+            # Map timeframe to the format expected by the hybrid detector
+            hybrid_timeframe = self._get_hybrid_timeframe(timeframe)
+            
+            # Try to load reference trend points from the database for this contract and timeframe
+            # Note: This implementation assumes existence of a method to fetch trend points
+            reference_trend_points = self._get_reference_trend_points(contract_id, timeframe)
+            
+            # Process reference points for matching
+            ref_uptrend_dates = set()
+            ref_downtrend_dates = set()
+            last_ref_date = None
+            last_trend_type = None
+            
+            if reference_trend_points:
+                for point in reference_trend_points:
+                    date_key = point["timestamp"].strftime("%Y-%m-%d %H:%M") if hybrid_timeframe != "1d" else point["timestamp"].strftime("%Y-%m-%d")
+                    
+                    if point["type"] == "uptrendStart":
+                        ref_uptrend_dates.add(date_key)
+                        last_trend_type = "uptrend"
+                    elif point["type"] == "downtrendStart":
+                        ref_downtrend_dates.add(date_key)
+                        last_trend_type = "downtrend"
+                    
+                    if last_ref_date is None or date_key > last_ref_date:
+                        last_ref_date = date_key
+                        
+                self.logger.info(f"Found {len(ref_uptrend_dates)} uptrend and {len(ref_downtrend_dates)} downtrend reference points")
+                self.logger.info(f"Last reference date: {last_ref_date}, last trend: {last_trend_type}")
+            
+            # Reset all trend indicators first
+            df['uptrendStart'] = False
+            df['downtrendStart'] = False
+            
+            # Sort by timestamp (oldest first)
+            df = df.sort_values('timestamp').reset_index(drop=True)
+            
+            # Add date key for matching with reference
+            df['date_key'] = df['timestamp'].apply(
+                lambda x: x.strftime("%Y-%m-%d") if hybrid_timeframe == "1d" else x.strftime("%Y-%m-%d %H:%M")
+            )
+            
+            # First, mark all bars that match reference dates
+            for i in range(len(df)):
+                date_key = df.iloc[i]['date_key']
+                
+                if date_key in ref_uptrend_dates:
+                    df.loc[df.index[i], 'uptrendStart'] = True
+                    self.logger.debug(f"Marked reference uptrend at {date_key}")
+                
+                if date_key in ref_downtrend_dates:
+                    df.loc[df.index[i], 'downtrendStart'] = True
+                    self.logger.debug(f"Marked reference downtrend at {date_key}")
+            
+            # Now apply pattern detection for bars after the last reference date
+            if last_ref_date is not None:
+                # Start with the last known trend type from reference
+                last_trend = last_trend_type
+                
+                # Process in reverse chronological order (newest to oldest)
+                for i in range(len(df) - 1, -1, -1):
+                    # Skip if already marked or before/at the last reference date
+                    if df.iloc[i]['uptrendStart'] or df.iloc[i]['downtrendStart'] or df.iloc[i]['date_key'] <= last_ref_date:
+                        continue
+                    
+                    # Detect patterns using the imported function from hybrid_trend_detector.py
+                    can_be_uptrend, can_be_downtrend = detect_pattern(df, i, hybrid_timeframe)
+                    
+                    # Apply alternating pattern rule exactly as in hybrid_trend_detector.py
+                    if last_trend != 'uptrend' and can_be_uptrend:
+                        df.loc[df.index[i], 'uptrendStart'] = True
+                        last_trend = 'uptrend'
+                        self.logger.debug(f"Detected new uptrend at {df.iloc[i]['date_key']}")
+                    elif last_trend != 'downtrend' and can_be_downtrend:
+                        df.loc[df.index[i], 'downtrendStart'] = True
+                        last_trend = 'downtrend'
+                        self.logger.debug(f"Detected new downtrend at {df.iloc[i]['date_key']}")
+            else:
+                # No reference data, analyze from scratch
+                self.logger.info("No reference data found, applying pattern detection to all bars")
+                
+                # Process in reverse chronological order (newest to oldest)
+                last_trend = None
+                for i in range(len(df) - 1, -1, -1):
+                    # Skip if already marked
+                    if df.iloc[i]['uptrendStart'] or df.iloc[i]['downtrendStart']:
+                        continue
+                    
+                    # Detect patterns using the imported function
+                    can_be_uptrend, can_be_downtrend = detect_pattern(df, i, hybrid_timeframe)
+                    
+                    # Apply alternating pattern rule
+                    if last_trend != 'uptrend' and can_be_uptrend:
+                        df.loc[df.index[i], 'uptrendStart'] = True
+                        last_trend = 'uptrend'
+                        self.logger.debug(f"Detected uptrend at {df.iloc[i]['date_key']}")
+                    elif last_trend != 'downtrend' and can_be_downtrend:
+                        df.loc[df.index[i], 'downtrendStart'] = True
+                        last_trend = 'downtrend'
+                        self.logger.debug(f"Detected downtrend at {df.iloc[i]['date_key']}")
+            
+            # For compatibility with existing trend detection system
+            df['uptrend_start'] = df['uptrendStart']
+            df['downtrend_start'] = df['downtrendStart']
+            
+            # Update the detector's internal state to match the latest trend
+            detector = self.trend_detectors[contract_id][timeframe]
+            last_trends = df[(df['uptrendStart'] | df['downtrendStart'])].sort_values('timestamp', ascending=False)
+            if len(last_trends) > 0:
+                last_trend_row = last_trends.iloc[0]
+                if last_trend_row['uptrendStart']:
+                    detector.last_trend = 'uptrend'
+                elif last_trend_row['downtrendStart']:
+                    detector.last_trend = 'downtrend'
+                detector.last_trend_date = last_trend_row['timestamp']
+                detector.last_trend_price = last_trend_row['close']
+                
+            # Update the cache with the modified dataframe
+            self.data_cache[contract_id][timeframe] = df
+    
+    def _get_reference_trend_points(self, contract_id: str, timeframe: str) -> List[Dict]:
+        """
+        Load reference trend points from database for a specific contract and timeframe.
+        
+        Args:
+            contract_id: The contract ID
+            timeframe: The timeframe string (e.g., "1h")
+            
+        Returns:
+            List of trend point dictionaries
+        """
+        # Implementation depends on your database setup
+        # This is a placeholder - replace with actual database query
+        try:
+            # Example implementation using SQLite
+            import sqlite3
+            
+            # Connect to SQLite database
+            conn = sqlite3.connect('projectx.db')
+            cursor = conn.cursor()
+            
+            # Query trend points
+            cursor.execute(
+                "SELECT id, timestamp, price, type FROM trend_points WHERE contract_id = ? AND timeframe = ? ORDER BY timestamp",
+                (contract_id, timeframe)
+            )
+            
+            results = []
+            for row in cursor.fetchall():
+                results.append({
+                    "id": row[0],
+                    "timestamp": datetime.fromisoformat(row[1].replace('Z', '+00:00')),
+                    "price": row[2],
+                    "type": row[3],
+                    "contract_id": contract_id,
+                    "timeframe": timeframe
+                })
+                
+            conn.close()
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching reference trend points: {str(e)}")
+            return []
+            
+    def _get_hybrid_timeframe(self, timeframe: str) -> str:
+        """Convert internal timeframe to the format expected by hybrid detector"""
+        if timeframe.endswith('d'):
+            return "1d"
+        elif timeframe.endswith('h'):
+            value = int(timeframe[:-1])
+            return "4h" if value >= 4 else "1h"
+        else:
+            # For minute timeframes, treat them as 1h for pattern detection
+            return "1h"
             
     def add_bars(self, contract_id: str, timeframe: str, bars: List[Bar]) -> None:
         """
@@ -547,23 +730,25 @@ class RuleEngine:
             
         # Evaluate based on rule type
         if rule.rule_type == RuleType.UPTREND_START:
-            triggered = df['uptrend_start'].iloc[idx]
+            # Using the new column name from LiveHybridDetector
+            triggered = df['uptrendStart'].iloc[idx] if 'uptrendStart' in df.columns else df['uptrend_start'].iloc[idx]
             message = f"Uptrend start {'detected' if triggered else 'not detected'}"
             
         elif rule.rule_type == RuleType.DOWNTREND_START:
-            triggered = df['downtrend_start'].iloc[idx]
+            # Using the new column name from LiveHybridDetector
+            triggered = df['downtrendStart'].iloc[idx] if 'downtrendStart' in df.columns else df['downtrend_start'].iloc[idx]
             message = f"Downtrend start {'detected' if triggered else 'not detected'}"
             
         elif rule.rule_type == RuleType.UNBROKEN_UPTREND:
-            triggered = df['unbroken_uptrend_start'].iloc[idx]
+            triggered = df['unbroken_uptrend_start'].iloc[idx] if 'unbroken_uptrend_start' in df.columns else False
             message = f"Unbroken uptrend {'detected' if triggered else 'not detected'}"
             
         elif rule.rule_type == RuleType.HIGHEST_DOWNTREND:
-            triggered = df['highest_downtrend_start'].iloc[idx]
+            triggered = df['highest_downtrend_start'].iloc[idx] if 'highest_downtrend_start' in df.columns else False
             message = f"Highest downtrend {'detected' if triggered else 'not detected'}"
             
         elif rule.rule_type == RuleType.UPTREND_TO_HIGH:
-            triggered = df['uptrend_to_high'].iloc[idx]
+            triggered = df['uptrend_to_high'].iloc[idx] if 'uptrend_to_high' in df.columns else False
             message = f"Uptrend to high {'detected' if triggered else 'not detected'}"
             
         else:

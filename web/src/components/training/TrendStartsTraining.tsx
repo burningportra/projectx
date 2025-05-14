@@ -18,6 +18,8 @@ interface OhlcBar {
 
 // Extended type for OhlcBar with trend indicators
 interface OhlcBarWithTrends extends OhlcBar {
+  // Note: uptrendStart and downtrendStart can coexist on the same candle
+  // This represents a "dual trend" scenario where price action shows characteristics of both trend types
   uptrendStart: boolean;
   downtrendStart: boolean;
   highestDowntrendStart: boolean;
@@ -39,19 +41,68 @@ const ensureUTC = (timestamp: number | Date): number => {
   return date.getTime();
 };
 
-const TrendStartsTraining: React.FC = () => {
+// Define props for TrendStartsTraining
+interface TrendStartsTrainingProps {
+  selectedTimeframe?: string;
+  onTimeframeChange?: (timeframe: string) => void;
+  selectedContract?: string;
+  onContractChange?: (contract: string) => void;
+  onTrendConfirmed?: (point: {timestamp: number; price: number; type: string; index: number; timeframe?: string}) => Promise<any>;
+  onTrendRemoved?: (point: {timestamp: number; type: string; index: number; timeframe?: string}) => Promise<any>;
+  chartData?: OhlcBarWithTrends[];
+  refreshTrigger?: number;
+}
+
+const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
+  selectedTimeframe: externalTimeframe,
+  onTimeframeChange,
+  selectedContract: externalContract,
+  onContractChange,
+  onTrendConfirmed: externalTrendConfirmed,
+  onTrendRemoved: externalTrendRemoved,
+  chartData,
+  refreshTrigger
+}) => {
   const [data, setData] = useState<OhlcBarWithTrends[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCandle, setSelectedCandle] = useState<any>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedTimeframe, setSelectedTimeframe] = useState("5m");
-  const [selectedContract, setSelectedContract] = useState<string>("ES");
+  const [selectedTimeframe, setSelectedTimeframe] = useState(externalTimeframe || "5m");
+  const [selectedContract, setSelectedContract] = useState<string>(externalContract || "ES");
   const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
   const [availableTimeframes, setAvailableTimeframes] = useState<string[]>(["1m", "5m", "15m", "1h", "4h", "1d"]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoadingContracts, setIsLoadingContracts] = useState(false);
+
+  // Update state when external props change
+  useEffect(() => {
+    if (externalTimeframe) {
+      setSelectedTimeframe(externalTimeframe);
+    }
+  }, [externalTimeframe]);
+
+  useEffect(() => {
+    if (externalContract) {
+      setSelectedContract(externalContract);
+    }
+  }, [externalContract]);
+
+  // Use chart data if provided from parent
+  useEffect(() => {
+    if (chartData && chartData.length > 0) {
+      setData(chartData);
+      setIsLoading(false);
+    }
+  }, [chartData]);
+
+  // Refresh when triggered from parent
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchData();
+    }
+  }, [refreshTrigger]);
 
   // Fetch available contracts from the database
   useEffect(() => {
@@ -76,6 +127,9 @@ const TrendStartsTraining: React.FC = () => {
             
             if (!contractIds.includes(selectedContract) && !symbols.includes(selectedContract)) {
               setSelectedContract(result.data[0].id);
+              if (onContractChange) {
+                onContractChange(result.data[0].id);
+              }
             }
           }
         }
@@ -93,7 +147,7 @@ const TrendStartsTraining: React.FC = () => {
     };
     
     fetchContracts();
-  }, []);
+  }, [selectedContract, onContractChange]);
 
   // Format timestamp to Eastern Time (UTC-4)
   const formatTimestampToEastern = (timestamp: number): string => {
@@ -120,73 +174,79 @@ const TrendStartsTraining: React.FC = () => {
   };
 
   // Fetch data from the API based on the selected timeframe and contract
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
+  const fetchData = async () => {
+    // Skip if we already have data from the chart component
+    if (chartData && chartData.length > 0 && !refreshTrigger) {
+      return;
+    }
 
-      try {
-        // Get the contract ID - if it's a symbol, find the corresponding full ID
-        let contractId = selectedContract;
-        if (!selectedContract.includes('.')) {
-          // It's probably a symbol, find the full ID
-          const contract = availableContracts.find(c => c.symbol === selectedContract);
-          if (contract) {
-            contractId = contract.id;
-          }
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Get the contract ID - if it's a symbol, find the corresponding full ID
+      let contractId = selectedContract;
+      if (!selectedContract.includes('.')) {
+        // It's probably a symbol, find the full ID
+        const contract = availableContracts.find(c => c.symbol === selectedContract);
+        if (contract) {
+          contractId = contract.id;
         }
-        
-        // Construct the API URL with query parameters
-        const apiUrl = `/api/ohlc?contract=${contractId}&timeframe=${selectedTimeframe}&limit=500`;
-        
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        
-        // Map the API response to our expected format
-        const processedData: OhlcBarWithTrends[] = result.data.map((item: any) => ({
-          id: item.id,
-          contractId: item.contractId,
-          timestamp: new Date(item.timestamp),
-          open: item.open,
-          high: item.high,
-          low: item.low,
-          close: item.close,
-          volume: item.volume,
-          timeframeUnit: item.timeframeUnit,
-          timeframeValue: item.timeframeValue,
-          uptrendStart: item.uptrendStart || false,
-          downtrendStart: item.downtrendStart || false,
-          highestDowntrendStart: item.highestDowntrendStart || false,
-          unbrokenUptrendStart: item.unbrokenUptrendStart || false,
-          uptrendToHigh: item.uptrendToHigh || false
-        }));
-        
-        // Ensure data is sorted by timestamp (newest first)
-        processedData.sort((a, b) => {
-          const aTime = ensureUTC(a.timestamp);
-          const bTime = ensureUTC(b.timestamp);
-          return bTime - aTime; // Descending order (newest first)
-        });
-
-        setData(processedData);
-        console.log(`Loaded ${processedData.length} bars for ${selectedContract} ${selectedTimeframe}`);
-      } catch (err) {
-        console.error("Error fetching trend data:", err);
-        setError(`Failed to load data: ${err instanceof Error ? err.message : String(err)}`);
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      // Construct the API URL with query parameters
+      const apiUrl = `/api/ohlc?contract=${contractId}&timeframe=${selectedTimeframe}&limit=500`;
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
 
-    // Only fetch data if we have the contract list
-    if (availableContracts.length > 0) {
+      const result = await response.json();
+      
+      // Map the API response to our expected format
+      const processedData: OhlcBarWithTrends[] = result.data.map((item: any) => ({
+        id: item.id,
+        contractId: item.contractId,
+        timestamp: new Date(item.timestamp),
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+        volume: item.volume,
+        timeframeUnit: item.timeframeUnit,
+        timeframeValue: item.timeframeValue,
+        uptrendStart: item.uptrendStart || false,
+        downtrendStart: item.downtrendStart || false,
+        highestDowntrendStart: item.highestDowntrendStart || false,
+        unbrokenUptrendStart: item.unbrokenUptrendStart || false,
+        uptrendToHigh: item.uptrendToHigh || false
+      }));
+      
+      // Ensure data is sorted by timestamp (newest first)
+      processedData.sort((a, b) => {
+        const aTime = ensureUTC(a.timestamp);
+        const bTime = ensureUTC(b.timestamp);
+        return bTime - aTime; // Descending order (newest first)
+      });
+
+      setData(processedData);
+      console.log(`Loaded ${processedData.length} bars for ${selectedContract} ${selectedTimeframe}`);
+    } catch (err) {
+      console.error("Error fetching trend data:", err);
+      setError(`Failed to load data: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Use effect to fetch data when parameters change
+  useEffect(() => {
+    // Only fetch data if we have the contract list and no chart data provided
+    if (availableContracts.length > 0 && (!chartData || chartData.length === 0)) {
       fetchData();
     }
-  }, [selectedTimeframe, selectedContract, availableContracts]);
+  }, [selectedTimeframe, selectedContract, availableContracts, chartData]);
 
   // Debug function to inspect timestamp values
   const debugTimestamp = (timestamp: any): string => {
@@ -205,7 +265,7 @@ const TrendStartsTraining: React.FC = () => {
     }
   };
 
-  // Function to confirm a trend at the selected candle
+  // Function to confirm trend for selected candle
   const confirmTrendPoint = async (trendType: string) => {
     if (!selectedCandle) {
       setError("No candle selected");
@@ -243,22 +303,41 @@ const TrendStartsTraining: React.FC = () => {
         contractId: contractId
       };
       
-      console.log("Confirming trend point:", trendPoint);
+      console.log("Confirming trend point:", JSON.stringify(trendPoint));
       
-      // Send the data to the API
-      const response = await fetch('/api/trend-points', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(trendPoint),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      // Use external handler if provided
+      if (externalTrendConfirmed) {
+        await externalTrendConfirmed(trendPoint);
+      } else {
+        // Otherwise use the internal API call
+        // Send the data to the API with retries
+        let response;
+        try {
+          response = await fetch('/api/trend-points', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(trendPoint),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("API error response:", errorText);
+            throw new Error(`API error: ${response.status} ${response.statusText}`);
+          }
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+          throw fetchError;
+        }
+        
+        const result = await response.json();
+        console.log("API response:", result);
+        
+        if (!result.success) {
+          throw new Error(result.message || "Unknown API error");
+        }
       }
-      
-      const result = await response.json();
       
       // Update the local data to reflect the change
       setData(prevData => {
@@ -327,22 +406,41 @@ const TrendStartsTraining: React.FC = () => {
         contractId: contractId
       };
       
-      console.log("Removing trend point:", trendPoint);
+      console.log("Removing trend point:", JSON.stringify(trendPoint));
       
-      // Send the request to the API
-      const response = await fetch('/api/trend-points/remove', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(trendPoint),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      // Use external handler if provided
+      if (externalTrendRemoved) {
+        await externalTrendRemoved(trendPoint);
+      } else {
+        // Otherwise use internal API call
+        // Send the request to the API
+        let response;
+        try {
+          response = await fetch('/api/trend-points/remove', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(trendPoint),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("API error response:", errorText);
+            throw new Error(`API error: ${response.status} ${response.statusText}`);
+          }
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+          throw fetchError;
+        }
+        
+        const result = await response.json();
+        console.log("API response:", result);
+        
+        if (!result.success) {
+          throw new Error(result.message || "Unknown API error");
+        }
       }
-      
-      const result = await response.json();
       
       // Update the local data to reflect the change
       setData(prevData => {
@@ -380,6 +478,22 @@ const TrendStartsTraining: React.FC = () => {
     }
   };
 
+  // Handle timeframe change
+  const handleTimeframeChange = (value: string) => {
+    setSelectedTimeframe(value);
+    if (onTimeframeChange) {
+      onTimeframeChange(value);
+    }
+  };
+
+  // Handle contract change
+  const handleContractChange = (value: string) => {
+    setSelectedContract(value);
+    if (onContractChange) {
+      onContractChange(value);
+    }
+  };
+
   // Handle trend action button click
   const handleTrendAction = (bar: OhlcBarWithTrends, action: string, trendType?: string) => {
     const timestamp = ensureUTC(bar.timestamp);
@@ -408,7 +522,7 @@ const TrendStartsTraining: React.FC = () => {
             <select
               className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={selectedContract}
-              onChange={(e) => setSelectedContract(e.target.value)}
+              onChange={(e) => handleContractChange(e.target.value)}
               disabled={isLoading || isUpdating || isLoadingContracts}
             >
               {isLoadingContracts ? (
@@ -431,7 +545,7 @@ const TrendStartsTraining: React.FC = () => {
             <select
               className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={selectedTimeframe}
-              onChange={(e) => setSelectedTimeframe(e.target.value)}
+              onChange={(e) => handleTimeframeChange(e.target.value)}
               disabled={isLoading || isUpdating}
             >
               {availableTimeframes.map((timeframe) => (
@@ -614,6 +728,11 @@ const TrendStartsTraining: React.FC = () => {
                       {/* Trend indicators */}
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
+                          {bar.uptrendStart && bar.downtrendStart && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-900 text-purple-300 border border-purple-500">
+                              Dual Trend
+                            </span>
+                          )}
                           {bar.uptrendStart && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900 text-green-300">
                               Up Start
@@ -658,7 +777,7 @@ const TrendStartsTraining: React.FC = () => {
                               {bar.uptrendStart && (
                                 <button 
                                   className="px-1 py-0.5 text-xs border border-red-500 text-red-400 hover:bg-red-900 hover:bg-opacity-50 rounded-sm"
-                                  onClick={() => handleTrendAction(bar, 'remove', 'uptrendStart')}
+                                  onClick={(e) => { e.stopPropagation(); handleTrendAction(bar, 'remove', 'uptrendStart'); }}
                                   disabled={isUpdating}
                                   title="Remove Uptrend Start marker"
                                 >
@@ -668,7 +787,7 @@ const TrendStartsTraining: React.FC = () => {
                               {bar.downtrendStart && (
                                 <button 
                                   className="px-1 py-0.5 text-xs border border-red-500 text-red-400 hover:bg-red-900 hover:bg-opacity-50 rounded-sm"
-                                  onClick={() => handleTrendAction(bar, 'remove', 'downtrendStart')}
+                                  onClick={(e) => { e.stopPropagation(); handleTrendAction(bar, 'remove', 'downtrendStart'); }}
                                   disabled={isUpdating}
                                   title="Remove Downtrend Start marker"
                                 >
@@ -678,7 +797,7 @@ const TrendStartsTraining: React.FC = () => {
                               {bar.highestDowntrendStart && (
                                 <button 
                                   className="px-1 py-0.5 text-xs border border-red-500 text-red-400 hover:bg-red-900 hover:bg-opacity-50 rounded-sm"
-                                  onClick={() => handleTrendAction(bar, 'remove', 'highestDowntrendStart')}
+                                  onClick={(e) => { e.stopPropagation(); handleTrendAction(bar, 'remove', 'highestDowntrendStart'); }}
                                   disabled={isUpdating}
                                   title="Remove Highest Downtrend marker"
                                 >
@@ -688,7 +807,7 @@ const TrendStartsTraining: React.FC = () => {
                               {bar.unbrokenUptrendStart && (
                                 <button 
                                   className="px-1 py-0.5 text-xs border border-red-500 text-red-400 hover:bg-red-900 hover:bg-opacity-50 rounded-sm"
-                                  onClick={() => handleTrendAction(bar, 'remove', 'unbrokenUptrendStart')}
+                                  onClick={(e) => { e.stopPropagation(); handleTrendAction(bar, 'remove', 'unbrokenUptrendStart'); }}
                                   disabled={isUpdating}
                                   title="Remove Unbroken Uptrend marker"
                                 >
@@ -698,7 +817,7 @@ const TrendStartsTraining: React.FC = () => {
                               {bar.uptrendToHigh && (
                                 <button 
                                   className="px-1 py-0.5 text-xs border border-red-500 text-red-400 hover:bg-red-900 hover:bg-opacity-50 rounded-sm"
-                                  onClick={() => handleTrendAction(bar, 'remove', 'uptrendToHigh')}
+                                  onClick={(e) => { e.stopPropagation(); handleTrendAction(bar, 'remove', 'uptrendToHigh'); }}
                                   disabled={isUpdating}
                                   title="Remove Uptrend to High marker"
                                 >
@@ -732,6 +851,7 @@ const TrendStartsTraining: React.FC = () => {
               <div className="flex space-x-4">
                 <span className="text-green-500">Up: {data.filter(bar => bar.uptrendStart).length}</span>
                 <span className="text-orange-500">Down: {data.filter(bar => bar.downtrendStart).length}</span>
+                <span className="text-purple-500">Dual: {data.filter(bar => bar.uptrendStart && bar.downtrendStart).length}</span>
                 <span className="text-red-500">Highest: {data.filter(bar => bar.highestDowntrendStart).length}</span>
                 <span className="text-green-700">Unbroken: {data.filter(bar => bar.unbrokenUptrendStart).length}</span>
                 <span className="text-blue-500">Up High: {data.filter(bar => bar.uptrendToHigh).length}</span>

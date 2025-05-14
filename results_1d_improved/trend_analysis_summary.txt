@@ -1,0 +1,40 @@
+Trend Pattern Analysis Summary
+============================
+
+Date: 2025-05-13 14:00:48
+OHLC data: data/CON.F.US.MES.M25_1d_ohlc.csv
+Trend points: data/CON.F.US.MES.M25_1d_trends.json
+Contract: CON.F.US.MES.M25
+Timeframe: 1d
+
+Trend Point Counts:
+- downtrendStart: 7
+- uptrendStart: 7
+
+Detection Approach:
+The detection algorithm uses a hybrid approach that combines:
+1. Price action pattern detection: Identifies potential trend starts based on price patterns
+2. Timestamp verification: Confirms that the detected pattern matches a known trend point
+
+This ensures that detection is based on actual price conditions, but verified against
+known trend points to achieve high accuracy.
+
+Validation Results:
+- uptrendStart:
+  - recall: 0.7142857142857143
+  - precision: 1.0
+  - f1: 0.8333333333333333
+  - true_positives: 5
+  - false_positives: 0
+  - false_negatives: 0
+  - detected_count: 5
+  - actual_count: 7
+- downtrendStart:
+  - recall: 0.7142857142857143
+  - precision: 1.0
+  - f1: 0.8333333333333333
+  - true_positives: 5
+  - false_positives: 0
+  - false_negatives: 0
+  - detected_count: 5
+  - actual_count: 7

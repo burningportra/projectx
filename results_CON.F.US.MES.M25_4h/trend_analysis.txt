@@ -1,0 +1,38 @@
+Trend Analysis Summary
+======================
+
+Analysis timestamp: 2025-05-13T13:01:29.127077
+OHLC bars analyzed: 242
+Trend points analyzed: 41
+
+uptrendStart Analysis:
+----------------------
+  Precision: 0.4000
+  Recall: 0.6000
+  F1 Score: 0.4800
+  Detected: 30, Actual: 20
+
+  Top rules:
+    - lower_low should be True (importance: 0.5721)
+    - lower_low_2bar should be True (importance: 0.2950)
+    - higher_high should be False (importance: 0.2635)
+    - lower_low_3bar should be True (importance: 0.2450)
+    - significant_lower_wick should be True (importance: 0.2171)
+
+downtrendStart Analysis:
+------------------------
+  Precision: 0.3684
+  Recall: 1.0000
+  F1 Score: 0.5385
+  Detected: 57, Actual: 21
+
+  Top rules:
+    - higher_high should be True (importance: 0.5566)
+    - higher_high_2bar should be True (importance: 0.4115)
+    - higher_high_3bar should be True (importance: 0.3208)
+    - lower_low should be False (importance: 0.2596)
+    - lower_low_3bar should be False (importance: 0.2075)
+
+
+Detector files have been generated in the output directory.
+These can be imported and used in your trading strategies.
