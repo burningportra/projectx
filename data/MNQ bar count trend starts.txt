@@ -1,0 +1,43 @@
+1. Nothing
+2. Bar 1 = Pending Downtrend Start
+3. Neutral
+4. Neutral
+5. Bar 1 = Confirmed Downtrend Start; Bar 5 becomes Pending Uptrend Start
+6. Bar 5 = Uptrend Start Confirmed; Bar 5 = Pending Downtrend Start
+7. Neutral
+8. Bar 5 = Confirmed Downtrend Start; Bar 7 = Pending Uptrend Start
+9. Neutral
+10. Bar 9 = Pending Downtrend Start
+11. Bar 7 = Confirmed Uptrend Start
+12. Neutral
+13. Neutral
+14. Neutral
+15. Neutral
+16. Neutral
+17. Neutral
+18. Neutral
+19. Neutral
+20. Neutral
+21. Bar 9 = Confirmed Downtrend Start; Bar 20 = Pending Uptrend Start
+22. Neutral
+23. Neutral
+24. Neutral
+25. Neutral
+26. Neutral
+27. Bar 20 = Confirmed Uptrend Start; Bar 26 = Pending Downtrend Start
+28. Bar 26 = Confirmed Downtrend Start; Bar 28 = Pending Uptrend Start
+29. Neutral
+30. Neutral
+31. Neutral
+32. Neutral
+33. Neutral
+34. Neutral
+35. Neutral
+36. Bar 28 = Confirmed Uptrend Start; Bar 33 = Pending downtrend start
+37. Neutral
+38. Neutral
+39. Neutral
+40. Bar 33 = Confirmed Downtrend Start; Bar 36 = Pending Uptrend Start
+41. Neutral
+42. Neutral
+43. Bar 36 = Confirmed Uptrend Start

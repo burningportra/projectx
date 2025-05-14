@@ -13,7 +13,7 @@ export default function TrendsPage() {
         
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Trend Analysis</h2>
-          <TrendChartContainer />
+          <TrendChartContainer showAllContracts={true} />
         </Card>
         
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">

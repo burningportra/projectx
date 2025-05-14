@@ -242,6 +242,7 @@ export default function TrendStartsPage() {
             onContractChange={handleContractChange}
             onDataUpdated={handleChartDataUpdated}
             refreshTrigger={refreshTrigger}
+            showAllContracts={true}
           />
 
           <TrendStartsTraining 

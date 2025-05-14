@@ -51,6 +51,10 @@ interface TrendStartsTrainingProps {
   onTrendRemoved?: (point: {timestamp: number; type: string; index: number; timeframe?: string}) => Promise<any>;
   chartData?: OhlcBarWithTrends[];
   refreshTrigger?: number;
+  /**
+   * If true, show all chartData regardless of contract (hide contract selector, use all chartData)
+   */
+  showAllContracts?: boolean;
 }
 
 const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
@@ -61,7 +65,8 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
   onTrendConfirmed: externalTrendConfirmed,
   onTrendRemoved: externalTrendRemoved,
   chartData,
-  refreshTrigger
+  refreshTrigger,
+  showAllContracts = false
 }) => {
   const [data, setData] = useState<OhlcBarWithTrends[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,6 +111,7 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
 
   // Fetch available contracts from the database
   useEffect(() => {
+    if (showAllContracts) return; // skip contract fetch if showing all
     const fetchContracts = async () => {
       setIsLoadingContracts(true);
       
@@ -147,7 +153,7 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
     };
     
     fetchContracts();
-  }, [selectedContract, onContractChange]);
+  }, [selectedContract, onContractChange, showAllContracts]);
 
   // Format timestamp to Eastern Time (UTC-4)
   const formatTimestampToEastern = (timestamp: number): string => {
@@ -176,7 +182,9 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
   // Fetch data from the API based on the selected timeframe and contract
   const fetchData = async () => {
     // Skip if we already have data from the chart component
-    if (chartData && chartData.length > 0 && !refreshTrigger) {
+    if (showAllContracts && chartData && chartData.length > 0) {
+      setData(chartData);
+      setIsLoading(false);
       return;
     }
 
@@ -186,7 +194,8 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
     try {
       // Get the contract ID - if it's a symbol, find the corresponding full ID
       let contractId = selectedContract;
-      if (!selectedContract.includes('.')) {
+      if (showAllContracts) contractId = '';
+      else if (!selectedContract.includes('.')) {
         // It's probably a symbol, find the full ID
         const contract = availableContracts.find(c => c.symbol === selectedContract);
         if (contract) {
@@ -242,11 +251,16 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
 
   // Use effect to fetch data when parameters change
   useEffect(() => {
+    if (showAllContracts && chartData && chartData.length > 0) {
+      setData(chartData);
+      setIsLoading(false);
+      return;
+    }
     // Only fetch data if we have the contract list and no chart data provided
-    if (availableContracts.length > 0 && (!chartData || chartData.length === 0)) {
+    if (!showAllContracts && availableContracts.length > 0 && (!chartData || chartData.length === 0)) {
       fetchData();
     }
-  }, [selectedTimeframe, selectedContract, availableContracts, chartData]);
+  }, [selectedTimeframe, selectedContract, availableContracts, chartData, showAllContracts]);
 
   // Debug function to inspect timestamp values
   const debugTimestamp = (timestamp: any): string => {
@@ -285,7 +299,8 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
       
       // Get the contract ID - if it's a symbol, find the corresponding full ID
       let contractId = selectedContract;
-      if (!selectedContract.includes('.')) {
+      if (showAllContracts) contractId = '';
+      else if (!selectedContract.includes('.')) {
         // It's probably a symbol, find the full ID
         const contract = availableContracts.find(c => c.symbol === selectedContract);
         if (contract) {
@@ -389,7 +404,8 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
       
       // Get the contract ID - if it's a symbol, find the corresponding full ID
       let contractId = selectedContract;
-      if (!selectedContract.includes('.')) {
+      if (showAllContracts) contractId = '';
+      else if (!selectedContract.includes('.')) {
         // It's probably a symbol, find the full ID
         const contract = availableContracts.find(c => c.symbol === selectedContract);
         if (contract) {
@@ -517,27 +533,29 @@ const TrendStartsTraining: React.FC<TrendStartsTrainingProps> = ({
       <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Contract selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Contract</label>
-            <select
-              className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={selectedContract}
-              onChange={(e) => handleContractChange(e.target.value)}
-              disabled={isLoading || isUpdating || isLoadingContracts}
-            >
-              {isLoadingContracts ? (
-                <option value="">Loading contracts...</option>
-              ) : availableContracts.length === 0 ? (
-                <option value="">No contracts available</option>
-              ) : (
-                availableContracts.map((contract) => (
-                  <option key={contract.id} value={contract.symbol}>
-                    {contract.symbol} - {contract.fullName}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
+          {!showAllContracts && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Contract</label>
+              <select
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedContract}
+                onChange={(e) => handleContractChange(e.target.value)}
+                disabled={isLoading || isUpdating || isLoadingContracts}
+              >
+                {isLoadingContracts ? (
+                  <option value="">Loading contracts...</option>
+                ) : availableContracts.length === 0 ? (
+                  <option value="">No contracts available</option>
+                ) : (
+                  availableContracts.map((contract) => (
+                    <option key={contract.id} value={contract.symbol}>
+                      {contract.symbol} - {contract.fullName}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
           
           {/* Timeframe selector */}
           <div>

@@ -74,6 +74,10 @@ interface TrendChartContainerProps {
   onContractChange?: (contract: string) => void;
   onDataUpdated?: (data: OhlcBarWithTrends[]) => void;
   refreshTrigger?: number;
+  /**
+   * If true, show all chart data regardless of contract (default: true)
+   */
+  showAllContracts?: boolean;
 }
 
 const TrendChartContainer: React.FC<TrendChartContainerProps> = ({ 
@@ -86,7 +90,8 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
   selectedContract: externalSelectedContract,
   onContractChange,
   onDataUpdated,
-  refreshTrigger = 0
+  refreshTrigger = 0,
+  showAllContracts = true
 }) => {
   const [data, setData] = useState<OhlcBarWithTrends[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -223,9 +228,17 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
         
         // Fetch market data
         const contractId = externalSelectedContract || "CON.F.US.MES.M25"; // Use selected contract or default
-        const response = await fetch(
-          `/api/market-data/bars?contractId=${contractId}&timeframeUnit=${timeframe.unit}&timeframeValue=${timeframe.value}&limit=100`
-        );
+        let apiUrl = `/api/market-data/bars?timeframeUnit=${timeframe.unit}&timeframeValue=${timeframe.value}&limit=100`;
+        
+        if (showAllContracts) {
+          apiUrl += '&allContracts=true';
+          console.log("Fetching data for all contracts");
+        } else {
+          apiUrl += `&contractId=${contractId}`;
+          console.log(`Fetching data for contract: ${contractId}`);
+        }
+        
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`API returned status: ${response.status}`);
@@ -319,12 +332,17 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
           }
 
           // Only fetch if we have valid params
-          if (timeframeString && finalContractId) {
+          if (timeframeString) {
             let trendPointsData;
             
             if (showRuleEngineTrends) {
               // Fetch trend points from rule engine detection
-              const ruleEngineApiUrl = `/api/trend/detect?contractId=${encodeURIComponent(finalContractId)}&timeframe=${encodeURIComponent(timeframeString)}`;
+              let ruleEngineApiUrl = `/api/trend/detect?timeframe=${encodeURIComponent(timeframeString)}`;
+              if (!showAllContracts) {
+                ruleEngineApiUrl += `&contractId=${encodeURIComponent(finalContractId)}`;
+              } else {
+                ruleEngineApiUrl += `&allContracts=true`;
+              }
               console.log("Rule engine API URL:", ruleEngineApiUrl);
               
               const ruleEngineTrendsResponse = await fetch(ruleEngineApiUrl);
@@ -350,7 +368,12 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
                 setShowRuleEngineTrends(false);
                 
                 // Fall back to saved trend points
-                const savedTrendsApiUrl = `/api/trend-points?contractId=${encodeURIComponent(finalContractId)}&timeframe=${encodeURIComponent(timeframeString)}`;
+                let savedTrendsApiUrl = `/api/trend-points?timeframe=${encodeURIComponent(timeframeString)}`;
+                if (!showAllContracts) {
+                  savedTrendsApiUrl += `&contractId=${encodeURIComponent(finalContractId)}`;
+                } else {
+                  savedTrendsApiUrl += `&allContracts=true`;
+                }
                 const savedTrendsResponse = await fetch(savedTrendsApiUrl);
                 
                 if (savedTrendsResponse.ok) {
@@ -359,7 +382,12 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
               }
             } else {
               // Fetch saved trend points from database
-              const apiUrl = `/api/trend-points?contractId=${encodeURIComponent(finalContractId)}&timeframe=${encodeURIComponent(timeframeString)}`;
+              let apiUrl = `/api/trend-points?timeframe=${encodeURIComponent(timeframeString)}`;
+              if (!showAllContracts) {
+                apiUrl += `&contractId=${encodeURIComponent(finalContractId)}`;
+              } else {
+                apiUrl += `&allContracts=true`;
+              }
               console.log("Trend points API URL:", apiUrl);
 
               // Use GET request with proper query parameters
@@ -514,12 +542,218 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
           });
         }
         
+        // When showing all contracts, we need to handle duplicate timestamps
+        // Lightweight Charts requires unique timestamps in ascending order
+        let finalData = dataWithTrends;
+        if (showAllContracts) {
+          console.log("Processing data for all contracts, handling duplicate timestamps...");
+          console.log("Timeframe selected:", selectedTimeframe);
+          
+          // Identify the timeframe type
+          const isDaily = timeframe?.unit === 4 || selectedTimeframe === "1 Day";
+          console.log("Is daily timeframe:", isDaily);
+
+          if (isDaily) {
+            // Special handling for daily timeframe which is more prone to timestamp conflicts
+            console.log("⚠️ Daily timeframe detected with multiple contracts - using special handling");
+            
+            // First attempt: Create a map of timestamps to the "best" bar for that time
+            // For each timestamp, we'll prefer bars with trend indicators
+            const uniqueBars = new Map<number, OhlcBarWithTrends>();
+            
+            // First pass: identify all bars with trend indicators
+            const trendBars = dataWithTrends.filter(bar => 
+              bar.uptrendStart || bar.downtrendStart || 
+              bar.highestDowntrendStart || bar.unbrokenUptrendStart || 
+              bar.uptrendToHigh
+            );
+            
+            console.log(`Found ${trendBars.length} bars with trend indicators`);
+            
+            // Add trend bars first (they take priority)
+            trendBars.forEach(bar => {
+              const timestamp = new Date(bar.timestamp).getTime();
+              uniqueBars.set(timestamp, bar);
+            });
+            
+            // Then add other bars only if we don't already have a bar for that timestamp
+            dataWithTrends.forEach(bar => {
+              const timestamp = new Date(bar.timestamp).getTime();
+              if (!uniqueBars.has(timestamp)) {
+                uniqueBars.set(timestamp, bar);
+              }
+            });
+            
+            // Convert the map back to an array and sort by timestamp
+            let dedupedData = Array.from(uniqueBars.values()).sort(
+              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+            
+            console.log(`After deduplication: ${dataWithTrends.length} bars → ${dedupedData.length} bars`);
+            
+            // If deduplication reduced the data too much (lost more than 50% of data),
+            // try using large offsets instead
+            if (dedupedData.length < dataWithTrends.length * 0.5) {
+              console.log("⚠️ Deduplication removed too many bars, trying offset approach instead");
+              
+              // Group by timestamp but preserve all bars
+              const barsByTimestamp = new Map<number, OhlcBarWithTrends[]>();
+              dataWithTrends.forEach(bar => {
+                const timestamp = new Date(bar.timestamp).getTime();
+                if (!barsByTimestamp.has(timestamp)) {
+                  barsByTimestamp.set(timestamp, []);
+                }
+                barsByTimestamp.get(timestamp)!.push(bar);
+              });
+              
+              // Apply very large offsets (whole days) to ensure no overlap
+              // 86400000 milliseconds = 1 day
+              const DAY_OFFSET = 86400000;
+              
+              const offsetData: OhlcBarWithTrends[] = [];
+              
+              barsByTimestamp.forEach((bars, timestamp) => {
+                if (bars.length === 1) {
+                  // Just one bar, keep as is
+                  offsetData.push(bars[0]);
+                } else {
+                  // Group by contractId to keep the same contract's bars together
+                  const barsByContract = new Map<string, OhlcBarWithTrends[]>();
+                  bars.forEach(bar => {
+                    if (!barsByContract.has(bar.contractId)) {
+                      barsByContract.set(bar.contractId, []);
+                    }
+                    barsByContract.get(bar.contractId)!.push(bar);
+                  });
+                  
+                  // Sort contracts for consistent results
+                  const sortedContracts = Array.from(barsByContract.keys()).sort();
+                  
+                  // Add each contract's bar with a day offset per contract
+                  sortedContracts.forEach((contractId, idx) => {
+                    const contractBars = barsByContract.get(contractId)!;
+                    contractBars.forEach(bar => {
+                      if (idx === 0) {
+                        // First contract gets no offset
+                        offsetData.push(bar);
+                      } else {
+                        // Other contracts get offset by the contract index (in days)
+                        const newTimestamp = new Date(timestamp + (idx * DAY_OFFSET));
+                        const adjustedBar = {
+                          ...bar,
+                          timestamp: newTimestamp
+                        };
+                        offsetData.push(adjustedBar);
+                      }
+                    });
+                  });
+                }
+              });
+              
+              // Use the offset data
+              finalData = offsetData.sort(
+                (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+              );
+              
+              console.log(`Using offset approach: ${dataWithTrends.length} → ${finalData.length} bars`);
+            } else {
+              // Deduplication worked well enough, use that data
+              finalData = dedupedData;
+            }
+            
+            // Final validation
+            const finalTimestamps = finalData.map(bar => new Date(bar.timestamp).getTime());
+            const uniqueTimestamps = new Set(finalTimestamps);
+            
+            if (finalTimestamps.length !== uniqueTimestamps.size) {
+              console.error("CRITICAL: Still have duplicate timestamps after all processing!");
+              console.log("Falling back to emergency deduplication - keeping only one bar per timestamp");
+              
+              // Last resort: Only keep the first occurrence of each timestamp
+              const seenTimestamps = new Set<number>();
+              finalData = finalData.filter(bar => {
+                const ts = new Date(bar.timestamp).getTime();
+                if (seenTimestamps.has(ts)) {
+                  return false;
+                }
+                seenTimestamps.add(ts);
+                return true;
+              });
+              
+              console.log(`Emergency fallback complete: ${finalData.length} bars with unique timestamps`);
+            }
+          } else {
+            // Non-daily timeframes - use the existing approach with small offsets
+            // Group bars by timestamp
+            const barsByTimestamp = new Map<number, OhlcBarWithTrends[]>();
+            dataWithTrends.forEach(bar => {
+              const timestamp = new Date(bar.timestamp).getTime();
+              if (!barsByTimestamp.has(timestamp)) {
+                barsByTimestamp.set(timestamp, []);
+              }
+              barsByTimestamp.get(timestamp)!.push(bar);
+            });
+            
+            // Count duplicates for debugging
+            let duplicateCount = 0;
+            barsByTimestamp.forEach((bars, timestamp) => {
+              if (bars.length > 1) {
+                duplicateCount += bars.length - 1;
+                console.log(`Found ${bars.length} bars with same timestamp: ${new Date(timestamp).toISOString()}`);
+                console.log(`Contract IDs:`, bars.map(b => b.contractId).join(', '));
+              }
+            });
+            console.log(`Found ${duplicateCount} duplicate timestamps out of ${dataWithTrends.length} bars`);
+            
+            // If we have any timestamps with multiple bars, fix by adding offsets
+            finalData = [];
+            barsByTimestamp.forEach((bars, timestamp) => {
+              if (bars.length === 1) {
+                // Just one bar for this timestamp, no change needed
+                finalData.push(bars[0]);
+              } else {
+                // Multiple bars for the same timestamp
+                // Sort by contractId to ensure consistent ordering
+                bars.sort((a, b) => a.contractId.localeCompare(b.contractId));
+                
+                // Add an offset to each bar after the first one
+                const offsetAmount = 1000; // 1 second
+                
+                bars.forEach((bar, i) => {
+                  if (i === 0) {
+                    finalData.push(bar);
+                  } else {
+                    // Create a new timestamp with the offset
+                    const newTimestamp = new Date(new Date(bar.timestamp).getTime() + (i * offsetAmount));
+                    
+                    const adjustedBar = { 
+                      ...bar,
+                      timestamp: newTimestamp
+                    };
+                    finalData.push(adjustedBar);
+                  }
+                });
+              }
+            });
+            
+            // Sort by timestamp again to ensure ascending order
+            finalData.sort((a, b) => 
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+          }
+          
+          console.log(`Final processed data: ${dataWithTrends.length} → ${finalData.length} bars`);
+          console.log("First few timestamps:", 
+            finalData.slice(0, 3).map(b => new Date(b.timestamp).toISOString())
+          );
+        }
+        
         // Set the data
-        setData(dataWithTrends);
+        setData(finalData);
         
         // If there's a callback to update parent with data, call it
         if (onDataUpdated) {
-          onDataUpdated(dataWithTrends);
+          onDataUpdated(finalData);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -740,6 +974,7 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
               const unit = t.unit === 2 ? "m" : t.unit === 3 ? "h" : t.unit === 4 ? "d" : t.unit === 5 ? "w" : "";
               return `${t.value}${unit}`;
             })}
+            showAllContracts={showAllContracts}
           />
           
           {/* Debug info for trend indicators */}

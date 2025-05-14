@@ -1,0 +1,221 @@
+// --- Data Structures ---
+
+Bar:
+  Date
+  Open
+  High
+  Low
+  Close
+  Index // Original index from the input file, useful for referencing
+
+State:
+  pds_bar_index = null // Index of the bar that is a PDS
+  pds_anchor_high = null // The high of the pds_bar_index bar
+  pus_bar_index = null // Index of the bar that is a PUS
+  pus_anchor_low = null  // The low of the pus_bar_index bar
+
+  last_confirmed_trend_type = null // "uptrend" or "downtrend"
+  last_confirmed_trend_start_bar_index = null
+
+  // For CDS detection: tracks the bar that made the peak before a potential reversal
+  cds_candidate_peak_bar_index = null
+  cds_candidate_peak_bar_high = null
+
+  // For CUS detection: tracks the bar that made the low before a potential reversal
+  cus_candidate_low_bar_index = null
+  cus_candidate_low_bar_low = null
+
+  log_output = [] // To store strings like "Bar X = PDS"
+
+
+// --- Helper Functions ---
+
+FUNCTION is_SDB(current_bar, prev_bar): // Simple Down Bar
+  RETURN current_bar.L < prev_bar.L AND \
+         current_bar.H < prev_bar.H AND \
+         current_bar.C < prev_bar.C // Or prev_bar.O
+
+FUNCTION is_SUB(current_bar, prev_bar): // Simple Up Bar
+  RETURN current_bar.L > prev_bar.L AND \
+         current_bar.H > prev_bar.H AND \
+         current_bar.C > prev_bar.C // Or prev_bar.O
+
+FUNCTION is_BRB(current_bar, prev_bar): // Bullish Reversal Bar
+  RETURN current_bar.L < prev_bar.L AND \
+         current_bar.H > prev_bar.H AND \
+         current_bar.C > prev_bar.C
+
+FUNCTION is_BeRB(current_bar, prev_bar): // Bearish Reversal Bar
+  RETURN current_bar.H > prev_bar.H AND \
+         current_bar.L < prev_bar.L AND \
+         current_bar.C < prev_bar.C
+
+
+// --- Main Logic ---
+
+Load all_bars from CSV file
+
+Initialize state = new State()
+
+FOR k FROM 1 TO length(all_bars) - 1: // Start from the second bar
+  current_bar = all_bars[k]
+  prev_bar = all_bars[k-1]
+  current_bar_log_entry = "Neutral"
+  pending_actions = [] // To collect actions for this bar before committing to state
+
+  // --- CDS Confirmation (Rule B) ---
+  // This implies we had a PDS or at least a cds_candidate_peak_bar_index
+  IF state.cds_candidate_peak_bar_index IS NOT NULL AND is_BRB(current_bar, prev_bar):
+    // Check if no higher high between candidate peak and current_bar - 1
+    no_higher_high_since_peak = true
+    FOR j FROM state.cds_candidate_peak_bar_index + 1 TO k - 1:
+      IF all_bars[j].H > state.cds_candidate_peak_bar_high:
+        no_higher_high_since_peak = false
+        BREAK
+    END FOR
+
+    IF no_higher_high_since_peak AND current_bar.L < state.cds_candidate_peak_bar_low: // BRB made new low relative to some prior low of candidate peak sequence
+                                                                                       // More accurately current_bar.L should be lower than the low of the bar that *initiated* the cds_candidate_peak
+                                                                                       // For simplicity, let's use the cds_candidate_peak_bar's low for now or refine this.
+                                                                                       // The key is the overall downward move from the peak.
+      // CDS Confirmed!
+      pending_actions.add("CDS: Bar " + state.cds_candidate_peak_bar_index + " Confirmed Downtrend Start")
+      state.last_confirmed_trend_type = "downtrend"
+      state.last_confirmed_trend_start_bar_index = state.cds_candidate_peak_bar_index
+
+      // The BRB (current_bar) becomes a PUS (Rule C, Condition 1)
+      pending_actions.add("PUS: Bar " + current_bar.Index + " Pending Uptrend Start")
+      state.pus_bar_index = current_bar.Index
+      state.pus_anchor_low = current_bar.L
+
+      // Reset PDS related state
+      state.pds_bar_index = null
+      state.pds_anchor_high = null
+      state.cds_candidate_peak_bar_index = null // CDS is confirmed, reset candidate
+      state.cds_candidate_peak_bar_high = null
+
+  // --- CUS Confirmation (Rule D) ---
+  // This implies we had a PUS (state.pus_bar_index is set)
+  ELSE IF state.pus_bar_index IS NOT NULL AND is_SDB(current_bar, prev_bar):
+    // CUS Confirmed!
+    pending_actions.add("CUS: Bar " + state.pus_bar_index + " Confirmed Uptrend Start")
+    state.last_confirmed_trend_type = "uptrend"
+    state.last_confirmed_trend_start_bar_index = state.pus_bar_index
+
+    // The bar that was PUS (state.pus_bar_index) now becomes PDS due to current_bar being SDB
+    pending_actions.add("PDS: Bar " + state.pus_bar_index + " Pending Downtrend Start")
+    state.pds_bar_index = state.pus_bar_index
+    state.pds_anchor_high = all_bars[state.pus_bar_index].H // Anchor high of the newly PDS bar
+
+    // Reset PUS related state, and CDS candidate as uptrend is confirmed
+    state.pus_bar_index = null
+    state.pus_anchor_low = null
+    state.cds_candidate_peak_bar_index = null
+    state.cds_candidate_peak_bar_high = null
+
+  // --- New Pending Downtrend Start (PDS - Rule A) ---
+  // Only if not just confirmed something else that sets PDS (like CUS rule)
+  ELSE IF is_SDB(current_bar, prev_bar) AND (NOT any(action.contains("PDS:") for action in pending_actions)):
+    IF state.pds_bar_index IS NULL OR prev_bar.H > state.pds_anchor_high: // New PDS or a higher PDS
+      pending_actions.add("PDS: Bar " + prev_bar.Index + " Pending Downtrend Start")
+      state.pds_bar_index = prev_bar.Index
+      state.pds_anchor_high = prev_bar.H
+      // This previous bar is now our cds_candidate_peak
+      state.cds_candidate_peak_bar_index = prev_bar.Index
+      state.cds_candidate_peak_bar_high = prev_bar.H
+      state.cds_candidate_peak_bar_low = prev_bar.L // Store its low too
+      // Clear any PUS if we are now PDS
+      state.pus_bar_index = null
+      state.pus_anchor_low = null
+
+  // --- New Pending Uptrend Start (PUS - Rule C, Condition 2) ---
+  // Only if not just confirmed something else that sets PUS (like CDS rule)
+  ELSE IF is_SUB(current_bar, prev_bar) AND (NOT any(action.contains("PUS:") for action in pending_actions)):
+    IF state.pus_bar_index IS NULL OR prev_bar.L < state.pus_anchor_low: // New PUS or a lower PUS
+      pending_actions.add("PUS: Bar " + prev_bar.Index + " Pending Uptrend Start")
+      state.pus_bar_index = prev_bar.Index
+      state.pus_anchor_low = prev_bar.L
+      // This previous bar is now our cus_candidate_low
+      state.cus_candidate_low_bar_index = prev_bar.Index
+      state.cus_candidate_low_bar_low = prev_bar.L
+      // Clear any PDS if we are now PUS
+      state.pds_bar_index = null
+      state.pds_anchor_high = null
+      state.cds_candidate_peak_bar_index = null // Clear CDS candidate as well
+      state.cds_candidate_peak_bar_high = null
+
+
+  // --- Handle Neutralization / PDS/PUS invalidation ---
+  // Example: If PDS existed, but current bar makes a higher high than PDS anchor high
+  ELSE: // None of the above specific conditions met
+    is_neutral_action = true
+    IF state.pds_bar_index IS NOT NULL:
+      // More complex invalidation might be needed, e.g., two consecutive higher highs, or close above PDS anchor high.
+      // For now, a simple check: if current bar's high is above the PDS anchor, maybe invalidate.
+      // Or, if an uptrend was confirmed, PDS should already be null.
+      // The example data seems to go "Neutral" if no other rule fires.
+      // Let's check the log for cases like line 3: "Neutral" after "Bar 1 = PDS"
+      // Bar 3 (index 2) compared to Bar 2 (index 1).
+      // Bar 2.L = 7763, Bar 2.H = 7843.25
+      // Bar 3.L = 7759, Bar 3.H = 7849.75
+      // At line 2 (processing bar 1, all_bars[0]): SDB(all_bars[1], all_bars[0])?
+      // B1 (7840, 7892, 7824, 7887)
+      // B2 (7792, 7843, 7763, 7838) -> SDB relative to B1. So B1 is PDS. (pds_bar_index = 0)
+      //
+      // Line 3 (processing bar 2, all_bars[1]):
+      // current_bar=B2, prev_bar=B1.
+      // CDS? No. CUS? No. New PDS? No (B2 is not SDB to B1 again, it was prev). New PUS? No.
+      //
+      // Line 3 in txt refers to state *after* bar 3 closes (i.e. when processing bar at index 3)
+      // So, for k=2 (current_bar=all_bars[2], prev_bar=all_bars[1])
+      // all_bars[2] = (7781.50, 7849.75, 7759.00, 7790.00) // Bar 3 from data
+      // all_bars[1] = (7792.50, 7843.25, 7763.00, 7838.25) // Bar 2 from data
+      // Is all_bars[2] SDB to all_bars[1]? L < L (7759 < 7763) YES. H < H (7849.75 < 7843.25) NO. So not SDB.
+      // Is all_bars[2] SUB to all_bars[1]? L > L (7759 > 7763) NO.
+      // This means it is "Neutral" based on simple SDB/SUB against prev_bar.
+      // However, the PDS at Bar 1 (index 0) should still be active unless invalidated.
+      // The log implies it is neutralized. What invalidates it?
+      // Perhaps if current_bar.H > state.pds_anchor_high (all_bars[2].H > all_bars[0].H ? 7849.75 > 7892.75 NO)
+      // Perhaps if current_bar.L > prev_bar.L AND current_bar.H > prev_bar.H (not SUB but generally higher)
+      // Let's look at the actual bars for your log line 3 (Neutral):
+      // Bar 1: 7840.25,7892.75,7824.50,7887.50
+      // Bar 2: 7792.50,7843.25,7763.00,7838.25 (PDS was Bar 1 from this)
+      // Bar 3: 7781.50,7849.75,7759.00,7790.00 (Neutral at this point, PDS at Bar 1 is gone)
+      // The condition that makes Bar 3 "Neutral" and cancels PDS on Bar 1:
+      // B3.L (7759) is < B2.L (7763) -- still going down on the low.
+      // B3.H (7849.75) is > B2.H (7843.25) -- but higher high.
+      // This "inside bar" type behavior or "lower low but higher high" might be the neutralizer.
+      // For now, if no specific PDS/CDS/PUS/CUS rule fires, it's Neutral.
+      // We need to be careful about not clearing PDS/PUS too eagerly. They persist.
+      // A PDS at bar X is only removed if:
+      // 1. It's confirmed as CDS.
+      // 2. A PUS forms (conflicting signal).
+      // 3. It's invalidated (e.g., subsequent bar makes a high above X.H).
+      // Let's refine based on log:
+      // After "Bar 1 = PDS", we get "Neutral" at Bar 3.
+      // The PDS was on all_bars[0]. pds_anchor_high = all_bars[0].H = 7892.75
+      // Bar 3 (all_bars[2]): H = 7849.75. This is NOT > pds_anchor_high.
+      // The PDS seems to be simply replaced or considered over if the *next* bar (Bar 2) doesn't continue strongly.
+      //
+      // Let's simplify for pseudo-code: pending states persist unless a rule clears them or a stronger, conflicting rule fires.
+      // The "Neutral" in the log seems to mean "no *new* event on THIS bar, but existing PDS/PUS might still be active".
+      // The critical part is when your log says "Bar X = Confirmed..." then that PDS/PUS is consumed.
+      // Or when it says "Bar Y = PDS" and a PUS was active, the PUS is implicitly cancelled.
+
+      // If pending_actions is empty at this stage, it's Neutral for *this* bar's new actions
+      IF length(pending_actions) == 0:
+        current_bar_log_entry = "Neutral"
+      ELSE:
+        current_bar_log_entry = "; ".join(pending_actions)
+
+    state.log_output.append( (k+1) + ". " + current_bar_log_entry ) // k+1 for 1-based bar counting in log
+
+    // Update the main state based on pending_actions (if any were committed)
+    // This means the 'state.pds_bar_index = ...' etc. lines inside the IF/ELSEIF
+    // should correctly reflect the state *after* this bar's processing.
+    // The `pending_actions` list is more for constructing the log string.
+    // The direct state modifications within the IF/ELSEIF blocks are what matter.
+
+END FOR
+
+PRINT state.log_output

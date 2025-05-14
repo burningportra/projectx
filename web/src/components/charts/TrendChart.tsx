@@ -38,6 +38,10 @@ interface TrendChartProps {
   onTrendRemoved?: (point: {timestamp: number; type: string; index: number; timeframe?: string}) => Promise<any>;
   timeframe?: string;
   timeframes?: string[]; // Available timeframes for filtering
+  /**
+   * If true, show all data regardless of contractId (do not filter/deduplicate by contract)
+   */
+  showAllContracts?: boolean;
 }
 
 // Colors for chart elements
@@ -386,7 +390,8 @@ const TrendChart: React.FC<TrendChartProps> = ({
   onTrendConfirmed,
   onTrendRemoved,
   timeframe = "5m", // e.g., "5m", "1h", "1d"
-  timeframes = ["1m", "5m", "15m", "1h", "1d"]
+  timeframes = ["1m", "5m", "15m", "1h", "1d"],
+  showAllContracts = false
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartApiRef = useRef<IChartApi | null>(null); // Renamed for clarity
@@ -417,7 +422,10 @@ const TrendChart: React.FC<TrendChartProps> = ({
 
   // Deduplicate data based on timeframe - memoized to prevent recalculation on every render
   const isDailyTimeframe = timeframe.endsWith("d") || timeframe.endsWith("w") || timeframe.endsWith("M");
-  const processedData = React.useMemo(() => deduplicateOhlcData(data, isDailyTimeframe), [data, isDailyTimeframe]);
+  const processedData = React.useMemo(() => {
+    if (showAllContracts) return data;
+    return deduplicateOhlcData(data, isDailyTimeframe);
+  }, [data, isDailyTimeframe, showAllContracts]);
   
   // Memoize formatting functions to prevent unnecessary rerenders
   const formatTimestampToEastern = useCallback((timestamp: number): string => {

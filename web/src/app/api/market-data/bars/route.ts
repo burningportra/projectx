@@ -25,21 +25,30 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") ?? "100"); // default to 100 bars
     const page = parseInt(searchParams.get("page") ?? "0"); // default to first page
     const fetchAll = searchParams.get("all") === "true"; // parameter to fetch all bars
+    const allContracts = searchParams.get("allContracts") === "true"; // parameter to fetch bars for all contracts
     
-    if (!contractId) {
+    if (!contractId && !allContracts) {
       return NextResponse.json(
         { error: "Missing contractId parameter" },
         { status: 400 }
       );
     }
 
+    // Build the where clause based on parameters
+    const whereClause = allContracts 
+      ? { 
+          timeframeUnit,
+          timeframeValue,
+        }
+      : {
+          contractId,
+          timeframeUnit,
+          timeframeValue,
+        };
+
     // Query to count total bars for the contract and timeframe
     const totalBarsCount = await prisma.ohlcBar.count({
-      where: {
-        contractId,
-        timeframeUnit,
-        timeframeValue,
-      }
+      where: whereClause
     });
 
     // Fetch OHLC bars based on params
@@ -47,11 +56,7 @@ export async function GET(req: NextRequest) {
     if (fetchAll) {
       // Get all bars for the contract and timeframe
       bars = await prisma.ohlcBar.findMany({
-        where: {
-          contractId,
-          timeframeUnit,
-          timeframeValue,
-        },
+        where: whereClause,
         orderBy: {
           timestamp: "desc", // Get newest first
         },
@@ -59,11 +64,7 @@ export async function GET(req: NextRequest) {
     } else {
       // Get paginated bars
       bars = await prisma.ohlcBar.findMany({
-        where: {
-          contractId,
-          timeframeUnit,
-          timeframeValue,
-        },
+        where: whereClause,
         orderBy: {
           timestamp: "desc", // Get newest first
         },

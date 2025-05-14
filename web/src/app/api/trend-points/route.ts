@@ -22,21 +22,26 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const contractId = url.searchParams.get('contractId');
     const timeframe = url.searchParams.get('timeframe');
+    const allContracts = url.searchParams.get('allContracts') === 'true';
     
-    console.log(`Query params: contractId=${contractId}, timeframe=${timeframe}`);
+    console.log(`Query params: contractId=${contractId}, timeframe=${timeframe}, allContracts=${allContracts}`);
     
-    if (!contractId || !timeframe) {
+    if ((!contractId && !allContracts) || !timeframe) {
       return NextResponse.json({
         success: false,
-        message: 'Missing required parameters: contractId and timeframe',
+        message: 'Missing required parameters: contractId (or allContracts=true) and timeframe',
       }, { status: 400 });
     }
     
     // Build the query
     const where: any = {
-      contractId,
       timeframe
     };
+    
+    // Only filter by contractId if not fetching all contracts
+    if (!allContracts && contractId) {
+      where.contractId = contractId;
+    }
     
     // Fetch trend points from the database
     const trendPoints = await prisma.trendPoint.findMany({
@@ -46,11 +51,11 @@ export async function GET(request: NextRequest) {
       }
     });
     
-    console.log(`Found ${trendPoints.length} trend points`);
+    console.log(`Found ${trendPoints.length} trend points${allContracts ? ' across all contracts' : ''}`);
     
     return NextResponse.json({
       success: true,
-      message: `Found ${trendPoints.length} trend points`,
+      message: `Found ${trendPoints.length} trend points${allContracts ? ' across all contracts' : ''}`,
       data: trendPoints
     });
   } catch (error) {
