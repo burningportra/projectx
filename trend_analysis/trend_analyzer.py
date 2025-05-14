@@ -71,29 +71,70 @@ def is_your_custom_pus_rule(current_bar, prev_bar):
 
 # --- New function for Custom CDS Confirmation Rule A ---
 def check_custom_cds_confirmation_A(current_bar, prev_bar, peak_bar_for_cds, all_bars):
-    # Rule for confirming CDS on peak_bar_for_cds when current_bar closes, via prev_bar actions.
+    # Rule for confirming CDS on peak_bar_for_cds when current_bar closes.
     # Conditions based on user description for Ref Log Line 8 (CDS for 2019-05-10 by 2019-05-15 close).
-    # 1. current_bar makes a higher high than prev_bar.
-    # 2. current_bar closes higher than prev_bar.
+    # 1. current_bar.h > prev_bar.h
+    # 2. current_bar.c > prev_bar.c
     # 3. No bar between (peak_bar_for_cds + 1) and (prev_bar) made a high > peak_bar_for_cds.h.
-    # 4. current_bar makes a lower low than peak_bar_for_cds.l (original peak bar low).
+    # 4. current_bar.l < peak_bar_for_cds.l (original peak bar low).
+    # 5. NEW: At least one bar between peak_bar_for_cds (exclusive) and current_bar (exclusive, i.e., up to prev_bar)
+    #    must have made a low <= peak_bar_for_cds.l.
 
-    cond1 = current_bar.h > prev_bar.h
-    cond2 = current_bar.c > prev_bar.c
-    cond4 = current_bar.l < peak_bar_for_cds.l
+    cond1_orig = current_bar.h > prev_bar.h
+    cond2_orig = current_bar.c > prev_bar.c
+    cond4_orig = current_bar.l < peak_bar_for_cds.l
 
-    # Check no_higher_high_since_peak_candidate (Condition 3)
-    no_higher_high = True
-    # Ensure peak_bar_for_cds.index is 1-based for this range check logic
-    # prev_bar.index is also 1-based
-    if peak_bar_for_cds.index < prev_bar.index: # only check if there are intermediate bars
+    no_higher_high_intermediate = True
+    if peak_bar_for_cds.index < prev_bar.index: 
         for j_1based_idx in range(peak_bar_for_cds.index + 1, prev_bar.index + 1):
-            # all_bars is 0-indexed, so access with [j_1based_idx - 1]
             if all_bars[j_1based_idx - 1].h > peak_bar_for_cds.h:
-                no_higher_high = False
+                no_higher_high_intermediate = False
                 break
     
-    return cond1 and cond2 and no_higher_high and cond4
+    found_deep_enough_pullback = False
+    if peak_bar_for_cds.index < prev_bar.index + 1:
+        start_1based_intermediate = peak_bar_for_cds.index + 1
+        end_1based_intermediate = prev_bar.index
+        if start_1based_intermediate <= end_1based_intermediate :
+             for j_1based_idx in range(start_1based_intermediate, end_1based_intermediate + 1):
+                if all_bars[j_1based_idx - 1].l <= peak_bar_for_cds.l:
+                    found_deep_enough_pullback = True
+                    break
+    
+    return found_deep_enough_pullback and cond1_orig and cond2_orig and no_higher_high_intermediate and cond4_orig
+
+def check_custom_cds_confirmation_B(current_bar, prev_bar, peak_bar_for_cds, all_bars):
+    # Rule for confirming CDS on peak_bar_for_cds when current_bar closes.
+    # Conditions based on user description for Ref Log Line 46.
+    # 1. current_bar.c > prev_bar.c
+    # 2. current_bar.l >= prev_bar.l
+    # 3. current_bar.h > peak_bar_for_cds.h
+    # 4. No bar between (peak_bar_for_cds + 1) and (prev_bar) made a high > peak_bar_for_cds.h.
+    # 5. NEW: At least one bar between peak_bar_for_cds (exclusive) and current_bar (exclusive, i.e., up to prev_bar)
+    #    must have made a low <= peak_bar_for_cds.l.
+
+    cond1_orig = current_bar.c > prev_bar.c
+    cond2_orig = current_bar.l >= prev_bar.l
+    cond3_orig = current_bar.h > peak_bar_for_cds.h
+
+    no_higher_high_intermediate = True
+    if peak_bar_for_cds.index < prev_bar.index: 
+        for j_1based_idx in range(peak_bar_for_cds.index + 1, prev_bar.index + 1):
+            if all_bars[j_1based_idx - 1].h > peak_bar_for_cds.h:
+                no_higher_high_intermediate = False
+                break
+    
+    found_deep_enough_pullback = False
+    if peak_bar_for_cds.index < prev_bar.index + 1:
+        start_1based_intermediate = peak_bar_for_cds.index + 1
+        end_1based_intermediate = prev_bar.index
+        if start_1based_intermediate <= end_1based_intermediate :
+             for j_1based_idx in range(start_1based_intermediate, end_1based_intermediate + 1):
+                if all_bars[j_1based_idx - 1].l <= peak_bar_for_cds.l:
+                    found_deep_enough_pullback = True
+                    break
+    
+    return found_deep_enough_pullback and cond1_orig and cond2_orig and cond3_orig and no_higher_high_intermediate
 
 def is_custom_pds_rule_B(current_bar, prev_bar):
     # PDS on prev_bar if current_bar does not make a high greater than prev_bar's high.
@@ -259,6 +300,48 @@ def process_trend_logic(all_bars):
                 state.confirmed_downtrend_candidate_peak_high = None
                 state.confirmed_downtrend_candidate_peak_low = None
                 confirmed_downtrend_this_iteration = True
+            
+            # --- Custom CDS Confirmation Rule B ---
+            elif not confirmed_downtrend_this_iteration and \
+                 check_custom_cds_confirmation_B(current_bar, prev_bar, peak_bar_for_confirmed_downtrend, all_bars):
+                
+                current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {peak_bar_for_confirmed_downtrend.index} ({peak_bar_for_confirmed_downtrend.date})")
+                
+                # PUS Selection: lowest low after peak, before current (same as Rule A's PUS logic)
+                # Prioritize existing PUS candidate if one somehow formed through other means (unlikely for this path)
+                if state.confirmed_uptrend_candidate_low_bar_index is not None:
+                    pus_candidate_idx = state.confirmed_uptrend_candidate_low_bar_index
+                    pus_bar_object_for_log = all_bars[pus_candidate_idx - 1]
+                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {pus_candidate_idx} ({pus_bar_object_for_log.date})")
+                    state.potential_uptrend_signal_bar_index = pus_candidate_idx
+                    state.potential_uptrend_anchor_low = pus_bar_object_for_log.l
+                else: 
+                    lowest_low_bar_for_pus = None
+                    min_low_val = float('inf')
+                    search_start_0idx = peak_bar_for_confirmed_downtrend.index 
+                    search_end_0idx = current_bar.index - 2 
+
+                    if search_start_0idx <= search_end_0idx:
+                        for i_0based in range(search_start_0idx, search_end_0idx + 1):
+                            bar_in_range = all_bars[i_0based]
+                            if bar_in_range.l < min_low_val:
+                                min_low_val = bar_in_range.l
+                                lowest_low_bar_for_pus = bar_in_range
+                    
+                    if lowest_low_bar_for_pus is not None:
+                        current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {lowest_low_bar_for_pus.index} ({lowest_low_bar_for_pus.date})")
+                        state.potential_uptrend_signal_bar_index = lowest_low_bar_for_pus.index
+                        state.potential_uptrend_anchor_low = lowest_low_bar_for_pus.l
+                        state.confirmed_uptrend_candidate_low_bar_index = lowest_low_bar_for_pus.index 
+                        state.confirmed_uptrend_candidate_low_low = lowest_low_bar_for_pus.l
+                        state.confirmed_uptrend_candidate_low_high = lowest_low_bar_for_pus.h
+                
+                state.potential_downtrend_signal_bar_index = None
+                state.potential_downtrend_anchor_high = None
+                state.confirmed_downtrend_candidate_peak_bar_index = None
+                state.confirmed_downtrend_candidate_peak_high = None
+                state.confirmed_downtrend_candidate_peak_low = None
+                confirmed_downtrend_this_iteration = True
         
         # --- Check for Confirmed Uptrend Start (CUS) ---
         # This rule is evaluated when current_bar closes.
@@ -390,7 +473,7 @@ def process_trend_logic(all_bars):
 if __name__ == "__main__":
     try:
         # Ensure 'data' directory exists or adjust path
-        csv_file_path = "data/MNQ Bar Data(2019-05-06 - 2019-06-28).csv"
+        csv_file_path = "data/MNQ Bar Data(2019-05-06 - 2019-8-14).csv"
         all_bars_chronological = load_bars_from_csv(filename=csv_file_path)
         
         if not all_bars_chronological:

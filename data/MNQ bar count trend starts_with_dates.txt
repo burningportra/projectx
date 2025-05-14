@@ -40,4 +40,7 @@
 40. Bar 33 (2019-06-20) = Confirmed Downtrend Start; Bar 36 (2019-06-25) = Pending Uptrend Start
 41. Neutral
 42. Neutral
-43. Bar 36 (2019-06-25) = Confirmed Uptrend Start 
+43. Bar 36 (2019-06-25) = Confirmed Uptrend Start; Bar 43 = Pending downtrend start
+44. Neutral
+45. Neutral
+46. Bar 45 (2019-07-09) = Pending Uptrend Start; Bar 43 (2019-07-05) = Confirmed Downtrend Start
