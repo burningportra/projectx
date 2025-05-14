@@ -400,73 +400,110 @@ def main():
         print("Exiting due to data loading errors.")
         return
 
-    # --- Automated Rule Discovery --- 
-    MAX_CONDITIONS_PER_RULE = 3 # Kept at 3
-    best_accuracy = -1.0
-    best_uptrend_rule_names = []
-    best_downtrend_rule_names = []
-
-    # If we add rules with more lookback, this needs to be dynamic or a max value.
-    fixed_lookback_needed = 3 # Stays 3 as new user granular conditions require prev3
-
-    uptrend_rule_combos = generate_rule_combinations(UPTREND_ATOMIC_CONDITIONS, MAX_CONDITIONS_PER_RULE)
-    downtrend_rule_combos = generate_rule_combinations(DOWNTREND_ATOMIC_CONDITIONS, MAX_CONDITIONS_PER_RULE)
+    # --- Targeted Test of Full User Logic (4-part rules) ---
+    print("\n--- Running Targeted Test of Full 4-Part User Logic ---")
     
-    print(f"Starting rule discovery. Total uptrend rule combinations: {len(uptrend_rule_combos)}")
-    print(f"Total downtrend rule combinations: {len(downtrend_rule_combos)}")
+    # Define the specific 4-part rules based on user's logic components
+    # UserA_UT is cond_uptrend_prev_is_bearish
+    # UserA_DT is cond_downtrend_prev_is_bullish
     
-    # Calculate total iterations considering the 'None' rule option
-    total_iterations_up = len(uptrend_rule_combos) + 1 
-    total_iterations_down = len(downtrend_rule_combos) + 1
-    total_iterations = total_iterations_up * total_iterations_down
-    print(f"Max iterations (including 'None' rule option): {total_iterations}") # Corrected calculation
+    specific_uptrend_rule: Rule = [
+        cond_uptrend_prev_is_bearish, 
+        cond_uptrend_user_B,
+        cond_uptrend_user_C,
+        cond_uptrend_user_D
+    ]
+    specific_downtrend_rule: Rule = [
+        cond_downtrend_prev_is_bullish, 
+        cond_downtrend_user_B,
+        cond_downtrend_user_C,
+        cond_downtrend_user_D
+    ]
     
-    iteration_count = 0
+    # These rules require lookback up to prev3
+    fixed_lookback_needed = 3 
 
-    uptrend_rule_combos_with_none = [[]] + uptrend_rule_combos 
-    downtrend_rule_combos_with_none = [[]] + downtrend_rule_combos
+    print(f"Uptrend Rule being tested: { ' AND '.join([f.__name__ for f in specific_uptrend_rule]) }")
+    print(f"Downtrend Rule being tested: { ' AND '.join([f.__name__ for f in specific_downtrend_rule]) }")
 
-    for up_rule_combo in uptrend_rule_combos_with_none:
-        for down_rule_combo in downtrend_rule_combos_with_none:
-            iteration_count += 1
-            if iteration_count % 500 == 0: # Print progress less frequently for longer runs
-                 print(f"Iteration {iteration_count}/{total_iterations}...")
+    current_rules_callback = create_rules_callback(specific_uptrend_rule, specific_downtrend_rule, fixed_lookback_needed)
+    
+    generated_trends_df = identify_trends_from_ohlc(ohlc_df, current_rules_callback)
+    results = compare_trends(generated_trends_df, ground_truth_trends_df)
 
-            if not up_rule_combo and not down_rule_combo: 
-                continue
+    print(f"\nResults for 4-Part User Logic:")
+    print(f"  Accuracy: {results['accuracy']:.2f}%")
+    print(f"  Matches: {results['matches']}")
+    print(f"  False Positives: {results['false_positives']}")
+    print(f"  False Negatives: {results['false_negatives']}")
+    print(f"  Total Ground Truth: {results['total_ground_truth']}")
+    print(f"  Total Generated: {results['total_generated']}")
+    # print(f"  FP Details: {results.get('false_positives_details')}") # Uncomment for details
+    # print(f"  FN Details: {results.get('false_negatives_details')}") # Uncomment for details
+    print("--- Targeted Test Complete ---\n")
 
-            current_rules_callback = create_rules_callback(up_rule_combo, down_rule_combo, fixed_lookback_needed)
+    # The combinatorial discovery loop is bypassed for this targeted test.
+    # To re-enable combinatorial search, comment out the targeted test section above 
+    # and uncomment the original main loop section below.
+
+    # --- Original Automated Rule Discovery Loop (Kept for reference) ---
+    # MAX_CONDITIONS_PER_RULE = 3 # User preference for future combinatorial runs
+    # best_accuracy = -1.0
+    # best_uptrend_rule_names = []
+    # best_downtrend_rule_names = []
+    
+    # # fixed_lookback_needed = 3 # Already set for the granular user conditions
+
+    # uptrend_rule_combos = generate_rule_combinations(UPTREND_ATOMIC_CONDITIONS, MAX_CONDITIONS_PER_RULE)
+    # downtrend_rule_combos = generate_rule_combinations(DOWNTREND_ATOMIC_CONDITIONS, MAX_CONDITIONS_PER_RULE)
+    
+    # print(f"Starting rule discovery. Total uptrend rule combinations: {len(uptrend_rule_combos)}")
+    # print(f"Total downtrend rule combinations: {len(downtrend_rule_combos)}")
+    
+    # total_iterations_up = len(uptrend_rule_combos) + 1 
+    # total_iterations_down = len(downtrend_rule_combos) + 1
+    # total_iterations = total_iterations_up * total_iterations_down
+    # print(f"Max iterations (including 'None' rule option): {total_iterations}")
+    
+    # iteration_count = 0
+
+    # uptrend_rule_combos_with_none = [[]] + uptrend_rule_combos 
+    # downtrend_rule_combos_with_none = [[]] + downtrend_rule_combos
+
+    # for up_rule_combo in uptrend_rule_combos_with_none:
+    #     for down_rule_combo in downtrend_rule_combos_with_none:
+    #         iteration_count += 1
+    #         if iteration_count % 500 == 0: 
+    #              print(f"Iteration {iteration_count}/{total_iterations}...")
+
+    #         if not up_rule_combo and not down_rule_combo: 
+    #             continue
+
+    #         current_rules_callback = create_rules_callback(up_rule_combo, down_rule_combo, fixed_lookback_needed)
             
-            generated_trends_df = identify_trends_from_ohlc(ohlc_df, current_rules_callback)
-            results = compare_trends(generated_trends_df, ground_truth_trends_df)
+    #         generated_trends_df = identify_trends_from_ohlc(ohlc_df, current_rules_callback)
+    #         results = compare_trends(generated_trends_df, ground_truth_trends_df)
 
-            if results['accuracy'] > best_accuracy:
-                best_accuracy = results['accuracy']
-                best_uptrend_rule_names = [f.__name__ for f in up_rule_combo]
-                best_downtrend_rule_names = [f.__name__ for f in down_rule_combo]
-                # To keep output cleaner during long runs, only print names, not full details initially
-                print(f"\nNew Best Accuracy: {best_accuracy:.2f}%")
-                print(f"  Uptrend Rule: {' AND '.join(best_uptrend_rule_names) if best_uptrend_rule_names else 'None'}")
-                print(f"  Downtrend Rule: {' AND '.join(best_downtrend_rule_names) if best_downtrend_rule_names else 'None'}")
-                print(f"  Matches: {results['matches']}, FP: {results['false_positives']}, FN: {results['false_negatives']}\n")
-                # Detailed false positives/negatives can be logged to a file if needed, or printed less often.
-                # For now, keeping the detailed dictionary for the final best.
-                if results['accuracy'] == 100.0: # Only print full details if 100%
-                    print(f"FP Details: {results.get('false_positives_details')}")
-                    print(f"FN Details: {results.get('false_negatives_details')}")
+    #         if results['accuracy'] > best_accuracy:
+    #             best_accuracy = results['accuracy']
+    #             best_uptrend_rule_names = [f.__name__ for f in up_rule_combo]
+    #             best_downtrend_rule_names = [f.__name__ for f in down_rule_combo]
+    #             print(f"\nNew Best Accuracy: {best_accuracy:.2f}%")
+    #             print(f"  Uptrend Rule: {' AND '.join(best_uptrend_rule_names) if best_uptrend_rule_names else 'None'}")
+    #             print(f"  Downtrend Rule: {' AND '.join(best_downtrend_rule_names) if best_downtrend_rule_names else 'None'}")
+    #             print(f"  Matches: {results['matches']}, FP: {results['false_positives']}, FN: {results['false_negatives']}\n")
+    #             if results['accuracy'] == 100.0:
+    #                 print(f"FP Details: {results.get('false_positives_details')}")
+    #                 print(f"FN Details: {results.get('false_negatives_details')}")
 
+    #         if results['accuracy'] == 100.0:
+    #             print("\n--- !!! 100% ACCURACY ACHIEVED !!! ---")
+    #             return 
 
-            if results['accuracy'] == 100.0:
-                print("\n--- !!! 100% ACCURACY ACHIEVED !!! ---")
-                # (print details as above)
-                return 
-
-    print("\n--- Discovery Complete ---")
-    print(f"Best accuracy achieved: {best_accuracy:.2f}%")
-    print(f"Best Uptrend Rule: {' AND '.join(best_uptrend_rule_names) if best_uptrend_rule_names else 'None'}")
-    print(f"Best Downtrend Rule: {' AND '.join(best_downtrend_rule_names) if best_downtrend_rule_names else 'None'}")
-    # Here you might want to re-run with the best rules to get detailed FP/FN for the final best.
-    # For now, the last results dictionary for the best accuracy will have them if uncommented in compare_trends.
+    # print("\n--- Discovery Complete ---")
+    # print(f"Best accuracy achieved: {best_accuracy:.2f}%")
+    # print(f"Best Uptrend Rule: {' AND '.join(best_uptrend_rule_names) if best_uptrend_rule_names else 'None'}")
+    # print(f"Best Downtrend Rule: {' AND '.join(best_downtrend_rule_names) if best_downtrend_rule_names else 'None'}")
 
 if __name__ == '__main__':
     main() 
