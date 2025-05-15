@@ -200,11 +200,16 @@ def is_custom_pds_rule_B(current_bar, prev_bar):
 def is_custom_pus_rule_B(current_bar, prev_bar):
     return current_bar.l >= prev_bar.l
 
-def check_custom_cus_confirmation_ref36(current_bar, pds_candidate_bar):
+def check_custom_cus_confirmation_ref36(current_bar, prev_bar, pds_candidate_bar):
     if pds_candidate_bar is None:
         return False
-    return (current_bar.l < pds_candidate_bar.l and \
-            current_bar.h <= pds_candidate_bar.h)
+    
+    original_cond_low_undercut = current_bar.l < pds_candidate_bar.l
+    original_cond_high_respect = current_bar.h <= pds_candidate_bar.h
+    # New condition: current bar must close higher than previous bar's close
+    new_cond_closes_stronger = current_bar.c > prev_bar.c
+    
+    return original_cond_low_undercut and original_cond_high_respect and new_cond_closes_stronger
 
 def check_custom_cus_confirmation_HHLL(current_bar, prev_bar):
     # CUS for prior PUS candidate is triggered if:
@@ -216,17 +221,39 @@ def check_custom_cus_confirmation_HHLL(current_bar, prev_bar):
     cond3_down_close = current_bar.c < current_bar.o
     return cond1_higher_high and cond2_lower_low and cond3_down_close
 
-def check_custom_cus_EngulfingUp(current_bar, prev_bar):
+def check_custom_cus_EngulfingUp(current_bar, prev_bar, initial_pds_candidate_bar_obj_for_context):
     # CUS for prior PUS candidate if current_bar is an engulfing up bar relative to prev_bar.
     # 1. current_bar.h > prev_bar.h
-    # 2. current_bar.l < prev_bar.l (optional, makes it an outside bar)
+    # 2. current_bar.l < prev_bar.l
     # 3. current_bar.c > prev_bar.c
     # 4. current_bar.c > current_bar.o (current bar is an UP bar)
+    # 5. NEW: current_bar.l < initial_pds_candidate_bar_obj.l (must also break below a relevant PDS low)
     cond1_higher_high = current_bar.h > prev_bar.h
-    cond2_lower_low = current_bar.l < prev_bar.l # Making this part of the rule for now
+    cond2_lower_low = current_bar.l < prev_bar.l 
     cond3_closes_higher_than_prev_close = current_bar.c > prev_bar.c
     cond4_up_bar = current_bar.c > current_bar.o
-    return cond1_higher_high and cond2_lower_low and cond3_closes_higher_than_prev_close and cond4_up_bar
+    
+    cond5_break_pds_low = False # Default to FALSE if no PDS context
+    pds_context_details = "None (Cond5 default False)"
+    if initial_pds_candidate_bar_obj_for_context is not None:
+        cond5_break_pds_low = current_bar.l < initial_pds_candidate_bar_obj_for_context.l
+        pds_context_details = f"PDS_Cand_Idx: {initial_pds_candidate_bar_obj_for_context.index}, PDS_Cand_L: {initial_pds_candidate_bar_obj_for_context.l}"
+        
+    final_result = cond1_higher_high and cond2_lower_low and cond3_closes_higher_than_prev_close and cond4_up_bar and cond5_break_pds_low
+
+    # Diagnostic print, especially for target line 32 (curr=32, prev=31)
+    if current_bar.index == 32 and prev_bar.index == 31: 
+        print(f"DEBUG EngulfingUp: Curr={current_bar.index}, Prev={prev_bar.index}, PUS_Cand_being_checked (not passed to func but from calling context)")
+        print(f"  PDS Context Obj Passed: {'Exists' if initial_pds_candidate_bar_obj_for_context else 'None'}")
+        print(f"  PDS Context Details: {pds_context_details}, Curr.L: {current_bar.l}")
+        print(f"  Cond1(curr.h>prev.h): {cond1_higher_high} ({current_bar.h} > {prev_bar.h})")
+        print(f"  Cond2(curr.l<prev.l): {cond2_lower_low} ({current_bar.l} < {prev_bar.l})")
+        print(f"  Cond3(curr.c>prev.c): {cond3_closes_higher_than_prev_close} ({current_bar.c} > {prev_bar.c})")
+        print(f"  Cond4(curr.c>curr.o): {cond4_up_bar} ({current_bar.c} > {current_bar.o})")
+        print(f"  Cond5(curr.l<pds_low if pds else False): {cond5_break_pds_low}")
+        print(f"  Final Result: {final_result}")
+        
+    return final_result
 
 def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.M25_1d_ohlc.csv"):
     bars = []
@@ -283,15 +310,23 @@ def process_trend_logic(all_bars):
         if initial_pus_candidate_bar_obj is not None:
             sdb_triggers_cus = is_SDB(current_bar, prev_bar)
             
+            # New condition for SDB CUS: only if current_bar.l does NOT break below initial_pds_candidate_bar_obj.l
+            sdb_cus_valid_context = True
+            if sdb_triggers_cus and initial_pds_candidate_bar_obj is not None: # Check PDS context only if SDB would trigger
+                if current_bar.l < initial_pds_candidate_bar_obj.l:
+                    sdb_cus_valid_context = False
+            
             ref36_pds_peak_for_check = None
             if state.confirmed_downtrend_candidate_peak_bar_index is not None: # Use current PDS peak for ref36 check
                  ref36_pds_peak_for_check = all_bars[state.confirmed_downtrend_candidate_peak_bar_index -1]
             
-            ref36_triggers_cus = check_custom_cus_confirmation_ref36(current_bar, ref36_pds_peak_for_check) if ref36_pds_peak_for_check else False
+            # Pass prev_bar to the updated ref36 function
+            ref36_triggers_cus = check_custom_cus_confirmation_ref36(current_bar, prev_bar, ref36_pds_peak_for_check) if ref36_pds_peak_for_check else False
             hhll_triggers_cus = check_custom_cus_confirmation_HHLL(current_bar, prev_bar)
-            engulfing_up_triggers_cus = check_custom_cus_EngulfingUp(current_bar, prev_bar)
+            # Pass initial_pds_candidate_bar_obj for context to EngulfingUp
+            engulfing_up_triggers_cus = check_custom_cus_EngulfingUp(current_bar, prev_bar, initial_pds_candidate_bar_obj)
 
-            if sdb_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "SDB"
+            if sdb_triggers_cus and sdb_cus_valid_context: can_confirm_cus = True; cus_trigger_rule_type = "SDB"
             elif ref36_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "REF36"
             elif hhll_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "HHLL"
             elif engulfing_up_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "EngulfingUp"
@@ -498,43 +533,39 @@ def process_trend_logic(all_bars):
         # And PDS Rule C didn't just fire for current_bar (to avoid double PDS setting if curr becomes prev)
         if not confirmed_downtrend_this_iteration and not new_pds_on_curr_bar_this_iteration:
             # This 'if' starts the PDS-on-prev-bar logic
-        if is_SDB(current_bar, prev_bar) or \
-           is_your_custom_pds_rule(current_bar, prev_bar) or \
-           is_custom_pds_rule_B(current_bar, prev_bar): 
-                # VVV ALL OF THESE LINES NEED TO BE INDENTED VVV
-            state.potential_downtrend_signal_bar_index = prev_bar.index
-            state.potential_downtrend_anchor_high = prev_bar.h
-            if state.confirmed_downtrend_candidate_peak_bar_index is None or \
-               prev_bar.h > state.confirmed_downtrend_candidate_peak_high:
-                state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
-                state.confirmed_downtrend_candidate_peak_high = prev_bar.h
-                state.confirmed_downtrend_candidate_peak_low = prev_bar.l
-                current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
-            if state.potential_uptrend_signal_bar_index is not None:
-                state.potential_uptrend_signal_bar_index = None
-                state.potential_uptrend_anchor_low = None
-                # ^^^ ALL OF THESE LINES NEED TO BE INDENTED ^^^
-
+            if is_SDB(current_bar, prev_bar) or \
+               is_your_custom_pds_rule(current_bar, prev_bar) or \
+               is_custom_pds_rule_B(current_bar, prev_bar): 
+                state.potential_downtrend_signal_bar_index = prev_bar.index
+                state.potential_downtrend_anchor_high = prev_bar.h
+                if state.confirmed_downtrend_candidate_peak_bar_index is None or \
+                   prev_bar.h > state.confirmed_downtrend_candidate_peak_high:
+                    state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
+                    state.confirmed_downtrend_candidate_peak_high = prev_bar.h
+                    state.confirmed_downtrend_candidate_peak_low = prev_bar.l
+                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                if state.potential_uptrend_signal_bar_index is not None:
+                    state.potential_uptrend_signal_bar_index = None
+                    state.potential_uptrend_anchor_low = None
+        
         # Check for PUS on prev_bar, allow if no CUS confirmed for a *different* trough this iteration
         # And PDS Rule C didn't just fire for current_bar (as that's a bearish signal)
         if not confirmed_uptrend_this_iteration and not new_pds_on_curr_bar_this_iteration:
             # This 'if' starts the PUS-on-prev-bar logic
             if is_SUB(current_bar, prev_bar) or \
-             is_your_custom_pus_rule(current_bar, prev_bar) or \
-             is_custom_pus_rule_B(current_bar, prev_bar): 
-                # VVV ALL OF THESE LINES NEED TO BE INDENTED VVV
-            state.potential_uptrend_signal_bar_index = prev_bar.index
-            state.potential_uptrend_anchor_low = prev_bar.l
-            if state.confirmed_uptrend_candidate_low_bar_index is None or \
-               prev_bar.l < state.confirmed_uptrend_candidate_low_low:
-                state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
-                state.confirmed_uptrend_candidate_low_low = prev_bar.l
-                state.confirmed_uptrend_candidate_low_high = prev_bar.h
-                current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
-            if state.potential_downtrend_signal_bar_index is not None:
-                state.potential_downtrend_signal_bar_index = None
-                state.potential_downtrend_anchor_high = None
-                # ^^^ ALL OF THESE LINES NEED TO BE INDENTED ^^^
+                 is_your_custom_pus_rule(current_bar, prev_bar) or \
+                 is_custom_pus_rule_B(current_bar, prev_bar): 
+                state.potential_uptrend_signal_bar_index = prev_bar.index
+                state.potential_uptrend_anchor_low = prev_bar.l
+                if state.confirmed_uptrend_candidate_low_bar_index is None or \
+                   prev_bar.l < state.confirmed_uptrend_candidate_low_low:
+                    state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
+                    state.confirmed_uptrend_candidate_low_low = prev_bar.l
+                    state.confirmed_uptrend_candidate_low_high = prev_bar.h
+                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                if state.potential_downtrend_signal_bar_index is not None:
+                    state.potential_downtrend_signal_bar_index = None
+                    state.potential_downtrend_anchor_high = None
 
         if not current_bar_event_descriptions:
             final_log_text = "Neutral"
