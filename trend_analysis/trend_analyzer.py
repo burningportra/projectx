@@ -473,7 +473,7 @@ def process_trend_logic(all_bars):
 if __name__ == "__main__":
     try:
         # Ensure 'data' directory exists or adjust path
-        csv_file_path = "data/MNQ Bar Data(2019-05-06 - 2019-8-14).csv"
+        csv_file_path = "data/MNQ Bar Data(2019-05-06-2019-8-14).csv"
         all_bars_chronological = load_bars_from_csv(filename=csv_file_path)
         
         if not all_bars_chronological:
