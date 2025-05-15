@@ -202,207 +202,202 @@ def process_trend_logic(all_bars):
         if k == 0:
             state.log_entries.append(f"{log_index_for_this_entry}. Nothing")
             continue
+        
         current_bar = all_bars[k]
         prev_bar = all_bars[k-1]
-        confirmed_downtrend_this_iteration = False
+        
         confirmed_uptrend_this_iteration = False
-        if state.confirmed_downtrend_candidate_peak_bar_index is not None:
-            peak_bar_for_confirmed_downtrend = all_bars[state.confirmed_downtrend_candidate_peak_bar_index - 1]
+        confirmed_downtrend_this_iteration = False
+
+        # --- Store initial candidates for this iteration's evaluation ---
+        initial_pus_candidate_idx = state.confirmed_uptrend_candidate_low_bar_index
+        initial_pus_candidate_bar_obj = None
+        if initial_pus_candidate_idx is not None:
+            initial_pus_candidate_bar_obj = all_bars[initial_pus_candidate_idx - 1]
+
+        initial_pds_candidate_idx = state.confirmed_downtrend_candidate_peak_bar_index
+        initial_pds_candidate_bar_obj = None
+        if initial_pds_candidate_idx is not None:
+            initial_pds_candidate_bar_obj = all_bars[initial_pds_candidate_idx - 1]
+
+        # --- Evaluate CUS Possibility (based on initial PUS candidate) ---
+        can_confirm_cus = False
+        cus_trigger_rule_type = None # e.g., "SDB", "REF36", "HHLL"
+        
+        if initial_pus_candidate_bar_obj is not None:
+            sdb_triggers_cus = is_SDB(current_bar, prev_bar)
+            
+            ref36_pds_peak_for_check = None
+            if state.confirmed_downtrend_candidate_peak_bar_index is not None: # Use current PDS peak for ref36 check
+                 ref36_pds_peak_for_check = all_bars[state.confirmed_downtrend_candidate_peak_bar_index -1]
+            
+            ref36_triggers_cus = check_custom_cus_confirmation_ref36(current_bar, ref36_pds_peak_for_check) if ref36_pds_peak_for_check else False
+            hhll_triggers_cus = check_custom_cus_confirmation_HHLL(current_bar, prev_bar)
+
+            if sdb_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "SDB"
+            elif ref36_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "REF36"
+            elif hhll_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "HHLL"
+
+        # --- Evaluate CDS Possibility (based on initial PDS candidate) ---
+        can_confirm_cds = False
+        cds_trigger_rule_type = None # e.g., "BRB", "A", "B", "F"
+        
+        if initial_pds_candidate_bar_obj is not None:
+            # For BRB, 'no_higher_high_for_brb_path' needs initial_pds_candidate_bar_obj
             no_higher_high_for_brb_path = True
-            if state.confirmed_downtrend_candidate_peak_bar_index < prev_bar.index:
-                for j_1based_idx in range(state.confirmed_downtrend_candidate_peak_bar_index + 1, prev_bar.index + 1):
-                    if all_bars[j_1based_idx - 1].h > peak_bar_for_confirmed_downtrend.h:
-                        no_higher_high_for_brb_path = False
-                        break
-            if is_BRB(current_bar, prev_bar) and \
-               current_bar.l < peak_bar_for_confirmed_downtrend.l and \
-               no_higher_high_for_brb_path:
-                current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {peak_bar_for_confirmed_downtrend.index} ({peak_bar_for_confirmed_downtrend.date})")
-                current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {current_bar.index} ({current_bar.date})")
-                state.potential_uptrend_signal_bar_index = current_bar.index
-                state.potential_uptrend_anchor_low = current_bar.l
-                state.confirmed_uptrend_candidate_low_bar_index = current_bar.index
-                state.confirmed_uptrend_candidate_low_low = current_bar.l
-                state.confirmed_uptrend_candidate_low_high = current_bar.h
-                state.potential_downtrend_signal_bar_index = None
-                state.potential_downtrend_anchor_high = None
-                state.confirmed_downtrend_candidate_peak_bar_index = None
-                state.confirmed_downtrend_candidate_peak_high = None
-                state.confirmed_downtrend_candidate_peak_low = None
-                confirmed_downtrend_this_iteration = True
-            elif not confirmed_downtrend_this_iteration and \
-                 check_custom_cds_confirmation_A(current_bar, prev_bar, peak_bar_for_confirmed_downtrend, all_bars):
-                current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {peak_bar_for_confirmed_downtrend.index} ({peak_bar_for_confirmed_downtrend.date})")
-                if state.confirmed_uptrend_candidate_low_bar_index is not None:
-                    pus_candidate_idx = state.confirmed_uptrend_candidate_low_bar_index
-                    pus_bar_object_for_log = all_bars[pus_candidate_idx - 1]
-                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {pus_candidate_idx} ({pus_bar_object_for_log.date})")
-                    state.potential_uptrend_signal_bar_index = pus_candidate_idx
-                    state.potential_uptrend_anchor_low = pus_bar_object_for_log.l
-                else:
-                    lowest_low_bar_for_pus = None
-                    min_low_val = float('inf')
-                    search_start_0idx = peak_bar_for_confirmed_downtrend.index
-                    search_end_0idx = current_bar.index - 2
-                    if search_start_0idx <= search_end_0idx:
-                        for i_0based in range(search_start_0idx, search_end_0idx + 1):
-                            bar_in_range = all_bars[i_0based]
-                            if bar_in_range.l < min_low_val:
-                                min_low_val = bar_in_range.l
-                                lowest_low_bar_for_pus = bar_in_range
-                    if lowest_low_bar_for_pus is not None:
-                        current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {lowest_low_bar_for_pus.index} ({lowest_low_bar_for_pus.date})")
-                        state.potential_uptrend_signal_bar_index = lowest_low_bar_for_pus.index
-                        state.potential_uptrend_anchor_low = lowest_low_bar_for_pus.l
-                        state.confirmed_uptrend_candidate_low_bar_index = lowest_low_bar_for_pus.index 
-                        state.confirmed_uptrend_candidate_low_low = lowest_low_bar_for_pus.l
-                        state.confirmed_uptrend_candidate_low_high = lowest_low_bar_for_pus.h
-                state.potential_downtrend_signal_bar_index = None
-                state.potential_downtrend_anchor_high = None
-                state.confirmed_downtrend_candidate_peak_bar_index = None
-                state.confirmed_downtrend_candidate_peak_high = None
-                state.confirmed_downtrend_candidate_peak_low = None
-                confirmed_downtrend_this_iteration = True
-            elif not confirmed_downtrend_this_iteration and \
-                 check_custom_cds_confirmation_B(current_bar, prev_bar, peak_bar_for_confirmed_downtrend, all_bars):
-                current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {peak_bar_for_confirmed_downtrend.index} ({peak_bar_for_confirmed_downtrend.date})")
-                if state.confirmed_uptrend_candidate_low_bar_index is not None:
-                    pus_candidate_idx = state.confirmed_uptrend_candidate_low_bar_index
-                    pus_bar_object_for_log = all_bars[pus_candidate_idx - 1]
-                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {pus_candidate_idx} ({pus_bar_object_for_log.date})")
-                    state.potential_uptrend_signal_bar_index = pus_candidate_idx
-                    state.potential_uptrend_anchor_low = pus_bar_object_for_log.l
-                else: 
-                    lowest_low_bar_for_pus = None
-                    min_low_val = float('inf')
-                    search_start_0idx = peak_bar_for_confirmed_downtrend.index 
-                    search_end_0idx = current_bar.index - 2 
-                    if search_start_0idx <= search_end_0idx:
-                        for i_0based in range(search_start_0idx, search_end_0idx + 1):
-                            bar_in_range = all_bars[i_0based]
-                            if bar_in_range.l < min_low_val:
-                                min_low_val = bar_in_range.l
-                                lowest_low_bar_for_pus = bar_in_range
-                    if lowest_low_bar_for_pus is not None:
-                        current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {lowest_low_bar_for_pus.index} ({lowest_low_bar_for_pus.date})")
-                        state.potential_uptrend_signal_bar_index = lowest_low_bar_for_pus.index
-                        state.potential_uptrend_anchor_low = lowest_low_bar_for_pus.l
-                        state.confirmed_uptrend_candidate_low_bar_index = lowest_low_bar_for_pus.index 
-                        state.confirmed_uptrend_candidate_low_low = lowest_low_bar_for_pus.l
-                        state.confirmed_uptrend_candidate_low_high = lowest_low_bar_for_pus.h
-                state.potential_downtrend_signal_bar_index = None
-                state.potential_downtrend_anchor_high = None
-                state.confirmed_downtrend_candidate_peak_bar_index = None
-                state.confirmed_downtrend_candidate_peak_high = None
-                state.confirmed_downtrend_candidate_peak_low = None
-                confirmed_downtrend_this_iteration = True
-            elif not confirmed_downtrend_this_iteration and \
-                 check_custom_cds_confirmation_F(current_bar, prev_bar, peak_bar_for_confirmed_downtrend, all_bars):
-                current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {peak_bar_for_confirmed_downtrend.index} ({peak_bar_for_confirmed_downtrend.date})")
-                
-                # PUS Selection for Rule F: always find the specific lowest low
-                lowest_low_bar_for_pus = None
-                min_low_val = float('inf')
-                # Search range: (peak_bar_for_confirmed_downtrend.index + 1) to (current_bar.index - 1)
-                search_start_0idx = peak_bar_for_confirmed_downtrend.index # 0-indexed for bar after peak
-                search_end_0idx = current_bar.index - 2 # 0-indexed for bar before current
+            if initial_pds_candidate_bar_obj.index < prev_bar.index:
+                for j_1based_idx in range(initial_pds_candidate_bar_obj.index + 1, prev_bar.index + 1):
+                    if all_bars[j_1based_idx - 1].h > initial_pds_candidate_bar_obj.h:
+                        no_higher_high_for_brb_path = False; break
+            
+            if is_BRB(current_bar, prev_bar) and current_bar.l < initial_pds_candidate_bar_obj.l and no_higher_high_for_brb_path:
+                can_confirm_cds = True; cds_trigger_rule_type = "BRB"
+            elif check_custom_cds_confirmation_A(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+                can_confirm_cds = True; cds_trigger_rule_type = "A"
+            elif check_custom_cds_confirmation_B(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+                can_confirm_cds = True; cds_trigger_rule_type = "B"
+            elif check_custom_cds_confirmation_F(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+                can_confirm_cds = True; cds_trigger_rule_type = "F"
 
-                if search_start_0idx <= search_end_0idx:
-                    for i_0based in range(search_start_0idx, search_end_0idx + 1):
-                        bar_in_range = all_bars[i_0based]
-                        if bar_in_range.l < min_low_val:
-                            min_low_val = bar_in_range.l
-                            lowest_low_bar_for_pus = bar_in_range
-                
-                if lowest_low_bar_for_pus is not None:
-                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {lowest_low_bar_for_pus.index} ({lowest_low_bar_for_pus.date})")
-                    state.potential_uptrend_signal_bar_index = lowest_low_bar_for_pus.index
-                    state.potential_uptrend_anchor_low = lowest_low_bar_for_pus.l
-                    state.confirmed_uptrend_candidate_low_bar_index = lowest_low_bar_for_pus.index 
-                    state.confirmed_uptrend_candidate_low_low = lowest_low_bar_for_pus.l
-                    state.confirmed_uptrend_candidate_low_high = lowest_low_bar_for_pus.h
-                else: # Should ideally not happen if prev_bar made the low and is in range
-                    state.potential_uptrend_signal_bar_index = None # Clear PUS if none found
-                    state.potential_uptrend_anchor_low = None
-                    state.confirmed_uptrend_candidate_low_bar_index = None
-                    state.confirmed_uptrend_candidate_low_low = None
-                    state.confirmed_uptrend_candidate_low_high = None
+        # --- Apply Consequences (PRIORITY 1: CUS) ---
+        if can_confirm_cus:
+            confirmed_uptrend_this_iteration = True
+            # initial_pus_candidate_bar_obj is the bar being confirmed CUS
+            current_bar_event_descriptions.append(f"Uptrend Start Confirmed for Bar {initial_pus_candidate_bar_obj.index} ({initial_pus_candidate_bar_obj.date})")
+            
+            # Clear ALL PUS state as it's now confirmed.
+            state.potential_uptrend_signal_bar_index = None
+            state.potential_uptrend_anchor_low = None
+            state.confirmed_uptrend_candidate_low_bar_index = None
+            state.confirmed_uptrend_candidate_low_low = None
+            state.confirmed_uptrend_candidate_low_high = None
 
-                # PDS on current_bar as per Rule F's implication
+            if cus_trigger_rule_type == "HHLL":
                 current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
                 state.potential_downtrend_signal_bar_index = current_bar.index
                 state.potential_downtrend_anchor_high = current_bar.h
+                # This PDS becomes the new candidate
                 state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
                 state.confirmed_downtrend_candidate_peak_high = current_bar.h
                 state.confirmed_downtrend_candidate_peak_low = current_bar.l
+            else: # SDB or REF36 CUS
+                # cus_bar_object (which is initial_pus_candidate_bar_obj) might become PDS
+                if state.confirmed_downtrend_candidate_peak_bar_index is None or \
+                   initial_pus_candidate_bar_obj.h > state.confirmed_downtrend_candidate_peak_high:
+                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {initial_pus_candidate_bar_obj.index} ({initial_pus_candidate_bar_obj.date})")
+                    state.potential_downtrend_signal_bar_index = initial_pus_candidate_bar_obj.index
+                    state.potential_downtrend_anchor_high = initial_pus_candidate_bar_obj.h
+                    state.confirmed_downtrend_candidate_peak_bar_index = initial_pus_candidate_bar_obj.index
+                    state.confirmed_downtrend_candidate_peak_high = initial_pus_candidate_bar_obj.h
+                    state.confirmed_downtrend_candidate_peak_low = initial_pus_candidate_bar_obj.l
+        
+        # --- Apply Consequences (PRIORITY 2: CDS) ---
+        if can_confirm_cds:
+            confirmed_downtrend_this_iteration = True
+            # initial_pds_candidate_bar_obj is the bar being confirmed CDS
+            current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {initial_pds_candidate_bar_obj.index} ({initial_pds_candidate_bar_obj.date})")
+
+            # PUS setting logic
+            pus_source_for_cds = None # Bar object that will be PUS
+            if cds_trigger_rule_type == "BRB":
+                current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {current_bar.index} ({current_bar.date})")
+                state.potential_uptrend_signal_bar_index = current_bar.index
+                state.potential_uptrend_anchor_low = current_bar.l
                 
-                confirmed_downtrend_this_iteration = True
-        if not confirmed_downtrend_this_iteration and \
-           state.confirmed_uptrend_candidate_low_bar_index is not None:
-            standard_sdb_trigger = is_SDB(current_bar, prev_bar)
-            custom_ref36_trigger = False
-            if state.confirmed_downtrend_candidate_peak_bar_index is not None:
-                pds_candidate_for_ref36_check = all_bars[state.confirmed_downtrend_candidate_peak_bar_index - 1]
-                if check_custom_cus_confirmation_ref36(current_bar, pds_candidate_for_ref36_check):
-                    custom_ref36_trigger = True
-            hhll_cus_trigger = check_custom_cus_confirmation_HHLL(current_bar, prev_bar)
-            if standard_sdb_trigger or custom_ref36_trigger or hhll_cus_trigger:
-                cus_candidate_bar_index = state.confirmed_uptrend_candidate_low_bar_index
-                cus_bar_object = all_bars[cus_candidate_bar_index - 1]
-                current_bar_event_descriptions.append(f"Uptrend Start Confirmed for Bar {cus_candidate_bar_index} ({cus_bar_object.date})")
-                state.potential_uptrend_signal_bar_index = None
-                state.potential_uptrend_anchor_low = None
-                state.confirmed_uptrend_candidate_low_bar_index = None
-                state.confirmed_uptrend_candidate_low_low = None
-                state.confirmed_uptrend_candidate_low_high = None
-                if hhll_cus_trigger:
-                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
-                    state.potential_downtrend_signal_bar_index = current_bar.index
-                    state.potential_downtrend_anchor_high = current_bar.h
-                    state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
-                    state.confirmed_downtrend_candidate_peak_high = current_bar.h
-                    state.confirmed_downtrend_candidate_peak_low = current_bar.l
-                else:
-                    became_cds_candidate = False
-                    if state.confirmed_downtrend_candidate_peak_bar_index is None or \
-                       cus_bar_object.h > state.confirmed_downtrend_candidate_peak_high:
-                        state.confirmed_downtrend_candidate_peak_bar_index = cus_candidate_bar_index 
-                        state.confirmed_downtrend_candidate_peak_high = cus_bar_object.h
-                        state.confirmed_downtrend_candidate_peak_low = cus_bar_object.l
-                        became_cds_candidate = True
-                    if became_cds_candidate:
-                        current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {cus_candidate_bar_index} ({cus_bar_object.date})")
-                        state.potential_downtrend_signal_bar_index = cus_candidate_bar_index
-                        state.potential_downtrend_anchor_high = cus_bar_object.h
-                confirmed_uptrend_this_iteration = True
-        if is_SDB(current_bar, prev_bar) or \
-           is_your_custom_pds_rule(current_bar, prev_bar) or \
-           is_custom_pds_rule_B(current_bar, prev_bar): 
-            state.potential_downtrend_signal_bar_index = prev_bar.index
-            state.potential_downtrend_anchor_high = prev_bar.h
-            if state.confirmed_downtrend_candidate_peak_bar_index is None or \
-               prev_bar.h > state.confirmed_downtrend_candidate_peak_high:
-                state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
-                state.confirmed_downtrend_candidate_peak_high = prev_bar.h
-                state.confirmed_downtrend_candidate_peak_low = prev_bar.l
-                current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
-            if state.potential_uptrend_signal_bar_index is not None:
-                state.potential_uptrend_signal_bar_index = None
-                state.potential_uptrend_anchor_low = None
-        elif is_SUB(current_bar, prev_bar) or \
-             is_your_custom_pus_rule(current_bar, prev_bar) or \
-             is_custom_pus_rule_B(current_bar, prev_bar): 
-            state.potential_uptrend_signal_bar_index = prev_bar.index
-            state.potential_uptrend_anchor_low = prev_bar.l
-            if state.confirmed_uptrend_candidate_low_bar_index is None or \
-               prev_bar.l < state.confirmed_uptrend_candidate_low_low:
-                state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
-                state.confirmed_uptrend_candidate_low_low = prev_bar.l
-                state.confirmed_uptrend_candidate_low_high = prev_bar.h
-                current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
-            if state.potential_downtrend_signal_bar_index is not None:
-                state.potential_downtrend_signal_bar_index = None
-                state.potential_downtrend_anchor_high = None
+                # Intelligent CUS candidate update for BRB
+                chosen_pus_candidate_bar = current_bar
+                if state.confirmed_uptrend_candidate_low_bar_index is not None and \
+                   state.confirmed_uptrend_candidate_low_low is not None and \
+                   state.confirmed_uptrend_candidate_low_low < current_bar.l: 
+                    chosen_pus_candidate_bar = all_bars[state.confirmed_uptrend_candidate_low_bar_index - 1]
+                
+                # Update confirmed_uptrend_candidate_... states
+                state.confirmed_uptrend_candidate_low_bar_index = chosen_pus_candidate_bar.index
+                state.confirmed_uptrend_candidate_low_low = chosen_pus_candidate_bar.l
+                state.confirmed_uptrend_candidate_low_high = chosen_pus_candidate_bar.h
+            
+            elif cds_trigger_rule_type in ["A", "B", "F"]:
+                # Use existing PUS candidate if available (it might be None if CUS just cleared it)
+                # OR find lowest_low between initial_pds_candidate_bar_obj and current_bar
+                temp_pus_candidate_bar = None
+                if state.confirmed_uptrend_candidate_low_bar_index is not None:
+                    temp_pus_candidate_bar = all_bars[state.confirmed_uptrend_candidate_low_bar_index -1]
+                else: # Find lowest_low
+                    lowest_low_bar_search = None; min_l_val = float('inf')
+                    s_start_0idx = initial_pds_candidate_bar_obj.index 
+                    s_end_0idx = current_bar.index - 2 
+                    if s_start_0idx <= s_end_0idx:
+                        for i_0based in range(s_start_0idx, s_end_0idx + 1):
+                            bar_in_range = all_bars[i_0based]
+                            if bar_in_range.l < min_l_val: min_l_val = bar_in_range.l; lowest_low_bar_search = bar_in_range
+                    if lowest_low_bar_search is not None:
+                        temp_pus_candidate_bar = lowest_low_bar_search
+                
+                if temp_pus_candidate_bar is not None:
+                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {temp_pus_candidate_bar.index} ({temp_pus_candidate_bar.date})")
+                    state.potential_uptrend_signal_bar_index = temp_pus_candidate_bar.index
+                    state.potential_uptrend_anchor_low = temp_pus_candidate_bar.l
+                    state.confirmed_uptrend_candidate_low_bar_index = temp_pus_candidate_bar.index
+                    state.confirmed_uptrend_candidate_low_low = temp_pus_candidate_bar.l
+                    state.confirmed_uptrend_candidate_low_high = temp_pus_candidate_bar.h
+
+            # PDS State update/clear for the confirmed CDS
+            # If Rule F triggered this CDS, it sets PDS on current_bar
+            if cds_trigger_rule_type == "F":
+                current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
+                state.potential_downtrend_signal_bar_index = current_bar.index
+                state.potential_downtrend_anchor_high = current_bar.h
+                state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index # New PDS candidate
+                state.confirmed_downtrend_candidate_peak_high = current_bar.h
+                state.confirmed_downtrend_candidate_peak_low = current_bar.l
+            
+            # Clear the PDS states of the *just confirmed* initial_pds_candidate_bar_obj
+            # Only if it wasn't immediately replaced by current_bar (e.g. by Rule F or CUS's HHLL)
+            # This needs to be careful not to clear a new PDS set on current_bar if initial_pds == current_bar (not possible here)
+            # Or if new PDS from CUS is different from initial_pds_candidate_bar_obj.
+            # Simpler: If the current PDS candidate IS the one we just confirmed (initial_pds_candidate_bar_obj), it means no newer PDS took precedence.
+            if state.confirmed_downtrend_candidate_peak_bar_index == initial_pds_candidate_bar_obj.index:
+                 state.potential_downtrend_signal_bar_index = None
+                 state.potential_downtrend_anchor_high = None
+                 state.confirmed_downtrend_candidate_peak_bar_index = None
+                 state.confirmed_downtrend_candidate_peak_high = None
+                 state.confirmed_downtrend_candidate_peak_low = None
+            # Also ensure active PDS signal for initial_pds_candidate_bar_obj is cleared if it was that one.
+            if state.potential_downtrend_signal_bar_index == initial_pds_candidate_bar_obj.index:
+                 state.potential_downtrend_signal_bar_index = None
+                 state.potential_downtrend_anchor_high = None
+
+
+        # --- Check for New Potential Signals (on prev_bar) ---
+        if not (confirmed_uptrend_this_iteration or confirmed_downtrend_this_iteration): 
+            if is_SDB(current_bar, prev_bar) or \
+               is_your_custom_pds_rule(current_bar, prev_bar) or \
+               is_custom_pds_rule_B(current_bar, prev_bar): 
+                state.potential_downtrend_signal_bar_index = prev_bar.index
+                state.potential_downtrend_anchor_high = prev_bar.h
+                if state.confirmed_downtrend_candidate_peak_bar_index is None or \
+                   prev_bar.h > state.confirmed_downtrend_candidate_peak_high:
+                    state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
+                    state.confirmed_downtrend_candidate_peak_high = prev_bar.h
+                    state.confirmed_downtrend_candidate_peak_low = prev_bar.l
+                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                if state.potential_uptrend_signal_bar_index is not None:
+                    state.potential_uptrend_signal_bar_index = None
+                    state.potential_uptrend_anchor_low = None
+            elif is_SUB(current_bar, prev_bar) or \
+                 is_your_custom_pus_rule(current_bar, prev_bar) or \
+                 is_custom_pus_rule_B(current_bar, prev_bar): 
+                state.potential_uptrend_signal_bar_index = prev_bar.index
+                state.potential_uptrend_anchor_low = prev_bar.l
+                if state.confirmed_uptrend_candidate_low_bar_index is None or \
+                   prev_bar.l < state.confirmed_uptrend_candidate_low_low:
+                    state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
+                    state.confirmed_uptrend_candidate_low_low = prev_bar.l
+                    state.confirmed_uptrend_candidate_low_high = prev_bar.h
+                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                if state.potential_downtrend_signal_bar_index is not None:
+                    state.potential_downtrend_signal_bar_index = None
+                    state.potential_downtrend_anchor_high = None
         if not current_bar_event_descriptions:
             final_log_text = "Neutral"
         else:
