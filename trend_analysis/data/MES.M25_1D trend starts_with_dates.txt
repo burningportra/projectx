@@ -1,0 +1,40 @@
+1. Nothing
+2. Potential Downtrend Signal on Bar 1 (2025-03-17 00:00:00+00:00)
+3. Downtrend Start Confirmed for Bar 1 (2025-03-17 00:00:00+00:00); Potential Uptrend Signal on Bar 2 (2025-03-18 00:00:00+00:00)
+4. Potential Downtrend Signal on Bar 3 (2025-03-19 00:00:00+00:00)
+5. Uptrend Start Confirmed for Bar 2 (2025-03-18 00:00:00+00:00)
+6. Downtrend Start Confirmed for Bar 3 (2025-03-19 00:00:00+00:00); Potential Uptrend Signal on Bar 5 (2025-03-21 00:00:00+00:00)
+7. Neutral
+8. Potential Downtrend Signal on Bar 5 (2025-03-21 00:00:00+00:00); Potential Downtrend Signal on Bar 7 (2025-03-25 00:00:00+00:00); Uptrend Start Confirmed for Bar 5 (2025-03-21 00:00:00+00:00)
+9. Neutral
+10. Neutral
+11. Neutral
+12. Downtrend Start Confirmed for Bar 7 (2025-03-25 00:00:00+00:00); Potential Uptrend Signal on Bar 11 (2025-03-31 00:00:00+00:00)
+13. Potential Downtrend Signal on Bar 13 (2025-04-02 00:00:00+00:00); Uptrend Start Confirmed for Bar 11 (2025-03-31 00:00:00+00:00)
+14. Neutral
+15. Neutral
+16. Neutral
+17. Downtrend Start Confirmed for Bar 13 (2025-04-02 00:00:00+00:00); Potential Uptrend Signal on Bar 16 (2025-04-09 00:00:00+00:00);Potential Downtrend Signal on Bar 17 (2025-04-08 00:00:00+00:00)
+18. Downtrend Start Confirmed for Bar 17 (2025-04-02 00:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-04-09 00:00:00+00:00)
+19. Neutral
+20. Potential Downtrend Signal on Bar 19 (2025-04-10 00:00:00+00:00)
+21. Neutral
+22. Neutral
+23. Uptrend Start Confirmed for Bar 18 (2025-04-09 00:00:00+00:00)
+24. Neutral
+25. Neutral
+26. Downtrend Start Confirmed for Bar 19 (2025-04-10 00:00:00+00:00); Potential Uptrend Signal on Bar 25 (2025-04-21 00:00:00+00:00)
+27. Potential Downtrend Signal on Bar 27 (2025-04-23 00:00:00+00:00);
+28. Potential Downtrend Signal on Bar 28 (2025-04-24 00:00:00+00:00);
+29. Potential Downtrend Signal on Bar 29 (2025-04-25 00:00:00+00:00);
+30. Potential Downtrend Signal on Bar 30 (2025-04-28 00:00:00+00:00);
+31. Potential Downtrend Signal on Bar 31 (2025-04-29 00:00:00+00:00);
+32. Potential Downtrend Signal on Bar 32 (2025-04-30 00:00:00+00:00);
+33. Potential Downtrend Signal on Bar 33 (2025-05-01 00:00:00+00:00);
+34. Downtrend Start Confirmed for Bar 33 (2025-05-01 00:00:00+00:00); Uptrend Start Confirmed for Bar 25 (2025-04-21 00:00:00+00:00); Potential Uptrend Signal on Bar 34 (2025-05-02 00:00:00+00:00); Potential Downtrend Signal on Bar 34 (2025-05-02 00:00:00+00:00)
+35. Neutral
+36. Uptrend Start Confirmed for Bar 34 (2025-05-02 00:00:00+00:00); 
+37. Downtrend Start Confirmed for Bar 34 (2025-05-02 00:00:00+00:00); Potential Uptrend Signal on Bar 37 (2025-05-07 00:00:00+00:00)
+38. Potential Downtrend Signal on Bar 38 (2025-05-08 00:00:00+00:00)
+39. Neutral
+40. Potential Downtrend Signal on Bar 40 (2025-05-12 00:00:00+00:00)
