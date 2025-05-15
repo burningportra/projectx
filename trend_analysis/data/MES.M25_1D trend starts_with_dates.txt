@@ -15,7 +15,7 @@
 15. Neutral
 16. Neutral
 17. Downtrend Start Confirmed for Bar 13 (2025-04-02 00:00:00+00:00); Potential Uptrend Signal on Bar 16 (2025-04-09 00:00:00+00:00);Potential Downtrend Signal on Bar 17 (2025-04-08 00:00:00+00:00)
-18. Downtrend Start Confirmed for Bar 17 (2025-04-02 00:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-04-09 00:00:00+00:00)
+18. Downtrend Start Confirmed for Bar 17 (2025-04-02 00:00:00+00:00); Potential Uptrend Signal on Bar 16 (2025-04-09 00:00:00+00:00); Uptrend Start Confirmed for Bar 16 (2025-04-09 00:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-04-09 00:00:00+00:00)
 19. Neutral
 20. Potential Downtrend Signal on Bar 19 (2025-04-10 00:00:00+00:00)
 21. Neutral

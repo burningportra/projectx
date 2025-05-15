@@ -1,41 +1,34 @@
 Okay, here's a summary of our current status and context for a new chat:
 
 **Goal:**
-We are developing a Python script (`trend_analysis/trend_analyzer.py`) to analyze OHLC bar data from a CSV (`data/MNQ Bar Data(2019-05-06-2019-8-14).csv`). The script aims to identify and log "Potential" and "Confirmed" trend starts (uptrends and downtrends) for each bar. The target output is to match a manually created reference log (`data/MNQ bar count trend starts.txt`) that specifies these events along with bar numbers and dates.
+We are developing a Python script (`trend_analysis/trend_analyzer_alt.py`) to analyze OHLC bar data from `trend_analysis/data/CON.F.US.MES.M25_1d_ohlc.csv` against its reference log `trend_analysis/data/MES.M25_1D trend starts_with_dates.txt`.
 
-**Current Script Logic Overview (Key Changes Highlighted):**
-*   **Bar Data:** Loads OHLC data (now 71 bars), processes chronologically.
-*   **State Tracking:** Standard PDS/PUS, CDS/CUS candidate tracking.
-*   **Pattern Definitions (Key Custom Rules):**
-    *   `is_your_custom_pds_rule(curr, prev)`: `curr.H <= prev.H AND curr.C < prev.O`
-    *   `is_your_custom_pus_rule(curr, prev)`: `curr.L >= prev.L AND curr.C > prev.O`
-    *   `is_custom_pds_rule_B(curr, prev)`: `curr.H <= prev.H`
-    *   `is_custom_pus_rule_B(curr, prev)`: `curr.L >= prev.L`
-    *   `check_custom_cds_confirmation_A(curr, prev, peak, all_bars)`: Confirms CDS if `curr.H > prev.H`, `curr.C > prev.C`, `no_higher_high` (intermediate bars vs peak), `curr.L < peak.L`, AND **a bar between peak (exclusive) and `prev_bar` (inclusive) made a low <= `peak.L` (`found_deep_enough_pullback`).**
-    *   `check_custom_cds_confirmation_B(curr, prev, peak, all_bars)`: Confirms CDS if `curr.C > prev.C`, `curr.L >= prev.L`, `curr.H > peak.H`, `no_higher_high` (intermediate bars vs peak), AND **`found_deep_enough_pullback` condition (same as Rule A).**
-    *   `check_custom_cus_confirmation_HHLL(curr, prev)`: Confirms CUS if `curr.H > prev.H AND curr.L < prev.L`.
-    *   `check_custom_cus_confirmation_ref36(curr, pds_cand)`: `curr.L < pds_cand.L AND curr.H <= pds_cand.H`.
-*   **Signal Detection Loop Highlights:**
-    1.  **CDS Confirmation:**
-        *   Order: `is_BRB`, then `check_custom_cds_confirmation_A`, then `check_custom_cds_confirmation_B`.
-        *   If CDS via Rule A or B: PUS is set to existing PUS candidate if any, otherwise to the bar with the *lowest low* strictly between the confirmed CDS peak and `current_bar`.
-    2.  **CUS Confirmation:**
-        *   Order: `is_SDB`, `check_custom_cus_confirmation_ref36`, `check_custom_cus_confirmation_HHLL`.
-        *   If CUS via HHLL: PDS is set on `current_bar`.
-        *   If CUS via SDB/ref36: PDS might be set on the `cus_bar_object` if it's a better peak.
-    3.  **New PDS/PUS Detection:** Standard SDB/SUB or custom rules A/B logic.
-*   **Logging:** Includes bar index and date. Duplicate event strings per line are removed.
+**Current Script (`trend_analyzer_alt.py`) Logic Overview:**
+*   **Bar Data:** 40 bars for MES data.
+*   **Key Custom Rules:** Includes CDS Rules A, B, F (with `found_deep_enough_pullback`), CDS Rule G (SUB-linked CDS), CDS Rule H (Outside Bar CDS), CUS Rule HHLL (now requires `curr.c < curr.o`), CUS Rule ref36.
+*   **Signal Detection Loop (`process_trend_logic`):
+    1.  **Snapshot Initial Candidates:** `initial_pus_candidate_idx` & `initial_pds_candidate_idx` stored.
+    2.  **Evaluate CUS/CDS Possibilities:** Based on initial candidates and current rules.
+    3.  **Apply Consequences (Priority: CUS first, then CDS):** Updates logs & state. Careful state management for PUS/PDS candidates and clearing.
+    4.  **New PDS/PUS on `prev_bar`:** This section was refined. PDS on `prev_bar` runs if `not confirmed_downtrend_this_iteration AND not new_pds_on_curr_bar_this_iteration` (where `new_pds_on_curr_bar_this_iteration` is from PDS Rule C - Failed Rally). PUS on `prev_bar` runs if `not confirmed_uptrend_this_iteration AND not new_pds_on_curr_bar_this_iteration`.
+*   **PDS Rule C (Failed Rally):** If `curr.H > prev.H AND curr.C < curr.O`, `current_bar` can become PDS.
+*   **PUS/CDS Interactions:** Logic for PUS selection after CDS, PDS setting after CUS, and intelligent CUS candidate updates in BRB CDS path are in place.
 
-**Current Status of Matching Reference Log (up to Ref Line 46):**
-*   **FULLY MATCHED!** The script output now aligns with the reference log provided up to line 46.
-*   **Ref Log Line 40 PUS (Script Line 39):** Correctly identifies CDS Bar 33, PUS Bar 36. (Achieved by "lowest low after peak" PUS rule for CDS_A).
-*   **Ref Log Line 42 (Script Line 42 "Neutral"):** Correctly neutral. This was fixed by adding the `found_deep_enough_pullback` condition to CDS Rules A and B, preventing a premature CDS of Bar 40.
-*   **Ref Log Line 43 CUS (Script Line 43):** Correctly confirms CUS for Bar 36 and PDS for Bar 43. (Achieved by `check_custom_cus_confirmation_HHLL`).
-*   **Ref Log Line 46 CDS/PUS (Script Line 46):** Correctly confirms CDS for Bar 43 and PUS for Bar 45. (Achieved by `check_custom_cds_confirmation_B` with the `found_deep_enough_pullback` and subsequent "lowest low" PUS logic).
+**Current Status of Matching MES Reference Log:**
+*   **Line 8 & 12 Corrected:** Script now correctly identifies PDS on Bar 7 at line 8 (due to refined conditions for the "New PDS/PUS on `prev_bar`" block), leading to the correct CDS for Bar 7 at line 12 (instead of Bar 8).
+*   **Line 17 MATCHED:** (CDS Bar 13; PUS Bar 16; PDS Bar 17) - Achieved with CDS Rule F.
+*   **Line 18 MATCHED:** (CUS Bar 16; CDS Bar 17; PDS Bar 18; PUS Bar 18) - Achieved by prioritizing CUS over CDS confirmation using candidate snapshotting.
+*   **Line 26 MATCHED:** (CDS Bar 19; PUS Bar 25) - Achieved with CDS Rule G.
+*   **Line 28 Corrected:** Unwanted CUS of Bar 25 (by HHLL) was removed by making HHLL require `curr.c < curr.o`.
+*   **Line 33 & 34 Corrected:** PDS on Bar 33 (by new PDS Rule C) and subsequent CDS on Bar 33 / PUS & PDS on Bar 34 (by new CDS Rule H - Outside Bar) now match reference.
+*   **Remaining Discrepancies to Re-check:**
+    *   Reference Log Line 5: `Uptrend Start Confirmed for Bar 2`. Script previously matched this, but the rule interaction was complex. Needs re-verification with latest full logic.
+    *   Reference Log Lines 27-29: Show PDS on Bars 27, 28, 29. Script had `Neutral` for these after the HHLL CUS fix for line 28. The cause of these PDS signals in the reference needs to be identified and implemented if they are still missing.
 
-**Key Logic Refinements Made:**
-1.  **PUS after CDS (Rules A & B):** If no prior PUS candidate, PUS is the bar with the lowest low between the (CDS peak) and (current_bar, exclusive).
-2.  **HHLL CUS Rule:** `current_bar.H > prev_bar.H AND current_bar.L < prev_bar.L` confirms prior PUS; `current_bar` becomes PDS.
-3.  **`found_deep_enough_pullback` Precondition for CDS Rules A & B:** Both custom CDS confirmation rules now require that at least one bar between the PDS candidate (exclusive) and `prev_bar` (inclusive) must have made a low less than or equal to the PDS candidate's low. This prevents CDS confirmation if the trend showed immediate weakness (e.g., higher lows) after the PDS.
+**Key Logic Refinements Added Recently:**
+1.  **PDS Rule C (Failed Rally):** `curr.H > prev.H AND curr.C < curr.O` -> `current_bar` PDS.
+2.  **CDS Rule H (Outside Bar):** `curr.H > prev_peak.H AND curr.L < prev_peak.L AND curr.C > prev_peak.C` -> CDS on `prev_peak`; PUS & PDS on `curr`.
+3.  **Refined HHLL CUS Rule:** Now also requires `current_bar.c < current_bar.o`.
+4.  **Refined "New PDS/PUS on `prev_bar`" Block:** Conditions for running PDS and PUS checks on `prev_bar` are now more nuanced based on whether a CDS/CUS or PDS_Rule_C occurred for `current_bar`.
 
-**To pick this up in a new chat, you can provide this summary. The script seems to be working correctly against the provided reference log up to line 46. Next steps would be to test against further reference data or explore new scenarios.** 
+**To pick this up in a new chat, provide this summary. Next step is to re-verify the entire MES log from the beginning with the current `trend_analyzer_alt.py` to ensure overall consistency and address any remaining or newly introduced discrepancies, particularly around lines 5 and 27-29.** 
