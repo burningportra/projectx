@@ -11,14 +11,18 @@ import pandas as pd
 import psycopg2
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Database connection parameters (read from environment variables)
 db_url = os.environ.get("TIMESCALE_DB_URL")
 
 
 if not db_url:
-    print("Error: DATABASE_URL environment variable not set")
-    print("Example: export DATABASE_URL='postgresql://postgres:password@localhost:5433/projectx'")
+    print("Error: TIMESCALE_DB_URL environment variable not set in your .env file or environment.")
+    print("Example: TIMESCALE_DB_URL='postgresql://postgres:password@localhost:5433/projectx'")
     exit(1)
 
 # Output files
