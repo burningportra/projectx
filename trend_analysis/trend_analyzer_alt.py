@@ -878,8 +878,8 @@ def export_confirmed_trend_starts(log_entries, output_csv="trend_analysis/confir
     processed_entries = set() # To store unique (trend_type, bar_index, date) tuples
 
     for entry_idx, entry in enumerate(log_entries):
-        if (entry_idx + 1) == 70: # Specific debug for entry 70 (was 54)
-            print(f"DEBUG EXPORT Line 70 raw entry: {repr(entry)}")
+        if (entry_idx + 1) == 57: # Specific debug for entry 57 (was 70)
+            print(f"DEBUG EXPORT Line 57 raw entry: {repr(entry)}")
 
         print(f"\nExporting log entry {entry_idx + 1}: {entry}") # Log the entry being processed
         m_down = downtrend_re.search(entry)

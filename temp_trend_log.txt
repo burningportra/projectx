@@ -1,0 +1,1232 @@
+Loaded 258 bars.
+DEBUG find_intervening_bar CALLED: start_idx=8, end_idx=11, find_low=False
+DEBUG find_intervening_bar RETURNING: 9. Slice_indices: 8-9. Range: 8-11, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=13, end_idx=17, find_low=True
+DEBUG find_intervening_bar RETURNING: 15. Slice_indices: 13-15. Range: 13-17, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=17, end_idx=20, find_low=True
+DEBUG find_intervening_bar RETURNING: 18. Slice_indices: 17-18. Range: 17-20, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=22, end_idx=28, find_low=False
+DEBUG find_intervening_bar RETURNING: 23. Slice_indices: 22-26. Range: 22-28, FindLow=False.
+DEBUG EngulfingUp: Curr=32, Prev=31, PUS_Cand_being_checked (not passed to func but from calling context)
+  PDS Context Obj Passed: None
+  PDS Context Details: None (Cond5 default False), Curr.L: 5751.5
+  Cond1(curr.h>prev.h): True (5758.5 > 5757.25)
+  Cond2(curr.l<prev.l): False (5751.5 < 5739.75)
+  Cond3(curr.c>prev.c): True (5755.75 > 5754.75)
+  Cond4(curr.c>curr.o): True (5755.75 > 5754.5)
+  Cond5(curr.l<pds_low if pds else False): False
+  Final Result: False
+DEBUG EngulfingUp: Curr=32, Prev=31, PUS_Cand_being_checked (not passed to func but from calling context)
+  PDS Context Obj Passed: None
+  PDS Context Details: None (Cond5 default False), Curr.L: 5751.5
+  Cond1(curr.h>prev.h): True (5758.5 > 5757.25)
+  Cond2(curr.l<prev.l): False (5751.5 < 5739.75)
+  Cond3(curr.c>prev.c): True (5755.75 > 5754.75)
+  Cond4(curr.c>curr.o): True (5755.75 > 5754.5)
+  Cond5(curr.l<pds_low if pds else False): False
+  Final Result: False
+DEBUG find_intervening_bar CALLED: start_idx=23, end_idx=36, find_low=True
+DEBUG find_intervening_bar RETURNING: 28. Slice_indices: 23-34. Range: 23-36, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=41, end_idx=43, find_low=True
+DEBUG find_intervening_bar RETURNING: 42. Slice_indices: 41-41. Range: 41-43, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=45, end_idx=49, find_low=False
+DEBUG find_intervening_bar RETURNING: 46. Slice_indices: 45-47. Range: 45-49, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=46, end_idx=51, find_low=True
+DEBUG find_intervening_bar RETURNING: 49. Slice_indices: 46-49. Range: 46-51, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=51, end_idx=53, find_low=True
+DEBUG find_intervening_bar RETURNING: 52. Slice_indices: 51-51. Range: 51-53, FindLow=True.
+\n--- DEBUG START: Processing Log Entry 57 (CurrentBar: 57) ---
+  PrevBar: 56
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: None, High: None
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  LOGGED FOR 57: Containment ENDED: Bar 57 BREAKDOWN below Bar 53 range (was 1 bar(s) inside).; Potential Downtrend Signal on Bar 57 (2025-03-28 06:00:00+00:00) by Rule C
+--- DEBUG END: Processing Log Entry 57 ---
+\n--- DEBUG START: Processing Log Entry 58 (CurrentBar: 58) ---
+  PrevBar: 57
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  LOGGED FOR 58: Neutral
+--- DEBUG END: Processing Log Entry 58 ---
+\n--- DEBUG START: Processing Log Entry 59 (CurrentBar: 59) ---
+  PrevBar: 58
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  LOGGED FOR 59: Neutral
+--- DEBUG END: Processing Log Entry 59 ---
+\n--- DEBUG START: Processing Log Entry 60 (CurrentBar: 60) ---
+  PrevBar: 59
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  LOGGED FOR 60: Neutral
+--- DEBUG END: Processing Log Entry 60 ---
+\n--- DEBUG START: Processing Log Entry 61 (CurrentBar: 61) ---
+  PrevBar: 60
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  LOGGED FOR 61: Neutral
+--- DEBUG END: Processing Log Entry 61 ---
+\n--- DEBUG START: Processing Log Entry 62 (CurrentBar: 62) ---
+  PrevBar: 61
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 55, Low: 5728.25
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: downtrend, Bar Index: 53
+    Overall Trend Is Up: False
+  CUS TRIGGERED for PUS Bar 61 by CurrentBar 62
+    Rule: REF36
+    Initial PDS for context (if used by rule): 57
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  LOGGED FOR 62: Uptrend Start Confirmed for Bar 61 (2025-03-30 22:00:00+00:00)
+--- DEBUG END: Processing Log Entry 62 ---
+\n--- DEBUG START: Processing Log Entry 63 (CurrentBar: 63) ---
+  PrevBar: 62
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  LOGGED FOR 63: Neutral
+--- DEBUG END: Processing Log Entry 63 ---
+\n--- DEBUG START: Processing Log Entry 64 (CurrentBar: 64) ---
+  PrevBar: 63
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  LOGGED FOR 64: Neutral
+--- DEBUG END: Processing Log Entry 64 ---
+\n--- DEBUG START: Processing Log Entry 65 (CurrentBar: 65) ---
+  PrevBar: 64
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: None, Low: None
+    PDS Candidate Index: 57, High: 5748.0
+    Last Confirmed Trend: uptrend, Bar Index: 61
+    Overall Trend Is Up: True
+  CUS TRIGGERED for PUS Bar 64 by CurrentBar 65
+    Rule: REF36
+    Initial PDS for context (if used by rule): 57
+DEBUG find_intervening_bar CALLED: start_idx=61, end_idx=64, find_low=False
+DEBUG find_intervening_bar RETURNING: 62. Slice_indices: 61-62. Range: 61-64, FindLow=False.
+  CDS TRIGGERED for PDS Bar 57 by CurrentBar 65
+    Rule: A
+    Initial PUS for context (if used by rule): None
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: None, High: None
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 65: Downtrend Start Confirmed for Bar 57 (2025-03-28 06:00:00+00:00); Downtrend Start Confirmed for Bar 62 (2025-03-31 02:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 64 (2025-03-31 10:00:00+00:00); Uptrend Start Confirmed for Bar 64 (2025-03-31 10:00:00+00:00)
+--- DEBUG END: Processing Log Entry 65 ---
+\n--- DEBUG START: Processing Log Entry 66 (CurrentBar: 66) ---
+  PrevBar: 65
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: None, High: None
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: None, High: None
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 66: Neutral
+--- DEBUG END: Processing Log Entry 66 ---
+\n--- DEBUG START: Processing Log Entry 67 (CurrentBar: 67) ---
+  PrevBar: 66
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: None, High: None
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 67: Potential Downtrend Signal on Bar 66 (2025-03-31 18:00:00+00:00)
+--- DEBUG END: Processing Log Entry 67 ---
+\n--- DEBUG START: Processing Log Entry 68 (CurrentBar: 68) ---
+  PrevBar: 67
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 68: Containment START: Bar 68 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25).
+--- DEBUG END: Processing Log Entry 68 ---
+\n--- DEBUG START: Processing Log Entry 69 (CurrentBar: 69) ---
+  PrevBar: 68
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 69: Containment: Bar 69 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 2 bars.
+--- DEBUG END: Processing Log Entry 69 ---
+\n--- DEBUG START: Processing Log Entry 70 (CurrentBar: 70) ---
+  PrevBar: 69
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+    LOG_70_DEBUG_EVENTS_BEFORE_MANUAL_UNIQUE: current_bar_event_descriptions = ['Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.']
+    LOG_70_DEBUG_EVENTS_AFTER_MANUAL_UNIQUE: unique_events = ['Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.']
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 70: Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.
+--- DEBUG END: Processing Log Entry 70 ---
+\n--- DEBUG START: Processing Log Entry 71 (CurrentBar: 71) ---
+  PrevBar: 70
+  State BEFORE CUS/CDS Eval:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  State AFTER CUS/CDS and PDS/PUS updates:
+    PUS Candidate Index: 64, Low: 5533.75
+    PDS Candidate Index: 66, High: 5672.5
+    Last Confirmed Trend: downtrend, Bar Index: 57
+    Overall Trend Is Up: False
+  LOGGED FOR 71: Containment ENDED: Bar 71 moves outside Bar 66 range (was 3 bar(s) inside).
+--- DEBUG END: Processing Log Entry 71 ---
+DEBUG find_intervening_bar CALLED: start_idx=57, end_idx=73, find_low=True
+DEBUG find_intervening_bar RETURNING: 64. Slice_indices: 57-71. Range: 57-73, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=73, end_idx=75, find_low=True
+DEBUG find_intervening_bar RETURNING: 74. Slice_indices: 73-73. Range: 73-75, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=75, end_idx=78, find_low=True
+DEBUG find_intervening_bar RETURNING: 76. Slice_indices: 75-76. Range: 75-78, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=91, end_idx=93, find_low=False
+DEBUG find_intervening_bar RETURNING: 92. Slice_indices: 91-91. Range: 91-93, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=101, end_idx=109, find_low=True
+DEBUG find_intervening_bar RETURNING: 104. Slice_indices: 101-107. Range: 101-109, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=113, end_idx=115, find_low=False
+DEBUG find_intervening_bar RETURNING: 114. Slice_indices: 113-113. Range: 113-115, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=111, end_idx=117, find_low=True
+DEBUG find_intervening_bar RETURNING: 113. Slice_indices: 111-115. Range: 111-117, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=119, end_idx=126, find_low=False
+DEBUG find_intervening_bar RETURNING: 124. Slice_indices: 119-124. Range: 119-126, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=143, end_idx=150, find_low=False
+DEBUG find_intervening_bar RETURNING: 144. Slice_indices: 143-148. Range: 143-150, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=161, end_idx=170, find_low=True
+DEBUG find_intervening_bar RETURNING: 165. Slice_indices: 161-168. Range: 161-170, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=170, end_idx=174, find_low=True
+DEBUG find_intervening_bar RETURNING: 173. Slice_indices: 170-172. Range: 170-174, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=184, end_idx=188, find_low=False
+DEBUG find_intervening_bar RETURNING: 186. Slice_indices: 184-186. Range: 184-188, FindLow=False.
+DEBUG find_intervening_bar CALLED: start_idx=197, end_idx=200, find_low=True
+DEBUG find_intervening_bar RETURNING: 199. Slice_indices: 197-198. Range: 197-200, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=210, end_idx=215, find_low=True
+DEBUG find_intervening_bar RETURNING: 214. Slice_indices: 210-213. Range: 210-215, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=215, end_idx=220, find_low=True
+DEBUG find_intervening_bar RETURNING: 216. Slice_indices: 215-218. Range: 215-220, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=220, end_idx=226, find_low=True
+DEBUG find_intervening_bar RETURNING: 222. Slice_indices: 220-224. Range: 220-226, FindLow=True.
+DEBUG find_intervening_bar CALLED: start_idx=227, end_idx=232, find_low=True
+DEBUG find_intervening_bar RETURNING: 229. Slice_indices: 227-230. Range: 227-232, FindLow=True.
+
+--- Generated Trend Log ---
+1. Nothing
+2. Potential Downtrend Signal on Bar 1 (2025-03-16 22:00:00+00:00); Potential Uptrend Signal on Bar 1 (2025-03-16 22:00:00+00:00)
+3. Neutral
+4. Potential Uptrend Signal on Bar 3 (2025-03-17 06:00:00+00:00)
+5. Neutral
+6. Potential Downtrend Signal on Bar 6 (2025-03-17 18:00:00+00:00) by Rule C
+7. Neutral
+8. Neutral
+9. Downtrend Start Confirmed for Bar 6 (2025-03-17 18:00:00+00:00); Potential Uptrend Signal on Bar 8 (2025-03-18 02:00:00+00:00); Uptrend Start Confirmed for Bar 3 (2025-03-17 06:00:00+00:00)
+10. Potential Downtrend Signal on Bar 9 (2025-03-18 06:00:00+00:00)
+11. Uptrend Start Confirmed for Bar 8 (2025-03-18 02:00:00+00:00)
+12. Downtrend Start Confirmed for Bar 9 (2025-03-18 06:00:00+00:00); Downtrend Start Confirmed for Bar 9 (2025-03-18 06:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 11 (2025-03-18 14:00:00+00:00); Uptrend Start Confirmed for Bar 11 (2025-03-18 14:00:00+00:00)
+13. Neutral
+14. Potential Downtrend Signal on Bar 13 (2025-03-18 22:00:00+00:00)
+15. Uptrend Start Confirmed for Bar 11 (2025-03-18 14:00:00+00:00)
+16. Downtrend Start Confirmed for Bar 13 (2025-03-18 22:00:00+00:00); Potential Uptrend Signal on Bar 15 (2025-03-19 06:00:00+00:00)
+17. Potential Downtrend Signal on Bar 17 (2025-03-19 14:00:00+00:00) by Rule C
+18. Downtrend Start Confirmed for Bar 17 (2025-03-19 14:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-03-19 18:00:00+00:00); Uptrend Start Confirmed for Bar 15 (2025-03-19 06:00:00+00:00) # FORCED to alternate
+19. Containment START: Bar 19 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0).; Potential Downtrend Signal on Bar 18 (2025-03-19 18:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-03-19 18:00:00+00:00)
+20. Containment: Bar 20 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 2 bars.
+21. Containment: Bar 21 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 3 bars.; Potential Downtrend Signal on Bar 20 (2025-03-20 02:00:00+00:00)
+22. Containment: Bar 22 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 4 bars.
+23. Containment: Bar 23 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 5 bars.; Downtrend Start Confirmed for Bar 20 (2025-03-20 02:00:00+00:00); Potential Downtrend Signal on Bar 23 (2025-03-20 14:00:00+00:00); Potential Downtrend Signal on Bar 23 (2025-03-20 14:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 22 (2025-03-20 10:00:00+00:00); Uptrend Start Confirmed for Bar 18 (2025-03-19 18:00:00+00:00) # FORCED to alternate
+24. Containment: Bar 24 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 6 bars.; Uptrend Start Confirmed for Bar 22 (2025-03-20 10:00:00+00:00)
+25. Containment: Bar 25 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 7 bars.; Potential Uptrend Signal on Bar 24 (2025-03-20 18:00:00+00:00)
+26. Containment: Bar 26 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 8 bars.
+27. Containment: Bar 27 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 9 bars.
+28. Containment ENDED: Bar 28 BREAKDOWN below Bar 18 range (was 9 bar(s) inside).
+29. Downtrend Start Confirmed for Bar 23 (2025-03-20 14:00:00+00:00); Downtrend Start Confirmed for Bar 23 (2025-03-20 14:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 28 (2025-03-21 10:00:00+00:00); Uptrend Start Confirmed for Bar 28 (2025-03-21 10:00:00+00:00)
+30. Neutral
+31. Neutral
+32. Neutral
+33. Neutral
+34. Neutral
+35. Neutral
+36. Neutral
+37. Potential Downtrend Signal on Bar 36 (2025-03-24 18:00:00+00:00)
+38. Containment START: Bar 38 inside Bar 36 (PDS_PEAK H:5825.5, L:5795.0).
+39. Containment: Bar 39 inside Bar 36 (PDS_PEAK H:5825.5, L:5795.0) for 2 bars.; Downtrend Start Confirmed for Bar 36 (2025-03-24 18:00:00+00:00); Potential Uptrend Signal on Bar 39 (2025-03-25 06:00:00+00:00); Uptrend Start Confirmed for Bar 28 (2025-03-21 10:00:00+00:00) # FORCED to alternate
+40. Containment ENDED: Bar 40 moves outside Bar 36 range (was 2 bar(s) inside).
+41. Potential Downtrend Signal on Bar 41 (2025-03-25 14:00:00+00:00) by Rule C
+42. Uptrend Start Confirmed for Bar 39 (2025-03-25 06:00:00+00:00)
+43. Containment START: Bar 43 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0).; Downtrend Start Confirmed for Bar 41 (2025-03-25 14:00:00+00:00); Potential Downtrend Signal on Bar 43 (2025-03-25 22:00:00+00:00); Potential Downtrend Signal on Bar 43 (2025-03-25 22:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 42 (2025-03-25 18:00:00+00:00)
+44. Containment: Bar 44 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0) for 2 bars.
+45. Containment: Bar 45 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0) for 3 bars.
+46. Containment ENDED: Bar 46 BREAKDOWN below Bar 41 range (was 3 bar(s) inside).; Downtrend Start Confirmed for Bar 43 (2025-03-25 22:00:00+00:00); Potential Downtrend Signal on Bar 46 (2025-03-26 10:00:00+00:00); Potential Downtrend Signal on Bar 46 (2025-03-26 10:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 45 (2025-03-26 06:00:00+00:00); Uptrend Start Confirmed for Bar 42 (2025-03-25 18:00:00+00:00) # FORCED to alternate
+47. Neutral
+48. Uptrend Start Confirmed for Bar 45 (2025-03-26 06:00:00+00:00)
+49. Neutral
+50. Downtrend Start Confirmed for Bar 46 (2025-03-26 10:00:00+00:00); Downtrend Start Confirmed for Bar 46 (2025-03-26 10:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 49 (2025-03-26 22:00:00+00:00); Uptrend Start Confirmed for Bar 49 (2025-03-26 22:00:00+00:00)
+51. Neutral
+52. Potential Downtrend Signal on Bar 51 (2025-03-27 06:00:00+00:00)
+53. Downtrend Start Confirmed for Bar 51 (2025-03-27 06:00:00+00:00); Potential Downtrend Signal on Bar 53 (2025-03-27 14:00:00+00:00); Potential Downtrend Signal on Bar 53 (2025-03-27 14:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 52 (2025-03-27 10:00:00+00:00); Uptrend Start Confirmed for Bar 49 (2025-03-26 22:00:00+00:00) # FORCED to alternate
+54. Containment START: Bar 54 inside Bar 53 (PDS_PEAK H:5779.75, L:5733.75).
+55. Containment ENDED: Bar 55 moves outside Bar 53 range (was 1 bar(s) inside).
+56. Containment START: Bar 56 inside Bar 53 (PDS_PEAK H:5779.75, L:5733.75).; Downtrend Start Confirmed for Bar 53 (2025-03-27 14:00:00+00:00); Potential Uptrend Signal on Bar 55 (2025-03-27 22:00:00+00:00); Uptrend Start Confirmed for Bar 52 (2025-03-27 10:00:00+00:00) # FORCED to alternate
+57. Containment ENDED: Bar 57 BREAKDOWN below Bar 53 range (was 1 bar(s) inside).; Potential Downtrend Signal on Bar 57 (2025-03-28 06:00:00+00:00) by Rule C
+58. Neutral
+59. Neutral
+60. Neutral
+61. Neutral
+62. Uptrend Start Confirmed for Bar 61 (2025-03-30 22:00:00+00:00)
+63. Neutral
+64. Neutral
+65. Downtrend Start Confirmed for Bar 57 (2025-03-28 06:00:00+00:00); Downtrend Start Confirmed for Bar 62 (2025-03-31 02:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 64 (2025-03-31 10:00:00+00:00); Uptrend Start Confirmed for Bar 64 (2025-03-31 10:00:00+00:00)
+66. Neutral
+67. Potential Downtrend Signal on Bar 66 (2025-03-31 18:00:00+00:00)
+68. Containment START: Bar 68 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25).
+69. Containment: Bar 69 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 2 bars.
+70. Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.
+71. Containment ENDED: Bar 71 moves outside Bar 66 range (was 3 bar(s) inside).
+72. Potential Downtrend Signal on Bar 71 (2025-04-01 14:00:00+00:00)
+73. Containment START: Bar 73 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25).; Potential Downtrend Signal on Bar 73 (2025-04-01 22:00:00+00:00) by Rule C
+74. Containment: Bar 74 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 2 bars.
+75. Containment: Bar 75 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 3 bars.; Downtrend Start Confirmed for Bar 73 (2025-04-01 22:00:00+00:00); Potential Downtrend Signal on Bar 75 (2025-04-02 06:00:00+00:00); Potential Downtrend Signal on Bar 75 (2025-04-02 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 74 (2025-04-02 02:00:00+00:00); Uptrend Start Confirmed for Bar 64 (2025-03-31 10:00:00+00:00) # FORCED to alternate
+76. Containment: Bar 76 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 4 bars.
+77. Containment ENDED: Bar 77 BREAKOUT above Bar 71 range (was 4 bar(s) inside).; Downtrend Start Confirmed for Bar 75 (2025-04-02 06:00:00+00:00); Potential Uptrend Signal on Bar 76 (2025-04-02 10:00:00+00:00); Uptrend Start Confirmed for Bar 74 (2025-04-02 02:00:00+00:00) # FORCED to alternate
+78. Potential Downtrend Signal on Bar 78 (2025-04-02 18:00:00+00:00) by Rule C
+79. Neutral
+80. Downtrend Start Confirmed for Bar 78 (2025-04-02 18:00:00+00:00); Potential Downtrend Signal on Bar 80 (2025-04-03 02:00:00+00:00); Potential Downtrend Signal on Bar 80 (2025-04-03 02:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 79 (2025-04-02 22:00:00+00:00); Uptrend Start Confirmed for Bar 76 (2025-04-02 10:00:00+00:00) # FORCED to alternate
+81. Neutral
+82. Neutral
+83. Neutral
+84. Neutral
+85. Neutral
+86. Uptrend Start Confirmed for Bar 79 (2025-04-02 22:00:00+00:00)
+87. Downtrend Start Confirmed for Bar 80 (2025-04-03 02:00:00+00:00); Potential Downtrend Signal on Bar 87 (2025-04-04 06:00:00+00:00); Potential Downtrend Signal on Bar 87 (2025-04-04 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 86 (2025-04-04 02:00:00+00:00)
+88. Neutral
+89. Neutral
+90. Neutral
+91. Neutral
+92. Potential Uptrend Signal on Bar 91 (2025-04-06 22:00:00+00:00)
+93. Uptrend Start Confirmed for Bar 91 (2025-04-06 22:00:00+00:00)
+94. Downtrend Start Confirmed for Bar 87 (2025-04-04 06:00:00+00:00); Downtrend Start Confirmed for Bar 92 (2025-04-07 02:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 91 (2025-04-06 22:00:00+00:00); Uptrend Start Confirmed for Bar 93 (2025-04-07 06:00:00+00:00)
+95. Neutral
+96. Potential Downtrend Signal on Bar 95 (2025-04-07 14:00:00+00:00)
+97. Containment START: Bar 97 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25).
+98. Containment: Bar 98 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25) for 2 bars.
+99. Containment: Bar 99 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25) for 3 bars.; Potential Downtrend Signal on Bar 99 (2025-04-08 06:00:00+00:00) by Rule C
+100. Containment ENDED: Bar 100 moves outside Bar 95 range (was 3 bar(s) inside).
+101. Potential Downtrend Signal on Bar 101 (2025-04-08 14:00:00+00:00) by Rule C
+102. Neutral
+103. Neutral
+104. Neutral
+105. Downtrend Start Confirmed for Bar 101 (2025-04-08 14:00:00+00:00); Potential Uptrend Signal on Bar 104 (2025-04-09 02:00:00+00:00); Uptrend Start Confirmed for Bar 91 (2025-04-06 22:00:00+00:00)
+106. Neutral
+107. Neutral
+108. Neutral
+109. Potential Downtrend Signal on Bar 109 (2025-04-09 22:00:00+00:00) by Rule C
+110. Neutral
+111. Downtrend Start Confirmed for Bar 109 (2025-04-09 22:00:00+00:00); Potential Downtrend Signal on Bar 111 (2025-04-10 06:00:00+00:00); Potential Downtrend Signal on Bar 111 (2025-04-10 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 110 (2025-04-10 02:00:00+00:00); Uptrend Start Confirmed for Bar 104 (2025-04-09 02:00:00+00:00) # FORCED to alternate
+112. Neutral
+113. Neutral
+114. Uptrend Start Confirmed for Bar 113 (2025-04-10 14:00:00+00:00)
+115. Neutral
+116. Downtrend Start Confirmed for Bar 111 (2025-04-10 06:00:00+00:00); Downtrend Start Confirmed for Bar 114 (2025-04-10 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 113 (2025-04-10 14:00:00+00:00); Uptrend Start Confirmed for Bar 115 (2025-04-10 22:00:00+00:00)
+117. Potential Downtrend Signal on Bar 117 (2025-04-11 06:00:00+00:00) by Rule C
+118. Containment START: Bar 118 inside Bar 117 (PDS_PEAK H:5379.5, L:5257.0).
+119. Containment ENDED: Bar 119 BREAKOUT above Bar 117 range (was 1 bar(s) inside).; Downtrend Start Confirmed for Bar 117 (2025-04-11 06:00:00+00:00); Potential Uptrend Signal on Bar 119 (2025-04-11 14:00:00+00:00); Uptrend Start Confirmed for Bar 113 (2025-04-10 14:00:00+00:00) # FORCED to alternate
+120. Containment START: Bar 120 inside Bar 119 (PUS_LOW H:5417.75, L:5251.25).; Potential Downtrend Signal on Bar 119 (2025-04-11 14:00:00+00:00); Potential Uptrend Signal on Bar 119 (2025-04-11 14:00:00+00:00)
+121. Containment ENDED: Bar 121 BREAKOUT above Bar 119 range (was 1 bar(s) inside).; Potential Downtrend Signal on Bar 121 (2025-04-13 22:00:00+00:00) by Rule C
+122. Containment START: Bar 122 inside Bar 121 (PDS_PEAK H:5477.0, L:5409.75).
+123. Containment: Bar 123 inside Bar 121 (PDS_PEAK H:5477.0, L:5409.75) for 2 bars.
+124. Containment ENDED: Bar 124 moves outside Bar 121 range (was 2 bar(s) inside).
+125. Potential Downtrend Signal on Bar 124 (2025-04-14 10:00:00+00:00)
+126. Neutral
+127. Potential Uptrend Signal on Bar 126 (2025-04-14 18:00:00+00:00); Uptrend Start Confirmed for Bar 119 (2025-04-11 14:00:00+00:00)
+128. Neutral
+129. Downtrend Start Confirmed for Bar 124 (2025-04-14 10:00:00+00:00); Downtrend Start Confirmed for Bar 124 (2025-04-14 10:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 125 (2025-04-14 14:00:00+00:00); Uptrend Start Confirmed for Bar 126 (2025-04-14 18:00:00+00:00)
+130. Containment START: Bar 130 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0).
+131. Containment: Bar 131 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0) for 2 bars.; Potential Downtrend Signal on Bar 131 (2025-04-15 14:00:00+00:00) by Rule C
+132. Containment: Bar 132 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0) for 3 bars.
+133. Containment ENDED: Bar 133 BREAKDOWN below Bar 125 range (was 3 bar(s) inside).
+134. Neutral
+135. Downtrend Start Confirmed for Bar 131 (2025-04-15 14:00:00+00:00); Potential Uptrend Signal on Bar 134 (2025-04-16 02:00:00+00:00); Uptrend Start Confirmed for Bar 134 (2025-04-16 02:00:00+00:00)
+136. Potential Downtrend Signal on Bar 135 (2025-04-16 06:00:00+00:00)
+137. Potential Downtrend Signal on Bar 137 (2025-04-16 14:00:00+00:00) by Rule C
+138. Uptrend Start Confirmed for Bar 134 (2025-04-16 02:00:00+00:00)
+139. Containment START: Bar 139 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5).; Downtrend Start Confirmed for Bar 137 (2025-04-16 14:00:00+00:00); Potential Uptrend Signal on Bar 138 (2025-04-16 18:00:00+00:00)
+140. Containment: Bar 140 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 2 bars.
+141. Containment: Bar 141 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 3 bars.; Potential Downtrend Signal on Bar 141 (2025-04-17 06:00:00+00:00) by Rule C
+142. Containment: Bar 142 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 4 bars.
+143. Containment ENDED: Bar 143 moves outside Bar 137 range (was 4 bar(s) inside).; Uptrend Start Confirmed for Bar 138 (2025-04-16 18:00:00+00:00)
+144. Downtrend Start Confirmed for Bar 141 (2025-04-17 06:00:00+00:00); Potential Downtrend Signal on Bar 144 (2025-04-17 18:00:00+00:00); Potential Downtrend Signal on Bar 144 (2025-04-17 18:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 143 (2025-04-17 14:00:00+00:00)
+145. Neutral
+146. Neutral
+147. Neutral
+148. Neutral
+149. Neutral
+150. Uptrend Start Confirmed for Bar 143 (2025-04-17 14:00:00+00:00)
+151. Downtrend Start Confirmed for Bar 144 (2025-04-17 18:00:00+00:00); Downtrend Start Confirmed for Bar 144 (2025-04-17 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 150 (2025-04-21 18:00:00+00:00); Uptrend Start Confirmed for Bar 150 (2025-04-21 18:00:00+00:00)
+152. Potential Downtrend Signal on Bar 151 (2025-04-21 22:00:00+00:00)
+153. Neutral
+154. Neutral
+155. Potential Downtrend Signal on Bar 155 (2025-04-22 14:00:00+00:00) by Rule C
+156. Uptrend Start Confirmed for Bar 150 (2025-04-21 18:00:00+00:00)
+157. Downtrend Start Confirmed for Bar 155 (2025-04-22 14:00:00+00:00); Potential Uptrend Signal on Bar 156 (2025-04-22 18:00:00+00:00)
+158. Potential Downtrend Signal on Bar 157 (2025-04-22 22:00:00+00:00)
+159. Neutral
+160. Neutral
+161. Potential Downtrend Signal on Bar 161 (2025-04-23 14:00:00+00:00) by Rule C
+162. Neutral
+163. Containment START: Bar 163 inside Bar 161 (PDS_PEAK H:5500.0, L:5385.5).
+164. Containment ENDED: Bar 164 BREAKDOWN below Bar 161 range (was 1 bar(s) inside).
+165. Neutral
+166. Downtrend Start Confirmed for Bar 161 (2025-04-23 14:00:00+00:00); Potential Uptrend Signal on Bar 165 (2025-04-24 06:00:00+00:00); Uptrend Start Confirmed for Bar 156 (2025-04-22 18:00:00+00:00)
+167. Neutral
+168. Neutral
+169. Potential Downtrend Signal on Bar 168 (2025-04-24 18:00:00+00:00)
+170. Neutral
+171. Potential Downtrend Signal on Bar 170 (2025-04-25 02:00:00+00:00)
+172. Neutral
+173. Downtrend Start Confirmed for Bar 170 (2025-04-25 02:00:00+00:00); Potential Uptrend Signal on Bar 173 (2025-04-25 14:00:00+00:00); Uptrend Start Confirmed for Bar 165 (2025-04-24 06:00:00+00:00) # FORCED to alternate
+174. Neutral
+175. Containment START: Bar 175 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0).; Potential Downtrend Signal on Bar 174 (2025-04-25 18:00:00+00:00)
+176. Containment: Bar 176 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0) for 2 bars.
+177. Containment: Bar 177 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0) for 3 bars.; Downtrend Start Confirmed for Bar 174 (2025-04-25 18:00:00+00:00); Potential Uptrend Signal on Bar 176 (2025-04-28 02:00:00+00:00); Uptrend Start Confirmed for Bar 173 (2025-04-25 14:00:00+00:00) # FORCED to alternate
+178. Containment ENDED: Bar 178 moves outside Bar 173 range (was 3 bar(s) inside).
+179. Potential Downtrend Signal on Bar 178 (2025-04-28 10:00:00+00:00)
+180. Downtrend Start Confirmed for Bar 178 (2025-04-28 10:00:00+00:00); Potential Uptrend Signal on Bar 179 (2025-04-28 14:00:00+00:00); Uptrend Start Confirmed for Bar 179 (2025-04-28 14:00:00+00:00)
+181. Neutral
+182. Potential Downtrend Signal on Bar 182 (2025-04-29 02:00:00+00:00) by Rule C
+183. Uptrend Start Confirmed for Bar 179 (2025-04-28 14:00:00+00:00)
+184. Neutral
+185. Downtrend Start Confirmed for Bar 182 (2025-04-29 02:00:00+00:00); Potential Uptrend Signal on Bar 184 (2025-04-29 10:00:00+00:00)
+186. Potential Downtrend Signal on Bar 186 (2025-04-29 18:00:00+00:00) by Rule C
+187. Neutral
+188. Uptrend Start Confirmed for Bar 184 (2025-04-29 10:00:00+00:00)
+189. Downtrend Start Confirmed for Bar 186 (2025-04-29 18:00:00+00:00); Downtrend Start Confirmed for Bar 186 (2025-04-29 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 188 (2025-04-30 02:00:00+00:00); Uptrend Start Confirmed for Bar 188 (2025-04-30 02:00:00+00:00)
+190. Potential Downtrend Signal on Bar 189 (2025-04-30 06:00:00+00:00)
+191. Uptrend Start Confirmed for Bar 190 (2025-04-30 10:00:00+00:00)
+192. Downtrend Start Confirmed for Bar 189 (2025-04-30 06:00:00+00:00); Potential Uptrend Signal on Bar 190 (2025-04-30 10:00:00+00:00)
+193. Neutral
+194. Neutral
+195. Neutral
+196. Potential Downtrend Signal on Bar 196 (2025-05-01 10:00:00+00:00) by Rule C
+197. Neutral
+198. Potential Downtrend Signal on Bar 197 (2025-05-01 14:00:00+00:00)
+199. Downtrend Start Confirmed for Bar 197 (2025-05-01 14:00:00+00:00); Potential Uptrend Signal on Bar 199 (2025-05-01 22:00:00+00:00); Uptrend Start Confirmed for Bar 190 (2025-04-30 10:00:00+00:00)
+200. Potential Downtrend Signal on Bar 200 (2025-05-02 02:00:00+00:00) by Rule C
+201. Neutral
+202. Downtrend Start Confirmed for Bar 200 (2025-05-02 02:00:00+00:00); Potential Uptrend Signal on Bar 201 (2025-05-02 06:00:00+00:00); Uptrend Start Confirmed for Bar 199 (2025-05-01 22:00:00+00:00) # FORCED to alternate
+203. Neutral
+204. Potential Downtrend Signal on Bar 204 (2025-05-02 18:00:00+00:00) by Rule C
+205. Neutral
+206. Potential Uptrend Signal on Bar 205 (2025-05-04 22:00:00+00:00); Uptrend Start Confirmed for Bar 201 (2025-05-02 06:00:00+00:00)
+207. Downtrend Start Confirmed for Bar 204 (2025-05-02 18:00:00+00:00); Potential Downtrend Signal on Bar 207 (2025-05-05 06:00:00+00:00); Potential Downtrend Signal on Bar 207 (2025-05-05 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 205 (2025-05-04 22:00:00+00:00)
+208. Containment START: Bar 208 inside Bar 207 (PDS_PEAK H:5680.25, L:5655.25).; Potential Uptrend Signal on Bar 207 (2025-05-05 06:00:00+00:00)
+209. Containment ENDED: Bar 209 BREAKOUT above Bar 207 range (was 1 bar(s) inside).
+210. Potential Downtrend Signal on Bar 210 (2025-05-05 18:00:00+00:00) by Rule C
+211. Neutral
+212. Neutral
+213. Neutral
+214. Neutral
+215. Downtrend Start Confirmed for Bar 210 (2025-05-05 18:00:00+00:00); Potential Uptrend Signal on Bar 214 (2025-05-06 10:00:00+00:00); Uptrend Start Confirmed for Bar 214 (2025-05-06 10:00:00+00:00)
+216. Potential Downtrend Signal on Bar 215 (2025-05-06 14:00:00+00:00)
+217. Downtrend Start Confirmed for Bar 215 (2025-05-06 14:00:00+00:00); Potential Uptrend Signal on Bar 216 (2025-05-06 18:00:00+00:00); Uptrend Start Confirmed for Bar 214 (2025-05-06 10:00:00+00:00) # FORCED to alternate
+218. Potential Downtrend Signal on Bar 217 (2025-05-06 22:00:00+00:00)
+219. Containment START: Bar 219 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25).
+220. Containment: Bar 220 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25) for 2 bars.; Potential Downtrend Signal on Bar 220 (2025-05-07 10:00:00+00:00) by Rule C
+221. Containment: Bar 221 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25) for 3 bars.
+222. Containment ENDED: Bar 222 moves outside Bar 217 range (was 3 bar(s) inside).; Downtrend Start Confirmed for Bar 220 (2025-05-07 10:00:00+00:00); Potential Uptrend Signal on Bar 222 (2025-05-07 18:00:00+00:00); Uptrend Start Confirmed for Bar 216 (2025-05-06 18:00:00+00:00) # FORCED to alternate
+223. Neutral
+224. Neutral
+225. Neutral
+226. Potential Downtrend Signal on Bar 226 (2025-05-08 10:00:00+00:00) by Rule C
+227. Downtrend Start Confirmed for Bar 226 (2025-05-08 10:00:00+00:00); Potential Uptrend Signal on Bar 227 (2025-05-08 14:00:00+00:00); Uptrend Start Confirmed for Bar 222 (2025-05-07 18:00:00+00:00) # FORCED to alternate
+228. Containment START: Bar 228 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75).; Potential Downtrend Signal on Bar 227 (2025-05-08 14:00:00+00:00); Potential Uptrend Signal on Bar 227 (2025-05-08 14:00:00+00:00)
+229. Containment: Bar 229 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 2 bars.; Potential Downtrend Signal on Bar 228 (2025-05-08 18:00:00+00:00)
+230. Containment: Bar 230 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 3 bars.; Downtrend Start Confirmed for Bar 228 (2025-05-08 18:00:00+00:00); Potential Downtrend Signal on CUS Bar 227 (due to trigger by 230); Potential Uptrend Signal on Bar 229 (2025-05-08 22:00:00+00:00); Uptrend Start Confirmed for Bar 227 (2025-05-08 14:00:00+00:00)
+231. Containment: Bar 231 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 4 bars.
+232. Containment: Bar 232 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 5 bars.; Downtrend Start Confirmed for Bar 227 (2025-05-08 14:00:00+00:00); Potential Uptrend Signal on Bar 232 (2025-05-09 10:00:00+00:00)
+233. Containment: Bar 233 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 6 bars.; Potential Downtrend Signal on Bar 232 (2025-05-09 10:00:00+00:00)
+234. Containment: Bar 234 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 7 bars.; Potential Uptrend Signal on Bar 233 (2025-05-09 14:00:00+00:00)
+235. Containment ENDED: Bar 235 BREAKOUT above Bar 227 range (was 7 bar(s) inside).; Downtrend Start Confirmed for Bar 232 (2025-05-09 10:00:00+00:00); Potential Uptrend Signal on Bar 233 (2025-05-09 14:00:00+00:00); Uptrend Start Confirmed for Bar 229 (2025-05-08 22:00:00+00:00) # FORCED to alternate
+236. Potential Downtrend Signal on Bar 235 (2025-05-11 22:00:00+00:00)
+237. Neutral
+238. Potential Downtrend Signal on Bar 238 (2025-05-12 10:00:00+00:00) by Rule C
+239. Uptrend Start Confirmed for Bar 233 (2025-05-09 14:00:00+00:00)
+240. Downtrend Start Confirmed for Bar 238 (2025-05-12 10:00:00+00:00); Potential Uptrend Signal on Bar 239 (2025-05-12 14:00:00+00:00)
+241. Potential Downtrend Signal on Bar 240 (2025-05-12 18:00:00+00:00)
+242. Neutral
+243. Uptrend Start Confirmed for Bar 239 (2025-05-12 14:00:00+00:00)
+244. Downtrend Start Confirmed for Bar 240 (2025-05-12 18:00:00+00:00); Potential Uptrend Signal on Bar 243 (2025-05-13 06:00:00+00:00)
+245. Neutral
+246. Potential Downtrend Signal on Bar 245 (2025-05-13 14:00:00+00:00)
+247. Containment START: Bar 247 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75).
+248. Containment: Bar 248 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 2 bars.
+249. Containment: Bar 249 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 3 bars.; Potential Downtrend Signal on Bar 249 (2025-05-14 06:00:00+00:00) by Rule C
+250. Containment: Bar 250 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 4 bars.
+251. Containment: Bar 251 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 5 bars.; Potential Downtrend Signal on Bar 250 (2025-05-14 10:00:00+00:00)
+252. Containment: Bar 252 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 6 bars.
+253. Containment: Bar 253 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 7 bars.
+254. Containment ENDED: Bar 254 moves outside Bar 245 range (was 7 bar(s) inside).
+255. Neutral
+256. Downtrend Start Confirmed for Bar 250 (2025-05-14 10:00:00+00:00); Potential Uptrend Signal on Bar 255 (2025-05-15 06:00:00+00:00); Uptrend Start Confirmed for Bar 243 (2025-05-13 06:00:00+00:00)
+257. Neutral
+258. Potential Downtrend Signal on Bar 257 (2025-05-15 14:00:00+00:00)
+\nExporting log entry 1: 1. Nothing
+  No trend confirmation found in entry.
+\nExporting log entry 2: 2. Potential Downtrend Signal on Bar 1 (2025-03-16 22:00:00+00:00); Potential Uptrend Signal on Bar 1 (2025-03-16 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 3: 3. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 4: 4. Potential Uptrend Signal on Bar 3 (2025-03-17 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 5: 5. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 6: 6. Potential Downtrend Signal on Bar 6 (2025-03-17 18:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 7: 7. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 8: 8. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 9: 9. Downtrend Start Confirmed for Bar 6 (2025-03-17 18:00:00+00:00); Potential Uptrend Signal on Bar 8 (2025-03-18 02:00:00+00:00); Uptrend Start Confirmed for Bar 3 (2025-03-17 06:00:00+00:00)
+  Matched DT: key=('downtrend', 6, '2025-03-17 18:00:00+00:00')
+    Added DT: ('downtrend', 6, '2025-03-17 18:00:00+00:00')
+  Matched UT: key=('uptrend', 3, '2025-03-17 06:00:00+00:00')
+    Added UT: ('uptrend', 3, '2025-03-17 06:00:00+00:00')
+\nExporting log entry 10: 10. Potential Downtrend Signal on Bar 9 (2025-03-18 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 11: 11. Uptrend Start Confirmed for Bar 8 (2025-03-18 02:00:00+00:00)
+  Matched UT: key=('uptrend', 8, '2025-03-18 02:00:00+00:00')
+    Added UT: ('uptrend', 8, '2025-03-18 02:00:00+00:00')
+\nExporting log entry 12: 12. Downtrend Start Confirmed for Bar 9 (2025-03-18 06:00:00+00:00); Downtrend Start Confirmed for Bar 9 (2025-03-18 06:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 11 (2025-03-18 14:00:00+00:00); Uptrend Start Confirmed for Bar 11 (2025-03-18 14:00:00+00:00)
+  Matched DT: key=('downtrend', 9, '2025-03-18 06:00:00+00:00')
+    Added DT: ('downtrend', 9, '2025-03-18 06:00:00+00:00')
+  Matched DT: key=('downtrend', 9, '2025-03-18 06:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 9, '2025-03-18 06:00:00+00:00')
+  Matched UT: key=('uptrend', 11, '2025-03-18 14:00:00+00:00')
+    Added UT: ('uptrend', 11, '2025-03-18 14:00:00+00:00')
+\nExporting log entry 13: 13. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 14: 14. Potential Downtrend Signal on Bar 13 (2025-03-18 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 15: 15. Uptrend Start Confirmed for Bar 11 (2025-03-18 14:00:00+00:00)
+  Matched UT: key=('uptrend', 11, '2025-03-18 14:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 11, '2025-03-18 14:00:00+00:00')
+\nExporting log entry 16: 16. Downtrend Start Confirmed for Bar 13 (2025-03-18 22:00:00+00:00); Potential Uptrend Signal on Bar 15 (2025-03-19 06:00:00+00:00)
+  Matched DT: key=('downtrend', 13, '2025-03-18 22:00:00+00:00')
+    Added DT: ('downtrend', 13, '2025-03-18 22:00:00+00:00')
+\nExporting log entry 17: 17. Potential Downtrend Signal on Bar 17 (2025-03-19 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 18: 18. Downtrend Start Confirmed for Bar 17 (2025-03-19 14:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-03-19 18:00:00+00:00); Uptrend Start Confirmed for Bar 15 (2025-03-19 06:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 17, '2025-03-19 14:00:00+00:00')
+    Added DT: ('downtrend', 17, '2025-03-19 14:00:00+00:00')
+  Matched UT: key=('uptrend', 15, '2025-03-19 06:00:00+00:00')
+    Added UT: ('uptrend', 15, '2025-03-19 06:00:00+00:00')
+\nExporting log entry 19: 19. Containment START: Bar 19 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0).; Potential Downtrend Signal on Bar 18 (2025-03-19 18:00:00+00:00); Potential Uptrend Signal on Bar 18 (2025-03-19 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 20: 20. Containment: Bar 20 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 21: 21. Containment: Bar 21 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 3 bars.; Potential Downtrend Signal on Bar 20 (2025-03-20 02:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 22: 22. Containment: Bar 22 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 4 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 23: 23. Containment: Bar 23 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 5 bars.; Downtrend Start Confirmed for Bar 20 (2025-03-20 02:00:00+00:00); Potential Downtrend Signal on Bar 23 (2025-03-20 14:00:00+00:00); Potential Downtrend Signal on Bar 23 (2025-03-20 14:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 22 (2025-03-20 10:00:00+00:00); Uptrend Start Confirmed for Bar 18 (2025-03-19 18:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 20, '2025-03-20 02:00:00+00:00')
+    Added DT: ('downtrend', 20, '2025-03-20 02:00:00+00:00')
+  Matched UT: key=('uptrend', 18, '2025-03-19 18:00:00+00:00')
+    Added UT: ('uptrend', 18, '2025-03-19 18:00:00+00:00')
+\nExporting log entry 24: 24. Containment: Bar 24 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 6 bars.; Uptrend Start Confirmed for Bar 22 (2025-03-20 10:00:00+00:00)
+  Matched UT: key=('uptrend', 22, '2025-03-20 10:00:00+00:00')
+    Added UT: ('uptrend', 22, '2025-03-20 10:00:00+00:00')
+\nExporting log entry 25: 25. Containment: Bar 25 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 7 bars.; Potential Uptrend Signal on Bar 24 (2025-03-20 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 26: 26. Containment: Bar 26 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 8 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 27: 27. Containment: Bar 27 inside Bar 18 (PUS_LOW H:5770.5, L:5681.0) for 9 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 28: 28. Containment ENDED: Bar 28 BREAKDOWN below Bar 18 range (was 9 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 29: 29. Downtrend Start Confirmed for Bar 23 (2025-03-20 14:00:00+00:00); Downtrend Start Confirmed for Bar 23 (2025-03-20 14:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 28 (2025-03-21 10:00:00+00:00); Uptrend Start Confirmed for Bar 28 (2025-03-21 10:00:00+00:00)
+  Matched DT: key=('downtrend', 23, '2025-03-20 14:00:00+00:00')
+    Added DT: ('downtrend', 23, '2025-03-20 14:00:00+00:00')
+  Matched DT: key=('downtrend', 23, '2025-03-20 14:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 23, '2025-03-20 14:00:00+00:00')
+  Matched UT: key=('uptrend', 28, '2025-03-21 10:00:00+00:00')
+    Added UT: ('uptrend', 28, '2025-03-21 10:00:00+00:00')
+\nExporting log entry 30: 30. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 31: 31. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 32: 32. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 33: 33. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 34: 34. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 35: 35. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 36: 36. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 37: 37. Potential Downtrend Signal on Bar 36 (2025-03-24 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 38: 38. Containment START: Bar 38 inside Bar 36 (PDS_PEAK H:5825.5, L:5795.0).
+  No trend confirmation found in entry.
+\nExporting log entry 39: 39. Containment: Bar 39 inside Bar 36 (PDS_PEAK H:5825.5, L:5795.0) for 2 bars.; Downtrend Start Confirmed for Bar 36 (2025-03-24 18:00:00+00:00); Potential Uptrend Signal on Bar 39 (2025-03-25 06:00:00+00:00); Uptrend Start Confirmed for Bar 28 (2025-03-21 10:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 36, '2025-03-24 18:00:00+00:00')
+    Added DT: ('downtrend', 36, '2025-03-24 18:00:00+00:00')
+  Matched UT: key=('uptrend', 28, '2025-03-21 10:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 28, '2025-03-21 10:00:00+00:00')
+\nExporting log entry 40: 40. Containment ENDED: Bar 40 moves outside Bar 36 range (was 2 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 41: 41. Potential Downtrend Signal on Bar 41 (2025-03-25 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 42: 42. Uptrend Start Confirmed for Bar 39 (2025-03-25 06:00:00+00:00)
+  Matched UT: key=('uptrend', 39, '2025-03-25 06:00:00+00:00')
+    Added UT: ('uptrend', 39, '2025-03-25 06:00:00+00:00')
+\nExporting log entry 43: 43. Containment START: Bar 43 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0).; Downtrend Start Confirmed for Bar 41 (2025-03-25 14:00:00+00:00); Potential Downtrend Signal on Bar 43 (2025-03-25 22:00:00+00:00); Potential Downtrend Signal on Bar 43 (2025-03-25 22:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 42 (2025-03-25 18:00:00+00:00)
+  Matched DT: key=('downtrend', 41, '2025-03-25 14:00:00+00:00')
+    Added DT: ('downtrend', 41, '2025-03-25 14:00:00+00:00')
+\nExporting log entry 44: 44. Containment: Bar 44 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 45: 45. Containment: Bar 45 inside Bar 41 (PDS_PEAK H:5837.25, L:5812.0) for 3 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 46: 46. Containment ENDED: Bar 46 BREAKDOWN below Bar 41 range (was 3 bar(s) inside).; Downtrend Start Confirmed for Bar 43 (2025-03-25 22:00:00+00:00); Potential Downtrend Signal on Bar 46 (2025-03-26 10:00:00+00:00); Potential Downtrend Signal on Bar 46 (2025-03-26 10:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 45 (2025-03-26 06:00:00+00:00); Uptrend Start Confirmed for Bar 42 (2025-03-25 18:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 43, '2025-03-25 22:00:00+00:00')
+    Added DT: ('downtrend', 43, '2025-03-25 22:00:00+00:00')
+  Matched UT: key=('uptrend', 42, '2025-03-25 18:00:00+00:00')
+    Added UT: ('uptrend', 42, '2025-03-25 18:00:00+00:00')
+\nExporting log entry 47: 47. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 48: 48. Uptrend Start Confirmed for Bar 45 (2025-03-26 06:00:00+00:00)
+  Matched UT: key=('uptrend', 45, '2025-03-26 06:00:00+00:00')
+    Added UT: ('uptrend', 45, '2025-03-26 06:00:00+00:00')
+\nExporting log entry 49: 49. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 50: 50. Downtrend Start Confirmed for Bar 46 (2025-03-26 10:00:00+00:00); Downtrend Start Confirmed for Bar 46 (2025-03-26 10:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 49 (2025-03-26 22:00:00+00:00); Uptrend Start Confirmed for Bar 49 (2025-03-26 22:00:00+00:00)
+  Matched DT: key=('downtrend', 46, '2025-03-26 10:00:00+00:00')
+    Added DT: ('downtrend', 46, '2025-03-26 10:00:00+00:00')
+  Matched DT: key=('downtrend', 46, '2025-03-26 10:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 46, '2025-03-26 10:00:00+00:00')
+  Matched UT: key=('uptrend', 49, '2025-03-26 22:00:00+00:00')
+    Added UT: ('uptrend', 49, '2025-03-26 22:00:00+00:00')
+\nExporting log entry 51: 51. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 52: 52. Potential Downtrend Signal on Bar 51 (2025-03-27 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 53: 53. Downtrend Start Confirmed for Bar 51 (2025-03-27 06:00:00+00:00); Potential Downtrend Signal on Bar 53 (2025-03-27 14:00:00+00:00); Potential Downtrend Signal on Bar 53 (2025-03-27 14:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 52 (2025-03-27 10:00:00+00:00); Uptrend Start Confirmed for Bar 49 (2025-03-26 22:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 51, '2025-03-27 06:00:00+00:00')
+    Added DT: ('downtrend', 51, '2025-03-27 06:00:00+00:00')
+  Matched UT: key=('uptrend', 49, '2025-03-26 22:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 49, '2025-03-26 22:00:00+00:00')
+\nExporting log entry 54: 54. Containment START: Bar 54 inside Bar 53 (PDS_PEAK H:5779.75, L:5733.75).
+  No trend confirmation found in entry.
+\nExporting log entry 55: 55. Containment ENDED: Bar 55 moves outside Bar 53 range (was 1 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 56: 56. Containment START: Bar 56 inside Bar 53 (PDS_PEAK H:5779.75, L:5733.75).; Downtrend Start Confirmed for Bar 53 (2025-03-27 14:00:00+00:00); Potential Uptrend Signal on Bar 55 (2025-03-27 22:00:00+00:00); Uptrend Start Confirmed for Bar 52 (2025-03-27 10:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 53, '2025-03-27 14:00:00+00:00')
+    Added DT: ('downtrend', 53, '2025-03-27 14:00:00+00:00')
+  Matched UT: key=('uptrend', 52, '2025-03-27 10:00:00+00:00')
+    Added UT: ('uptrend', 52, '2025-03-27 10:00:00+00:00')
+\nExporting log entry 57: 57. Containment ENDED: Bar 57 BREAKDOWN below Bar 53 range (was 1 bar(s) inside).; Potential Downtrend Signal on Bar 57 (2025-03-28 06:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 58: 58. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 59: 59. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 60: 60. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 61: 61. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 62: 62. Uptrend Start Confirmed for Bar 61 (2025-03-30 22:00:00+00:00)
+  Matched UT: key=('uptrend', 61, '2025-03-30 22:00:00+00:00')
+    Added UT: ('uptrend', 61, '2025-03-30 22:00:00+00:00')
+\nExporting log entry 63: 63. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 64: 64. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 65: 65. Downtrend Start Confirmed for Bar 57 (2025-03-28 06:00:00+00:00); Downtrend Start Confirmed for Bar 62 (2025-03-31 02:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 64 (2025-03-31 10:00:00+00:00); Uptrend Start Confirmed for Bar 64 (2025-03-31 10:00:00+00:00)
+  Matched DT: key=('downtrend', 57, '2025-03-28 06:00:00+00:00')
+    Added DT: ('downtrend', 57, '2025-03-28 06:00:00+00:00')
+  Matched DT: key=('downtrend', 62, '2025-03-31 02:00:00+00:00')
+    Added DT: ('downtrend', 62, '2025-03-31 02:00:00+00:00')
+  Matched UT: key=('uptrend', 64, '2025-03-31 10:00:00+00:00')
+    Added UT: ('uptrend', 64, '2025-03-31 10:00:00+00:00')
+\nExporting log entry 66: 66. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 67: 67. Potential Downtrend Signal on Bar 66 (2025-03-31 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 68: 68. Containment START: Bar 68 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25).
+  No trend confirmation found in entry.
+\nExporting log entry 69: 69. Containment: Bar 69 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 2 bars.
+  No trend confirmation found in entry.
+DEBUG EXPORT Line 70 raw entry: '70. Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.'
+\nExporting log entry 70: 70. Containment: Bar 70 inside Bar 66 (PDS_PEAK H:5672.5, L:5595.25) for 3 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 71: 71. Containment ENDED: Bar 71 moves outside Bar 66 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 72: 72. Potential Downtrend Signal on Bar 71 (2025-04-01 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 73: 73. Containment START: Bar 73 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25).; Potential Downtrend Signal on Bar 73 (2025-04-01 22:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 74: 74. Containment: Bar 74 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 75: 75. Containment: Bar 75 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 3 bars.; Downtrend Start Confirmed for Bar 73 (2025-04-01 22:00:00+00:00); Potential Downtrend Signal on Bar 75 (2025-04-02 06:00:00+00:00); Potential Downtrend Signal on Bar 75 (2025-04-02 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 74 (2025-04-02 02:00:00+00:00); Uptrend Start Confirmed for Bar 64 (2025-03-31 10:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 73, '2025-04-01 22:00:00+00:00')
+    Added DT: ('downtrend', 73, '2025-04-01 22:00:00+00:00')
+  Matched UT: key=('uptrend', 64, '2025-03-31 10:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 64, '2025-03-31 10:00:00+00:00')
+\nExporting log entry 76: 76. Containment: Bar 76 inside Bar 71 (PDS_PEAK H:5694.75, L:5600.25) for 4 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 77: 77. Containment ENDED: Bar 77 BREAKOUT above Bar 71 range (was 4 bar(s) inside).; Downtrend Start Confirmed for Bar 75 (2025-04-02 06:00:00+00:00); Potential Uptrend Signal on Bar 76 (2025-04-02 10:00:00+00:00); Uptrend Start Confirmed for Bar 74 (2025-04-02 02:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 75, '2025-04-02 06:00:00+00:00')
+    Added DT: ('downtrend', 75, '2025-04-02 06:00:00+00:00')
+  Matched UT: key=('uptrend', 74, '2025-04-02 02:00:00+00:00')
+    Added UT: ('uptrend', 74, '2025-04-02 02:00:00+00:00')
+\nExporting log entry 78: 78. Potential Downtrend Signal on Bar 78 (2025-04-02 18:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 79: 79. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 80: 80. Downtrend Start Confirmed for Bar 78 (2025-04-02 18:00:00+00:00); Potential Downtrend Signal on Bar 80 (2025-04-03 02:00:00+00:00); Potential Downtrend Signal on Bar 80 (2025-04-03 02:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 79 (2025-04-02 22:00:00+00:00); Uptrend Start Confirmed for Bar 76 (2025-04-02 10:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 78, '2025-04-02 18:00:00+00:00')
+    Added DT: ('downtrend', 78, '2025-04-02 18:00:00+00:00')
+  Matched UT: key=('uptrend', 76, '2025-04-02 10:00:00+00:00')
+    Added UT: ('uptrend', 76, '2025-04-02 10:00:00+00:00')
+\nExporting log entry 81: 81. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 82: 82. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 83: 83. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 84: 84. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 85: 85. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 86: 86. Uptrend Start Confirmed for Bar 79 (2025-04-02 22:00:00+00:00)
+  Matched UT: key=('uptrend', 79, '2025-04-02 22:00:00+00:00')
+    Added UT: ('uptrend', 79, '2025-04-02 22:00:00+00:00')
+\nExporting log entry 87: 87. Downtrend Start Confirmed for Bar 80 (2025-04-03 02:00:00+00:00); Potential Downtrend Signal on Bar 87 (2025-04-04 06:00:00+00:00); Potential Downtrend Signal on Bar 87 (2025-04-04 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 86 (2025-04-04 02:00:00+00:00)
+  Matched DT: key=('downtrend', 80, '2025-04-03 02:00:00+00:00')
+    Added DT: ('downtrend', 80, '2025-04-03 02:00:00+00:00')
+\nExporting log entry 88: 88. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 89: 89. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 90: 90. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 91: 91. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 92: 92. Potential Uptrend Signal on Bar 91 (2025-04-06 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 93: 93. Uptrend Start Confirmed for Bar 91 (2025-04-06 22:00:00+00:00)
+  Matched UT: key=('uptrend', 91, '2025-04-06 22:00:00+00:00')
+    Added UT: ('uptrend', 91, '2025-04-06 22:00:00+00:00')
+\nExporting log entry 94: 94. Downtrend Start Confirmed for Bar 87 (2025-04-04 06:00:00+00:00); Downtrend Start Confirmed for Bar 92 (2025-04-07 02:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 91 (2025-04-06 22:00:00+00:00); Uptrend Start Confirmed for Bar 93 (2025-04-07 06:00:00+00:00)
+  Matched DT: key=('downtrend', 87, '2025-04-04 06:00:00+00:00')
+    Added DT: ('downtrend', 87, '2025-04-04 06:00:00+00:00')
+  Matched DT: key=('downtrend', 92, '2025-04-07 02:00:00+00:00')
+    Added DT: ('downtrend', 92, '2025-04-07 02:00:00+00:00')
+  Matched UT: key=('uptrend', 93, '2025-04-07 06:00:00+00:00')
+    Added UT: ('uptrend', 93, '2025-04-07 06:00:00+00:00')
+\nExporting log entry 95: 95. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 96: 96. Potential Downtrend Signal on Bar 95 (2025-04-07 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 97: 97. Containment START: Bar 97 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25).
+  No trend confirmation found in entry.
+\nExporting log entry 98: 98. Containment: Bar 98 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 99: 99. Containment: Bar 99 inside Bar 95 (PDS_PEAK H:5285.75, L:4977.25) for 3 bars.; Potential Downtrend Signal on Bar 99 (2025-04-08 06:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 100: 100. Containment ENDED: Bar 100 moves outside Bar 95 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 101: 101. Potential Downtrend Signal on Bar 101 (2025-04-08 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 102: 102. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 103: 103. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 104: 104. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 105: 105. Downtrend Start Confirmed for Bar 101 (2025-04-08 14:00:00+00:00); Potential Uptrend Signal on Bar 104 (2025-04-09 02:00:00+00:00); Uptrend Start Confirmed for Bar 91 (2025-04-06 22:00:00+00:00)
+  Matched DT: key=('downtrend', 101, '2025-04-08 14:00:00+00:00')
+    Added DT: ('downtrend', 101, '2025-04-08 14:00:00+00:00')
+  Matched UT: key=('uptrend', 91, '2025-04-06 22:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 91, '2025-04-06 22:00:00+00:00')
+\nExporting log entry 106: 106. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 107: 107. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 108: 108. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 109: 109. Potential Downtrend Signal on Bar 109 (2025-04-09 22:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 110: 110. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 111: 111. Downtrend Start Confirmed for Bar 109 (2025-04-09 22:00:00+00:00); Potential Downtrend Signal on Bar 111 (2025-04-10 06:00:00+00:00); Potential Downtrend Signal on Bar 111 (2025-04-10 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 110 (2025-04-10 02:00:00+00:00); Uptrend Start Confirmed for Bar 104 (2025-04-09 02:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 109, '2025-04-09 22:00:00+00:00')
+    Added DT: ('downtrend', 109, '2025-04-09 22:00:00+00:00')
+  Matched UT: key=('uptrend', 104, '2025-04-09 02:00:00+00:00')
+    Added UT: ('uptrend', 104, '2025-04-09 02:00:00+00:00')
+\nExporting log entry 112: 112. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 113: 113. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 114: 114. Uptrend Start Confirmed for Bar 113 (2025-04-10 14:00:00+00:00)
+  Matched UT: key=('uptrend', 113, '2025-04-10 14:00:00+00:00')
+    Added UT: ('uptrend', 113, '2025-04-10 14:00:00+00:00')
+\nExporting log entry 115: 115. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 116: 116. Downtrend Start Confirmed for Bar 111 (2025-04-10 06:00:00+00:00); Downtrend Start Confirmed for Bar 114 (2025-04-10 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 113 (2025-04-10 14:00:00+00:00); Uptrend Start Confirmed for Bar 115 (2025-04-10 22:00:00+00:00)
+  Matched DT: key=('downtrend', 111, '2025-04-10 06:00:00+00:00')
+    Added DT: ('downtrend', 111, '2025-04-10 06:00:00+00:00')
+  Matched DT: key=('downtrend', 114, '2025-04-10 18:00:00+00:00')
+    Added DT: ('downtrend', 114, '2025-04-10 18:00:00+00:00')
+  Matched UT: key=('uptrend', 115, '2025-04-10 22:00:00+00:00')
+    Added UT: ('uptrend', 115, '2025-04-10 22:00:00+00:00')
+\nExporting log entry 117: 117. Potential Downtrend Signal on Bar 117 (2025-04-11 06:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 118: 118. Containment START: Bar 118 inside Bar 117 (PDS_PEAK H:5379.5, L:5257.0).
+  No trend confirmation found in entry.
+\nExporting log entry 119: 119. Containment ENDED: Bar 119 BREAKOUT above Bar 117 range (was 1 bar(s) inside).; Downtrend Start Confirmed for Bar 117 (2025-04-11 06:00:00+00:00); Potential Uptrend Signal on Bar 119 (2025-04-11 14:00:00+00:00); Uptrend Start Confirmed for Bar 113 (2025-04-10 14:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 117, '2025-04-11 06:00:00+00:00')
+    Added DT: ('downtrend', 117, '2025-04-11 06:00:00+00:00')
+  Matched UT: key=('uptrend', 113, '2025-04-10 14:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 113, '2025-04-10 14:00:00+00:00')
+\nExporting log entry 120: 120. Containment START: Bar 120 inside Bar 119 (PUS_LOW H:5417.75, L:5251.25).; Potential Downtrend Signal on Bar 119 (2025-04-11 14:00:00+00:00); Potential Uptrend Signal on Bar 119 (2025-04-11 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 121: 121. Containment ENDED: Bar 121 BREAKOUT above Bar 119 range (was 1 bar(s) inside).; Potential Downtrend Signal on Bar 121 (2025-04-13 22:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 122: 122. Containment START: Bar 122 inside Bar 121 (PDS_PEAK H:5477.0, L:5409.75).
+  No trend confirmation found in entry.
+\nExporting log entry 123: 123. Containment: Bar 123 inside Bar 121 (PDS_PEAK H:5477.0, L:5409.75) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 124: 124. Containment ENDED: Bar 124 moves outside Bar 121 range (was 2 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 125: 125. Potential Downtrend Signal on Bar 124 (2025-04-14 10:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 126: 126. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 127: 127. Potential Uptrend Signal on Bar 126 (2025-04-14 18:00:00+00:00); Uptrend Start Confirmed for Bar 119 (2025-04-11 14:00:00+00:00)
+  Matched UT: key=('uptrend', 119, '2025-04-11 14:00:00+00:00')
+    Added UT: ('uptrend', 119, '2025-04-11 14:00:00+00:00')
+\nExporting log entry 128: 128. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 129: 129. Downtrend Start Confirmed for Bar 124 (2025-04-14 10:00:00+00:00); Downtrend Start Confirmed for Bar 124 (2025-04-14 10:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 125 (2025-04-14 14:00:00+00:00); Uptrend Start Confirmed for Bar 126 (2025-04-14 18:00:00+00:00)
+  Matched DT: key=('downtrend', 124, '2025-04-14 10:00:00+00:00')
+    Added DT: ('downtrend', 124, '2025-04-14 10:00:00+00:00')
+  Matched DT: key=('downtrend', 124, '2025-04-14 10:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 124, '2025-04-14 10:00:00+00:00')
+  Matched UT: key=('uptrend', 126, '2025-04-14 18:00:00+00:00')
+    Added UT: ('uptrend', 126, '2025-04-14 18:00:00+00:00')
+\nExporting log entry 130: 130. Containment START: Bar 130 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0).
+  No trend confirmation found in entry.
+\nExporting log entry 131: 131. Containment: Bar 131 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0) for 2 bars.; Potential Downtrend Signal on Bar 131 (2025-04-15 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 132: 132. Containment: Bar 132 inside Bar 125 (PUS_LOW H:5492.0, L:5391.0) for 3 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 133: 133. Containment ENDED: Bar 133 BREAKDOWN below Bar 125 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 134: 134. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 135: 135. Downtrend Start Confirmed for Bar 131 (2025-04-15 14:00:00+00:00); Potential Uptrend Signal on Bar 134 (2025-04-16 02:00:00+00:00); Uptrend Start Confirmed for Bar 134 (2025-04-16 02:00:00+00:00)
+  Matched DT: key=('downtrend', 131, '2025-04-15 14:00:00+00:00')
+    Added DT: ('downtrend', 131, '2025-04-15 14:00:00+00:00')
+  Matched UT: key=('uptrend', 134, '2025-04-16 02:00:00+00:00')
+    Added UT: ('uptrend', 134, '2025-04-16 02:00:00+00:00')
+\nExporting log entry 136: 136. Potential Downtrend Signal on Bar 135 (2025-04-16 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 137: 137. Potential Downtrend Signal on Bar 137 (2025-04-16 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 138: 138. Uptrend Start Confirmed for Bar 134 (2025-04-16 02:00:00+00:00)
+  Matched UT: key=('uptrend', 134, '2025-04-16 02:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 134, '2025-04-16 02:00:00+00:00')
+\nExporting log entry 139: 139. Containment START: Bar 139 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5).; Downtrend Start Confirmed for Bar 137 (2025-04-16 14:00:00+00:00); Potential Uptrend Signal on Bar 138 (2025-04-16 18:00:00+00:00)
+  Matched DT: key=('downtrend', 137, '2025-04-16 14:00:00+00:00')
+    Added DT: ('downtrend', 137, '2025-04-16 14:00:00+00:00')
+\nExporting log entry 140: 140. Containment: Bar 140 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 141: 141. Containment: Bar 141 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 3 bars.; Potential Downtrend Signal on Bar 141 (2025-04-17 06:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 142: 142. Containment: Bar 142 inside Bar 137 (PDS_PEAK H:5401.0, L:5287.5) for 4 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 143: 143. Containment ENDED: Bar 143 moves outside Bar 137 range (was 4 bar(s) inside).; Uptrend Start Confirmed for Bar 138 (2025-04-16 18:00:00+00:00)
+  Matched UT: key=('uptrend', 138, '2025-04-16 18:00:00+00:00')
+    Added UT: ('uptrend', 138, '2025-04-16 18:00:00+00:00')
+\nExporting log entry 144: 144. Downtrend Start Confirmed for Bar 141 (2025-04-17 06:00:00+00:00); Potential Downtrend Signal on Bar 144 (2025-04-17 18:00:00+00:00); Potential Downtrend Signal on Bar 144 (2025-04-17 18:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 143 (2025-04-17 14:00:00+00:00)
+  Matched DT: key=('downtrend', 141, '2025-04-17 06:00:00+00:00')
+    Added DT: ('downtrend', 141, '2025-04-17 06:00:00+00:00')
+\nExporting log entry 145: 145. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 146: 146. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 147: 147. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 148: 148. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 149: 149. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 150: 150. Uptrend Start Confirmed for Bar 143 (2025-04-17 14:00:00+00:00)
+  Matched UT: key=('uptrend', 143, '2025-04-17 14:00:00+00:00')
+    Added UT: ('uptrend', 143, '2025-04-17 14:00:00+00:00')
+\nExporting log entry 151: 151. Downtrend Start Confirmed for Bar 144 (2025-04-17 18:00:00+00:00); Downtrend Start Confirmed for Bar 144 (2025-04-17 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 150 (2025-04-21 18:00:00+00:00); Uptrend Start Confirmed for Bar 150 (2025-04-21 18:00:00+00:00)
+  Matched DT: key=('downtrend', 144, '2025-04-17 18:00:00+00:00')
+    Added DT: ('downtrend', 144, '2025-04-17 18:00:00+00:00')
+  Matched DT: key=('downtrend', 144, '2025-04-17 18:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 144, '2025-04-17 18:00:00+00:00')
+  Matched UT: key=('uptrend', 150, '2025-04-21 18:00:00+00:00')
+    Added UT: ('uptrend', 150, '2025-04-21 18:00:00+00:00')
+\nExporting log entry 152: 152. Potential Downtrend Signal on Bar 151 (2025-04-21 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 153: 153. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 154: 154. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 155: 155. Potential Downtrend Signal on Bar 155 (2025-04-22 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 156: 156. Uptrend Start Confirmed for Bar 150 (2025-04-21 18:00:00+00:00)
+  Matched UT: key=('uptrend', 150, '2025-04-21 18:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 150, '2025-04-21 18:00:00+00:00')
+\nExporting log entry 157: 157. Downtrend Start Confirmed for Bar 155 (2025-04-22 14:00:00+00:00); Potential Uptrend Signal on Bar 156 (2025-04-22 18:00:00+00:00)
+  Matched DT: key=('downtrend', 155, '2025-04-22 14:00:00+00:00')
+    Added DT: ('downtrend', 155, '2025-04-22 14:00:00+00:00')
+\nExporting log entry 158: 158. Potential Downtrend Signal on Bar 157 (2025-04-22 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 159: 159. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 160: 160. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 161: 161. Potential Downtrend Signal on Bar 161 (2025-04-23 14:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 162: 162. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 163: 163. Containment START: Bar 163 inside Bar 161 (PDS_PEAK H:5500.0, L:5385.5).
+  No trend confirmation found in entry.
+\nExporting log entry 164: 164. Containment ENDED: Bar 164 BREAKDOWN below Bar 161 range (was 1 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 165: 165. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 166: 166. Downtrend Start Confirmed for Bar 161 (2025-04-23 14:00:00+00:00); Potential Uptrend Signal on Bar 165 (2025-04-24 06:00:00+00:00); Uptrend Start Confirmed for Bar 156 (2025-04-22 18:00:00+00:00)
+  Matched DT: key=('downtrend', 161, '2025-04-23 14:00:00+00:00')
+    Added DT: ('downtrend', 161, '2025-04-23 14:00:00+00:00')
+  Matched UT: key=('uptrend', 156, '2025-04-22 18:00:00+00:00')
+    Added UT: ('uptrend', 156, '2025-04-22 18:00:00+00:00')
+\nExporting log entry 167: 167. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 168: 168. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 169: 169. Potential Downtrend Signal on Bar 168 (2025-04-24 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 170: 170. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 171: 171. Potential Downtrend Signal on Bar 170 (2025-04-25 02:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 172: 172. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 173: 173. Downtrend Start Confirmed for Bar 170 (2025-04-25 02:00:00+00:00); Potential Uptrend Signal on Bar 173 (2025-04-25 14:00:00+00:00); Uptrend Start Confirmed for Bar 165 (2025-04-24 06:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 170, '2025-04-25 02:00:00+00:00')
+    Added DT: ('downtrend', 170, '2025-04-25 02:00:00+00:00')
+  Matched UT: key=('uptrend', 165, '2025-04-24 06:00:00+00:00')
+    Added UT: ('uptrend', 165, '2025-04-24 06:00:00+00:00')
+\nExporting log entry 174: 174. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 175: 175. Containment START: Bar 175 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0).; Potential Downtrend Signal on Bar 174 (2025-04-25 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 176: 176. Containment: Bar 176 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 177: 177. Containment: Bar 177 inside Bar 173 (PUS_LOW H:5554.5, L:5480.0) for 3 bars.; Downtrend Start Confirmed for Bar 174 (2025-04-25 18:00:00+00:00); Potential Uptrend Signal on Bar 176 (2025-04-28 02:00:00+00:00); Uptrend Start Confirmed for Bar 173 (2025-04-25 14:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 174, '2025-04-25 18:00:00+00:00')
+    Added DT: ('downtrend', 174, '2025-04-25 18:00:00+00:00')
+  Matched UT: key=('uptrend', 173, '2025-04-25 14:00:00+00:00')
+    Added UT: ('uptrend', 173, '2025-04-25 14:00:00+00:00')
+\nExporting log entry 178: 178. Containment ENDED: Bar 178 moves outside Bar 173 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 179: 179. Potential Downtrend Signal on Bar 178 (2025-04-28 10:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 180: 180. Downtrend Start Confirmed for Bar 178 (2025-04-28 10:00:00+00:00); Potential Uptrend Signal on Bar 179 (2025-04-28 14:00:00+00:00); Uptrend Start Confirmed for Bar 179 (2025-04-28 14:00:00+00:00)
+  Matched DT: key=('downtrend', 178, '2025-04-28 10:00:00+00:00')
+    Added DT: ('downtrend', 178, '2025-04-28 10:00:00+00:00')
+  Matched UT: key=('uptrend', 179, '2025-04-28 14:00:00+00:00')
+    Added UT: ('uptrend', 179, '2025-04-28 14:00:00+00:00')
+\nExporting log entry 181: 181. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 182: 182. Potential Downtrend Signal on Bar 182 (2025-04-29 02:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 183: 183. Uptrend Start Confirmed for Bar 179 (2025-04-28 14:00:00+00:00)
+  Matched UT: key=('uptrend', 179, '2025-04-28 14:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 179, '2025-04-28 14:00:00+00:00')
+\nExporting log entry 184: 184. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 185: 185. Downtrend Start Confirmed for Bar 182 (2025-04-29 02:00:00+00:00); Potential Uptrend Signal on Bar 184 (2025-04-29 10:00:00+00:00)
+  Matched DT: key=('downtrend', 182, '2025-04-29 02:00:00+00:00')
+    Added DT: ('downtrend', 182, '2025-04-29 02:00:00+00:00')
+\nExporting log entry 186: 186. Potential Downtrend Signal on Bar 186 (2025-04-29 18:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 187: 187. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 188: 188. Uptrend Start Confirmed for Bar 184 (2025-04-29 10:00:00+00:00)
+  Matched UT: key=('uptrend', 184, '2025-04-29 10:00:00+00:00')
+    Added UT: ('uptrend', 184, '2025-04-29 10:00:00+00:00')
+\nExporting log entry 189: 189. Downtrend Start Confirmed for Bar 186 (2025-04-29 18:00:00+00:00); Downtrend Start Confirmed for Bar 186 (2025-04-29 18:00:00+00:00) # FORCED to alternate; Potential Uptrend Signal on Bar 188 (2025-04-30 02:00:00+00:00); Uptrend Start Confirmed for Bar 188 (2025-04-30 02:00:00+00:00)
+  Matched DT: key=('downtrend', 186, '2025-04-29 18:00:00+00:00')
+    Added DT: ('downtrend', 186, '2025-04-29 18:00:00+00:00')
+  Matched DT: key=('downtrend', 186, '2025-04-29 18:00:00+00:00')
+    Skipped DT (globally duplicate): ('downtrend', 186, '2025-04-29 18:00:00+00:00')
+  Matched UT: key=('uptrend', 188, '2025-04-30 02:00:00+00:00')
+    Added UT: ('uptrend', 188, '2025-04-30 02:00:00+00:00')
+\nExporting log entry 190: 190. Potential Downtrend Signal on Bar 189 (2025-04-30 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 191: 191. Uptrend Start Confirmed for Bar 190 (2025-04-30 10:00:00+00:00)
+  Matched UT: key=('uptrend', 190, '2025-04-30 10:00:00+00:00')
+    Added UT: ('uptrend', 190, '2025-04-30 10:00:00+00:00')
+\nExporting log entry 192: 192. Downtrend Start Confirmed for Bar 189 (2025-04-30 06:00:00+00:00); Potential Uptrend Signal on Bar 190 (2025-04-30 10:00:00+00:00)
+  Matched DT: key=('downtrend', 189, '2025-04-30 06:00:00+00:00')
+    Added DT: ('downtrend', 189, '2025-04-30 06:00:00+00:00')
+\nExporting log entry 193: 193. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 194: 194. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 195: 195. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 196: 196. Potential Downtrend Signal on Bar 196 (2025-05-01 10:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 197: 197. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 198: 198. Potential Downtrend Signal on Bar 197 (2025-05-01 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 199: 199. Downtrend Start Confirmed for Bar 197 (2025-05-01 14:00:00+00:00); Potential Uptrend Signal on Bar 199 (2025-05-01 22:00:00+00:00); Uptrend Start Confirmed for Bar 190 (2025-04-30 10:00:00+00:00)
+  Matched DT: key=('downtrend', 197, '2025-05-01 14:00:00+00:00')
+    Added DT: ('downtrend', 197, '2025-05-01 14:00:00+00:00')
+  Matched UT: key=('uptrend', 190, '2025-04-30 10:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 190, '2025-04-30 10:00:00+00:00')
+\nExporting log entry 200: 200. Potential Downtrend Signal on Bar 200 (2025-05-02 02:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 201: 201. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 202: 202. Downtrend Start Confirmed for Bar 200 (2025-05-02 02:00:00+00:00); Potential Uptrend Signal on Bar 201 (2025-05-02 06:00:00+00:00); Uptrend Start Confirmed for Bar 199 (2025-05-01 22:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 200, '2025-05-02 02:00:00+00:00')
+    Added DT: ('downtrend', 200, '2025-05-02 02:00:00+00:00')
+  Matched UT: key=('uptrend', 199, '2025-05-01 22:00:00+00:00')
+    Added UT: ('uptrend', 199, '2025-05-01 22:00:00+00:00')
+\nExporting log entry 203: 203. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 204: 204. Potential Downtrend Signal on Bar 204 (2025-05-02 18:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 205: 205. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 206: 206. Potential Uptrend Signal on Bar 205 (2025-05-04 22:00:00+00:00); Uptrend Start Confirmed for Bar 201 (2025-05-02 06:00:00+00:00)
+  Matched UT: key=('uptrend', 201, '2025-05-02 06:00:00+00:00')
+    Added UT: ('uptrend', 201, '2025-05-02 06:00:00+00:00')
+\nExporting log entry 207: 207. Downtrend Start Confirmed for Bar 204 (2025-05-02 18:00:00+00:00); Potential Downtrend Signal on Bar 207 (2025-05-05 06:00:00+00:00); Potential Downtrend Signal on Bar 207 (2025-05-05 06:00:00+00:00) by Rule C; Potential Uptrend Signal on Bar 205 (2025-05-04 22:00:00+00:00)
+  Matched DT: key=('downtrend', 204, '2025-05-02 18:00:00+00:00')
+    Added DT: ('downtrend', 204, '2025-05-02 18:00:00+00:00')
+\nExporting log entry 208: 208. Containment START: Bar 208 inside Bar 207 (PDS_PEAK H:5680.25, L:5655.25).; Potential Uptrend Signal on Bar 207 (2025-05-05 06:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 209: 209. Containment ENDED: Bar 209 BREAKOUT above Bar 207 range (was 1 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 210: 210. Potential Downtrend Signal on Bar 210 (2025-05-05 18:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 211: 211. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 212: 212. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 213: 213. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 214: 214. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 215: 215. Downtrend Start Confirmed for Bar 210 (2025-05-05 18:00:00+00:00); Potential Uptrend Signal on Bar 214 (2025-05-06 10:00:00+00:00); Uptrend Start Confirmed for Bar 214 (2025-05-06 10:00:00+00:00)
+  Matched DT: key=('downtrend', 210, '2025-05-05 18:00:00+00:00')
+    Added DT: ('downtrend', 210, '2025-05-05 18:00:00+00:00')
+  Matched UT: key=('uptrend', 214, '2025-05-06 10:00:00+00:00')
+    Added UT: ('uptrend', 214, '2025-05-06 10:00:00+00:00')
+\nExporting log entry 216: 216. Potential Downtrend Signal on Bar 215 (2025-05-06 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 217: 217. Downtrend Start Confirmed for Bar 215 (2025-05-06 14:00:00+00:00); Potential Uptrend Signal on Bar 216 (2025-05-06 18:00:00+00:00); Uptrend Start Confirmed for Bar 214 (2025-05-06 10:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 215, '2025-05-06 14:00:00+00:00')
+    Added DT: ('downtrend', 215, '2025-05-06 14:00:00+00:00')
+  Matched UT: key=('uptrend', 214, '2025-05-06 10:00:00+00:00')
+    Skipped UT (globally duplicate): ('uptrend', 214, '2025-05-06 10:00:00+00:00')
+\nExporting log entry 218: 218. Potential Downtrend Signal on Bar 217 (2025-05-06 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 219: 219. Containment START: Bar 219 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25).
+  No trend confirmation found in entry.
+\nExporting log entry 220: 220. Containment: Bar 220 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25) for 2 bars.; Potential Downtrend Signal on Bar 220 (2025-05-07 10:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 221: 221. Containment: Bar 221 inside Bar 217 (PDS_PEAK H:5690.75, L:5608.25) for 3 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 222: 222. Containment ENDED: Bar 222 moves outside Bar 217 range (was 3 bar(s) inside).; Downtrend Start Confirmed for Bar 220 (2025-05-07 10:00:00+00:00); Potential Uptrend Signal on Bar 222 (2025-05-07 18:00:00+00:00); Uptrend Start Confirmed for Bar 216 (2025-05-06 18:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 220, '2025-05-07 10:00:00+00:00')
+    Added DT: ('downtrend', 220, '2025-05-07 10:00:00+00:00')
+  Matched UT: key=('uptrend', 216, '2025-05-06 18:00:00+00:00')
+    Added UT: ('uptrend', 216, '2025-05-06 18:00:00+00:00')
+\nExporting log entry 223: 223. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 224: 224. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 225: 225. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 226: 226. Potential Downtrend Signal on Bar 226 (2025-05-08 10:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 227: 227. Downtrend Start Confirmed for Bar 226 (2025-05-08 10:00:00+00:00); Potential Uptrend Signal on Bar 227 (2025-05-08 14:00:00+00:00); Uptrend Start Confirmed for Bar 222 (2025-05-07 18:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 226, '2025-05-08 10:00:00+00:00')
+    Added DT: ('downtrend', 226, '2025-05-08 10:00:00+00:00')
+  Matched UT: key=('uptrend', 222, '2025-05-07 18:00:00+00:00')
+    Added UT: ('uptrend', 222, '2025-05-07 18:00:00+00:00')
+\nExporting log entry 228: 228. Containment START: Bar 228 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75).; Potential Downtrend Signal on Bar 227 (2025-05-08 14:00:00+00:00); Potential Uptrend Signal on Bar 227 (2025-05-08 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 229: 229. Containment: Bar 229 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 2 bars.; Potential Downtrend Signal on Bar 228 (2025-05-08 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 230: 230. Containment: Bar 230 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 3 bars.; Downtrend Start Confirmed for Bar 228 (2025-05-08 18:00:00+00:00); Potential Downtrend Signal on CUS Bar 227 (due to trigger by 230); Potential Uptrend Signal on Bar 229 (2025-05-08 22:00:00+00:00); Uptrend Start Confirmed for Bar 227 (2025-05-08 14:00:00+00:00)
+  Matched DT: key=('downtrend', 228, '2025-05-08 18:00:00+00:00')
+    Added DT: ('downtrend', 228, '2025-05-08 18:00:00+00:00')
+  Matched UT: key=('uptrend', 227, '2025-05-08 14:00:00+00:00')
+    Added UT: ('uptrend', 227, '2025-05-08 14:00:00+00:00')
+\nExporting log entry 231: 231. Containment: Bar 231 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 4 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 232: 232. Containment: Bar 232 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 5 bars.; Downtrend Start Confirmed for Bar 227 (2025-05-08 14:00:00+00:00); Potential Uptrend Signal on Bar 232 (2025-05-09 10:00:00+00:00)
+  Matched DT: key=('downtrend', 227, '2025-05-08 14:00:00+00:00')
+    Added DT: ('downtrend', 227, '2025-05-08 14:00:00+00:00')
+\nExporting log entry 233: 233. Containment: Bar 233 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 6 bars.; Potential Downtrend Signal on Bar 232 (2025-05-09 10:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 234: 234. Containment: Bar 234 inside Bar 227 (PUS_LOW H:5741.0, L:5652.75) for 7 bars.; Potential Uptrend Signal on Bar 233 (2025-05-09 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 235: 235. Containment ENDED: Bar 235 BREAKOUT above Bar 227 range (was 7 bar(s) inside).; Downtrend Start Confirmed for Bar 232 (2025-05-09 10:00:00+00:00); Potential Uptrend Signal on Bar 233 (2025-05-09 14:00:00+00:00); Uptrend Start Confirmed for Bar 229 (2025-05-08 22:00:00+00:00) # FORCED to alternate
+  Matched DT: key=('downtrend', 232, '2025-05-09 10:00:00+00:00')
+    Added DT: ('downtrend', 232, '2025-05-09 10:00:00+00:00')
+  Matched UT: key=('uptrend', 229, '2025-05-08 22:00:00+00:00')
+    Added UT: ('uptrend', 229, '2025-05-08 22:00:00+00:00')
+\nExporting log entry 236: 236. Potential Downtrend Signal on Bar 235 (2025-05-11 22:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 237: 237. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 238: 238. Potential Downtrend Signal on Bar 238 (2025-05-12 10:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 239: 239. Uptrend Start Confirmed for Bar 233 (2025-05-09 14:00:00+00:00)
+  Matched UT: key=('uptrend', 233, '2025-05-09 14:00:00+00:00')
+    Added UT: ('uptrend', 233, '2025-05-09 14:00:00+00:00')
+\nExporting log entry 240: 240. Downtrend Start Confirmed for Bar 238 (2025-05-12 10:00:00+00:00); Potential Uptrend Signal on Bar 239 (2025-05-12 14:00:00+00:00)
+  Matched DT: key=('downtrend', 238, '2025-05-12 10:00:00+00:00')
+    Added DT: ('downtrend', 238, '2025-05-12 10:00:00+00:00')
+\nExporting log entry 241: 241. Potential Downtrend Signal on Bar 240 (2025-05-12 18:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 242: 242. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 243: 243. Uptrend Start Confirmed for Bar 239 (2025-05-12 14:00:00+00:00)
+  Matched UT: key=('uptrend', 239, '2025-05-12 14:00:00+00:00')
+    Added UT: ('uptrend', 239, '2025-05-12 14:00:00+00:00')
+\nExporting log entry 244: 244. Downtrend Start Confirmed for Bar 240 (2025-05-12 18:00:00+00:00); Potential Uptrend Signal on Bar 243 (2025-05-13 06:00:00+00:00)
+  Matched DT: key=('downtrend', 240, '2025-05-12 18:00:00+00:00')
+    Added DT: ('downtrend', 240, '2025-05-12 18:00:00+00:00')
+\nExporting log entry 245: 245. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 246: 246. Potential Downtrend Signal on Bar 245 (2025-05-13 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 247: 247. Containment START: Bar 247 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75).
+  No trend confirmation found in entry.
+\nExporting log entry 248: 248. Containment: Bar 248 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 2 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 249: 249. Containment: Bar 249 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 3 bars.; Potential Downtrend Signal on Bar 249 (2025-05-14 06:00:00+00:00) by Rule C
+  No trend confirmation found in entry.
+\nExporting log entry 250: 250. Containment: Bar 250 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 4 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 251: 251. Containment: Bar 251 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 5 bars.; Potential Downtrend Signal on Bar 250 (2025-05-14 10:00:00+00:00)
+  No trend confirmation found in entry.
+\nExporting log entry 252: 252. Containment: Bar 252 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 6 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 253: 253. Containment: Bar 253 inside Bar 245 (PDS_PEAK H:5926.75, L:5887.75) for 7 bars.
+  No trend confirmation found in entry.
+\nExporting log entry 254: 254. Containment ENDED: Bar 254 moves outside Bar 245 range (was 7 bar(s) inside).
+  No trend confirmation found in entry.
+\nExporting log entry 255: 255. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 256: 256. Downtrend Start Confirmed for Bar 250 (2025-05-14 10:00:00+00:00); Potential Uptrend Signal on Bar 255 (2025-05-15 06:00:00+00:00); Uptrend Start Confirmed for Bar 243 (2025-05-13 06:00:00+00:00)
+  Matched DT: key=('downtrend', 250, '2025-05-14 10:00:00+00:00')
+    Added DT: ('downtrend', 250, '2025-05-14 10:00:00+00:00')
+  Matched UT: key=('uptrend', 243, '2025-05-13 06:00:00+00:00')
+    Added UT: ('uptrend', 243, '2025-05-13 06:00:00+00:00')
+\nExporting log entry 257: 257. Neutral
+  No trend confirmation found in entry.
+\nExporting log entry 258: 258. Potential Downtrend Signal on Bar 257 (2025-05-15 14:00:00+00:00)
+  No trend confirmation found in entry.
+\nTotal unique trends extracted: 96
+Total trends after sort (should be same as unique extracted): 96
+Exported 96 confirmed trend starts to trend_analysis/confirmed_trend_starts.csv
