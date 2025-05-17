@@ -43,6 +43,13 @@ class State:
         self.containment_start_bar_index_for_log = None # Bar that first entered containment
         self.containment_consecutive_bars_inside = 0 # Number of bars strictly inside after start
 
+        # Overall trend state for strict U/D alternation
+        self.overall_trend_is_up = None # True if current confirmed trend is UP, False if DOWN, None if Neutral
+
+        # For forcing alternation
+        self.last_confirmed_trend_type = None
+        self.last_confirmed_trend_bar_index = None
+
 # --- Helper Functions for Bar Patterns ---
 def is_SDB(current_bar, prev_bar): # Simple Down Bar
   return (current_bar.l < prev_bar.l and \
@@ -210,14 +217,29 @@ def is_custom_pus_rule_B(current_bar, prev_bar):
     return current_bar.l >= prev_bar.l
 
 def check_custom_cus_confirmation_ref36(current_bar, prev_bar, pds_candidate_bar):
+    if current_bar.index == 55 and prev_bar.index == 53: # Original bar indices
+        print(f"DEBUG REF36 CUS Check for UT52 by Bar55/53:")
+        print(f"  current_bar (Bar55): L={current_bar.l}, H={current_bar.h}, C={current_bar.c}")
+        print(f"  prev_bar (Bar53): C={prev_bar.c}")
+        if pds_candidate_bar:
+            print(f"  pds_candidate_bar (Bar{pds_candidate_bar.index}): L={pds_candidate_bar.l}, H={pds_candidate_bar.h}")
+        else:
+            print(f"  pds_candidate_bar is None")
+
     if pds_candidate_bar is None:
+        if current_bar.index == 55 and prev_bar.index == 53: print("  REF36 Fail: pds_candidate_bar is None")
         return False
     
     original_cond_low_undercut = current_bar.l < pds_candidate_bar.l
     original_cond_high_respect = current_bar.h <= pds_candidate_bar.h
-    # New condition: current bar must close higher than previous bar's close
     new_cond_closes_stronger = current_bar.c > prev_bar.c
     
+    if current_bar.index == 55 and prev_bar.index == 53:
+        print(f"  Cond1 (curr.L < pds.L): {original_cond_low_undercut} ({current_bar.l} < {pds_candidate_bar.l})")
+        print(f"  Cond2 (curr.H <= pds.H): {original_cond_high_respect} ({current_bar.h} <= {pds_candidate_bar.h})")
+        print(f"  Cond3 (curr.C > prev.C): {new_cond_closes_stronger} ({current_bar.c} > {prev_bar.c})")
+        print(f"  REF36 Result: {original_cond_low_undercut and original_cond_high_respect and new_cond_closes_stronger}")
+
     return original_cond_low_undercut and original_cond_high_respect and new_cond_closes_stronger
 
 def check_custom_cus_confirmation_HHLL(current_bar, prev_bar):
@@ -264,7 +286,7 @@ def check_custom_cus_EngulfingUp(current_bar, prev_bar, initial_pds_candidate_ba
         
     return final_result
 
-def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.4h.csv"):
+def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv"):
     bars = []
     with open(filename, 'r', newline='') as f:
         reader = csv.DictReader(f)
@@ -283,6 +305,21 @@ def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.4h.csv"):
         ))
     return bars
 
+# Helper function to get unique sorted events manually
+def get_unique_sorted_events(descriptions):
+    seen = set()
+    unique_list = []
+    # print(f"DEBUG get_unique_sorted_events INPUT: {descriptions}") # Optional: too verbose normally
+    for item in descriptions:
+        if item not in seen:
+            seen.add(item)
+            unique_list.append(item)
+        # else:
+            # print(f"DEBUG get_unique_sorted_events DUPLICATE SKIPPED: {item}") # Optional
+    # print(f"DEBUG get_unique_sorted_events unique_list before sort: {unique_list}") # Optional
+    # print(f"DEBUG get_unique_sorted_events RETURN: {sorted(unique_list)}") # Optional
+    return sorted(unique_list)
+
 def process_trend_logic(all_bars):
     if not all_bars:
         return []
@@ -297,6 +334,17 @@ def process_trend_logic(all_bars):
         
         current_bar = all_bars[k]
         prev_bar = all_bars[k-1]
+        
+        # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+        if 57 <= log_index_for_this_entry <= 71:
+            print(f"\\n--- DEBUG START: Processing Log Entry {log_index_for_this_entry} (CurrentBar: {current_bar.index}) ---")
+            print(f"  PrevBar: {prev_bar.index if prev_bar else 'N/A'}")
+            print(f"  State BEFORE CUS/CDS Eval:")
+            print(f"    PUS Candidate Index: {state.confirmed_uptrend_candidate_low_bar_index}, Low: {state.confirmed_uptrend_candidate_low_low}")
+            print(f"    PDS Candidate Index: {state.confirmed_downtrend_candidate_peak_bar_index}, High: {state.confirmed_downtrend_candidate_peak_high}")
+            print(f"    Last Confirmed Trend: {state.last_confirmed_trend_type}, Bar Index: {state.last_confirmed_trend_bar_index}")
+            print(f"    Overall Trend Is Up: {state.overall_trend_is_up}")
+        # <<< END DETAILED DEBUGGING >>>
         
         confirmed_uptrend_this_iteration = False
         confirmed_downtrend_this_iteration = False
@@ -379,23 +427,24 @@ def process_trend_logic(all_bars):
         if initial_pus_candidate_bar_obj is not None:
             sdb_triggers_cus = is_SDB(current_bar, prev_bar)
             
-            # New condition for SDB CUS: only if current_bar.l does NOT break below initial_pus_candidate_bar_obj.l
-            sdb_cus_valid_context = True
-            if sdb_triggers_cus and initial_pus_candidate_bar_obj is not None: # Check context against the PUS being confirmed
-                if current_bar.l < initial_pus_candidate_bar_obj.l: # If SDB's low breaks the PUS's own low
+            sdb_cus_valid_context = True # Restored: sdb_cus_valid_context logic
+            if sdb_triggers_cus and initial_pds_candidate_bar_obj is not None: 
+                if current_bar.l < initial_pds_candidate_bar_obj.l:
                     sdb_cus_valid_context = False
             
-            ref36_pds_peak_for_check = None
-            if state.confirmed_downtrend_candidate_peak_bar_index is not None: # Use current PDS peak for ref36 check
-                 ref36_pds_peak_for_check = all_bars[state.confirmed_downtrend_candidate_peak_bar_index -1]
-            
-            # Pass prev_bar to the updated ref36 function
-            ref36_triggers_cus = check_custom_cus_confirmation_ref36(current_bar, prev_bar, ref36_pds_peak_for_check) if ref36_pds_peak_for_check else False
+            # Context for REF36 CUS rule
+            ref36_pds_context_for_check = initial_pds_candidate_bar_obj 
+            if not ref36_pds_context_for_check and state.confirmed_downtrend_candidate_peak_bar_index is not None:
+                 ref36_pds_context_for_check = all_bars[state.confirmed_downtrend_candidate_peak_bar_index -1]
+            ref36_triggers_cus = check_custom_cus_confirmation_ref36(current_bar, prev_bar, ref36_pds_context_for_check)
+
             hhll_triggers_cus = check_custom_cus_confirmation_HHLL(current_bar, prev_bar)
-            # Pass initial_pds_candidate_bar_obj for context to EngulfingUp
             engulfing_up_triggers_cus = check_custom_cus_EngulfingUp(current_bar, prev_bar, initial_pds_candidate_bar_obj)
 
-            if sdb_triggers_cus and sdb_cus_valid_context: can_confirm_cus = True; cus_trigger_rule_type = "SDB"
+            if log_index_for_this_entry == 54: # k=53, current_bar is original Bar 55
+                print(f"DEBUG LOG 54 CUS TRIGGERS: sdb={sdb_triggers_cus}, sdb_valid={sdb_cus_valid_context}, ref36={ref36_triggers_cus}, hhll={hhll_triggers_cus}, engulf={engulfing_up_triggers_cus}")
+
+            if sdb_triggers_cus and sdb_cus_valid_context: can_confirm_cus = True; cus_trigger_rule_type = "SDB" # Restored sdb_cus_valid_context usage
             elif ref36_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "REF36"
             elif hhll_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "HHLL"
             elif engulfing_up_triggers_cus: can_confirm_cus = True; cus_trigger_rule_type = "EngulfingUp"
@@ -434,9 +483,42 @@ def process_trend_logic(all_bars):
         # --- Apply Consequences (PRIORITY 1: CUS) ---
         if can_confirm_cus:
             confirmed_uptrend_this_iteration = True
-            # initial_pus_candidate_bar_obj is the bar being confirmed CUS
-            current_bar_event_descriptions.append(f"Uptrend Start Confirmed for Bar {initial_pus_candidate_bar_obj.index} ({initial_pus_candidate_bar_obj.date})")
+            confirmed_bar_for_this_cus = initial_pus_candidate_bar_obj
+
+            # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+            if 57 <= log_index_for_this_entry <= 71:
+                print(f"  CUS TRIGGERED for PUS Bar {confirmed_bar_for_this_cus.index} by CurrentBar {current_bar.index}")
+                print(f"    Rule: {cus_trigger_rule_type}")
+                print(f"    Initial PDS for context (if used by rule): {initial_pds_candidate_bar_obj.index if initial_pds_candidate_bar_obj else 'None'}")
+            # <<< END DETAILED DEBUGGING >>>
+
+            if state.last_confirmed_trend_type == 'uptrend' and \
+               confirmed_bar_for_this_cus.index > state.last_confirmed_trend_bar_index:
+                if log_index_for_this_entry == 70: # ADDED DEBUG
+                    print(f"    LOG_70_DEBUG_FORCED_DT: ENTERING forced DT block. Last Confirmed: {state.last_confirmed_trend_type} @ {state.last_confirmed_trend_bar_index}. Current CUS for Bar: {confirmed_bar_for_this_cus.index}")
+
+                intervening_high_bar_for_dt = find_intervening_bar(all_bars, state.last_confirmed_trend_bar_index, confirmed_bar_for_this_cus.index, find_lowest_low=False)
+                
+                if log_index_for_this_entry == 70: # ADDED DEBUG
+                    print(f"    LOG_70_DEBUG_FORCED_DT: find_intervening_bar returned: {intervening_high_bar_for_dt.index if intervening_high_bar_for_dt else 'None'}")
+
+                if intervening_high_bar_for_dt:
+                    current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {intervening_high_bar_for_dt.index} ({intervening_high_bar_for_dt.date}) # FORCED to alternate")
+                    if log_index_for_this_entry == 70: # ADDED DEBUG
+                        print(f"    LOG_70_DEBUG_FORCED_DT: APPENDED 'Downtrend Start Confirmed for Bar {intervening_high_bar_for_dt.index}'. current_bar_event_descriptions is now: {current_bar_event_descriptions}")
+                    
+                    # Update state for this forced trend
+                    state.last_confirmed_trend_type = 'downtrend'
+                    state.last_confirmed_trend_bar_index = intervening_high_bar_for_dt.index
             
+            current_bar_event_descriptions.append(f"Uptrend Start Confirmed for Bar {confirmed_bar_for_this_cus.index} ({confirmed_bar_for_this_cus.date})")
+            state.overall_trend_is_up = True 
+            state.last_confirmed_trend_type = 'uptrend' # This is the actual confirmed trend
+            state.last_confirmed_trend_bar_index = confirmed_bar_for_this_cus.index
+            
+            cus_confirmed_bar = confirmed_bar_for_this_cus
+            cus_triggering_bar = current_bar
+
             # Clear ALL PUS state as it's now confirmed.
             state.potential_uptrend_signal_bar_index = None
             state.potential_uptrend_anchor_low = None
@@ -444,48 +526,124 @@ def process_trend_logic(all_bars):
             state.confirmed_uptrend_candidate_low_low = None
             state.confirmed_uptrend_candidate_low_high = None
 
-            if cus_trigger_rule_type == "HHLL":
-                current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
-                state.potential_downtrend_signal_bar_index = current_bar.index
-                state.potential_downtrend_anchor_high = current_bar.h
-                # This PDS becomes the new candidate
-                state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
-                state.confirmed_downtrend_candidate_peak_high = current_bar.h
-                state.confirmed_downtrend_candidate_peak_low = current_bar.l
-            elif cus_trigger_rule_type == "EngulfingUp":
-                # EngulfingUp CUS doesn't make PDS itself, let other PDS rules handle it if needed
-                pass
-            else: # SDB or REF36 CUS (or EngulfingUp if it doesn't have specific PDS consequence)
-                # cus_bar_object (which is initial_pus_candidate_bar_obj) might become PDS
-                if cus_trigger_rule_type != "EngulfingUp": # Assuming EngulfingUp CUS doesn't make PDS itself
+            # Overall trend is now UP. Only PUS states that were part of this CUS are cleared.
+            # PDS candidates remain active, allowing for a subsequent CDS if pattern forms.
+            # state.potential_downtrend_signal_bar_index = None # DO NOT CLEAR
+            # state.potential_downtrend_anchor_high = None      # DO NOT CLEAR
+            # state.confirmed_downtrend_candidate_peak_bar_index = None # DO NOT CLEAR
+            # state.confirmed_downtrend_candidate_peak_high = None    # DO NOT CLEAR
+            # state.confirmed_downtrend_candidate_peak_low = None     # DO NOT CLEAR
+
+            made_cus_bar_pds = False
+            if cus_confirmed_bar and cus_triggering_bar: # Redundant check, but safe
+                is_pds_by_trigger = False
+                if is_SDB(cus_triggering_bar, cus_confirmed_bar) or \
+                   is_your_custom_pds_rule(cus_triggering_bar, cus_confirmed_bar) or \
+                   is_custom_pds_rule_B(cus_triggering_bar, cus_confirmed_bar):
+                    is_pds_by_trigger = True
+                
+                if is_pds_by_trigger:
+                    # Only set PDS on CUS bar if it's a new peak or no PDS exists
                     if state.confirmed_downtrend_candidate_peak_bar_index is None or \
-                       initial_pus_candidate_bar_obj.h > state.confirmed_downtrend_candidate_peak_high:
-                        current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {initial_pus_candidate_bar_obj.index} ({initial_pus_candidate_bar_obj.date})")
-                        state.potential_downtrend_signal_bar_index = initial_pus_candidate_bar_obj.index
-                        state.potential_downtrend_anchor_high = initial_pus_candidate_bar_obj.h
-                        state.confirmed_downtrend_candidate_peak_bar_index = initial_pus_candidate_bar_obj.index
-                        state.confirmed_downtrend_candidate_peak_high = initial_pus_candidate_bar_obj.h
-                        state.confirmed_downtrend_candidate_peak_low = initial_pus_candidate_bar_obj.l
+                       cus_confirmed_bar.h > state.confirmed_downtrend_candidate_peak_high:
+                        current_bar_event_descriptions.append(f"Potential Downtrend Signal on CUS Bar {cus_confirmed_bar.index} (due to trigger by {cus_triggering_bar.index})")
+                        state.potential_downtrend_signal_bar_index = cus_confirmed_bar.index
+                        state.potential_downtrend_anchor_high = cus_confirmed_bar.h
+                        state.confirmed_downtrend_candidate_peak_bar_index = cus_confirmed_bar.index
+                        state.confirmed_downtrend_candidate_peak_high = cus_confirmed_bar.h
+                        state.confirmed_downtrend_candidate_peak_low = cus_confirmed_bar.l
+                        made_cus_bar_pds = True
+                    # If not higher, we don't set it as PDS, and made_cus_bar_pds remains False,
+                    # allowing original CUS PDS logic (like for HHLL) to run if applicable.
+
+            if not made_cus_bar_pds: # Only apply original PDS logic if the above didn't set PDS
+                if cus_trigger_rule_type == "HHLL":
+                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
+                    state.potential_downtrend_signal_bar_index = current_bar.index
+                    state.potential_downtrend_anchor_high = current_bar.h
+                    # This PDS becomes the new candidate
+                    state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
+                    state.confirmed_downtrend_candidate_peak_high = current_bar.h
+                    state.confirmed_downtrend_candidate_peak_low = current_bar.l
+                elif cus_trigger_rule_type == "EngulfingUp":
+                    # EngulfingUp CUS doesn't make PDS itself, let other PDS rules handle it if needed
+                    pass
+                else: # SDB or REF36 CUS (or EngulfingUp if it doesn't have specific PDS consequence)
+                    # cus_bar_object (which is initial_pus_candidate_bar_obj) might become PDS
+                    if cus_trigger_rule_type != "EngulfingUp": # Assuming EngulfingUp CUS doesn't make PDS itself
+                        if state.confirmed_downtrend_candidate_peak_bar_index is None or \
+                           cus_confirmed_bar.h > state.confirmed_downtrend_candidate_peak_high:
+                            current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {cus_confirmed_bar.index} ({cus_confirmed_bar.date})")
+                            state.potential_downtrend_signal_bar_index = cus_confirmed_bar.index
+                            state.potential_downtrend_anchor_high = cus_confirmed_bar.h
+                            state.confirmed_downtrend_candidate_peak_bar_index = cus_confirmed_bar.index
+                            state.confirmed_downtrend_candidate_peak_high = cus_confirmed_bar.h
+                            state.confirmed_downtrend_candidate_peak_low = cus_confirmed_bar.l
         
         # --- Apply Consequences (PRIORITY 2: CDS) ---
         if can_confirm_cds:
             confirmed_downtrend_this_iteration = True
-            # initial_pds_candidate_bar_obj is the bar being confirmed CDS
-            current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {initial_pds_candidate_bar_obj.index} ({initial_pds_candidate_bar_obj.date})")
+            confirmed_bar_for_this_cds = initial_pds_candidate_bar_obj
+
+            # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+            if 57 <= log_index_for_this_entry <= 71:
+                print(f"  CDS TRIGGERED for PDS Bar {confirmed_bar_for_this_cds.index} by CurrentBar {current_bar.index}")
+                print(f"    Rule: {cds_trigger_rule_type}")
+                print(f"    Initial PUS for context (if used by rule): {initial_pus_candidate_bar_obj.index if initial_pus_candidate_bar_obj else 'None'}")
+            # <<< END DETAILED DEBUGGING >>>
+
+            if state.last_confirmed_trend_type == 'downtrend' and \
+               confirmed_bar_for_this_cds.index > state.last_confirmed_trend_bar_index:
+                intervening_low_bar_for_ut = find_intervening_bar(all_bars, state.last_confirmed_trend_bar_index, confirmed_bar_for_this_cds.index, find_lowest_low=True)
+                if intervening_low_bar_for_ut:
+                    current_bar_event_descriptions.append(f"Uptrend Start Confirmed for Bar {intervening_low_bar_for_ut.index} ({intervening_low_bar_for_ut.date}) # FORCED to alternate")
+                    state.last_confirmed_trend_type = 'uptrend' 
+                    state.last_confirmed_trend_bar_index = intervening_low_bar_for_ut.index
+            
+            current_bar_event_descriptions.append(f"Downtrend Start Confirmed for Bar {confirmed_bar_for_this_cds.index} ({confirmed_bar_for_this_cds.date})")
+            state.overall_trend_is_up = False 
+            state.last_confirmed_trend_type = 'downtrend'
+            state.last_confirmed_trend_bar_index = confirmed_bar_for_this_cds.index
+
+            cds_confirmed_bar = confirmed_bar_for_this_cds # Use the consistently named variable
 
             # NEW LOGIC: Invalidate/clear any PUS candidate that occurred at or before this confirmed CDS bar
             if state.confirmed_uptrend_candidate_low_bar_index is not None and \
                state.confirmed_uptrend_candidate_low_bar_index <= initial_pds_candidate_bar_obj.index:
-                # Optional: Log PUS invalidation if desired for clarity
-                # current_bar_event_descriptions.append(f"PUS candidate Bar {state.confirmed_uptrend_candidate_low_bar_index} invalidated by CDS Bar {initial_pds_candidate_bar_obj.index}")
                 state.potential_uptrend_signal_bar_index = None
                 state.potential_uptrend_anchor_low = None
                 state.confirmed_uptrend_candidate_low_bar_index = None
                 state.confirmed_uptrend_candidate_low_low = None
                 state.confirmed_uptrend_candidate_low_high = None
+            
+            # Overall trend is now DOWN. Only PDS states part of this CDS are cleared by CDS consequence.
+            # PUS candidates remain active, allowing for a subsequent CUS.
+            # state.potential_uptrend_signal_bar_index = None # DO NOT CLEAR
+            # state.potential_uptrend_anchor_low = None     # DO NOT CLEAR
+            # state.confirmed_uptrend_candidate_low_bar_index = None # DO NOT CLEAR
+            # state.confirmed_uptrend_candidate_low_low = None    # DO NOT CLEAR
+            # state.confirmed_uptrend_candidate_low_high = None   # DO NOT CLEAR
+
+            # PDS state that was confirmed (initial_pds_candidate_bar_obj) IS cleared by its own CDS consequence later
+            # The lines below ensure any *other* PDS states are NOT cleared by this overall trend change.
+            # The actual PDS that was confirmed (initial_pds_candidate_bar_obj) will be cleared by its specific CDS consequence. 
+            # Here, we only ensure that if a *different* PDS was somehow active, it doesn't get cleared by this generic sweep.
+            # This block needs to be more precise about what PDS to clear vs keep
+            # For now, the main idea is: DO NOT BLINDLY CLEAR ALL PDS ON CDS.
+            # The confirmed PDS (initial_pds_candidate_bar_obj) gets its state handled by the cds_trigger_rule_type consequences.
+
+            # The original PDS clearing logic from the very first version of this alternation:
+            if state.confirmed_downtrend_candidate_peak_bar_index == cds_confirmed_bar.index:
+                state.potential_downtrend_signal_bar_index = None
+                state.potential_downtrend_anchor_high = None
+                state.confirmed_downtrend_candidate_peak_bar_index = None
+                state.confirmed_downtrend_candidate_peak_high = None
+                state.confirmed_downtrend_candidate_peak_low = None
+            if state.potential_downtrend_signal_bar_index == cds_confirmed_bar.index:
+                state.potential_downtrend_signal_bar_index = None
+                state.potential_downtrend_anchor_high = None
 
             # PUS setting logic (now operates with potentially cleared PUS state)
-            # pus_source_for_cds = None # This variable was unused, removing
             if cds_trigger_rule_type == "BRB_vs_PDSOpen": # Updated from BRB_RelaxedLow
                 current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {current_bar.index} ({current_bar.date})")
                 state.potential_uptrend_signal_bar_index = current_bar.index
@@ -541,6 +699,14 @@ def process_trend_logic(all_bars):
                     state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
                     state.confirmed_uptrend_candidate_low_low = prev_bar.l
                     state.confirmed_uptrend_candidate_low_high = prev_bar.h
+                    current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                    # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+                    if 57 <= log_index_for_this_entry <= 71:
+                        print(f"    PUS Candidate updated/set on prev_bar {prev_bar.index} to {prev_bar.index}, Low: {prev_bar.l}")
+                    # <<< END DETAILED DEBUGGING >>>
+                if state.potential_downtrend_signal_bar_index is not None:
+                    state.potential_downtrend_signal_bar_index = None
+                    state.potential_downtrend_anchor_high = None
 
             # PDS State update/clear for the confirmed CDS
             if cds_trigger_rule_type == "F": # Rule F specific PDS on current_bar
@@ -587,15 +753,18 @@ def process_trend_logic(all_bars):
         # PDS Rule C (Failed Rally PDS on current_bar) is checked first
         new_pds_on_curr_bar_this_iteration = False 
         if current_bar.h > prev_bar.h and current_bar.c < current_bar.o: # Outer if for PDS Rule C
-            if state.confirmed_downtrend_candidate_peak_bar_index is None or \
-               current_bar.h > state.confirmed_downtrend_candidate_peak_high: # Inner if
-                    current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date})")
-                    state.potential_downtrend_signal_bar_index = current_bar.index
-                    state.potential_downtrend_anchor_high = current_bar.h
-                    state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
-                    state.confirmed_downtrend_candidate_peak_high = current_bar.h
-                    state.confirmed_downtrend_candidate_peak_low = current_bar.l
-                    new_pds_on_curr_bar_this_iteration = True # This line belongs INSIDE the inner if
+            # Always set current_bar as PDS candidate if Rule C conditions are met,
+            # potentially overriding an older, higher PDS if this is a fresh failed rally.
+            # (Original check was: if state.confirmed_downtrend_candidate_peak_bar_index is None or 
+            # current_bar.h > state.confirmed_downtrend_candidate_peak_high:)
+            current_bar_event_descriptions.append(f"Potential Downtrend Signal on Bar {current_bar.index} ({current_bar.date}) by Rule C")
+            state.potential_downtrend_signal_bar_index = current_bar.index
+            state.potential_downtrend_anchor_high = current_bar.h
+            state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
+            state.confirmed_downtrend_candidate_peak_high = current_bar.h
+            state.confirmed_downtrend_candidate_peak_low = current_bar.l
+            new_pds_on_curr_bar_this_iteration = True
+            
             # This following 'if' should be at the same indentation level as the 'inner if' above,
             # still inside the 'outer if for PDS Rule C'
             if state.potential_uptrend_signal_bar_index == current_bar.index:
@@ -634,6 +803,10 @@ def process_trend_logic(all_bars):
                         state.potential_uptrend_signal_bar_index = None
                         state.potential_uptrend_anchor_low = None
                     if state.confirmed_uptrend_candidate_low_bar_index == prev_bar.index:
+                        # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+                        if 57 <= log_index_for_this_entry <= 71 and state.confirmed_uptrend_candidate_low_bar_index is not None :
+                            print(f"    Clearing PUS candidate {state.confirmed_uptrend_candidate_low_bar_index} because PDS set on prev_bar {prev_bar.index}")
+                        # <<< END DETAILED DEBUGGING >>>
                         state.confirmed_uptrend_candidate_low_bar_index = None
                         state.confirmed_uptrend_candidate_low_low = None
                         state.confirmed_uptrend_candidate_low_high = None
@@ -660,6 +833,10 @@ def process_trend_logic(all_bars):
                     state.confirmed_uptrend_candidate_low_low = prev_bar.l
                     state.confirmed_uptrend_candidate_low_high = prev_bar.h
                     current_bar_event_descriptions.append(f"Potential Uptrend Signal on Bar {prev_bar.index} ({prev_bar.date})")
+                    # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+                    if 57 <= log_index_for_this_entry <= 71:
+                        print(f"    PUS Candidate updated/set on prev_bar {prev_bar.index} to {prev_bar.index}, Low: {prev_bar.l}")
+                    # <<< END DETAILED DEBUGGING >>>
                 if state.potential_downtrend_signal_bar_index is not None:
                     state.potential_downtrend_signal_bar_index = None
                     state.potential_downtrend_anchor_high = None
@@ -667,46 +844,131 @@ def process_trend_logic(all_bars):
         if not current_bar_event_descriptions:
             final_log_text = "Neutral"
         else:
-            unique_events = sorted(list(set(current_bar_event_descriptions)))
+            if log_index_for_this_entry == 70: # ADDED DEBUG
+                print(f"    LOG_70_DEBUG_EVENTS_BEFORE_MANUAL_UNIQUE: current_bar_event_descriptions = {current_bar_event_descriptions}")
+            
+            unique_events = get_unique_sorted_events(current_bar_event_descriptions) # NEW WAY
+            
+            if log_index_for_this_entry == 70: # ADDED DEBUG
+                print(f"    LOG_70_DEBUG_EVENTS_AFTER_MANUAL_UNIQUE: unique_events = {unique_events}")
+
             final_log_text = "; ".join(unique_events)
+        
+        # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
+        if 57 <= log_index_for_this_entry <= 71:
+            print(f"  State AFTER CUS/CDS and PDS/PUS updates:")
+            print(f"    PUS Candidate Index: {state.confirmed_uptrend_candidate_low_bar_index}, Low: {state.confirmed_uptrend_candidate_low_low}")
+            print(f"    PDS Candidate Index: {state.confirmed_downtrend_candidate_peak_bar_index}, High: {state.confirmed_downtrend_candidate_peak_high}")
+            print(f"    Last Confirmed Trend: {state.last_confirmed_trend_type}, Bar Index: {state.last_confirmed_trend_bar_index}")
+            print(f"    Overall Trend Is Up: {state.overall_trend_is_up}")
+            print(f"  LOGGED FOR {log_index_for_this_entry}: {final_log_text}")
+            print(f"--- DEBUG END: Processing Log Entry {log_index_for_this_entry} ---")
+        # <<< END DETAILED DEBUGGING >>>
+
         state.log_entries.append(f"{log_index_for_this_entry}. {final_log_text}")
     return state.log_entries
 
-def export_confirmed_trend_starts(log_entries, output_csv="confirmed_trend_starts.csv"):
+def export_confirmed_trend_starts(log_entries, output_csv="trend_analysis/confirmed_trend_starts.csv"):
     import re
     rows = []
     # Regex to match trend start lines
     downtrend_re = re.compile(r"Downtrend Start Confirmed for Bar (\d+) \(([^)]+)\)")
     uptrend_re = re.compile(r"Uptrend Start Confirmed for Bar (\d+) \(([^)]+)\)")
-    for entry in log_entries:
-        m = downtrend_re.search(entry)
-        if m:
-            rows.append({
-                'trend_type': 'downtrend',
-                'bar_index': int(m.group(1)), # Convert to int for sorting
-                'date': m.group(2)
-            })
-        m = uptrend_re.search(entry)
-        if m:
-            rows.append({
-                'trend_type': 'uptrend',
-                'bar_index': int(m.group(1)), # Convert to int for sorting
-                'date': m.group(2)
-            })
     
-    # Sort rows by bar_index
-    rows.sort(key=lambda x: x['bar_index'])
+    processed_entries = set() # To store unique (trend_type, bar_index, date) tuples
+
+    for entry_idx, entry in enumerate(log_entries):
+        if (entry_idx + 1) == 70: # Specific debug for entry 70 (was 54)
+            print(f"DEBUG EXPORT Line 70 raw entry: {repr(entry)}")
+
+        print(f"\nExporting log entry {entry_idx + 1}: {entry}") # Log the entry being processed
+        m_down = downtrend_re.search(entry)
+        if m_down:
+            bar_idx = int(m_down.group(1))
+            date_str = m_down.group(2)
+            trend_key = ('downtrend', bar_idx, date_str)
+            print(f"  Matched DT: key={trend_key}")
+            if trend_key not in processed_entries:
+                rows.append({
+                    'trend_type': 'downtrend',
+                    'bar_index': bar_idx, 
+                    'date': date_str
+                })
+                processed_entries.add(trend_key)
+                print(f"    Added DT: {trend_key}")
+            else:
+                print(f"    Skipped DT (duplicate): {trend_key}")
+        
+        m_up = uptrend_re.search(entry)
+        if m_up:
+            bar_idx = int(m_up.group(1))
+            date_str = m_up.group(2)
+            trend_key = ('uptrend', bar_idx, date_str)
+            print(f"  Matched UT: key={trend_key}")
+            if trend_key not in processed_entries:
+                rows.append({
+                    'trend_type': 'uptrend',
+                    'bar_index': bar_idx, 
+                    'date': date_str
+                })
+                processed_entries.add(trend_key)
+                print(f"    Added UT: {trend_key}")
+            else:
+                print(f"    Skipped UT (duplicate): {trend_key}")
+        
+        if not m_down and not m_up:
+            print(f"  No trend confirmation found in entry.")
+
+    print(f"\nTotal trends extracted before sort: {len(rows)}")
+
+    # Sort rows by bar_index, then by trend_type if bar_index is same (e.g. for bar 232)
+    rows.sort(key=lambda x: (x['bar_index'], x['trend_type']))
+    print(f"Total trends after sort (should be same): {len(rows)}")
     
-    # Write to CSV
+    # Write to CSV (using raw de-duplicated rows)
     with open(output_csv, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['trend_type', 'bar_index', 'date'])
         writer.writeheader()
-        writer.writerows(rows)
-    print(f"Exported {len(rows)} confirmed trend starts to {output_csv}")
+        writer.writerows(rows) # Write the original de-duplicated and sorted rows
+    print(f"Exported {len(rows)} confirmed trend starts to {output_csv}") # Print count of raw rows
+
+# Helper function for forcing alternation
+def find_intervening_bar(all_bars, start_bar_idx_1based, end_bar_idx_1based, find_lowest_low=True):
+    print(f"DEBUG find_intervening_bar CALLED: start_idx={start_bar_idx_1based}, end_idx={end_bar_idx_1based}, find_low={find_lowest_low}") # ADDED
+    # 1-based indices converted to 0-based for slicing
+    start_0idx = start_bar_idx_1based -1
+    end_0idx = end_bar_idx_1based -1 # slice goes up to, but not including, end_0idx+1
+
+    if start_0idx < 0 or end_0idx >= len(all_bars) or start_0idx > end_0idx:
+        return None
+    
+    # Ensure the slice is valid and not empty. Slice is inclusive of start_0idx, exclusive of end_0idx for intervening.
+    # For [A, B, C, D], if A is last_confirmed (idx_A) and D is current_confirmed (idx_D),
+    # we search B, C. So range is (idx_A+1) to (idx_D-1).
+    # So search_start_0idx = start_0idx + 1, search_end_0idx = end_0idx -1 (for list slicing: search_end_0idx + 1)
+    
+    search_start_0idx = start_0idx + 1 
+    search_end_0idx = end_0idx - 1
+
+    if search_start_0idx > search_end_0idx: # No bars in between
+        return None
+
+    relevant_slice = all_bars[search_start_0idx : search_end_0idx + 1]
+    if not relevant_slice:
+        print(f"DEBUG find_intervening_bar RETURNING None: relevant_slice is empty") # ADDED
+        return None
+
+    if find_lowest_low:
+        chosen_bar =  min(relevant_slice, key=lambda bar: bar.l)
+    else: # find highest_high
+        chosen_bar = max(relevant_slice, key=lambda bar: bar.h)
+    print(f"DEBUG find_intervening_bar RETURNING: {chosen_bar.index if chosen_bar else 'None'}. Slice_indices: {search_start_0idx}-{search_end_0idx}. Range: {start_bar_idx_1based}-{end_bar_idx_1based}, FindLow={find_lowest_low}.") # MODIFIED EXISTING PRINT
+    return chosen_bar
 
 if __name__ == "__main__":
     try:
-        csv_file_path = "data/CON.F.US.MES.M25_4h_ohlc.csv"
+        # Corrected path assuming script is run from workspace root
+        csv_file_path = "data/CON.F.US.MES.M25_4h_ohlc.csv" 
         all_bars_chronological = load_bars_from_alt_csv(filename=csv_file_path)
         if not all_bars_chronological:
             print(f"No bars were loaded. Check CSV file path '{csv_file_path}' and format.")
@@ -717,7 +979,7 @@ if __name__ == "__main__":
             for entry in output_log:
                 print(entry)
             # Export confirmed trend starts
-            export_confirmed_trend_starts(output_log, output_csv="confirmed_trend_starts.csv")
+            export_confirmed_trend_starts(output_log, output_csv="trend_analysis/confirmed_trend_starts.csv")
     except FileNotFoundError:
         print(f"Error: The CSV data file '{csv_file_path}' was not found. Make sure it's in the correct directory, or update the path.")
     except Exception as e:
