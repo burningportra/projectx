@@ -1,0 +1,12 @@
+2025-05-17 13:26:11,016 - trend_analysis.data.loaders - INFO - Loading bars from trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv
+2025-05-17 13:26:11,017 - trend_analysis.data.loaders - ERROR - Error loading bars from trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv: validate_bars() got an unexpected keyword argument 'min_bars'
+2025-05-17 13:26:11,017 - trend_analysis.utils.error_handling - ERROR - Error in data_loading: catching classes that do not inherit from BaseException is not allowed
+2025-05-17 13:26:11,020 - trend_analysis.utils.error_handling - ERROR - Error handler failed: catching classes that do not inherit from BaseException is not allowed
+2025-05-17 13:28:20,175 - trend_analysis.cli - ERROR - No CSV file specified
+2025-05-17 13:28:26,860 - trend_analysis.data.loaders - INFO - Loading bars from trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv
+2025-05-17 13:28:26,862 - trend_analysis.utils.helpers - INFO - Validated 258 bars successfully
+2025-05-17 13:28:26,862 - trend_analysis.data.loaders - INFO - Loaded 258 bars from trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv
+2025-05-17 13:28:26,862 - trend_analysis.cli - INFO - Loaded 258 bars from trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv
+2025-05-17 13:28:26,863 - trend_analysis.data.exporters - INFO - Exporting confirmed trend starts to confirmed_trend_starts.csv
+2025-05-17 13:28:26,864 - trend_analysis.data.exporters - INFO - Exported 102 confirmed trend starts to confirmed_trend_starts.csv
+2025-05-17 13:28:26,864 - trend_analysis.cli - INFO - Analysis completed successfully. Results written to confirmed_trend_starts.csv
