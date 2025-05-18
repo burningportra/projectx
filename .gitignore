@@ -14,3 +14,6 @@ web/src/generated/prisma/runtime/index-browser.d.ts
 web/src/generated/prisma/package.json
 web/src/generated/prisma/index.js
 web/src/generated/prisma/edge.js
+.DS_Store
+.DS_Store
+.DS_Store

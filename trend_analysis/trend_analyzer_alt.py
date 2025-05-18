@@ -287,7 +287,7 @@ def check_custom_cus_EngulfingUp(current_bar, prev_bar, initial_pds_candidate_ba
         
     return final_result
 
-def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv"):
+def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.M25_1h_ohlc.csv"):
     bars = []
     with open(filename, 'r', newline='') as f:
         reader = csv.DictReader(f)
@@ -336,16 +336,6 @@ def process_trend_logic(all_bars):
         current_bar = all_bars[k]
         prev_bar = all_bars[k-1]
         
-        # <<< DETAILED DEBUGGING FOR BARS 57-71 >>>
-        if 57 <= log_index_for_this_entry <= 71:
-            print(f"\\n--- DEBUG START: Processing Log Entry {log_index_for_this_entry} (CurrentBar: {current_bar.index}) ---")
-            print(f"  PrevBar: {prev_bar.index if prev_bar else 'N/A'}")
-            print(f"  State BEFORE CUS/CDS Eval:")
-            print(f"    PUS Candidate Index: {state.confirmed_uptrend_candidate_low_bar_index}, Low: {state.confirmed_uptrend_candidate_low_low}")
-            print(f"    PDS Candidate Index: {state.confirmed_downtrend_candidate_peak_bar_index}, High: {state.confirmed_downtrend_candidate_peak_high}")
-            print(f"    Last Confirmed Trend: {state.last_confirmed_trend_type}, Bar Index: {state.last_confirmed_trend_bar_index}")
-            print(f"    Overall Trend Is Up: {state.overall_trend_is_up}")
-        # <<< END DETAILED DEBUGGING >>>
         
         confirmed_uptrend_this_iteration = False
         confirmed_downtrend_this_iteration = False
@@ -998,7 +988,7 @@ def find_intervening_bar(all_bars, start_bar_idx_1based, end_bar_idx_1based, fin
 if __name__ == "__main__":
     try:
         # Corrected path assuming script is run from workspace root
-        csv_file_path = "data/CON.F.US.MES.M25_4h_ohlc.csv" 
+        csv_file_path = "data/CON.F.US.MES.M25_1h_ohlc.csv" 
         all_bars_chronological = load_bars_from_alt_csv(filename=csv_file_path)
         if not all_bars_chronological:
             print(f"No bars were loaded. Check CSV file path '{csv_file_path}' and format.")
