@@ -25,10 +25,14 @@ This document outlines the steps and considerations for building a mechanical tr
 
 - [x] **Environment Setup**: Ensure Python environment has necessary libraries (`signalrcore`, `psycopg2-binary` or `asyncpg`, `python-dotenv`, `pyyaml`).
 - [x] **Configuration Files**: Create/update `config/settings.yaml` for API keys, contract IDs, timeframes, database connection details, and any timeframe-specific analyzer parameters.
+    *   *Ensured `settings.yaml` includes robust database connection templating (`dsn_template`, `password_env_var`) for `Config` class.*
 - [x] **.env File**: Set up `.env` for sensitive credentials (API token, DB password).
+    *   *Crucial for `LOCAL_DB_PASSWORD`, `PROJECTX_API_TOKEN`, and `PROJECTX_USERNAME` (for historical data client).*
 - [x] **TimescaleDB (Local)**: Successfully run `run_timescaledb_docker.sh` and connect to the local instance using a DB tool (e.g., DBeaver, pgAdmin) to verify.
 - [x] **TimescaleDB Schema (Local)**: Apply the `ohlc_bars` table schema (from `docs/market_data_pipeline_design.md`) and ensure it's a hypertable (`SELECT create_hypertable('ohlc_bars', 'timestamp');`). Add unique constraint: `ALTER TABLE ohlc_bars ADD CONSTRAINT ohlc_bars_unique UNIQUE (contract_id, timestamp, timeframe_unit, timeframe_value);`.
-- [ ] **Watermark Tables Schema (Local)**: Design and create tables for storing watermarks, e.g., `analyzer_watermarks (analyzer_id TEXT, contract_id TEXT, timeframe TEXT, last_processed_timestamp TIMESTAMPTZ, PRIMARY KEY (analyzer_id, contract_id, timeframe))` and `coordinator_watermarks (coordinator_id TEXT PRIMARY KEY, last_processed_signal_id BIGINT);`. (Schema defined in setup_local_db.py, but not actively used yet)
+    *   *`ohlc_bars` table created by `setup_local_db.py` with composite PRIMARY KEY `(contract_id, timestamp, timeframe_unit, timeframe_value)` and `DECIMAL` types for OHLCV. Hypertable conversion confirmed. This schema was also adopted by `DBHandler` for consistency.*
+- [~] **Watermark Tables Schema (Local)**: Design and create tables for storing watermarks, e.g., `analyzer_watermarks (analyzer_id TEXT, contract_id TEXT, timeframe TEXT, last_processed_timestamp TIMESTAMPTZ, PRIMARY KEY (analyzer_id, contract_id, timeframe))` and `coordinator_watermarks (coordinator_id TEXT PRIMARY KEY, last_processed_signal_id BIGINT);`. (Schema defined in setup_local_db.py, but not actively used yet)
+    *   *Schema for `analyzer_watermarks` and `coordinator_watermarks` created by `setup_local_db.py`. Tables exist but are not yet actively used by any service.*
 
 ### Phase 1: Data Foundation - Live Data to TimescaleDB
 
@@ -36,26 +40,35 @@ This document outlines the steps and considerations for building a mechanical tr
 
 2.  **Live Data Ingestion & OHLC Aggregation Service (Python)**
     *   [x] **Base WebSocket Client**: Adapt `test_combined_hubs.py` into a reusable class or module for connecting to SignalR, handling auth, and managing subscriptions (for market data - trades).
+        *   *Adapted from `test_combined_hubs.py` into `live_ingester.py`. Handles JWT token generation (via `generate_jwt_token.py`) and SignalR connection parameters (`skip_negotiation: True`, token in URL query string, correct event/method names like `GatewayQuote`, `SubscribeContractQuotes`).*
     *   [x] **Configuration Loading**: Implement logic to load contract IDs and timeframes from `config/settings.yaml`.
+        *   *Includes loading multiple timeframes per contract for aggregation.*
     *   [x] **In-Memory Bar Aggregator Class**: Create a Python class (`OHLCBarAggregator`) that:
         *   [x] Initializes pending bars for each (contract, timeframe) pair.
         *   [x] Has a method to process an incoming trade (tick) data.
         *   [x] Updates `high`, `low`, `close`, `volume` for relevant pending bars.
         *   [x] Identifies when a bar period completes for each timeframe.
+            *   *Logic refined to correctly handle bar finalization and start of new bars based on `tick_time_utc` vs `expected_bar_end_time`.*
         *   [x] Correctly aligns bar `timestamp` to standard clock intervals (e.g., floor timestamp to start of 1m, 5m, 1h interval).
         *   [x] Returns a list of completed bars.
+            *   *Uses a callback mechanism (`on_bar_completed`) to pass completed bars for storage.*
         *   [x] **Initial Bar State Handling**: On service startup, implement logic to fetch the last known bar or align to the next full period to ensure continuity or defined starting behavior.
     *   [x] **DBHandler Integration**: Instantiate `DBHandler` from `src/data/storage/db_handler.py` (Achieved with direct psycopg2 usage in live_ingester.py).
+        *   *Achieved with direct `psycopg2` usage in `live_ingester.py` for synchronous writes executed in a separate thread pool to avoid blocking the async SignalR loop. Aligned with `DBHandler` from `download_historical.py` by standardizing on table schema.*
         *   [x] Ensure `DBHandler.store_bars()` method uses an `UPSERT` (`ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING`) for `ohlc_bars`.
+            *   *`live_ingester.py` uses `INSERT ... ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING` with `psycopg2`.*
         *   [x] Ensure `DBHandler` can connect to TimescaleDB using credentials from config.
     *   [x] **Main Ingestion Loop**: Create the main asynchronous loop that:
         *   [x] Connects to WebSocket.
         *   [x] Receives trades for subscribed contracts.
+            *   *Refined message parsing for `GatewayQuote` and `GatewayTrade` to handle list-based payloads and correct data extraction (e.g., price, volume, timestamp prioritization from available fields like `timestamp`, `quote.timestamp`, `trade.timestamp`, `lastUpdated`).*
         *   [x] Passes trades to the `OHLCBarAggregator`.
         *   [x] Takes completed bars from the aggregator and uses `DBHandler` to store them.
     *   [x] **Asynchronous Operations**: Ensure all WebSocket interactions and database writes are asynchronous (`asyncio`, `asyncpg` if `DBHandler` is adapted) (SignalR is async, DB is sync psycogp2 but managed not to block).
     *   [x] **Error Handling & Reconnection**: Implement WebSocket auto-reconnection with exponential backoff. Add try-except blocks for data parsing and DB errors, with appropriate logging.
+        *   *SignalR client's built-in reconnection used. Debugged various `AttributeError` and `TypeError` issues during data processing (e.g. `connection_alive`, message structure `str` vs `dict`, price/timestamp key access) and SignalR event handling.*
     *   [x] **Logging**: Integrate structured logging throughout this service.
+    *   [x] **Historical Data Ingestion (`download_historical.py`)**: Aligned with live data schema. `DBHandler` updated to use `DECIMAL` types, composite PK for table creation if needed, and `INSERT ... ON CONFLICT` for TimescaleDB batch inserts. Resolved authentication issues by ensuring `PROJECTX_USERNAME` is loaded from `.env`. Successfully tested backfill.
 
 ### Phase 2: Multi-Timeframe Signal Generation
 

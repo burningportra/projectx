@@ -75,66 +75,103 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
         list: A list of dictionaries, each representing a detected signal.
     """
     
+    if ohlc_df.empty:
+        return []
+
+    # Convert DataFrame to Bar objects (optional if MAs are calculated on df directly)
     all_bars = []
-    for i, row in enumerate(ohlc_df.itertuples(index=False)): # index=False to avoid 'Index' attribute
+    for i, row in enumerate(ohlc_df.itertuples(index=False)):
         bar = Bar(
             timestamp=row.timestamp, 
             o=row.open,
             h=row.high,
             l=row.low,
             c=row.close,
-            volume=row.volume if hasattr(row, 'volume') else 0.0 # Ensure volume exists
+            volume=row.volume if hasattr(row, 'volume') else 0.0
         )
-        bar.index = i + 1 # Assign 1-based index
+        bar.index = i + 1 # Assign 1-based index based on DataFrame order
         all_bars.append(bar)
 
-    if not all_bars:
+    short_window = 5
+    long_window = 20
+
+    if len(ohlc_df) < long_window:
+        # print(f"Not enough data for {contract_id} {timeframe_str}. Need {long_window}, got {len(ohlc_df)}")
         return []
 
-    signals_found = []
-    state = State()
-
-    # --- Main Loop (Adapted from process_trend_logic in trend_analyzer_alt.py) ---
-    # This is where the bulk of your logic from process_trend_logic will go.
-    # Instead of building log_entries, you'll build signal dictionaries and append to signals_found.
+    # Calculate MAs using pandas
+    # Ensure 'close' column is numeric
+    ohlc_df['close'] = pd.to_numeric(ohlc_df['close'], errors='coerce')
     
-    # Example structure (actual logic to be filled from your script):
-    for k in range(len(all_bars)):
-        if k == 0:
+    ohlc_df['short_ma'] = ohlc_df['close'].rolling(window=short_window).mean()
+    ohlc_df['long_ma'] = ohlc_df['close'].rolling(window=long_window).mean()
+
+    signals_found = []
+    # state = State() # State object might be used if porting more complex logic
+
+    for i in range(len(all_bars)): # Iterate through all_bars to use Bar objects for signal details
+        if i < long_window -1 : # Ensure enough data for MA calculation up to prev_bar
+            # Corrected index for ohlc_df.iloc access to align with all_bars
+            # MA values for the current bar (all_bars[i]) correspond to ohlc_df.iloc[i]
             continue
-        
-        current_bar = all_bars[k]
-        prev_bar = all_bars[k-1]
 
-        # ... (All your state tracking, rule checks, CUS/CDS confirmation logic) ...
+        current_bar_obj = all_bars[i]
         
-        # --- Example Signal Creation (inside CUS confirmation, for instance) ---
-        # if cus_confirmed_this_iteration:
-        #     signal_bar_obj = ... # The Bar object that represents the confirmed signal
-        #     signal = {
-        #         'timestamp': signal_bar_obj.timestamp,
-        #         'contract_id': contract_id,
-        #         'timeframe': timeframe_str,
-        #         'signal_type': "uptrend_start", 
-        #         'signal_price': signal_bar_obj.c, # Example
-        #         'signal_open': signal_bar_obj.o,
-        #         'signal_high': signal_bar_obj.h,
-        #         'signal_low': signal_bar_obj.l,
-        #         'signal_close': signal_bar_obj.c,
-        #         'signal_volume': signal_bar_obj.volume,
-        #         'details': {
-        #             "confirmed_signal_bar_index": signal_bar_obj.index,
-        #             "triggering_bar_index": current_bar.index,
-        #             # Add other relevant details like rule type
-        #         }
-        #     }
-        #     signals_found.append(signal)
+        # MA values are from the DataFrame, which aligns with all_bars by index i
+        current_short_ma = ohlc_df.iloc[i]['short_ma']
+        current_long_ma = ohlc_df.iloc[i]['long_ma']
+        
+        prev_short_ma = ohlc_df.iloc[i-1]['short_ma']
+        prev_long_ma = ohlc_df.iloc[i-1]['long_ma']
 
-        # --- Example Signal Creation (inside CDS confirmation) ---
-        # if cds_confirmed_this_iteration:
-        #     signal_bar_obj = ... 
-        #     signal = { ... similar structure for "downtrend_start" ... }
-        #     signals_found.append(signal)
+        # Check for NaN values in MAs which can happen at the start of the series
+        if pd.isna(current_short_ma) or pd.isna(current_long_ma) or \
+           pd.isna(prev_short_ma) or pd.isna(prev_long_ma):
+            continue
+            
+        # Uptrend signal: short MA crosses above long MA
+        if prev_short_ma <= prev_long_ma and current_short_ma > current_long_ma:
+            signal = {
+                'timestamp': current_bar_obj.timestamp,
+                'contract_id': contract_id,
+                'timeframe': timeframe_str,
+                'signal_type': "uptrend_start",
+                'signal_price': current_bar_obj.c, # Close price of the confirmation bar
+                'signal_open': current_bar_obj.o,
+                'signal_high': current_bar_obj.h,
+                'signal_low': current_bar_obj.l,
+                'signal_close': current_bar_obj.c,
+                'signal_volume': current_bar_obj.volume,
+                'details': {
+                    'short_ma': current_short_ma,
+                    'long_ma': current_long_ma,
+                    'triggering_bar_index': current_bar_obj.index, # 1-based index
+                    'strategy_type': 'MA_Crossover'
+                }
+            }
+            signals_found.append(signal)
+
+        # Downtrend signal: short MA crosses below long MA
+        elif prev_short_ma >= prev_long_ma and current_short_ma < current_long_ma:
+            signal = {
+                'timestamp': current_bar_obj.timestamp,
+                'contract_id': contract_id,
+                'timeframe': timeframe_str,
+                'signal_type': "downtrend_start",
+                'signal_price': current_bar_obj.c, # Close price of the confirmation bar
+                'signal_open': current_bar_obj.o,
+                'signal_high': current_bar_obj.h,
+                'signal_low': current_bar_obj.l,
+                'signal_close': current_bar_obj.c,
+                'signal_volume': current_bar_obj.volume,
+                'details': {
+                    'short_ma': current_short_ma,
+                    'long_ma': current_long_ma,
+                    'triggering_bar_index': current_bar_obj.index, # 1-based index
+                    'strategy_type': 'MA_Crossover'
+                }
+            }
+            signals_found.append(signal)
             
     return signals_found
 

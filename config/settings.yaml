@@ -45,7 +45,7 @@ trading:
     - "12h"
     - "1d"
     - "1w"
-    - "1M"
+    - "1mo"
 
   # Parameters for trend_analyzer_alt.py, potentially on a per-timeframe basis
   # This is a placeholder, structure will depend on how trend_analyzer_alt.py is refactored
@@ -93,11 +93,17 @@ ingestion:
 
 # Analysis Service Configuration
 analysis:
-# ... existing code ...
+  loop_sleep_seconds: 300 # Sleep duration in seconds between analysis cycles
+  # targets:
+  #   - analyzer_id: "trend_start_finder_v1"
+  #     contract_id: "CON.F.US.MES.M25"
+  #     timeframes: ["5m", "15m", "1h"]
+  #   - analyzer_id: "trend_start_finder_v1"
+  #     contract_id: "CON.F.US.EUR.M25"
+  #     timeframes: ["1h", "4h"]
+
 # logging:
 #   level: "INFO" # Overall logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-#   format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s"
-# ... existing code ... 
 
 # List of contracts to subscribe to for live data
 # Initially, we'll work with one, but this could be a list later.

@@ -1,0 +1,138 @@
+import asyncio
+import pandas as pd
+import asyncpg
+import logging
+from decimal import Decimal # Import Decimal
+
+# Adjust path to import from src
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.core.config import Config
+from src.strategies.trend_start_finder import generate_trend_starts
+from src.core.utils import parse_timeframe # To get integer unit/value for query
+
+# --- Configuration ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+config = Config()
+DB_POOL = None
+
+async def init_db_pool():
+    global DB_POOL
+    if DB_POOL is None:
+        try:
+            db_url = config.get_database_url()
+            DB_POOL = await asyncpg.create_pool(dsn=db_url, min_size=1, max_size=5)
+            logger.info("Database connection pool created successfully for test.")
+        except Exception as e:
+            logger.error(f"Failed to create database connection pool: {e}", exc_info=True)
+            raise
+
+async def close_db_pool():
+    global DB_POOL
+    if DB_POOL:
+        await DB_POOL.close()
+        logger.info("Database connection pool closed for test.")
+        DB_POOL = None
+
+async def fetch_test_ohlc_bars(contract_id: str, timeframe_str: str, limit: int) -> pd.DataFrame:
+    if not DB_POOL:
+        logger.error("DB_POOL not initialized for fetch_test_ohlc_bars")
+        return pd.DataFrame()
+
+    # Use parse_timeframe to get the integer unit and value for the query
+    # This ensures consistency with how analyzer_service queries the DB
+    try:
+        tf_unit_int, tf_value_int = parse_timeframe(timeframe_str)
+    except ValueError as e:
+        logger.error(f"Invalid timeframe string '{timeframe_str}': {e}")
+        return pd.DataFrame()
+
+    query = f"""
+        SELECT timestamp, open, high, low, close, volume 
+        FROM ohlc_bars
+        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3
+        ORDER BY timestamp ASC
+        LIMIT $4;
+    """
+    try:
+        async with DB_POOL.acquire() as conn:
+            # Ensure numeric types are handled correctly from asyncpg to pandas
+            # asyncpg returns Decimal for NUMERIC/DECIMAL, float for REAL/DOUBLE PRECISION
+            # The table uses DOUBLE PRECISION for ohlcv, so they should be floats.
+            records = await conn.fetch(query, contract_id, tf_unit_int, tf_value_int, limit)
+        
+        if not records:
+            logger.info(f"No records found for {contract_id} {timeframe_str} with unit {tf_unit_int}, value {tf_value_int}.")
+            return pd.DataFrame(columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+
+        df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        
+        # Ensure OHLCV columns are numeric.
+        # The raw data from DB (double precision) should be fine, but this is a good check.
+        for col in ['open', 'high', 'low', 'close', 'volume']:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce') # Coerce ensures non-numerics become NaN
+        
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        logger.info(f"Fetched {len(df)} bars for {contract_id} {timeframe_str}.")
+        return df
+    except Exception as e:
+        logger.error(f"Error fetching OHLC bars: {e}", exc_info=True)
+        return pd.DataFrame()
+
+async def main_test():
+    await init_db_pool()
+    
+    contract_to_test = "CON.F.US.MES.M25"
+    timeframe_to_test = "5m" # This is the one with ~12k bars
+    num_bars_to_fetch = 300  # Let's get a decent slice
+    
+    logger.info(f"Fetching {num_bars_to_fetch} bars for {contract_to_test} [{timeframe_to_test}]...")
+    ohlc_data = await fetch_test_ohlc_bars(contract_to_test, timeframe_to_test, num_bars_to_fetch)
+
+    if ohlc_data.empty:
+        logger.warning("No OHLC data fetched, cannot run test.")
+        await close_db_pool()
+        return
+
+    # --- Debug: Check for NaNs after numeric conversion ---
+    nan_counts = ohlc_data[['open', 'high', 'low', 'close', 'volume']].isnull().sum()
+    logger.info(f"NaN counts in fetched data:\n{nan_counts}")
+    if ohlc_data[['close']].isnull().all().item(): # Check if all close prices are NaN
+        logger.error("All close prices are NaN after fetching and numeric conversion. Aborting test.")
+        await close_db_pool()
+        return
+
+    logger.info(f"First 5 rows of fetched data:\n{ohlc_data.head()}")
+    logger.info(f"Last 5 rows of fetched data:\n{ohlc_data.tail()}")
+
+    logger.info("Running generate_trend_starts...")
+    signals = generate_trend_starts(ohlc_data.copy(), contract_to_test, timeframe_to_test) # Pass a copy
+
+    if signals:
+        logger.info(f"Found {len(signals)} signals:")
+        for i, sig in enumerate(signals):
+            logger.info(f"Signal {i+1}: {sig}")
+    else:
+        logger.info("No signals generated by the strategy for this data slice.")
+
+    # --- Debug: Print some MA values if you modify generate_trend_starts to return them or log them ---
+    # For example, if generate_trend_starts was modified to add 'short_ma' and 'long_ma' columns to the df it processes:
+    # if 'short_ma' in ohlc_data.columns and 'long_ma' in ohlc_data.columns:
+    #     logger.info("Sample MA values (from original df, if modified by generate_trend_starts):")
+    #     logger.info(ohlc_data[['timestamp', 'close', 'short_ma', 'long_ma']].tail(25)) # Last 25 to see recent MAs
+    # else:
+    #     logger.info("MA columns not found on the DataFrame for direct inspection here. Strategy internal.")
+
+
+    await close_db_pool()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main_test())
+    except Exception as e:
+        logger.error(f"Error in main_test: {e}", exc_info=True) 
