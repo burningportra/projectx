@@ -5,6 +5,7 @@ import sys
 import requests
 import json
 from signalrcore.hub_connection_builder import HubConnectionBuilder
+from dotenv import load_dotenv
 
 # --- Configuration ---
 MARKET_HUB_URL_BASE = 'wss://rtc.topstepx.com/hubs/market'
@@ -149,7 +150,6 @@ def create_hub_connection(hub_name, hub_url_base, access_token):
     connection.on_open(on_open)
     connection.on_close(on_close)
     connection.on_error(on_error)
-    connection.on_reconnect(on_reconnected)
 
     # Specific message handlers
     if hub_name == "MarketHub":
@@ -203,6 +203,7 @@ def subscribe_user_events(connection):
 
 # --- Main Execution ---
 if __name__ == "__main__":
+    load_dotenv()
     print("--- Combined Hubs Client Test ---")
     print("This script will attempt to generate a new session token using your API key")
     print(f"(from env var {API_KEY_ENV_VAR}) and username '{USERNAME_FOR_TOKEN_GENERATION}',")

@@ -1,35 +1,67 @@
-# ProjectX Automated Trading System Settings
+# Configuration for ProjectX Trading System
 
-# API settings
+# API and Authentication Details
+# These should ideally be overridden by environment variables for security in production
 api:
-  url: https://api.topstepx.com
-  rtc_market_url: https://rtc.topstepx.com/hubs/market
-  rtc_user_url: https://rtc.topstepx.com/hubs/user
+  base_url: "https://api.topstepx.com" # As per docs
+  login_url: "/api/Auth/loginKey" # As per docs
+  market_hub_url_base: "wss://rtc.topstepx.com/hubs/market"
+  user_hub_url_base: "wss://rtc.topstepx.com/hubs/user"
+  # API_KEY_ENV_VAR and USERNAME_FOR_TOKEN_GENERATION will be read from .env
+  # PROJECTX_API_TOKEN: "your_api_token_from_env" 
+  # USERNAME_FOR_TOKEN_GENERATION: "your_username_from_env"
 
-# Database settings
+# Database Configuration
 database:
-  # SQLite (default/fallback)
-  url: sqlite:///projectx.db
-  
-  # TimescaleDB with PostgreSQL
-  timescale_url: postgresql://postgres:password@localhost:5433/projectx
-  use_timescale: true
-  
-  # Connection pool settings
-  min_connections: 1
-  max_connections: 10
+  local_timescaledb:
+    host: "localhost"
+    port: 5433 # Default from your run_timescaledb_docker.sh
+    user: "postgres" # Default for many postgres images
+    # PASSWORD_ENV_VAR: "LOCAL_DB_PASSWORD" # To be read from .env
+    dbname: "projectx" # Default from your run_timescaledb_docker.sh
+  railway_timescaledb:
+    # RAILWAY_DATABASE_URL_ENV_VAR: "DATABASE_URL" # To be read from .env for Railway deployment
 
-# Timeframes to track (comma-separated)
-# Available options: 1s, 5s, 15s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 4h, 1d, 1w, 1mo
-timeframes:
-  - 5m
-  - 15m
-  - 1h
-  - 4h
-  - 1d
+# Trading Parameters
+trading:
+  contracts:
+    - id: "CON.F.US.MES.M25" # Example: Micro E-mini S&P 500 June 2025
+    # - id: "CON.F.US.MNQ.M25" # Example: Micro E-mini Nasdaq 100 June 2025
+  
+  # Timeframes for OHLC aggregation and analysis (e.g., 1m, 5m, 15m, 1h, 4h)
+  # Format: <number><unit_char> (m: minute, h: hour, d: day)
+  timeframes:
+    - "1m"
+    - "5m"
+    - "15m"
+    - "30m"
+    - "1h"
+    - "4h"
+    - "6h"
+    - "12h"
+    - "1d"
+    - "1w"
 
-# Logging settings
+  # Parameters for trend_analyzer_alt.py, potentially on a per-timeframe basis
+  # This is a placeholder, structure will depend on how trend_analyzer_alt.py is refactored
+  analyzer_params:
+    default:
+      lookback_period: 20 # Example parameter
+      # Add other parameters your trend_analyzer_alt might use
+    "1m":
+      lookback_period: 10
+    "1h":
+      lookback_period: 25
+
+# Logging Configuration
 logging:
-  level: "INFO"
-  file_logging: true
-  log_dir: "logs" 
+  level: "INFO" # e.g., DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(hub)s - %(message)s"
+  # Add specific log levels for noisy libraries if needed
+  # library_log_levels:
+  #   signalrcore: "WARNING"
+
+# Data Ingestion Service
+data_ingestion:
+  websocket_reconnect_delay_base: 5 # seconds
+  websocket_reconnect_max_attempts: 10 
