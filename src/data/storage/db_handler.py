@@ -135,21 +135,22 @@ class DBHandler:
             )
             
             if not table_exists:
-                # Create a simple table structure
+                # Create table structure aligned with live_ingester.py
                 await conn.execute("""
                     CREATE TABLE ohlc_bars (
-                        id SERIAL PRIMARY KEY,
                         contract_id TEXT NOT NULL,
                         timestamp TIMESTAMPTZ NOT NULL,
-                        open DOUBLE PRECISION NOT NULL,
-                        high DOUBLE PRECISION NOT NULL,
-                        low DOUBLE PRECISION NOT NULL,
-                        close DOUBLE PRECISION NOT NULL,
-                        volume DOUBLE PRECISION,
+                        open DECIMAL NOT NULL,
+                        high DECIMAL NOT NULL,
+                        low DECIMAL NOT NULL,
+                        close DECIMAL NOT NULL,
+                        volume DECIMAL,
                         timeframe_unit INTEGER NOT NULL,
-                        timeframe_value INTEGER NOT NULL
+                        timeframe_value INTEGER NOT NULL,
+                        PRIMARY KEY (contract_id, timestamp, timeframe_unit, timeframe_value)
                     );
                 """)
+                logger.info("Table 'ohlc_bars' created with composite primary key and DECIMAL types.")
                 
                 # Convert to hypertable
                 try:
@@ -283,56 +284,79 @@ class DBHandler:
         
         try:
             # Filter out bars that already exist in the database
-            bars_to_insert = []
+            # This pre-check is no longer needed for TimescaleDB if using ON CONFLICT
+            # bars_to_insert = []
+            # if not self.use_timescale: # Keep for SQLite or if ON CONFLICT is not used
+            #     for bar in bars:
+            #         # Check if this bar already exists in the database
+            #         existing = await self._bar_exists(bar)
+            #         if not existing:
+            #             bars_to_insert.append(bar)
+            # else: # For TimescaleDB, we'll use ON CONFLICT
+            #     bars_to_insert = bars # Insert all, let DB handle conflicts
+
+            # if not bars_to_insert:
+            #     logger.info("All bars already exist in database (pre-check), or no bars provided initially.")
+            #     return 0
             
-            for bar in bars:
-                # Check if this bar already exists in the database
-                existing = await self._bar_exists(bar)
-                if not existing:
-                    bars_to_insert.append(bar)
-            
-            if not bars_to_insert:
-                logger.info("All bars already exist in database, skipping insertion")
-                return 0
-            
-            logger.info(f"Inserting {len(bars_to_insert)} new bars out of {len(bars)} total")
+            # logger.info(f"Attempting to insert {len(bars_to_insert)} bars out of {len(bars)} total (duplicates will be ignored by DB for Timescale).")
             
             if self.use_timescale:
                 async with self.pg_pool.acquire() as conn:
-                    # Use a simpler insert without ON CONFLICT for bulk inserts
                     records = []
-                    for bar in bars_to_insert:
-                        # Ensure timestamp is a datetime object, not a string
+                    for bar in bars: # Process all bars for ON CONFLICT
                         if isinstance(bar.t, str):
                             timestamp = datetime.fromisoformat(bar.t)
                         else:
                             timestamp = bar.t
                         
+                        # Ensure OHLCV are compatible with DECIMAL (e.g., already Decimal or convertible)
+                        # Assuming Bar model fields o,h,l,c,v are already Decimal or float/int
                         records.append((
-                            bar.contract_id, timestamp, bar.o, bar.h, bar.l, bar.c, bar.v,
+                            bar.contract_id, timestamp, 
+                            bar.o, bar.h, bar.l, bar.c, bar.v, # These should be Decimal or compatible
                             bar.timeframe_unit, bar.timeframe_value
                         ))
                     
                     if records:
-                        # Execute the insert in a transaction
                         async with conn.transaction():
+                            # Use INSERT ... ON CONFLICT for TimescaleDB
                             result = await conn.executemany("""
                                 INSERT INTO ohlc_bars (
                                     contract_id, timestamp, open, high, low, close, volume,
                                     timeframe_unit, timeframe_value
                                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING
                             """, records)
-            else:
-                # Prepare the batch insert for SQLite
+                            # executemany for asyncpg doesn't directly return number of affected rows in the same way
+                            # as some other drivers. We assume success if no exception.
+                            # To get exact count of inserted rows, a more complex query or approach would be needed.
+                            # For now, we log the attempt.
+                            logger.info(f"Attempted to insert {len(records)} bars into TimescaleDB with ON CONFLICT DO NOTHING.")
+                            # We can't easily get the exact number of rows *actually* inserted by executemany with ON CONFLICT
+                            # without another query. Returning the number of bars attempted.
+                            return len(records) # Or a more sophisticated way to count actual inserts if needed
+            else: # SQLite path
+                bars_to_insert_sqlite = []
+                for bar in bars:
+                    existing = await self._bar_exists(bar)
+                    if not existing:
+                        bars_to_insert_sqlite.append(bar)
+                
+                if not bars_to_insert_sqlite:
+                    logger.info("All bars already exist in SQLite database (pre-check), or no bars provided initially.")
+                    return 0
+
+                logger.info(f"Inserting {len(bars_to_insert_sqlite)} new bars into SQLite out of {len(bars)} total.")
+
                 values = []
-                for bar in bars_to_insert:
-                    timestamp = bar.t.isoformat() if isinstance(bar.t, datetime) else bar.t
+                for bar_sqlite in bars_to_insert_sqlite:
+                    timestamp_sqlite = bar_sqlite.t.isoformat() if isinstance(bar_sqlite.t, datetime) else bar_sqlite.t
                     values.append((
-                        bar.contract_id, timestamp, bar.o, bar.h, bar.l, bar.c, bar.v,
-                        bar.timeframe_unit, bar.timeframe_value
+                        bar_sqlite.contract_id, timestamp_sqlite, bar_sqlite.o, bar_sqlite.h, bar_sqlite.l, bar_sqlite.c, bar_sqlite.v,
+                        bar_sqlite.timeframe_unit, bar_sqlite.timeframe_value
                     ))
                     
-                # Use executemany for batch insert
                 await self.sqlite_conn.executemany("""
                     INSERT OR REPLACE INTO ohlc_bars (
                         contract_id, timestamp, open, high, low, close, volume,
@@ -341,8 +365,7 @@ class DBHandler:
                 """, values)
                 
                 await self.sqlite_conn.commit()
-                
-            return len(bars_to_insert)
+                return len(bars_to_insert_sqlite)
             
         except Exception as e:
             logger.error(f"Error storing {len(bars)} bars: {str(e)}")

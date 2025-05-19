@@ -41,6 +41,7 @@ class GatewayClient:
         self.market_hub_url = config.get_rtc_market_url()
         self.user_hub_url = config.get_rtc_user_url()
         self.username = os.getenv("PROJECTX_USERNAME", "")
+        print(f"DEBUG: GatewayClient.__init__ - self.username: '{self.username}', api_token (prefix): '{self.api_token[:5] if self.api_token else 'None'}'") # DEBUG
         
         self.session = None
         self.market_hub_connection = None

@@ -8,19 +8,18 @@ datasource db {
 }
 
 model OhlcBar {
-  id             Int      @id @default(autoincrement())
   contractId     String   @map("contract_id")
   timestamp      DateTime @db.Timestamptz(6)
   open           Float
   high           Float
   low            Float
   close          Float
-  volume         Float?
+  volume         BigInt?
   timeframeUnit  Int      @map("timeframe_unit")
   timeframeValue Int      @map("timeframe_value")
 
+  @@id([contractId, timestamp, timeframeUnit, timeframeValue])
   @@index([contractId], map: "idx_bars_contract")
-  @@index([contractId, timeframeUnit, timeframeValue], map: "idx_bars_contract_timeframe")
   @@index([timeframeUnit, timeframeValue], map: "idx_bars_timeframe")
   @@map("ohlc_bars")
 }
@@ -38,4 +37,21 @@ model TrendPoint {
   @@index([contractId, timestamp, type])
   @@index([contractId, timeframe])
   @@map("trend_points")
+}
+
+model AnalyzerWatermark {
+  analyzerId             String   @map("analyzer_id")
+  contractId             String   @map("contract_id")
+  timeframe              String
+  lastProcessedTimestamp DateTime? @map("last_processed_timestamp") @db.Timestamptz(6)
+
+  @@id([analyzerId, contractId, timeframe])
+  @@map("analyzer_watermarks")
+}
+
+model CoordinatorWatermark {
+  coordinatorId          String  @id @map("coordinator_id")
+  lastProcessedSignalId BigInt? @map("last_processed_signal_id")
+
+  @@map("coordinator_watermarks")
 } 

@@ -117,15 +117,40 @@ class Config:
     
     def get_database_url(self) -> str:
         """Get the database connection URL."""
-        # Check if TimescaleDB is enabled
         if self.use_timescale():
-            # Return the TimescaleDB URL
-            return os.getenv(
-                "TIMESCALE_DB_URL",
-                self.settings.get("database", {}).get("timescale_url", "postgresql://postgres:password@localhost:5432/projectx")
-            )
+            # 1. Prioritize direct TIMESCALE_DB_URL from environment
+            env_db_url = os.getenv("TIMESCALE_DB_URL")
+            if env_db_url:
+                return env_db_url
+
+            # 2. Try to construct from settings.yaml template and components
+            db_config = self.settings.get("database", {})
+            local_ts_config = db_config.get("local_timescaledb", {})
+            dsn_template = local_ts_config.get("dsn_template")
+            
+            if dsn_template:
+                password_env_var = local_ts_config.get("password_env_var")
+                password = "" # Default to empty string if env var name not specified
+                if password_env_var:
+                    password = os.getenv(password_env_var, "") # Fetch password from specified env var
+                
+                try:
+                    return dsn_template.format(
+                        user=local_ts_config.get("user", "postgres"),
+                        password=password, # Use fetched password
+                        host=local_ts_config.get("host", "localhost"),
+                        port=local_ts_config.get("port", 5432),
+                        dbname=local_ts_config.get("dbname", "projectx")
+                    )
+                except KeyError as e:
+                    print(f"Warning: Missing key in dsn_template formatting: {e}. Check local_timescaledb settings in settings.yaml")
+            
+            # 3. Fallback to a hardcoded default (as was previously in settings.yaml sort of)
+            # This should ideally not be reached if settings.yaml is correct
+            print("Warning: Could not construct TimescaleDB URL from settings template. Falling back to default DSN.")
+            return "postgresql://postgres:password@localhost:5432/projectx"
         else:
-            # Return the SQLite URL (fallback)
+            # SQLite path (remains the same)
             return os.getenv(
                 "DATABASE_URL",
                 self.settings.get("database", {}).get("url", "sqlite:///projectx.db")

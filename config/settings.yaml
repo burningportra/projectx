@@ -13,12 +13,16 @@ api:
 
 # Database Configuration
 database:
+  use_timescale: true # Added to enable TimescaleDB by default via settings
+  default_ingestion_db: local_timescaledb # Can be 'local_timescaledb' or 'railway_timescaledb'
   local_timescaledb:
     host: "localhost"
     port: 5433 # Default from your run_timescaledb_docker.sh
     user: "postgres" # Default for many postgres images
-    # PASSWORD_ENV_VAR: "LOCAL_DB_PASSWORD" # To be read from .env
+    password_env_var: "LOCAL_DB_PASSWORD" # Specifies the ENV VAR for the password
     dbname: "projectx" # Default from your run_timescaledb_docker.sh
+    # Template for constructing the DSN if individual parts are used
+    dsn_template: "postgresql://{user}:{password}@{host}:{port}/{dbname}"
   railway_timescaledb:
     # RAILWAY_DATABASE_URL_ENV_VAR: "DATABASE_URL" # To be read from .env for Railway deployment
 
@@ -41,6 +45,7 @@ trading:
     - "12h"
     - "1d"
     - "1w"
+    - "1M"
 
   # Parameters for trend_analyzer_alt.py, potentially on a per-timeframe basis
   # This is a placeholder, structure will depend on how trend_analyzer_alt.py is refactored
@@ -60,8 +65,46 @@ logging:
   # Add specific log levels for noisy libraries if needed
   # library_log_levels:
   #   signalrcore: "WARNING"
+  ingester_log_file: "logs/live_ingester.log"
 
 # Data Ingestion Service
 data_ingestion:
   websocket_reconnect_delay_base: 5 # seconds
   websocket_reconnect_max_attempts: 10 
+
+# Contract Configuration
+contracts:
+  default_monitor_list:
+    - "CON.F.US.MES.M25"
+    # - "CON.F.US.MNQ.M25"
+  # Specific contract settings can be added here if needed later
+
+# Ingestion Service Configuration
+ingestion:
+  default_timeframe_seconds: 60 # Default if no specific list provided, or for single-timeframe mode
+  target_timeframes_seconds:
+    - 60    # 1 minute
+    - 300   # 5 minutes
+    - 900   # 15 minutes
+  main_loop_sleep_seconds: 300 # How often the main loop checks token/connection status
+  # Potential future settings:
+  # historical_fill_days: 7
+  # data_source_priority: ['trades', 'quotes'] # if using both for OHLC
+
+# Analysis Service Configuration
+analysis:
+# ... existing code ...
+# logging:
+#   level: "INFO" # Overall logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+#   format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s"
+# ... existing code ... 
+
+# List of contracts to subscribe to for live data
+# Initially, we'll work with one, but this could be a list later.
+live_contracts:
+  - contract_id: "CON.F.US.MES.M25" # Example Micro E-mini S&P 500
+    # Timeframes in seconds to aggregate for this contract
+    timeframes_seconds:
+      - 60    # 1 minute
+      - 300   # 5 minutes
+      - 900   # 15 minutes 

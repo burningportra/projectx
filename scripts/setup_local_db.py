@@ -71,21 +71,17 @@ def execute_query(conn, query, params=None, fetch=False):
         # conn.rollback() # Rollback on error, though commit is per statement here
         raise # Re-raise the exception to stop execution if critical
 
-def main():
-    conn = None
+def setup_tables(conn):
+    """Creates all necessary tables in the database."""
     try:
-        conn = get_db_connection()
-
         print("\n--- Enabling TimescaleDB Extension ---")
         try:
             execute_query(conn, "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
-            print("TimescaleDB extension enabled (or already existed).")
-        except Exception as e:
-            print(f"Note: Could not ensure TimescaleDB extension is enabled: {e}")
+            print("TimescaleDB extension enabled or already exists.")
+        except psycopg2.Error as e:
+            print(f"Warning: Could not enable TimescaleDB extension: {e}")
             print("This might be fine if it's already enabled or if the user lacks permissions for CREATE EXTENSION.")
             print("If hypertable creation fails later, this might be the cause.")
-            # It's possible the connection itself is the issue, so we might not want to proceed if this fails.
-            # However, for now, let's keep it as a warning.
 
         print("\n--- Dropping ohlc_bars Table (if exists) to ensure clean hypertable conversion ---")
         execute_query(conn, "DROP TABLE IF EXISTS ohlc_bars CASCADE;")
@@ -106,36 +102,35 @@ def main():
         );
         """
         execute_query(conn, ohlc_bars_schema)
+        print("Table 'ohlc_bars' created or already exists.")
 
         print("\n--- Converting ohlc_bars to Hypertable ---")
-        # Check if already a hypertable to avoid error
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM timescaledb_information.hypertables
-                    WHERE hypertable_name = 'ohlc_bars'
-                );
-            """)
-            is_hypertable = cur.fetchone()[0]
+        # Use IF NOT EXISTS for create_hypertable if your TimescaleDB version supports it
+        # For older versions, this might error if called twice, but DROP TABLE handles re-runs for this script.
+        hypertable_query = "SELECT create_hypertable('ohlc_bars', 'timestamp', if_not_exists => TRUE);"
+        try:
+            execute_query(conn, hypertable_query)
+            print("Successfully converted 'ohlc_bars' to hypertable or it already was.")
+        except psycopg2.Error as e:
+            # Check if the error is because it's already a hypertable
+            if "already a hypertable" in str(e).lower():
+                print("'ohlc_bars' is already a hypertable.")
+            else:
+                raise # Re-raise other errors
 
-        if not is_hypertable:
-            execute_query(conn, "SELECT create_hypertable('ohlc_bars', 'timestamp', if_not_exists => TRUE);")
-            print("ohlc_bars converted to hypertable (or already was).")
-        else:
-            print("ohlc_bars is already a hypertable.")
-
+        # --- Watermark Tables ---
         print("\n--- Creating analyzer_watermarks Table ---")
         analyzer_watermarks_schema = """
         CREATE TABLE IF NOT EXISTS analyzer_watermarks (
             analyzer_id TEXT NOT NULL,
             contract_id TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
+            timeframe TEXT NOT NULL, -- e.g., '1m', '5m', '1h'
             last_processed_timestamp TIMESTAMPTZ,
             PRIMARY KEY (analyzer_id, contract_id, timeframe)
         );
         """
         execute_query(conn, analyzer_watermarks_schema)
+        print("Table 'analyzer_watermarks' created or already exists.")
 
         print("\n--- Creating coordinator_watermarks Table ---")
         coordinator_watermarks_schema = """
@@ -145,6 +140,49 @@ def main():
         );
         """
         execute_query(conn, coordinator_watermarks_schema)
+        print("Table 'coordinator_watermarks' created or already exists.")
+
+        # --- Detected Signals Table ---
+        print("\n--- Creating detected_signals Table ---")
+        # Drop if exists to apply changes cleanly during development, consider ALTER TABLE for production migrations
+        execute_query(conn, "DROP TABLE IF EXISTS detected_signals CASCADE;") 
+        detected_signals_schema = """
+        CREATE TABLE IF NOT EXISTS detected_signals (
+            signal_id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMPTZ NOT NULL,          -- Timestamp of the bar that generated the signal
+            contract_id TEXT NOT NULL,
+            timeframe TEXT NOT NULL,                 -- e.g., '1m', '5m', '1h', '1D' (matches analyzer's timeframe identifier)
+            signal_type TEXT NOT NULL,               -- e.g., 'uptrend_start', 'downtrend_start', 'ma_cross_bullish'
+            signal_price DOUBLE PRECISION,           -- Price at which the signal occurred (e.g., breakout price, or close of signal bar)
+            
+            -- OHLCV of the bar that generated the signal
+            signal_open DOUBLE PRECISION, 
+            signal_high DOUBLE PRECISION,
+            signal_low DOUBLE PRECISION,
+            signal_close DOUBLE PRECISION,
+            signal_volume BIGINT,
+            
+            details JSONB                            -- For additional signal parameters, e.g., {'sma_short': 20, 'sma_long': 50, 'indicator_value': 12.34}
+        );
+        """
+        execute_query(conn, detected_signals_schema)
+        print("Table 'detected_signals' created or already exists.")
+
+        # Add index for faster querying on detected_signals by timestamp and contract_id
+        print("\n--- Creating Index on detected_signals (timestamp, contract_id) ---")
+        index_query = "CREATE INDEX IF NOT EXISTS idx_detected_signals_timestamp_contract ON detected_signals (timestamp DESC, contract_id);"
+        execute_query(conn, index_query)
+        print("Index 'idx_detected_signals_timestamp_contract' created or already exists.")
+
+    except psycopg2.Error as e:
+        print(f"An error occurred during table setup: {e}")
+
+def main():
+    conn = None
+    try:
+        conn = get_db_connection()
+
+        setup_tables(conn)
 
         print("\n--- Basic Test Query ---")
         test_query_result = execute_query(conn, "SELECT current_database();", fetch=True)

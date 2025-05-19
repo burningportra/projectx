@@ -14,8 +14,17 @@ import logging
 import argparse
 from datetime import datetime, timezone, timedelta
 
+# ---- START DEBUG ----
+from dotenv import load_dotenv
+load_dotenv() # Try loading .env explicitly here too
+print(f"DEBUG: PROJECTX_USERNAME from os.getenv in download_historical.py (top): '{os.getenv('PROJECTX_USERNAME')}'")
+# ---- END DEBUG ----
+
 # Add the project root to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# The above line might be problematic if __file__ is not what's expected when run from project root.
+# Let's assume project root is already in PYTHONPATH or use a more robust way if needed.
+# For now, since Config is in src.core, direct imports should work if script is run from project root.
 
 from src.core.config import Config
 from src.core.logging_config import setup_logging
