@@ -58,14 +58,43 @@ trading:
     "1h":
       lookback_period: 25
 
-# Logging Configuration
+# Logging Configuration for dictConfig
 logging:
-  level: "INFO" # e.g., DEBUG, INFO, WARNING, ERROR
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(hub)s - %(message)s"
-  # Add specific log levels for noisy libraries if needed
-  # library_log_levels:
-  #   signalrcore: "WARNING"
-  ingester_log_file: "logs/live_ingester.log"
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    simple:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    detailed:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - L%(lineno)d - %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG # Console can be more verbose for development
+      formatter: simple
+      stream: ext://sys.stdout
+    # Example file handler (can be added for specific services or globally)
+    # info_file_handler:
+    #   class: logging.handlers.RotatingFileHandler
+    #   level: INFO
+    #   formatter: detailed
+    #   filename: logs/projectx_info.log
+    #   maxBytes: 10485760 # 10MB
+    #   backupCount: 20
+    #   encoding: utf8
+  root:
+    level: INFO # Default level for all loggers unless overridden
+    handlers: [console] # Add other handlers like info_file_handler here if desired globally
+  # Example of configuring specific loggers for more fine-grained control:
+  # loggers:
+  #   src.data.ingestion.live_ingester:
+  #     level: DEBUG
+  #     handlers: [console, info_file_handler] # Can use multiple handlers
+  #     propagate: no # Prevent messages from also going to root logger handlers
+  #   src.analysis.analyzer_service:
+  #     level: INFO
+  #   asyncpg:
+  #     level: WARNING # To quiet down noisy library logs
 
 # Data Ingestion Service
 data_ingestion:
@@ -93,17 +122,17 @@ ingestion:
 
 # Analysis Service Configuration
 analysis:
-  loop_sleep_seconds: 300 # Sleep duration in seconds between analysis cycles
-  # targets:
-  #   - analyzer_id: "trend_start_finder_v1"
-  #     contract_id: "CON.F.US.MES.M25"
-  #     timeframes: ["5m", "15m", "1h"]
+  loop_sleep_seconds: 300 # Time in seconds the analyzer service sleeps between cycles
+  targets:
+    - analyzer_id: "cus_cds_trend_finder"
+      contract_id: "CON.F.US.MES.M25"
+      # List all timeframes this analyzer should process for this contract
+      timeframes: ["1m", "5m", "15m", "30m", "1h", "4h", "6h", "12h", "1d", "1w", "1mo"]
+      # Example of another target for a different contract or analyzer:
+      # - analyzer_id: "another_strategy_analyzer"
   #   - analyzer_id: "trend_start_finder_v1"
   #     contract_id: "CON.F.US.EUR.M25"
   #     timeframes: ["1h", "4h"]
-
-# logging:
-#   level: "INFO" # Overall logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 # List of contracts to subscribe to for live data
 # Initially, we'll work with one, but this could be a list later.
@@ -114,3 +143,77 @@ live_contracts:
       - 60    # 1 minute
       - 300   # 5 minutes
       - 900   # 15 minutes 
+
+# --- Signal Coordination Service Configuration ---
+coordination:
+  coordinator_id: "simple_confluence_coordinator_v1"
+  loop_interval_seconds: 60 # How often to check for new signals
+  db_fetch_limit: 1000 # Max signals to fetch from DB in one go
+  rules:
+    - name: "MES_1h_15m_Confluence_CUS_CDS"
+      description: "Looks for a CUS on 1h confirmed by a CDS on 15m for MES contract."
+      primary_signal:
+        contract_id: "CON.F.US.MES.M25" # Can be specific or use a wildcard like "*" for any contract
+        timeframe: "1h"
+        # signal_type: "CUS_CONFIRMED_UP" # or "CDS_CONFIRMED_DOWN", or a list, or wildcard "*"
+        signal_types: ["CUS_CONFIRMED_UP", "CUS_CONFIRMED_DOWN"]
+      confirming_signals:
+        - contract_id: "CON.F.US.MES.M25" # Must match primary or be compatible
+          timeframe: "15m"
+          # signal_type: "CDS_CONFIRMED_DOWN"
+          signal_types: ["CDS_CONFIRMED_UP", "CDS_CONFIRMED_DOWN"]
+          time_offset_minutes: 5 # Confirming signal must be within +/- 5 minutes of primary
+          # required_match: "opposite" # e.g. primary CUS_UP needs confirming CDS_DOWN. Or "same" or "any"
+
+# --- (Future) Execution Service Configuration ---
+execution:
+  execution_service_id: "default_executor_001"
+  loop_interval_seconds: 10
+  db_fetch_limit: 100 # Max coordinated signals or orders to process per loop
+  provider: "mock" # "mock", "tradovate", "interactive_brokers", etc.
+  default_account_id: "mock_account_001" # Default account to use if not specified elsewhere
+
+  # Risk management parameters applied by the OrderManager
+  risk_parameters:
+    default_max_contracts_per_trade: 1
+    # Symbol-specific overrides for max contracts
+    contract_max_contracts:
+      "CON.F.US.MES.M25": 1
+      # "CON.F.US.MNQ.M25": 2
+
+    # Default stop loss and take profit. Can be specified in ticks, points, or percentage.
+    # These are fallback values if not defined by the strategy signal itself.
+    default_stop_loss:
+      type: "ticks" # "ticks", "points", "percentage"
+      value: 20 # e.g., 20 ticks for MES (0.25 points per tick = 5 points)
+    default_take_profit:
+      type: "ticks"
+      value: 40 # e.g., 40 ticks for MES (10 points)
+
+    # Contract-specific stop/profit levels
+    contract_specific_risk:
+      "CON.F.US.MES.M25":
+        stop_loss:
+          type: "points"
+          value: 6
+        take_profit:
+          type: "points"
+          value: 12
+      # "CON.F.US.CL.Q25": # Crude Oil
+      #   stop_loss:
+      #     type: "ticks"
+      #     value: 15 # 0.01 per tick
+      #   take_profit:
+      #     type: "ticks"
+      #     value: 45
+
+  # Configuration for the mock execution client (if provider is "mock")
+  mock_client_config:
+    fill_chance_percentage: 80 # 80% chance an order will be filled
+    simulated_fill_delay_ms: 100 # Simulate a delay before fill confirmation
+    slippage_ticks: 1 # Simulate 1 tick of slippage on fills for market orders
+
+# The following logging section was a duplicate and has been removed.
+# # --- Logging Configuration ---
+# logging:
+# # ... existing code ... 

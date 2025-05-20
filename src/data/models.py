@@ -6,9 +6,12 @@ data structures used in the system.
 """
 
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field, validator
+from typing import Optional, List, Dict, Any, Union, Literal
+from pydantic import BaseModel, Field, validator, ConfigDict
 import uuid
+from decimal import Decimal
+from pydantic import conint
+from uuid import UUID
 
 
 class Bar(BaseModel):
@@ -57,6 +60,8 @@ class Bar(BaseModel):
     class Config:
         """Pydantic model configuration."""
         validate_assignment = True
+        arbitrary_types_allowed = True
+        extra = 'ignore'
 
 
 class InProgressBar(Bar):
@@ -177,4 +182,75 @@ class TimeSeriesData(BaseModel):
     
     def get_close(self, lookback: int = 1) -> List[float]:
         """Get close prices for the last N bars."""
-        return [bar.c for bar in self.get_bars(lookback)] 
+        return [bar.c for bar in self.get_bars(lookback)]
+
+
+class Order(BaseModel):
+    order_id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4)
+    internal_order_id: str = Field(..., description="Custom unique identifier for the order, can be based on signal or coordination event")
+    broker_order_id: Optional[str] = Field(None, description="ID from the broker, can be None initially")
+    contract_id: str
+    signal_id: Optional[uuid.UUID] = Field(None, description="Optional link to the signal that triggered the order")
+    coordinated_signal_id: Optional[str] = Field(None, description="Optional link to a coordinated signal event ID")
+    account_id: str = Field(..., description="Account used for the order")
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    order_type: Literal["MARKET", "LIMIT", "STOP"]
+    direction: Literal["BUY", "SELL"]
+    quantity: conint(gt=0) # Must be greater than 0
+    limit_price: Optional[Decimal] = None
+    stop_price: Optional[Decimal] = None
+    status: Literal[
+        "PENDING_SUBMIT", # Order created internally, not yet sent to broker
+        "SUBMITTED",      # Order sent to broker, awaiting acknowledgement
+        "ACCEPTED",       # Broker acknowledged the order
+        "WORKING",        # Order is live in the market (e.g. limit order)
+        "FILLED",
+        "PARTIALLY_FILLED",
+        "CANCELLED",
+        "PENDING_CANCEL", # Request to cancel sent
+        "REJECTED",
+        "EXPIRED",
+        "ERROR"           # Error in processing or from broker
+    ]
+    filled_quantity: Optional[conint(ge=0)] = 0
+    average_fill_price: Optional[Decimal] = None
+    commission: Optional[Decimal] = None
+    details: Optional[Dict[str, Any]] = Field(None, description="Additional order-specific info (e.g., TIF, strategy notes, error messages)")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @validator('limit_price', 'stop_price', 'average_fill_price', 'commission', pre=True, always=True)
+    def ensure_decimal(cls, v):
+        if v is not None:
+            return Decimal(str(v))
+        return v
+
+    @validator('order_type', always=True)
+    def check_prices_for_order_type(cls, v, values):
+        limit_price = values.get('limit_price')
+        stop_price = values.get('stop_price')
+        if v == "LIMIT" and limit_price is None:
+            raise ValueError("limit_price must be set for LIMIT orders")
+        if v == "STOP" and stop_price is None:
+            raise ValueError("stop_price must be set for STOP orders")
+        return v
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, use_enum_values=True)
+
+# Example usage:
+# order_data = {
+#     "internal_order_id": "signal_cus123_confirm_cds456_trade001",
+#     "contract_id": "CON.F.US.MES.M25",
+#     "account_id": "mock_account_001",
+#     "order_type": "LIMIT",
+#     "direction": "BUY",
+#     "quantity": 1,
+#     "limit_price": 5300.75,
+#     "status": "PENDING_SUBMIT",
+#     "details": {"strategy_name": "MES_1h_15m_Confluence_CUS_CDS", "note": "Entry based on strong confluence"}
+# }
+# try:
+#     new_order = Order(**order_data)
+#     print(new_order.model_dump_json(indent=2))
+# except ValidationError as e:
+#     print(e.errors()) 

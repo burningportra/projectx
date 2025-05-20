@@ -167,6 +167,20 @@ class Config:
         # If not specified in environment, check settings
         return self.settings.get("database", {}).get("use_timescale", False)
     
+    def get_database_config(self) -> Optional[Dict[str, Any]]:
+        """Returns the raw database configuration section."""
+        db_conf = self.settings.get("database")
+        if db_conf and db_conf.get("use_timescale"):
+            # If using timescale, provide the specific config for local_timescaledb
+            # or railway_timescaledb based on default_ingestion_db or other logic.
+            # For now, let's assume we need the local_timescaledb details directly
+            # if they exist under a 'local_timescaledb' key, which they do.
+            # A more robust version might resolve which actual DB to use.
+            return db_conf.get("local_timescaledb")
+        elif db_conf:
+            return db_conf # For non-timescale setups, could be flat
+        return None
+    
     def get_db_min_connections(self) -> int:
         """Get the minimum database connections."""
         return int(os.getenv(
@@ -184,3 +198,31 @@ class Config:
     def get_timeframes(self) -> list:
         """Get the list of timeframes to track."""
         return self.settings.get("timeframes", ["5m", "15m", "1h", "4h", "1d"])
+
+    def get_analysis_config(self) -> Optional[Dict[str, Any]]:
+        """Returns the 'analysis' section of the config."""
+        return self.settings.get('analysis')
+
+    def get_coordination_config(self) -> Optional[Dict[str, Any]]:
+        """Returns the coordination configuration."""
+        return self.settings.get("coordination")
+
+    def get_execution_config(self) -> Optional[Dict[str, Any]]:
+        """Returns the execution configuration."""
+        return self.settings.get("execution")
+
+    def get_logging_config(self) -> Optional[Dict[str, Any]]:
+        """Returns the 'logging' section of the config."""
+        # This method is not provided in the original file or the code block
+        # It's assumed to exist as it's called in the original file
+        return self.settings.get("logging") # Added return based on typical usage
+
+# Helper function to load configuration easily
+_config_instance: Optional[Config] = None
+
+def load_config(config_path: Optional[str] = None) -> Config:
+    """Loads the configuration or returns the existing instance."""
+    global _config_instance
+    if _config_instance is None:
+        _config_instance = Config(config_path=config_path)
+    return _config_instance
