@@ -32,6 +32,38 @@ STRATEGY_MAPPING = {
 # Needs to be accessible by the notification handler
 DB_POOL_MAIN_FOR_HANDLER: Optional[asyncpg.Pool] = None
 
+async def create_watermarks_table_if_not_exists(pool: asyncpg.Pool):
+    if not pool:
+        logger.critical("Database pool not provided. Cannot create analyzer_watermarks table.")
+        return
+    
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS analyzer_watermarks (
+        analyzer_id TEXT NOT NULL,
+        contract_id TEXT NOT NULL,
+        timeframe TEXT NOT NULL,
+        last_processed_timestamp TIMESTAMPTZ,
+        PRIMARY KEY (analyzer_id, contract_id, timeframe)
+    );
+    """
+    conn = None
+    try:
+        conn = await pool.acquire()
+        logger.debug(f"Acquired connection for DDL operations on analyzer_watermarks.")
+        status = await conn.execute(create_table_sql)
+        logger.info(f"Table 'analyzer_watermarks' checked/created. Status: {status}")
+        return True
+    except Exception as e:
+        logger.error(f"Error creating analyzer_watermarks table: {e}", exc_info=True)
+        return False
+    finally:
+        if conn:
+            try:
+                await pool.release(conn)
+                logger.debug(f"Connection released after DDL operations on analyzer_watermarks.")
+            except Exception as e:
+                logger.error(f"Error releasing connection in create_watermarks_table_if_not_exists: {e}")
+
 async def create_signals_table_if_not_exists(pool: asyncpg.Pool):
     if not pool: # Check the passed pool argument
         logger.critical("Database pool not provided. Cannot create signals table.")
@@ -42,24 +74,50 @@ async def create_signals_table_if_not_exists(pool: asyncpg.Pool):
         signal_id SERIAL PRIMARY KEY,
         analyzer_id TEXT NOT NULL,
         timestamp TIMESTAMPTZ NOT NULL,         -- Main event timestamp from signal_data
-        trigger_timestamp TIMESTAMPTZ NOT NULL, -- When this row was inserted/triggered
+        trigger_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- When this row was inserted/triggered
         contract_id TEXT NOT NULL,
-        timeframe_value INTEGER NOT NULL,
-        timeframe_unit INTEGER NOT NULL,        -- Assuming parse_timeframe maps units to integers
-        rule_type TEXT NOT NULL,                -- Name alignment with insert query
+        timeframe TEXT NOT NULL,                -- Consistent with insert logic & Prisma schema
+        signal_type TEXT NOT NULL,              -- Consistent with insert logic & Prisma schema
         signal_price REAL,
         signal_open REAL,
         signal_high REAL,
         signal_low REAL,
         signal_close REAL,
         signal_volume REAL,
-        details JSONB NULL,
-        UNIQUE(analyzer_id, contract_id, timeframe_value, timeframe_unit, timestamp, rule_type)
+        details JSONB
+        -- Constraint will be added/ensured separately
     );
     """
-    async with pool.acquire() as conn: # Use the passed pool argument
-        await conn.execute(create_table_sql)
-    logger.info("Table 'detected_signals' checked/created.")
+    # Removed CONSTRAINT detected_signals_unique_idx UNIQUE (analyzer_id, contract_id, timeframe, timestamp, signal_type) from initial CREATE
+
+    drop_constraint_sql = "ALTER TABLE detected_signals DROP CONSTRAINT IF EXISTS detected_signals_unique_idx;"
+    add_constraint_sql = "ALTER TABLE detected_signals ADD CONSTRAINT detected_signals_unique_idx UNIQUE (analyzer_id, contract_id, timeframe, timestamp, signal_type);"
+
+    conn = None
+    try:
+        conn = await pool.acquire()
+        logger.debug(f"Acquired connection for DDL operations on detected_signals.")
+
+        status_create = await conn.execute(create_table_sql)
+        logger.info(f"Table 'detected_signals' checked/created. Status: {status_create}")
+
+        status_drop = await conn.execute(drop_constraint_sql)
+        logger.info(f"Attempted to drop constraint 'detected_signals_unique_idx'. Status: {status_drop}")
+        
+        status_add = await conn.execute(add_constraint_sql)
+        logger.info(f"Attempted to add constraint 'detected_signals_unique_idx'. Status: {status_add}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error during DDL operations for detected_signals table (create/drop/add constraint): {e}", exc_info=True)
+        return False
+    finally:
+        if conn:
+            try:
+                await pool.release(conn)
+                logger.debug(f"Connection released after DDL operations on detected_signals.")
+            except Exception as e:
+                logger.error(f"Error releasing connection in create_signals_table_if_not_exists: {e}")
 
 def convert_np_types(data):
     """Recursively convert numpy types in a dictionary to standard Python types for JSON serialization."""
@@ -101,12 +159,33 @@ async def store_signals(
     # Prepare data for insertion
     signals_to_store = []
     for signal in signals:
+        # Ensure timestamp from signal is timezone-aware (UTC)
+        signal_timestamp = signal['timestamp']
+        if isinstance(signal_timestamp, str):
+            try:
+                if signal_timestamp.endswith('Z'):
+                    signal_timestamp = datetime.fromisoformat(signal_timestamp[:-1] + '+00:00')
+                else:
+                    signal_timestamp = datetime.fromisoformat(signal_timestamp)
+            except ValueError as e:
+                logger.error(f"Error parsing signal timestamp string '{signal_timestamp}': {e}. Skipping signal.")
+                continue # Skip this signal
+        
+        if not isinstance(signal_timestamp, datetime):
+            logger.error(f"Signal timestamp is not a datetime object after parsing: {signal_timestamp} (type: {type(signal_timestamp)}). Skipping signal.")
+            continue
+
+        if signal_timestamp.tzinfo is None:
+            signal_timestamp = signal_timestamp.replace(tzinfo=timezone.utc)
+        elif signal_timestamp.tzinfo != timezone.utc:
+            signal_timestamp = signal_timestamp.astimezone(timezone.utc)
+
         signals_to_store.append((
             analyzer_id,
-            signal['timestamp'],         # Timestamp of the bar generating the signal
+            signal_timestamp,         # Use the processed, timezone-aware timestamp
             datetime.now(timezone.utc),  # trigger_timestamp
             contract_id,
-            timeframe_str,               # MODIFIED: Use the formatted timeframe string
+            timeframe_str,               # This should be the string timeframe like "1m", "1h"
             signal['signal_type'],
             signal.get('signal_price'),
             signal.get('open'),
@@ -114,7 +193,7 @@ async def store_signals(
             signal.get('low'),
             signal.get('close'),
             signal.get('volume'),
-            json.dumps(signal.get('details', {})) # Ensure details is a JSON string
+            json.dumps(convert_np_types(signal.get('details', {}))) # Ensure details is a JSON string and numpy types are converted
         ))
 
     insert_query = """
@@ -124,36 +203,48 @@ async def store_signals(
             signal_open, signal_high, signal_low, signal_close, signal_volume, 
             details
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        ON CONFLICT (signal_id) DO NOTHING; 
-        """
-        # Note: The ON CONFLICT target for detected_signals should ideally be a combination of fields
-        # that make a signal unique, e.g., (analyzer_id, contract_id, timeframe, timestamp, signal_type).
-        # Using signal_id (serial PK) means new inserts will always happen unless IDs are reused,
-        # which they aren't here. If re-running analysis could produce identical signals,
-        # a more robust conflict target based on content is needed. For now, this is fine.
+        ON CONFLICT ON CONSTRAINT detected_signals_unique_idx
+        DO UPDATE SET
+            trigger_timestamp = EXCLUDED.trigger_timestamp,
+            signal_price = EXCLUDED.signal_price,
+            signal_open = EXCLUDED.signal_open,
+            signal_high = EXCLUDED.signal_high,
+            signal_low = EXCLUDED.signal_low,
+            signal_close = EXCLUDED.signal_close,
+            signal_volume = EXCLUDED.signal_volume,
+            details = EXCLUDED.details
+        RETURNING signal_id;
+        """ 
+        # Updated ON CONFLICT to use the correct unique constraint fields
 
     conn = None
+    num_inserted_or_updated = 0
     try:
-        async with pool.acquire() as conn:
-            status = await conn.executemany(insert_query, signals_to_store)
-            # executemany returns None in asyncpg, so we check the count of items we attempted to store.
-            # For more precise count of actual rows inserted, one might need row-by-row insert or other logic.
-            logger.info(f"    Attempted to store {len(signals_to_store)} signals in the database for {analyzer_id}/{contract_id}/{timeframe_str}.")
-            return len(signals_to_store) # Return number of signals processed
-    except asyncpg.exceptions.UndefinedColumnError as e:
-        logger.error(f"Error storing signals (UndefinedColumnError) for {analyzer_id} ({contract_id} [{timeframe_str}]): {e}")
-        logger.error("This usually means the 'detected_signals' table schema in the database "
-                     "does not match what the code expects (e.g., missing or differently named columns).")
-        logger.error(f"Data prepared for insert (first item): {signals_to_store[0] if signals_to_store else 'None'}")
+        conn = await pool.acquire()
+        logger.debug(f"Acquired connection for storing {len(signals_to_store)} signals for {analyzer_id} ({contract_id} [{timeframe_str}]).")
 
+        status = await conn.executemany(insert_query, signals_to_store)
+        # executemany returns None in asyncpg, so we check the count of items we attempted to store.
+        # For more precise count of actual rows inserted, one might need row-by-row insert or other logic.
+        num_inserted_or_updated = len(signals_to_store) # Assume all were processed if no error
+        logger.info(f"Successfully stored/updated {num_inserted_or_updated} signals for {analyzer_id} ({contract_id} [{timeframe_str}]) with status: {status}")
+        return num_inserted_or_updated
+    except asyncpg.PostgresError as e:  # Catch specific database errors
+        logger.error(f"Database error storing signals for {analyzer_id} ({contract_id} [{timeframe_str}]): {e}")
+        # Consider the nature of the error. If it's about the ON CONFLICT, the DDL or constraint name might be wrong.
+        # If it's a data type issue, the data conversion logic above might need refinement.
+        num_inserted_or_updated = 0 # Indicate failure or partial success if applicable
     except Exception as e:
-        logger.error(f"Error storing signals for {analyzer_id} ({contract_id} [{timeframe_str}]): {e}")
-        if conn and conn.is_closed():
-            logger.error("    Database connection was closed during the operation.")
-        # Log the first signal data that failed to help debug
-        if signals_to_store:
-            logger.error(f"    Failed signal data (first item): {signals_to_store[0]}")
-    return 0
+        logger.error(f"Unexpected error storing signals for {analyzer_id} ({contract_id} [{timeframe_str}]): {type(e).__name__} - {e}")
+        num_inserted_or_updated = 0
+    finally:
+        if conn:
+            try:
+                await pool.release(conn)
+                logger.debug(f"Connection released after attempting to store signals for {analyzer_id} ({contract_id} [{timeframe_str}]).")
+            except Exception as e:
+                logger.error(f"Error releasing connection in store_signals: {e}")
+    return num_inserted_or_updated
 
 async def fetch_ohlc_bars_for_analysis(
     pool: asyncpg.Pool, 
@@ -496,6 +587,7 @@ async def handle_new_bar_notification(connection, pid, channel, payload_str):
 async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
     logger.info("Starting Analyzer Service event loop...")
     await create_signals_table_if_not_exists(pool)
+    await create_watermarks_table_if_not_exists(pool)
 
     analysis_config = app_config.settings.get('analysis', {})
     analysis_targets = analysis_config.get('targets', [])
@@ -517,27 +609,36 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
             # Initial run for all targets to process backlog before relying solely on notifications
             logger.info("Performing initial analysis run for all configured targets to process backlog...")
             initial_analysis_tasks = []
-            for target_group in analysis_targets:
-                analyzer_id = target_group['analyzer_id']
-                strategy_func_name = target_group.get('strategy', 'cus_cds_trend_finder')
-                strategy_func = STRATEGY_MAPPING.get(strategy_func_name) # MODIFIED: Use module-level STRATEGY_MAPPING
+            for target_config in analysis_targets: # Iterate directly over each configured target
+                analyzer_id = target_config.get('analyzer_id')
+                strategy_func_name = target_config.get('strategy', 'cus_cds_trend_finder')
+                strategy_func = STRATEGY_MAPPING.get(strategy_func_name)
+
+                if not analyzer_id: # Added check for analyzer_id
+                    logger.warning(f"Skipping target configuration due to missing 'analyzer_id': {target_config}")
+                    continue
 
                 if not strategy_func:
                     logger.error(f"Strategy '{strategy_func_name}' not found for analyzer '{analyzer_id}'. Skipping target group.")
                     continue
 
-                for contract_config in target_group.get('contracts', []):
-                    contract_id = contract_config['contract_id']
-                    for tf_str in contract_config.get('timeframes', []):
-                        # Construct a target_config dict for run_analyzer_for_target
-                        single_target_run_config = {
-                            'analyzer_id': analyzer_id,
-                            'contract_id': contract_id,
-                            'timeframe': tf_str,
-                            # 'strategy': strategy_func_name # strategy_func is passed directly
-                        }
-                        task = run_analyzer_for_target(pool, single_target_run_config, strategy_func)
-                        initial_analysis_tasks.append(task)
+                contract_id = target_config.get('contract_id') # Get contract_id directly
+                if not contract_id: # Added check for contract_id
+                    logger.warning(f"Skipping target configuration for analyzer '{analyzer_id}' due to missing 'contract_id': {target_config}")
+                    continue
+
+                for tf_str in target_config.get('timeframes', []): # Get timeframes list directly
+                    # Construct a single_target_run_config dict for run_analyzer_for_target
+                    # This structure is what run_analyzer_for_target expects
+                    single_target_run_config_for_backlog = {
+                        'analyzer_id': analyzer_id,
+                        'contract_id': contract_id,
+                        'timeframe': tf_str,
+                        # 'strategy': strategy_func_name # strategy_func is passed directly
+                    }
+                    logger.info(f"Queueing backlog analysis for: {analyzer_id} - {contract_id} [{tf_str}]")
+                    task = run_analyzer_for_target(pool, single_target_run_config_for_backlog, strategy_func)
+                    initial_analysis_tasks.append(task)
             
             if initial_analysis_tasks:
                 await asyncio.gather(*initial_analysis_tasks)

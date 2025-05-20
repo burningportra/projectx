@@ -1,28 +1,27 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
+# Install system dependencies if required (e.g., for psycopg2-binary if not using -slim or if issues arise)
+# RUN apt-get update && apt-get install -y libpq-dev gcc
+
 # Copy requirements file
 COPY requirements.txt .
-
-# Update requirements.txt with FastAPI dependencies 
-RUN echo "fastapi==0.115.12" >> requirements.txt
-RUN echo "uvicorn==0.34.2" >> requirements.txt
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY ./src ./src
+COPY ./config ./config
+COPY .env.template .env.template
+# Ensure run_services.sh is copied if it's in the root
+COPY run_services.sh .
 
 # Set environment variables
 ENV PYTHONPATH=/app
-ENV MODULE_NAME=src.api.server
-ENV VARIABLE_NAME=app
-ENV PORT=8000
 
-# Expose port
-EXPOSE 8000
+# Make the script executable
+RUN chmod +x run_services.sh
 
-# Command to run the API server
-CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["./run_services.sh"] 

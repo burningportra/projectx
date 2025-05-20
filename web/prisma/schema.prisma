@@ -54,4 +54,27 @@ model CoordinatorWatermark {
   lastProcessedSignalId BigInt? @map("last_processed_signal_id")
 
   @@map("coordinator_watermarks")
+}
+
+model DetectedSignal {
+  signal_id         Int      @id @default(autoincrement())
+  analyzer_id       String
+  timestamp         DateTime @db.Timestamptz // Timestamp of the bar generating the signal
+  trigger_timestamp DateTime @default(now()) @db.Timestamptz // When this row was inserted
+  contract_id       String
+  timeframe         String   // e.g., "1m", "5m", "1h". Consistent with Python insert.
+  signal_type       String   // Was rule_type in some DDLs, but signal_type in Python INSERT and API params
+  signal_price      Float?
+  signal_open       Float?
+  signal_high       Float?
+  signal_low        Float?
+  signal_close      Float?
+  signal_volume     Float?
+  details           Json?    @db.JsonB
+
+  @@unique([analyzer_id, contract_id, timeframe, timestamp, signal_type], name: "detected_signals_unique_idx")
+  @@index([contract_id, timeframe, timestamp])
+  @@index([signal_type])
+  @@index([timestamp])
+  @@map("detected_signals")
 } 

@@ -5,6 +5,8 @@ from typing import List, Dict, Optional, Any
 
 logger = logging.getLogger(__name__) # Initialize logger at module level
 
+MIN_BARS_FOR_TREND_START = 5 # Define the constant
+
 # --- Bar Class (Adapted from trend_analyzer_alt.py) ---
 class Bar:
     def __init__(self, timestamp: datetime.datetime, o: float, h: float, l: float, c: float, volume: float = None, index: int = None):
@@ -232,25 +234,27 @@ def generate_trend_starts(
     debug: bool = False
 ) -> List[Dict[str, Any]]:
     """
-    Analyzes a DataFrame of OHLCV bars to detect trend starts based on a set of predefined rules.
-
-    Args:
-        bars_df: DataFrame containing OHLCV data with a DateTimeIndex.
-                 Expected columns: 'open', 'high', 'low', 'close', 'volume', 'buy_volume', 'sell_volume'.
-        contract_id: The contract ID for which trends are being generated.
-        timeframe_str: The timeframe string (e.g., "1m", "1h") for which trends are being generated.
-        config: Optional dictionary to override default strategy parameters.
-        debug: If True, enables detailed print statements for debugging.
-
-    Returns:
-        A list of dictionaries, where each dictionary represents a detected trend start signal.
-        Each signal includes 'timestamp', 'trend_type' ('bullish' or 'bearish'),
-        'trigger_price', 'details', 'contract_id', and 'timeframe'.
+    Identifies trend start signals (CUS/CDS) from a DataFrame of OHLC bars.
+    Uses the detailed CUS/CDS logic with Potential Uptrend/Downtrend Starts (PUS/PDS)
+    and various confirmation rules.
     """
+    global logger # Ensure logger is accessible
+    # Initialize logger if it hasn't been (e.g., if run standalone for testing)
+    if logger is None:
+        logger = logging.getLogger(__name__)
+        if not logger.hasHandlers(): # Avoid adding multiple handlers if already configured
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logger.info("Logger for trend_start_finder initialized (likely in standalone or test mode).")
+    
     log_prefix = f"[generate_trend_starts][{contract_id}][{timeframe_str}]"
     logger.info(f"{log_prefix} Starting trend start generation for {len(bars_df)} bars.")
-    if bars_df.empty:
-        logger.info(f"{log_prefix} Empty OHLC DataFrame received. No signals to generate.")
+
+    signals_found = []
+    unique_signals = [] # Initialize unique_signals list
+    seen = set()      # Initialize seen set
+
+    if bars_df.empty or len(bars_df) < MIN_BARS_FOR_TREND_START:
+        logger.info(f"{log_prefix} Not enough bars ({len(bars_df)}) to process. Minimum required: {MIN_BARS_FOR_TREND_START}.")
         return []
 
     all_bars = []
@@ -269,7 +273,6 @@ def generate_trend_starts(
     if not all_bars: # Should be redundant due to bars_df.empty check, but safe
         return []
 
-    signals_found = []
     state = State()
 
     # --- Rule Name Mappings (Systematic for signal details) ---
@@ -698,7 +701,10 @@ def generate_trend_starts(
             # PDS Invalidation Logic
             if state.last_confirmed_trend_type == 'uptrend' and initial_pds_candidate_bar_obj is not None:
                 if current_bar.l > initial_pds_candidate_bar_obj.l: 
-                    logger.info(f"{log_prefix}   🔎 {log_msg_pds} Invalidated Potential Downtrend Start on Bar {initial_pds_candidate_bar_obj.index} (High:{initial_pds_candidate_bar_obj.h}) because Current Bar {current_bar.index} Low ({current_bar.l}) > Potential Low ({initial_pds_candidate_bar_obj.l}) during uptrend.")
+                    # Construct a local message for invalidation to avoid NameError with log_msg_pds
+                    invalidation_log_detail = f"Invalidated Potential Downtrend Start on Bar {initial_pds_candidate_bar_obj.index} (High:{initial_pds_candidate_bar_obj.h}, Low:{initial_pds_candidate_bar_obj.l})"\
+                                              f" because Current Bar {current_bar.index} Low ({current_bar.l}) > PDS Low ({initial_pds_candidate_bar_obj.l}) during uptrend."
+                    logger.info(f"{log_prefix}   🔎 {invalidation_log_detail}")
                     state.confirmed_downtrend_candidate_peak_bar_index = None
                     state.confirmed_downtrend_candidate_peak_high = None
                     state.confirmed_downtrend_candidate_peak_low = None
@@ -708,7 +714,10 @@ def generate_trend_starts(
             # PUS Invalidation Logic
             if state.last_confirmed_trend_type == 'downtrend' and initial_pus_candidate_bar_obj is not None:
                 if current_bar.h < initial_pus_candidate_bar_obj.h: 
-                    logger.info(f"{log_prefix}   🔎 {log_msg_pus} Invalidated Potential Uptrend Start on Bar {initial_pus_candidate_bar_obj.index} (Low:{initial_pus_candidate_bar_obj.l}) because Current Bar {current_bar.index} High ({current_bar.h}) < Potential High ({initial_pus_candidate_bar_obj.h}) during downtrend.")
+                    # Construct a local message for invalidation to avoid NameError with log_msg_pus
+                    invalidation_log_detail = f"Invalidated Potential Uptrend Start on Bar {initial_pus_candidate_bar_obj.index} (Low:{initial_pus_candidate_bar_obj.l}, High:{initial_pus_candidate_bar_obj.h})"\
+                                              f" because Current Bar {current_bar.index} High ({current_bar.h}) < PUS High ({initial_pus_candidate_bar_obj.h}) during downtrend."
+                    logger.info(f"{log_prefix}   🔎 {invalidation_log_detail}")
                     state.confirmed_uptrend_candidate_low_bar_index = None
                     state.confirmed_uptrend_candidate_low_low = None
                     state.confirmed_uptrend_candidate_low_high = None

@@ -284,7 +284,7 @@ Deploying this system to Railway involves:
 
 Railway excels at deploying applications from a GitHub repository, especially if a `Dockerfile` is present.
 
--   [ ] **Create `Dockerfile`**: A `Dockerfile` in your project root tells Railway how to build and run your application.
+- [x] **Create `Dockerfile`**: A `Dockerfile` in your project root tells Railway how to build and run your application.
 
     ```dockerfile
     # Dockerfile Example for ProjectX Trading System (adjust as needed)
@@ -303,18 +303,16 @@ Railway excels at deploying applications from a GitHub repository, especially if
     # Copy the rest of the application code
     COPY . .
 
+    # Make the run_services.sh script executable
+    RUN chmod +x run_services.sh
+
     # Define the command to run your application.
-    # This will depend on how you structure your services.
-    # If running analyzer_service.py (which might also call ingestion or they are separate):
-    CMD ["python", "-m", "src.analysis.analyzer_service"]
-    # Or, if you have a main script that orchestrates multiple services:
-    # CMD ["python", "src/main_trader_services.py"]
-    # Ensure the entry point script is correctly specified.
-    # The `-m` flag is useful if your entry point is a module within a package.
+    # This script will start both ingestion and analysis services.
+    CMD ["./run_services.sh"]
     ```
 
--   [ ] **Update `requirements.txt`**: Ensure this file is comprehensive and lists all packages needed for the application to run in the Docker container (e.g., `signalrcore`, `psycopg2-binary` or `asyncpg`, `python-dotenv`, `PyYAML`, `pandas`).
--   [ ] **Railway Service Configuration**:
+- [x] **Update `requirements.txt`**: Ensure this file is comprehensive and lists all packages needed for the application to run in the Docker container (e.g., `signalrcore`, `psycopg2-binary` or `asyncpg`, `python-dotenv`, `PyYAML`, `pandas`).
+- [x] **Railway Service Configuration**:
     *   In your Railway project dashboard, add a new service, linking it to your GitHub repository.
     *   Railway should automatically detect the `Dockerfile` and use it for builds.
     *   **Environment Variables**: This is critical for Railway deployments. Configure all necessary environment variables in the Railway service settings (under "Variables"). These will override or provide values that might otherwise come from a local `.env` file:
@@ -388,8 +386,8 @@ This checklist helps ensure all steps are covered when moving to Railway.
 - [ ] **Database**: Railway PostgreSQL service created.
 - [ ] **Database**: TimescaleDB extension successfully enabled on the Railway PostgreSQL instance.
 - [ ] **Database**: All required tables (`ohlc_bars`, `detected_signals`, `analyzer_watermarks`, `coordinator_watermarks`) created in the Railway DB. `ohlc_bars` is confirmed as a hypertable with the correct unique constraint.
-- [ ] **Application**: `Dockerfile` is complete, tested locally (e.g., `docker build .`), and correctly defines dependencies and the start command.
-- [ ] **Application**: `requirements.txt` accurately lists all runtime dependencies.
+- [x] **Application**: `Dockerfile` is complete, tested locally (e.g., `docker build .`), and correctly defines dependencies and the start command.
+- [x] **Application**: `requirements.txt` accurately lists all runtime dependencies.
 - [ ] **Application**: Python service(s) (e.g., combined ingestion/analysis) successfully deployed to Railway from the GitHub repository.
 - [ ] **Application**: All necessary environment variables (especially `DATABASE_URL`, `PROJECTX_API_TOKEN`, `PROJECTX_USERNAME`) are correctly configured in the Railway service settings.
 - [ ] **Application**: Deployed services on Railway are running, and their logs (viewable in the Railway dashboard) indicate successful startup, connection to the database, and ongoing operations.
@@ -423,27 +421,3 @@ These goals define the expected outcomes and verifiable milestones for each phas
 
 *   [x] **Analyzer Data Retrieval**: The `analyzer_service.py` successfully queries new OHLC bars from TimescaleDB for each configured target (contract, timeframe), using the `analyzer_watermarks` table to avoid reprocessing data (current polling method).
 *   [x] **Event-Driven Analyzer Implemented**: The `analyzer_service.py` is updated to use PostgreSQL LISTEN/NOTIFY. It listens for new bar notifications, fetches relevant context, and triggers analysis via `trend_start_finder.py` in near real-time.
-*   [x] **Strategy Logic Integration**: The core CUS/CDS trend-finding logic from `src/strategies/trend_start_finder.py` is successfully integrated and called by `analyzer_service.py`, processing OHLC data retrieved from the database.
-*   [x] **Signal Generation & Storage**: The `analyzer_service.py` correctly identifies trend signals based on the strategy logic and reliably stores these signals (including descriptive rule names) in the `detected_signals` table.
-*   [x] **Analyzer Watermark Update**: `analyzer_service.py` correctly updates the `last_processed_timestamp` in the `analyzer_watermarks` table for each target after processing.
-*   [x] **Coordinator Signal Retrieval**: The Signal Coordination Service (`src/coordination/coordinator_service.py`) can successfully query new signals from the `detected_signals` table, using the `coordinator_watermarks` table to track its progress.
-*   [x] **Basic Coordination Logic Functional**: The coordinator implements initial, rule-based coordination (e.g., time-based confluence of signals from different timeframes for the same contract and trend type) and logs coordinated signal events. A signal cache is used to manage recent signals for evaluation.
-*   [x] **Coordinator Watermark Update**: The coordinator correctly updates its `last_processed_signal_id` in the `coordinator_watermarks` table after each processing cycle.
-*   [x] **End-to-End Data Flow (Signal Generation & Basic Coordination)**: A clear data path is observable and functional: Live Tick -> OHLC Bar in DB -> Analyzer Reads Bar -> Analyzer Writes Signal to DB -> Coordinator Reads Signal -> Coordinator Logs Coordinated Event.
-
-### Goals for Phase 3: Order Execution Service (Proposed)
-
-*   [ ] **Execution Module Design**: A clear design document or detailed specification for the Order Execution Module is created, outlining its responsibilities, inputs (e.g., coordinated signals), outputs (e.g., order submissions), and interaction with the `GatewayClient` and Signal Coordination Service.
-*   [ ] **API Interaction Plan**: Key ProjectX Gateway API endpoints for order placement, modification, cancellation, and position/account status retrieval are identified, and their usage within the execution module is planned.
-*   [ ] **Risk Management Considerations**: Initial thoughts on how basic risk checks (e.g., max position size per trade, daily loss limits, concurrent open orders) would be incorporated before order placement are documented.
-
-### Goals for Railway Deployment (Post-Local Development & Testing)
-
-*   [ ] **Railway Database Setup**: Railway PostgreSQL service is provisioned, TimescaleDB extension is enabled, and all necessary schemas (`ohlc_bars`, `detected_signals`, watermark tables) are applied correctly and verified.
-*   [ ] **Application Dockerized & Deployed**: Python application(s) are successfully containerized using the `Dockerfile` and deployed as a service on Railway, with correct start commands.
-*   [ ] **Environment Configuration on Railway**: All necessary environment variables (DATABASE_URL, API keys, service-specific configurations) are securely configured in the Railway service settings.
-*   [ ] **Service Operational on Railway**: Deployed services on Railway are running, connecting to the Railway DB, and processing live data (verifiable through Railway logs and by querying the Railway DB). This includes data ingestion and signal generation.
-*   [ ] **Remote Data Accessibility**: OHLC and signal data stored in the Railway TimescaleDB instance can be accessed remotely (e.g., from a local DB tool or script) for verification, analysis, and debugging, respecting Railway's security configurations.
-*   [ ] **Historical Data Population on Railway**: A strategy for populating the Railway DB with historical data is chosen and successfully executed.
-
-</rewritten_file> 
