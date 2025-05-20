@@ -63,6 +63,38 @@ def parse_timeframe(timeframe: str) -> Tuple[int, int]:
     return (unit_map[unit_str], value)
 
 
+def format_timeframe_from_unit_value(unit: int, value: int) -> str:
+    """
+    Convert a (unit, value) pair back into a timeframe string (e.g., "5m", "1h").
+
+    Args:
+        unit: Integer representation of the timeframe unit 
+              (1=Second, 2=Minute, 3=Hour, 4=Day, 5=Week, 6=Month).
+        value: The number of units.
+
+    Returns:
+        String representation of the timeframe.
+
+    Raises:
+        ValueError: If the unit integer is invalid.
+    """
+    # Inverse of the unit_map in parse_timeframe
+    unit_str_map = {
+        1: "s",  # Second
+        2: "m",  # Minute
+        3: "h",  # Hour
+        4: "d",  # Day
+        5: "w",  # Week
+        6: "mo"  # Month
+    }
+
+    if unit not in unit_str_map:
+        raise ValueError(f"Invalid timeframe unit integer: {unit}")
+
+    unit_char = unit_str_map[unit]
+    return f"{value}{unit_char}"
+
+
 def get_bar_start_time(timestamp: Union[str, datetime.datetime], unit: int, unit_number: int) -> datetime.datetime:
     """
     Calculate the start time of a bar containing the given timestamp.

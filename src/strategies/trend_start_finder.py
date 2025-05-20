@@ -1,6 +1,9 @@
 import pandas as pd
 import datetime # Required for type hinting if not already imported by pandas
 import logging # Added for debug logging
+from typing import List, Dict, Optional, Any
+
+logger = logging.getLogger(__name__) # Initialize logger at module level
 
 # --- Bar Class (Adapted from trend_analyzer_alt.py) ---
 class Bar:
@@ -221,22 +224,37 @@ def find_intervening_bar(all_bars: list, start_bar_idx_1based: int, end_bar_idx_
         return max(relevant_slice, key=lambda bar: bar.h)
 
 # --- Main Signal Generation Function ---
-def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str: str) -> list:
+def generate_trend_starts(
+    bars_df: pd.DataFrame,
+    contract_id: str,
+    timeframe_str: str,
+    config: Optional[Dict[str, Any]] = None,
+    debug: bool = False
+) -> List[Dict[str, Any]]:
     """
-    Analyzes OHLC data to find trend start signals using CUS/CDS logic.
+    Analyzes a DataFrame of OHLCV bars to detect trend starts based on a set of predefined rules.
+
     Args:
-        ohlc_df (pd.DataFrame): DataFrame with columns ['timestamp', 'open', 'high', 'low', 'close', 'volume'].
-                                Timestamp should be datetime objects.
-        contract_id (str): Identifier for the contract.
-        timeframe_str (str): Identifier for the timeframe (e.g., "1m", "5m").
+        bars_df: DataFrame containing OHLCV data with a DateTimeIndex.
+                 Expected columns: 'open', 'high', 'low', 'close', 'volume', 'buy_volume', 'sell_volume'.
+        contract_id: The contract ID for which trends are being generated.
+        timeframe_str: The timeframe string (e.g., "1m", "1h") for which trends are being generated.
+        config: Optional dictionary to override default strategy parameters.
+        debug: If True, enables detailed print statements for debugging.
+
     Returns:
-        list: A list of dictionaries, each representing a detected signal.
+        A list of dictionaries, where each dictionary represents a detected trend start signal.
+        Each signal includes 'timestamp', 'trend_type' ('bullish' or 'bearish'),
+        'trigger_price', 'details', 'contract_id', and 'timeframe'.
     """
-    if ohlc_df.empty:
+    log_prefix = f"[generate_trend_starts][{contract_id}][{timeframe_str}]"
+    logger.info(f"{log_prefix} Starting trend start generation for {len(bars_df)} bars.")
+    if bars_df.empty:
+        logger.info(f"{log_prefix} Empty OHLC DataFrame received. No signals to generate.")
         return []
 
     all_bars = []
-    for i, row in enumerate(ohlc_df.itertuples(index=False)):
+    for i, row in enumerate(bars_df.itertuples(index=False)):
         bar = Bar(
             timestamp=row.timestamp, 
             o=float(row.open), # Ensure float
@@ -248,7 +266,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
         )
         all_bars.append(bar)
 
-    if not all_bars: # Should be redundant due to ohlc_df.empty check, but safe
+    if not all_bars: # Should be redundant due to bars_df.empty check, but safe
         return []
 
     signals_found = []
@@ -286,23 +304,12 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
         "CDS_ConfirmedBy_RuleH_HHLL_vs_PDS_Trigger": "HigherHigh-LowerLow Bar vs Potential Downtrend Start (Rule H)"
     }
 
-
-    # Create a logger instance for this function
-    logger = logging.getLogger(__name__ + ".generate_trend_starts")
-    # Potentially configure logger if not configured globally, e.g.,
-    # if not logger.hasHandlers():
-    #     handler = logging.StreamHandler()
-    #     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #     handler.setFormatter(formatter)
-    #     logger.addHandler(handler)
-    #     logger.setLevel(logging.INFO) # Or DEBUG
-
     for k in range(len(all_bars)):
         current_bar = all_bars[k]
         current_bar_dt_str = current_bar.timestamp.strftime('%Y-%m-%d %H:%M')
         
         # Trader-friendly log for bar processing
-        logger.info(f"Processing Bar {current_bar.index} ({current_bar_dt_str})")
+        logger.info(f"{log_prefix} Processing Bar {current_bar.index} ({current_bar_dt_str})")
 
         if k == 0:
             # logger.info("First bar, skipping PDS/PUS logic based on prev_bar.") # Optional: can be too noisy
@@ -432,7 +439,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     forced_bar_dt_str = forced_dt_bar_due_to_cus.timestamp.strftime('%Y-%m-%d %H:%M')
                     cus_bar_dt_str = cus_confirmed_on_bar.timestamp.strftime('%Y-%m-%d %H:%M')
                     friendly_cus_rule_name = CUS_FRIENDLY_NAMES.get(cus_rule_applied, cus_rule_applied)
-                    logger.info(f"📉 FORCED DOWNTREND on {forced_bar_dt_str} (Bar {forced_dt_bar_due_to_cus.index}). Caused by Confirmed Uptrend Start on {cus_bar_dt_str} (Bar {cus_confirmed_on_bar.index}) with rule '{friendly_cus_rule_name}'. Triggered by Bar {current_bar.index}. {current_trend_log_str}")
+                    logger.info(f"{log_prefix} 📉 FORCED DOWNTREND on {forced_bar_dt_str} (Bar {forced_dt_bar_due_to_cus.index}). Caused by Confirmed Uptrend Start on {cus_bar_dt_str} (Bar {cus_confirmed_on_bar.index}) with rule '{friendly_cus_rule_name}'. Triggered by Bar {current_bar.index}. {current_trend_log_str}")
                     signal = {
                         'timestamp': forced_dt_bar_due_to_cus.timestamp, 'contract_id': contract_id, 'timeframe': timeframe_str,
                         'signal_type': "downtrend_start", 'signal_price': forced_dt_bar_due_to_cus.c,
@@ -450,7 +457,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
             # Main CUS signal
             cus_bar_dt_str = cus_confirmed_on_bar.timestamp.strftime('%Y-%m-%d %H:%M')
             friendly_cus_rule_name = CUS_FRIENDLY_NAMES.get(cus_rule_applied, cus_rule_applied)
-            logger.info(f"📈 CONFIRMED UPTREND START on {cus_bar_dt_str} (Bar {cus_confirmed_on_bar.index}) by Rule: '{friendly_cus_rule_name}'. Triggered by Bar {current_bar.index} ({current_bar_dt_str}). {current_trend_log_str}")
+            logger.info(f"{log_prefix} 📈 CONFIRMED UPTREND START on {cus_bar_dt_str} (Bar {cus_confirmed_on_bar.index}) by Rule: '{friendly_cus_rule_name}'. Triggered by Bar {current_bar.index} ({current_bar_dt_str}). {current_trend_log_str}")
             signal = {
                 'timestamp': cus_confirmed_on_bar.timestamp, 'contract_id': contract_id, 'timeframe': timeframe_str,
                 'signal_type': "uptrend_start", 'signal_price': cus_confirmed_on_bar.c,
@@ -491,7 +498,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                         state.confirmed_downtrend_candidate_peak_high = cus_confirmed_on_bar.h
                         state.confirmed_downtrend_candidate_peak_low = cus_confirmed_on_bar.l
                         made_cus_bar_pds = True
-                        if logger: logger.info(f"  ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Confirmed Uptrend Start Bar {cus_confirmed_on_bar.index} (High: {cus_confirmed_on_bar.h}) due to {pds_trigger_detail}.")
+                        if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Confirmed Uptrend Start Bar {cus_confirmed_on_bar.index} (High: {cus_confirmed_on_bar.h}) due to {pds_trigger_detail}.")
             
             if not made_cus_bar_pds:
                 friendly_cus_rule_name_short = CUS_FRIENDLY_NAMES.get(cus_rule_applied, cus_rule_applied)
@@ -501,7 +508,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
                     state.confirmed_downtrend_candidate_peak_high = current_bar.h
                     state.confirmed_downtrend_candidate_peak_low = current_bar.l
-                    if logger: logger.info(f"  ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Current Bar {current_bar.index} (High: {current_bar.h}) due to '{friendly_cus_rule_name_short}' rule.")
+                    if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Current Bar {current_bar.index} (High: {current_bar.h}) due to '{friendly_cus_rule_name_short}' rule.")
                 elif cus_rule_applied != "CUS_ConfirmedBy_EngulfingUp_PDSBreak_Trigger": # SDB or REF36
                     if state.confirmed_downtrend_candidate_peak_bar_index is None or \
                        (cus_confirmed_on_bar and cus_confirmed_on_bar.h > state.confirmed_downtrend_candidate_peak_high):
@@ -511,7 +518,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                             state.confirmed_downtrend_candidate_peak_bar_index = cus_confirmed_on_bar.index
                             state.confirmed_downtrend_candidate_peak_high = cus_confirmed_on_bar.h
                             state.confirmed_downtrend_candidate_peak_low = cus_confirmed_on_bar.l
-                            if logger: logger.info(f"  ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Confirmed Uptrend Start Bar {cus_confirmed_on_bar.index} (High: {cus_confirmed_on_bar.h}) due to '{friendly_cus_rule_name_short}' rule.")
+                            if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Uptrend Start: New Potential Downtrend Start on Confirmed Uptrend Start Bar {cus_confirmed_on_bar.index} (High: {cus_confirmed_on_bar.h}) due to '{friendly_cus_rule_name_short}' rule.")
         
         # --- Apply Consequences (PRIORITY 2: CDS, only if no CUS in this iteration) ---
         # This block will only execute if CUS was NOT confirmed in the same iteration.
@@ -531,7 +538,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     forced_bar_dt_str = forced_ut_bar_due_to_cds.timestamp.strftime('%Y-%m-%d %H:%M')
                     cds_bar_dt_str = cds_confirmed_on_bar.timestamp.strftime('%Y-%m-%d %H:%M')
                     friendly_cds_rule_name = CDS_FRIENDLY_NAMES.get(cds_rule_applied, cds_rule_applied)
-                    logger.info(f"📈 FORCED UPTREND on {forced_bar_dt_str} (Bar {forced_ut_bar_due_to_cds.index}). Caused by Confirmed Downtrend Start on {cds_bar_dt_str} (Bar {cds_confirmed_on_bar.index}) with rule '{friendly_cds_rule_name}'. Triggered by Bar {current_bar.index}. {current_trend_log_str}")
+                    logger.info(f"{log_prefix} 📈 FORCED UPTREND on {forced_bar_dt_str} (Bar {forced_ut_bar_due_to_cds.index}). Caused by Confirmed Downtrend Start on {cds_bar_dt_str} (Bar {cds_confirmed_on_bar.index}) with rule '{friendly_cds_rule_name}'. Triggered by Bar {current_bar.index}. {current_trend_log_str}")
                     signal = {
                         'timestamp': forced_ut_bar_due_to_cds.timestamp, 'contract_id': contract_id, 'timeframe': timeframe_str,
                         'signal_type': "uptrend_start", 'signal_price': forced_ut_bar_due_to_cds.c,
@@ -548,7 +555,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
             # Main CDS Signal
             cds_bar_dt_str = cds_confirmed_on_bar.timestamp.strftime('%Y-%m-%d %H:%M')
             friendly_cds_rule_name = CDS_FRIENDLY_NAMES.get(cds_rule_applied, cds_rule_applied)
-            logger.info(f"📉 CONFIRMED DOWNTREND START on {cds_bar_dt_str} (Bar {cds_confirmed_on_bar.index}) by Rule: '{friendly_cds_rule_name}'. Triggered by Bar {current_bar.index} ({current_bar_dt_str}). {current_trend_log_str}")
+            logger.info(f"{log_prefix} 📉 CONFIRMED DOWNTREND START on {cds_bar_dt_str} (Bar {cds_confirmed_on_bar.index}) by Rule: '{friendly_cds_rule_name}'. Triggered by Bar {current_bar.index} ({current_bar_dt_str}). {current_trend_log_str}")
             signal = {
                 'timestamp': cds_confirmed_on_bar.timestamp, 'contract_id': contract_id, 'timeframe': timeframe_str,
                 'signal_type': "downtrend_start", 'signal_price': cds_confirmed_on_bar.c,
@@ -589,7 +596,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                 state.confirmed_uptrend_candidate_low_bar_index = chosen_pus_candidate_bar.index
                 state.confirmed_uptrend_candidate_low_low = chosen_pus_candidate_bar.l
                 state.confirmed_uptrend_candidate_low_high = chosen_pus_candidate_bar.h
-                if logger: logger.info(f"  ➡️ After Confirmed Downtrend Start: New Potential Uptrend Start on Bar {chosen_pus_candidate_bar.index} (Low: {chosen_pus_candidate_bar.l}) from '{friendly_cds_rule_name_short}' rule.")
+                if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Downtrend Start: New Potential Uptrend Start on Bar {chosen_pus_candidate_bar.index} (Low: {chosen_pus_candidate_bar.l}) from '{friendly_cds_rule_name_short}' rule.")
             elif cds_rule_applied in ["CDS_ConfirmedBy_RuleA_PDSLowBreak_Trigger", "CDS_ConfirmedBy_RuleB_PDSHighBreak_Thrust_Trigger", "CDS_ConfirmedBy_RuleF_PDSLowBreak_FailedHigh_Trigger"]:
                 temp_pus_candidate_bar = None
                 if state.confirmed_uptrend_candidate_low_bar_index is not None:
@@ -600,14 +607,14 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     state.confirmed_uptrend_candidate_low_bar_index = temp_pus_candidate_bar.index
                     state.confirmed_uptrend_candidate_low_low = temp_pus_candidate_bar.l
                     state.confirmed_uptrend_candidate_low_high = temp_pus_candidate_bar.h
-                    if logger: logger.info(f"  ➡️ After Confirmed Downtrend Start: Retained Potential Uptrend Start on Bar {temp_pus_candidate_bar.index} (Low: {temp_pus_candidate_bar.l}) from '{friendly_cds_rule_name_short}' context.")
+                    if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Downtrend Start: Retained Potential Uptrend Start on Bar {temp_pus_candidate_bar.index} (Low: {temp_pus_candidate_bar.l}) from '{friendly_cds_rule_name_short}' context.")
             elif cds_rule_applied == "CDS_ConfirmedBy_RuleG_SUB_PostPDSLowBreak_Trigger":
                 state.potential_uptrend_signal_bar_index = prev_bar.index; state.potential_uptrend_anchor_low = prev_bar.l
                 if state.confirmed_uptrend_candidate_low_bar_index is None or prev_bar.l < state.confirmed_uptrend_candidate_low_low:
                     state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
                     state.confirmed_uptrend_candidate_low_low = prev_bar.l
                     state.confirmed_uptrend_candidate_low_high = prev_bar.h
-                    if logger: logger.info(f"  ➡️ After Confirmed Downtrend Start: New Potential Uptrend Start on Previous Bar {prev_bar.index} (Low: {prev_bar.l}) from '{friendly_cds_rule_name_short}' rule.")
+                    if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Downtrend Start: New Potential Uptrend Start on Previous Bar {prev_bar.index} (Low: {prev_bar.l}) from '{friendly_cds_rule_name_short}' rule.")
                 if state.potential_downtrend_signal_bar_index is not None: 
                     state.potential_downtrend_signal_bar_index = None; state.potential_downtrend_anchor_high = None
             
@@ -616,7 +623,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                 state.potential_downtrend_signal_bar_index = current_bar.index; state.potential_downtrend_anchor_high = current_bar.h
                 state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index
                 state.confirmed_downtrend_candidate_peak_high = current_bar.h; state.confirmed_downtrend_candidate_peak_low = current_bar.l
-                if logger: logger.info(f"  ➡️ After Confirmed Downtrend Start: New Potential Downtrend Start on Current Bar {current_bar.index} (High: {current_bar.h}) from '{friendly_cds_rule_name_short}' rule.")
+                if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Downtrend Start: New Potential Downtrend Start on Current Bar {current_bar.index} (High: {current_bar.h}) from '{friendly_cds_rule_name_short}' rule.")
             elif cds_rule_applied == "CDS_ConfirmedBy_RuleH_HHLL_vs_PDS_Trigger":
                 state.potential_uptrend_signal_bar_index = current_bar.index; state.potential_uptrend_anchor_low = current_bar.l
                 state.confirmed_uptrend_candidate_low_bar_index = current_bar.index; state.confirmed_uptrend_candidate_low_low = current_bar.l
@@ -624,7 +631,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                 state.potential_downtrend_signal_bar_index = current_bar.index; state.potential_downtrend_anchor_high = current_bar.h
                 state.confirmed_downtrend_candidate_peak_bar_index = current_bar.index 
                 state.confirmed_downtrend_candidate_peak_high = current_bar.h; state.confirmed_downtrend_candidate_peak_low = current_bar.l
-                if logger: logger.info(f"  ➡️ After Confirmed Downtrend Start: New Potential Uptrend & Downtrend Starts on Current Bar {current_bar.index} from '{friendly_cds_rule_name_short}' rule.")
+                if logger: logger.info(f"{log_prefix}   ➡️ After Confirmed Downtrend Start: New Potential Uptrend & Downtrend Starts on Current Bar {current_bar.index} from '{friendly_cds_rule_name_short}' rule.")
 
         # --- Check for New Potential Signals (on prev_bar or current_bar for Rule C) ---
         # This section now correctly guards based on whether CUS or CDS actually fired.
@@ -648,13 +655,13 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
                     state.confirmed_downtrend_candidate_peak_high = new_pds_high
                     state.confirmed_downtrend_candidate_peak_low = new_pds_low
-                    logger.info(f"  🔎 {log_msg_pds} New Potential Downtrend Start formed or updated.")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pds} New Potential Downtrend Start formed or updated.")
                     if state.in_containment: state.in_containment = False 
                 elif new_pds_high == initial_pds_candidate_bar_obj.h and new_pds_low < initial_pds_candidate_bar_obj.l : 
                     state.confirmed_downtrend_candidate_peak_bar_index = prev_bar.index
                     state.confirmed_downtrend_candidate_peak_high = new_pds_high
                     state.confirmed_downtrend_candidate_peak_low = new_pds_low
-                    logger.info(f"  🔎 {log_msg_pds} Potential Downtrend Start updated (same High, lower Low).")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pds} Potential Downtrend Start updated (same High, lower Low).")
                     if state.in_containment: state.in_containment = False 
                 # else:
                 #     logger.info(f"  Potential Downtrend Start on Bar {prev_bar.index} not an improvement over existing: Bar {initial_pds_candidate_bar_obj.index if initial_pds_candidate_bar_obj else 'N/A'}")
@@ -677,13 +684,13 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
                     state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
                     state.confirmed_uptrend_candidate_low_low = new_pus_low
                     state.confirmed_uptrend_candidate_low_high = new_pus_high
-                    logger.info(f"  🔎 {log_msg_pus} New Potential Uptrend Start formed or updated.")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pus} New Potential Uptrend Start formed or updated.")
                     if state.in_containment: state.in_containment = False 
                 elif new_pus_low == initial_pus_candidate_bar_obj.l and new_pus_high > initial_pus_candidate_bar_obj.h : 
                     state.confirmed_uptrend_candidate_low_bar_index = prev_bar.index
                     state.confirmed_uptrend_candidate_low_low = new_pus_low
                     state.confirmed_uptrend_candidate_low_high = new_pus_high
-                    logger.info(f"  🔎 {log_msg_pus} Potential Uptrend Start updated (same Low, higher High).")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pus} Potential Uptrend Start updated (same Low, higher High).")
                     if state.in_containment: state.in_containment = False
                 # else:
                 #     logger.info(f"  Potential Uptrend Start on Bar {prev_bar.index} not an improvement over existing: Bar {initial_pus_candidate_bar_obj.index if initial_pus_candidate_bar_obj else 'N/A'}")
@@ -691,7 +698,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
             # PDS Invalidation Logic
             if state.last_confirmed_trend_type == 'uptrend' and initial_pds_candidate_bar_obj is not None:
                 if current_bar.l > initial_pds_candidate_bar_obj.l: 
-                    logger.info(f"  Invalidated Potential Downtrend Start on Bar {initial_pds_candidate_bar_obj.index} (High:{initial_pds_candidate_bar_obj.h}) because Current Bar {current_bar.index} Low ({current_bar.l}) > Potential Low ({initial_pds_candidate_bar_obj.l}) during uptrend.")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pds} Invalidated Potential Downtrend Start on Bar {initial_pds_candidate_bar_obj.index} (High:{initial_pds_candidate_bar_obj.h}) because Current Bar {current_bar.index} Low ({current_bar.l}) > Potential Low ({initial_pds_candidate_bar_obj.l}) during uptrend.")
                     state.confirmed_downtrend_candidate_peak_bar_index = None
                     state.confirmed_downtrend_candidate_peak_high = None
                     state.confirmed_downtrend_candidate_peak_low = None
@@ -701,7 +708,7 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
             # PUS Invalidation Logic
             if state.last_confirmed_trend_type == 'downtrend' and initial_pus_candidate_bar_obj is not None:
                 if current_bar.h < initial_pus_candidate_bar_obj.h: 
-                    logger.info(f"  Invalidated Potential Uptrend Start on Bar {initial_pus_candidate_bar_obj.index} (Low:{initial_pus_candidate_bar_obj.l}) because Current Bar {current_bar.index} High ({current_bar.h}) < Potential High ({initial_pus_candidate_bar_obj.h}) during downtrend.")
+                    logger.info(f"{log_prefix}   🔎 {log_msg_pus} Invalidated Potential Uptrend Start on Bar {initial_pus_candidate_bar_obj.index} (Low:{initial_pus_candidate_bar_obj.l}) because Current Bar {current_bar.index} High ({current_bar.h}) < Potential High ({initial_pus_candidate_bar_obj.h}) during downtrend.")
                     state.confirmed_uptrend_candidate_low_bar_index = None
                     state.confirmed_uptrend_candidate_low_low = None
                     state.confirmed_uptrend_candidate_low_high = None
@@ -710,7 +717,15 @@ def generate_trend_starts(ohlc_df: pd.DataFrame, contract_id: str, timeframe_str
         # Removed the verbose [AFTER ALL LOGIC] block and End Iteration block
         # The essential state is logged when it changes or leads to a signal.
 
-    return signals_found
+    for signal in signals_found:
+        # Using a tuple of identifiable fields for uniqueness check
+        signal_tuple = (signal['timestamp'], signal['signal_type'], signal['signal_price'])
+        if signal_tuple not in seen:
+            seen.add(signal_tuple)
+            unique_signals.append(signal)
+
+    logger.info(f"{log_prefix} Finished processing {len(all_bars)} bars. Generated {len(signals_found)} raw signals. {len(unique_signals)} unique signals after filtering.")
+    return unique_signals
 
 if __name__ == '__main__':
     # Example of how to test this function (optional)

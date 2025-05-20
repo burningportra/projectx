@@ -29,16 +29,21 @@ The system is designed to automatically ingest live market data, process this da
 
 4.  **Multi-Timeframe Signal Engine (`src/analysis/analyzer_service.py`, `src/strategies/trend_start_finder.py`)**:
     *   **Purpose**: Analyzes OHLC data from the database for different contracts and timeframes to identify potential trading signals based on implemented strategies (currently CUS/CDS trend detection).
-    *   **Functionality**: Periodically queries new OHLC data (using watermarks), applies strategy logic, and stores identified signals in the `detected_signals` table.
+    *   **Functionality**: Periodically queries new OHLC data (using watermarks), applies strategy logic, and stores identified signals in the `detected_signals` table. (See Phase 2 for proposed event-driven enhancements).
     *   **Strategy**: The current primary strategy (`trend_start_finder.py`) is based on identifying "Confirmed Uptrend Starts" (CUS) and "Confirmed Downtrend Starts" (CDS) using a specific set of bar patterns and state transitions.
 
 5.  **Signal Coordination & Execution Logic (Future Development)**:
     *   **Purpose**: To combine signals from different analyzers (potentially across multiple timeframes or strategies) into a single, actionable trading decision. This component will then interact with an execution module to place orders.
     *   **Functionality (Conceptual)**: Will involve rules for signal confluence, filtering, and risk management before triggering an execution.
 
+6.  **Trend Start Data API (`web/src/app/api/trend-starts/route.ts`)**:
+    *   **Purpose**: Provides an HTTP API endpoint to retrieve stored trend start signals.
+    *   **Functionality**: Allows querying signals based on timeframe, contract ID, signal type, date range, and pagination.
+    *   **Key Technology**: Next.js API Routes, Prisma ORM for database interaction.
+
 ## Guiding Principles:
 
-*   **Event-Driven**: The system primarily reacts to new data (ticks from the market, new bars in the database) rather than constantly polling for changes. This is efficient and responsive.
+*   **Event-Driven**: The system primarily reacts to new data (ticks from the market, new bars in the database) rather than constantly polling for changes. This is efficient and responsive. The transition of `analyzer_service.py` to an event-driven model using LISTEN/NOTIFY further emphasizes this.
 *   **Asynchronous Operations**: Utilizes `asyncio` for network I/O (SignalR) and potentially for other I/O-bound tasks to prevent blocking the main execution threads, ensuring the system remains responsive.
 *   **Data Integrity**: Critical for a trading system. Achieved through:
     *   Unique constraints in the database (e.g., on `ohlc_bars` for contract, timestamp, and timeframe) to prevent duplicates.
@@ -47,6 +52,7 @@ The system is designed to automatically ingest live market data, process this da
 *   **Modularity**: Components (ingestion, aggregation, analysis, storage) are designed to be as independent as possible. This simplifies development, testing, and maintenance. For example, the signal generation logic in `trend_start_finder.py` is separate from the `analyzer_service.py` that orchestrates its execution.
 *   **Scalability**: While initially focused on a few contracts, the design considers future expansion (more contracts, more complex strategies, higher data volumes) by using appropriate technologies like TimescaleDB and modular Python services.
 *   **Idempotency**: Operations, especially database writes and state updates, are designed to be safe if re-executed (e.g., due to a service restart). `INSERT ... ON CONFLICT DO NOTHING` is an example.
+*   **Logging**: The `analyzer_service.py` and `trend_start_finder.py` include detailed logging for operations, signal detection, and errors. The logs in `trend_start_finder.py` have been refined to be "trader-friendly."
 
 ## Development Environment & Project Structure Overview
 
@@ -148,10 +154,11 @@ A new developer should familiarize themselves with Phase 0 and Phase 1 to unders
 3.  **Timeframe-Specific Analyzer Service (`src/analysis/analyzer_service.py`)**:
     *   [x] **Analyzer Structure**: The `analyzer_service.py` acts as an orchestrator. It runs in a loop, and for each "target" (a specific contract and timeframe combination defined in `config/settings.yaml`), it performs an analysis cycle. Currently, it's a single process that iterates through targets.
     *   [x] **Analyzer Configuration**: Loads analysis targets and the `analyzer_id` from `config/settings.yaml` via `src/core/config.py`. The `analyzer_id` helps distinguish signals or watermark entries if multiple analysis strategies were to be run.
-    *   [x] **Data Fetching & Watermarking**:
+    *   [x] **Data Fetching & Watermarking (Polling Method)**:
         *   For each target, the service first queries the `analyzer_watermarks` table to get the `last_processed_timestamp` for that specific analyzer, contract, and timeframe.
         *   It then queries the `ohlc_bars` table for any new bars that have arrived since this last processed timestamp.
         *   This watermarking mechanism is crucial for efficiency, ensuring that data is processed only once.
+    *   [x] **Event-Driven Analyzer Implemented**: The `analyzer_service.py` is updated to use PostgreSQL LISTEN/NOTIFY. It listens for new bar notifications, fetches relevant context, and triggers analysis via `trend_start_finder.py` in near real-time.
     *   [x] **Signal Logic Integration (`src/strategies/trend_start_finder.py`)**:
         *   The new OHLC bars (as a Pandas DataFrame) are passed to the `generate_trend_starts` function in `trend_start_finder.py`.
         *   This function contains the CUS/CDS trend-finding logic, adapted from the original `trend_analyzer_alt.py` script. It iterates through the bars, maintains state, and identifies trend start signals.
@@ -162,7 +169,19 @@ A new developer should familiarize themselves with Phase 0 and Phase 1 to unders
         *   The service now uses `asyncpg` for database operations to align with its asynchronous nature.
     *   [x] **Logging**: The `analyzer_service.py` and `trend_start_finder.py` include detailed logging for operations, signal detection, and errors. The logs in `trend_start_finder.py` have been refined to be "trader-friendly."
 
-4.  **Signal Coordination Service (Python) (Future Development)**:
+4.  **Trend Start Data API Development (`web/src/app/api/trend-starts/route.ts`)**:
+    *   [ ] **API Endpoint Definition**: Define and implement a GET endpoint (e.g., `/api/trend-starts`).
+        *   `Supported Query Parameters: timeframe (required, string), contract_id (optional, string), signal_type (optional, string, e.g., "uptrend_start", "downtrend_start"), start_date (optional, ISO 8601 string), end_date (optional, ISO 8601 string), limit (optional, int, default: 100), offset (optional, int, default: 0).`
+        *   `Response: JSON array of trend start signals matching the query, sourced from the detected_signals table.`
+    *   [ ] **Request Validation**: Implement validation for all incoming query parameters (e.g., correct timeframe format, date format, numeric types for limit/offset).
+    *   [ ] **Database Interaction**: Use Prisma client (expected to be available in the `web/` Next.js environment) to connect to TimescaleDB and query the `detected_signals` table.
+    *   [ ] **Dynamic Query Construction**: Build the Prisma query dynamically based on the provided and validated query parameters. Handle optional parameters correctly.
+    *   [ ] **Response Formatting**: Ensure a consistent JSON response structure. Return appropriate HTTP status codes (e.g., 200 OK, 400 Bad Request for invalid parameters, 500 Internal Server Error).
+    *   [ ] **Error Handling**: Implement robust error handling for database connection issues, query execution errors, and unexpected issues.
+    *   [ ] **Logging**: Add logging for incoming API requests (including parameters), significant processing steps, and any errors encountered.
+    *   [ ] **Documentation (Initial)**: Briefly document the API endpoint, its parameters, and expected response within the project (e.g., in this framework document or a separate API documentation file). Consider generating OpenAPI/Swagger documentation later.
+
+5.  **Signal Coordination Service (Python) (Future Development)**:
     *   **Purpose**: This service will be responsible for taking the raw signals generated by individual analyzers and applying higher-level logic to decide if a trade should actually be considered.
     *   [ ] **Coordinator Structure**: Likely an asynchronous script/service similar to `analyzer_service.py`.
     *   [ ] **Signal Monitoring & Watermarking**: It will query the `detected_signals` table for new signals, using the `coordinator_watermarks` table (specifically `last_processed_signal_id`) to track which signals it has already seen.
@@ -402,7 +421,8 @@ These goals define the expected outcomes and verifiable milestones for each phas
 
 ### Goals for Phase 2: Multi-Timeframe Signal Generation
 
-*   [x] **Analyzer Data Retrieval**: The `analyzer_service.py` successfully queries new OHLC bars from TimescaleDB for each configured target (contract, timeframe), using the `analyzer_watermarks` table to avoid reprocessing data.
+*   [x] **Analyzer Data Retrieval**: The `analyzer_service.py` successfully queries new OHLC bars from TimescaleDB for each configured target (contract, timeframe), using the `analyzer_watermarks` table to avoid reprocessing data (current polling method).
+*   [x] **Event-Driven Analyzer Implemented**: The `analyzer_service.py` is updated to use PostgreSQL LISTEN/NOTIFY. It listens for new bar notifications, fetches relevant context, and triggers analysis via `trend_start_finder.py` in near real-time.
 *   [x] **Strategy Logic Integration**: The core CUS/CDS trend-finding logic from `src/strategies/trend_start_finder.py` is successfully integrated and called by `analyzer_service.py`, processing OHLC data retrieved from the database.
 *   [x] **Signal Generation & Storage**: The `analyzer_service.py` correctly identifies trend signals based on the strategy logic and reliably stores these signals (including descriptive rule names) in the `detected_signals` table.
 *   [x] **Analyzer Watermark Update**: `analyzer_service.py` correctly updates the `last_processed_timestamp` in the `analyzer_watermarks` table for each target after processing.

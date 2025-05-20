@@ -12,7 +12,7 @@ import os # Added os import
 from src.core.config import Config
 # from src.data.storage.db_handler import DBHandler # Removed DBHandler
 from src.strategies.trend_start_finder import generate_trend_starts
-from src.core.utils import parse_timeframe # For converting timeframe string to unit/value if needed by DBHandler
+from src.core.utils import parse_timeframe, format_timeframe_from_unit_value # MODIFIED: Added format_timeframe_from_unit_value
 
 # --- Configuration ---
 # Basic logging setup (can be enhanced via a shared logging_config later)
@@ -20,9 +20,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 config = Config()
+BAR_HISTORY_COUNT = 200 # Number of bars to fetch for context, including the new one.
 
-# Removed global DB_POOL, init_db_pool, close_db_pool definitions here
-# Pool will be managed in the main execution block
+# MODIFIED: Moved strategy_mapping to module level
+STRATEGY_MAPPING = {
+    "cus_cds_trend_finder": generate_trend_starts
+    # Add other strategies here if needed
+}
+
+# This will hold the pool when running as a service directly
+# Needs to be accessible by the notification handler
+DB_POOL_MAIN_FOR_HANDLER: Optional[asyncpg.Pool] = None
 
 async def create_signals_table_if_not_exists(pool: asyncpg.Pool):
     if not pool: # Check the passed pool argument
@@ -74,71 +82,78 @@ def convert_np_types(data):
         return None
     return data
 
-async def store_signals(pool: asyncpg.Pool, signals: List[Dict[str, Any]], analyzer_id: str, contract_id_log: str, timeframe_log: str) -> int:
-    """
-    Stores a list of signal dictionaries in the detected_signals table.
-    Returns the number of signals successfully stored.
-    """
+async def store_signals(
+    pool: asyncpg.Pool,
+    analyzer_id: str,
+    contract_id: str,
+    timeframe_unit: int, # Still needed to format the string
+    timeframe_value: int, # Still needed to format the string
+    signals: List[Dict[str, Any]]
+) -> int:
     if not signals:
         return 0
+    if not pool:
+        logger.error(f"Database pool not available for store_signals for {analyzer_id}/{contract_id}")
+        return 0
 
+    timeframe_str = format_timeframe_from_unit_value(timeframe_unit, timeframe_value) # Generate timeframe string
+
+    # Prepare data for insertion
     signals_to_store = []
-    current_trigger_time = datetime.now(timezone.utc)
-    for signal_data in signals:
-        # Parse timeframe string into unit and value for storage and unique constraint
-        tf_unit, tf_value = parse_timeframe(signal_data['timeframe'])
-        
+    for signal in signals:
         signals_to_store.append((
             analyzer_id,
-            signal_data['timestamp'],
-            current_trigger_time,
-            signal_data['contract_id'],
-            tf_value,  # Parsed timeframe value (integer)
-            tf_unit,   # Parsed timeframe unit (integer)
-            signal_data['signal_type'], # This is the 'rule_type' for the constraint
-            signal_data.get('signal_price'),
-            signal_data.get('signal_open'),
-            signal_data.get('signal_high'),
-            signal_data.get('signal_low'),
-            signal_data.get('signal_close'),
-            signal_data.get('signal_volume'),
-            json.dumps(convert_np_types(signal_data.get('details', {})))
+            signal['timestamp'],         # Timestamp of the bar generating the signal
+            datetime.now(timezone.utc),  # trigger_timestamp
+            contract_id,
+            timeframe_str,               # MODIFIED: Use the formatted timeframe string
+            signal['signal_type'],
+            signal.get('signal_price'),
+            signal.get('open'),
+            signal.get('high'),
+            signal.get('low'),
+            signal.get('close'),
+            signal.get('volume'),
+            json.dumps(signal.get('details', {})) # Ensure details is a JSON string
         ))
 
-    if not signals_to_store:
-        return 0
-
-    # Ensure the column names match your detected_signals table schema
-    # and the unique constraint columns are correct in ON CONFLICT
     insert_query = """
-    INSERT INTO detected_signals (
-        analyzer_id, timestamp, trigger_timestamp, contract_id, 
-        timeframe_value, timeframe_unit, rule_type, 
-        signal_price, signal_open, signal_high, signal_low, signal_close, signal_volume, details
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-    ON CONFLICT (analyzer_id, contract_id, timeframe_value, timeframe_unit, timestamp, rule_type) DO NOTHING;
-    """
+        INSERT INTO detected_signals (
+            analyzer_id, timestamp, trigger_timestamp, contract_id, timeframe, 
+            signal_type, signal_price, 
+            signal_open, signal_high, signal_low, signal_close, signal_volume, 
+            details
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ON CONFLICT (signal_id) DO NOTHING; 
+        """
+        # Note: The ON CONFLICT target for detected_signals should ideally be a combination of fields
+        # that make a signal unique, e.g., (analyzer_id, contract_id, timeframe, timestamp, signal_type).
+        # Using signal_id (serial PK) means new inserts will always happen unless IDs are reused,
+        # which they aren't here. If re-running analysis could produce identical signals,
+        # a more robust conflict target based on content is needed. For now, this is fine.
+
+    conn = None
     try:
         async with pool.acquire() as conn:
-            async with conn.transaction():
-                # executemany returns a status string like 'INSERT 0 10'
-                status = await conn.executemany(insert_query, signals_to_store)
-                # To get actual number inserted when ON CONFLICT DO NOTHING is used, 
-                # it's tricky with executemany. We assume if no error, all were attempted.
-                # For precise count, one might need row-by-row insert or more complex query.
-                # For now, log based on number attempted.
-                num_attempted = len(signals_to_store)
-                logger.info(f"Attempted to store {num_attempted} signals for analyzer '{analyzer_id}' ({contract_id_log} [{timeframe_log}]). DB Status: {status}")
-                # This status does not directly give count of rows actually inserted vs ignored.
-                # We will return num_attempted assuming the purpose is to know how many signals were generated and sent to DB.
-                return num_attempted 
-    except asyncpg.exceptions.UniqueViolationError:
-        # This should ideally be caught by ON CONFLICT DO NOTHING, but if it still occurs, log it.
-        logger.warning(f"Unique constraint violation encountered unexpectedly for {analyzer_id} ({contract_id_log} [{timeframe_log}]), despite ON CONFLICT DO NOTHING.")
-        return 0 # Or a specific value indicating partial success / conflict
+            status = await conn.executemany(insert_query, signals_to_store)
+            # executemany returns None in asyncpg, so we check the count of items we attempted to store.
+            # For more precise count of actual rows inserted, one might need row-by-row insert or other logic.
+            logger.info(f"    Attempted to store {len(signals_to_store)} signals in the database for {analyzer_id}/{contract_id}/{timeframe_str}.")
+            return len(signals_to_store) # Return number of signals processed
+    except asyncpg.exceptions.UndefinedColumnError as e:
+        logger.error(f"Error storing signals (UndefinedColumnError) for {analyzer_id} ({contract_id} [{timeframe_str}]): {e}")
+        logger.error("This usually means the 'detected_signals' table schema in the database "
+                     "does not match what the code expects (e.g., missing or differently named columns).")
+        logger.error(f"Data prepared for insert (first item): {signals_to_store[0] if signals_to_store else 'None'}")
+
     except Exception as e:
-        logger.error(f"Error storing signals for {analyzer_id} ({contract_id_log} [{timeframe_log}]): {e}", exc_info=True)
-        return 0
+        logger.error(f"Error storing signals for {analyzer_id} ({contract_id} [{timeframe_str}]): {e}")
+        if conn and conn.is_closed():
+            logger.error("    Database connection was closed during the operation.")
+        # Log the first signal data that failed to help debug
+        if signals_to_store:
+            logger.error(f"    Failed signal data (first item): {signals_to_store[0]}")
+    return 0
 
 async def fetch_ohlc_bars_for_analysis(
     pool: asyncpg.Pool, 
@@ -179,6 +194,49 @@ async def fetch_ohlc_bars_for_analysis(
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return df
 
+async def fetch_ohlc_bars_for_analysis_window(
+    pool: asyncpg.Pool,
+    contract_id: str,
+    timeframe_unit: int, # Parsed from timeframe_str
+    timeframe_value: int, # Parsed from timeframe_str
+    end_timestamp: datetime, # Timestamp of the notified bar
+    bar_count: int
+) -> pd.DataFrame:
+    if not pool:
+        logger.error("Database pool not available for fetch_ohlc_bars_for_analysis_window")
+        return pd.DataFrame(columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+
+    query = """
+        SELECT "timestamp", "open", "high", "low", "close", "volume"
+        FROM ohlc_bars
+        WHERE contract_id = $1
+          AND timeframe_unit = $2
+          AND timeframe_value = $3
+          AND "timestamp" <= $4  -- Include the notified bar itself
+        ORDER BY "timestamp" DESC
+        LIMIT $5;
+    """
+    # Note: After fetching, we'll need to re-sort by timestamp ASC for the strategy
+    try:
+        async with pool.acquire() as conn:
+            records = await conn.fetch(query, contract_id, timeframe_unit, timeframe_value, end_timestamp, bar_count)
+    except Exception as e:
+        logger.error(f"Error fetching OHLC window for {contract_id} TF {timeframe_value}{timeframe_unit} ending {end_timestamp}: {e}", exc_info=True)
+        return pd.DataFrame(columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+
+    if not records:
+        return pd.DataFrame(columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+
+    # Convert to DataFrame and sort ascending by timestamp
+    df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df = df.sort_values(by='timestamp', ascending=True).reset_index(drop=True)
+    
+    # Ensure numeric types for OHLCV columns
+    for col in ['open', 'high', 'low', 'close', 'volume']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    return df
 
 async def get_analyzer_watermark(pool: asyncpg.Pool, analyzer_id: str, contract_id: str, timeframe: str) -> Optional[datetime]:
     if not pool: # Check the passed pool argument
@@ -252,14 +310,21 @@ async def run_analyzer_for_target(
         # This ensures we re-check from the beginning if no data was ever found.
         return
 
-    logger.info(f"    Fetched {len(new_bars_df)} new bars for analysis for {contract_id} [{timeframe_str}].")
+    logger.info(f"    Fetched {len(new_bars_df)} new OHLC bars for {contract_id} [{timeframe_str}] for analysis.")
     generated_signals = strategy_func(new_bars_df, contract_id=contract_id, timeframe_str=timeframe_str)
 
     if not generated_signals:
         logger.info(f"    No signals generated by '{analyzer_id}' for {contract_id} [{timeframe_str}] from {len(new_bars_df)} bars.")
     else:
         logger.info(f"    Generated {len(generated_signals)} signals by '{analyzer_id}' for {contract_id} [{timeframe_str}].")
-        num_stored = await store_signals(pool, generated_signals, analyzer_id, contract_id, timeframe_str) # Pass analyzer_id, contract_id, timeframe_str
+        num_stored = await store_signals(
+            pool=pool, 
+            analyzer_id=analyzer_id,
+            contract_id=contract_id,
+            timeframe_unit=tf_unit_val,  # Parsed from timeframe_str
+            timeframe_value=tf_value_val, # Parsed from timeframe_str
+            signals=generated_signals
+        )
         logger.info(f"    Stored {num_stored} signals in the database for {analyzer_id}/{contract_id}/{timeframe_str}.")
 
     new_max_timestamp = new_bars_df['timestamp'].max()
@@ -272,143 +337,311 @@ async def run_analyzer_for_target(
     else:
         logger.warning(f"    Could not determine new watermark for {analyzer_id}/{contract_id}/{timeframe_str} as max timestamp was NaT. Watermark not updated.")
 
-async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool): # Renamed 'config' to 'app_config' to avoid conflict with global 'config'
-    analysis_config = app_config.get_analysis_config()
-    if not analysis_config:
-        logger.error("Analysis configuration not found. Exiting.")
-        return
+    logger.info(f"Finished analysis cycle for {analyzer_id} - {contract_id} [{timeframe_str}].")
 
-    loop_interval = analysis_config.get("loop_sleep_seconds", 300)
-    targets = analysis_config.get("targets", [])
-
-    if not targets:
-        logger.warning("No analysis targets configured. Analyzer will sleep.")
-
-    strategy_map = {
-        "cus_cds_trend_finder": generate_trend_starts 
-        # Add other strategy functions here by their analyzer_id
-    }
-
-    logger.info("Starting main analyzer loop...")
-    cycle_count = 0
+async def handle_new_bar_notification(connection, pid, channel, payload_str):
+    logger.info(f"Received notification on channel '{channel}' with PID {pid}. Raw payload string: {payload_str[:500]}...") # Log raw payload string (truncated)
     try:
-        while True:
-            cycle_count += 1
-            logger.info(f"--- Analyzer Service: Starting cycle {cycle_count} ---")
+        payload = json.loads(payload_str)
+        logger.info(f"Successfully parsed JSON payload: {payload}") # Log parsed payload
+
+        # MODIFIED: Check if action is INSERT and table name starts with _hyper_ (Timescale chunk) 
+        # or ideally, if the trigger passed a specific identifier for the ohlc_bars table.
+        # For now, we assume notifications for ohlc_bars will come from chunk tables.
+        table_name_from_payload = payload.get('table', '')
+        is_ohlc_insert = payload.get('action') == 'INSERT' and table_name_from_payload.startswith('_hyper_')
+        # A more robust trigger would add a field like 'source_table': 'ohlc_bars' to the payload.
+        logger.info(f"Checking condition for processing: action='{payload.get('action')}', table='{table_name_from_payload}'. Is OHLC insert? {is_ohlc_insert}")
+
+        if is_ohlc_insert:
+            bar_data = payload.get('data')
+            logger.info(f"Extracted bar_data from payload: {bar_data}") # Log extracted bar_data
+            if not bar_data:
+                logger.warning("Notification for ohlc_bars INSERT missing data.")
+                return
+
+            contract_id_notif = bar_data.get('contract_id')
+            bar_timestamp_str = bar_data.get('timestamp') 
+            timeframe_unit_notif = bar_data.get('timeframe_unit')
+            timeframe_value_notif = bar_data.get('timeframe_value')
+            logger.info(f"Extracted fields: contract_id='{contract_id_notif}', ts_str='{bar_timestamp_str}', tf_unit='{timeframe_unit_notif}', tf_val='{timeframe_value_notif}'") # Log extracted fields
+
+            if not all([contract_id_notif, bar_timestamp_str, timeframe_unit_notif is not None, timeframe_value_notif is not None]):
+                logger.warning(f"Notification missing essential data fields after extraction. Payload data: {bar_data}")
+                return
             
-            active_targets_in_cycle = 0
-            for target_group_config in targets: # e.g., {'analyzer_id': 'x', 'contract_id': 'y', 'timeframes': ['1m', '5m']}
-                analyzer_id_from_config = target_group_config.get('analyzer_id')
-                contract_id_from_config = target_group_config.get('contract_id')
-                timeframes_for_target = target_group_config.get('timeframes', [])
+            try:
+                timeframe_str_notif = format_timeframe_from_unit_value(timeframe_unit_notif, timeframe_value_notif)
+                logger.info(f"Successfully formatted timeframe_str_notif: '{timeframe_str_notif}'") # Log successful timeframe formatting
+            except ValueError as e:
+                logger.error(f"Error formatting timeframe from notification unit/value ({timeframe_unit_notif}, {timeframe_value_notif}): {e}")
+                return
 
-                if not all([analyzer_id_from_config, contract_id_from_config, timeframes_for_target]):
-                    logger.warning(f"Skipping invalid target configuration: {target_group_config}")
-                    continue
-
-                strategy_func_to_use = strategy_map.get(analyzer_id_from_config)
-                if not strategy_func_to_use:
-                    logger.error(f"No strategy function found for analyzer_id: '{analyzer_id_from_config}'. Skipping target.")
-                    continue
+            try:
+                if bar_timestamp_str.endswith('Z'):
+                    bar_timestamp = datetime.fromisoformat(bar_timestamp_str[:-1] + '+00:00')
+                else:
+                    bar_timestamp = datetime.fromisoformat(bar_timestamp_str)
                 
-                logger.info(f"Processing target group: Analyzer '{analyzer_id_from_config}', Contract '{contract_id_from_config}', Timeframes: {timeframes_for_target}")
-                active_targets_in_cycle +=1
+                if bar_timestamp.tzinfo is None:
+                    bar_timestamp = bar_timestamp.replace(tzinfo=timezone.utc)
+                elif bar_timestamp.tzinfo != timezone.utc:
+                    bar_timestamp = bar_timestamp.astimezone(timezone.utc)
+                logger.info(f"Successfully parsed bar_timestamp: {bar_timestamp}") # Log successful timestamp parsing
 
-                for tf_str in timeframes_for_target:
-                    # Create a specific config for this single run (analyzer, contract, one timeframe)
-                    single_run_target_config = {
-                        'analyzer_id': analyzer_id_from_config,
-                        'contract_id': contract_id_from_config,
-                        'timeframe': tf_str # Pass the single timeframe string
-                    }
-                    try:
-                        await run_analyzer_for_target(pool, single_run_target_config, strategy_func_to_use)
-                    except Exception as e:
-                        logger.error(f"ERROR during analysis for {analyzer_id_from_config}/{contract_id_from_config}/{tf_str}: {e}", exc_info=True)
-            
-            if active_targets_in_cycle == 0 and targets: # Targets were configured but all were invalid/skipped
-                 logger.warning("No valid targets were processed in this cycle despite configurations existing.")
-            elif not targets: # No targets configured at all
-                pass # Already logged "Analyzer will sleep"
+            except ValueError as e:
+                logger.error(f"Error parsing timestamp from notification '{bar_timestamp_str}': {e}")
+                return
 
-            logger.info(f"--- Analyzer Service: Cycle {cycle_count} complete. Sleeping for {loop_interval} seconds. ---")
-            await asyncio.sleep(loop_interval)
-    except asyncio.CancelledError:
-        logger.info("Main analyzer loop cancelled.")
+            logger.info(f"New OHLC bar notification: Contract={contract_id_notif}, Timestamp={bar_timestamp}, Timeframe={timeframe_str_notif} (Unit={timeframe_unit_notif}, Val={timeframe_value_notif})")
+
+            # Access analysis targets from the global config object
+            # The 'config' object is available globally in this module
+            analysis_config = config.settings.get('analysis', {})
+            configured_targets = analysis_config.get('targets', [])
+            found_matching_target = False
+
+            for target_config in configured_targets: # Renamed target_group to target_config for clarity
+                analyzer_id = target_config.get('analyzer_id')
+                config_contract_id = target_config.get('contract_id')
+                
+                if not analyzer_id or not config_contract_id:
+                    logger.warning(f"Skipping invalid target configuration in settings.yaml: {target_config}. Missing 'analyzer_id' or 'contract_id'.")
+                    continue
+
+                strategy_func_name = target_config.get('strategy', 'cus_cds_trend_finder')
+                strategy_func = STRATEGY_MAPPING.get(strategy_func_name) # MODIFIED: Use module-level STRATEGY_MAPPING
+
+                if not strategy_func: # Added check for strategy_func in notification handler context
+                    logger.error(f"Strategy '{strategy_func_name}' for analyzer '{analyzer_id}' not found in STRATEGY_MAPPING. Cannot process notification.")
+                    continue # Skip this target if strategy function is not found
+
+                if contract_id_notif == config_contract_id:
+                    for config_timeframe_str in target_config.get('timeframes', []):
+                        if timeframe_str_notif == config_timeframe_str:
+                            found_matching_target = True
+                            logger.info(f"  MATCH FOUND for notification: Analyzer='{analyzer_id}', Contract='{contract_id_notif}', Timeframe='{timeframe_str_notif}'. Will trigger analysis.")
+                            
+                            # --- Begin Analysis Logic for Matched Target ---
+                            if not strategy_func: # Should have been caught earlier, but double-check
+                                logger.error(f"    Strategy function for '{analyzer_id}' not found. Skipping analysis.")
+                                continue # Skip to next timeframe or target
+
+                            try:
+                                # Parse the config_timeframe_str (e.g., "1m") to unit/value for the DB query
+                                tf_unit_for_query, tf_value_for_query = parse_timeframe(config_timeframe_str)
+                            except ValueError as e:
+                                logger.error(f"    Error parsing configured timeframe '{config_timeframe_str}' for DB query: {e}. Skipping analysis for this timeframe.")
+                                continue
+
+                            logger.info(f"    Fetching ~{BAR_HISTORY_COUNT} bars for {contract_id_notif} [{config_timeframe_str}] ending at {bar_timestamp}")
+                            historical_bars_df = await fetch_ohlc_bars_for_analysis_window(
+                                pool=DB_POOL_MAIN_FOR_HANDLER, # MODIFIED: Use accessible main pool
+                                contract_id=contract_id_notif,
+                                timeframe_unit=tf_unit_for_query,
+                                timeframe_value=tf_value_for_query,
+                                end_timestamp=bar_timestamp, # Timestamp of the notified bar
+                                bar_count=BAR_HISTORY_COUNT
+                            )
+
+                            if historical_bars_df.empty:
+                                logger.info(f"    No historical bars found for {contract_id_notif} [{config_timeframe_str}] ending {bar_timestamp}. Min history {BAR_HISTORY_COUNT} might not be met. Skipping strategy execution.")
+                            elif len(historical_bars_df) < BAR_HISTORY_COUNT:
+                                logger.warning(f"    Fetched only {len(historical_bars_df)} bars for {contract_id_notif} [{config_timeframe_str}] (less than requested {BAR_HISTORY_COUNT}). Strategy might not perform optimally.")
+                                # Decide if you want to proceed or skip if not enough history. For now, proceed.
+
+                            # Ensure the notified bar is the last one in the DataFrame if present, or that history leads up to it.
+                            # The query for fetch_ohlc_bars_for_analysis_window includes bar_timestamp, so it should be the last one.
+
+                            generated_signals = strategy_func(
+                                historical_bars_df, 
+                                contract_id=contract_id_notif, 
+                                timeframe_str=config_timeframe_str
+                            )
+
+                            if not generated_signals:
+                                logger.info(f"    No signals generated by '{analyzer_id}' for {contract_id_notif} [{config_timeframe_str}] from {len(historical_bars_df)} bars.")
+                            else:
+                                logger.info(f"    Generated {len(generated_signals)} signals by '{analyzer_id}' for {contract_id_notif} [{config_timeframe_str}].")
+                                num_stored = await store_signals(
+                                    pool=DB_POOL_MAIN_FOR_HANDLER, 
+                                    analyzer_id=analyzer_id,
+                                    contract_id=contract_id_notif,
+                                    timeframe_unit=tf_unit_for_query,  # Parsed from config_timeframe_str
+                                    timeframe_value=tf_value_for_query, # Parsed from config_timeframe_str
+                                    signals=generated_signals
+                                )
+                                logger.info(f"    Stored {num_stored} signals in the database for {analyzer_id}/{contract_id_notif}/{config_timeframe_str}.")
+
+                            # Update watermark to the timestamp of the bar that triggered this notification
+                            await update_analyzer_watermark(DB_POOL_MAIN_FOR_HANDLER, analyzer_id, contract_id_notif, config_timeframe_str, bar_timestamp) # MODIFIED
+                            logger.info(f"    Updated watermark for {analyzer_id}/{contract_id_notif}/{config_timeframe_str} to {bar_timestamp}.")
+                            
+                            # --- End Analysis Logic for Matched Target ---
+                            break # Found matching timeframe for this target_config
+                
+                # If a match was found for this target_config, we don't necessarily break from the outer loop,
+                # as another analyzer_id (another item in configured_targets) might also be interested in the same bar.
+                # The found_matching_target flag is mostly for the final "No matching target found" log.
+                # However, the inner break for timeframes is correct.
+
+            if not found_matching_target:
+                logger.info(f"  No matching analysis target found in config for Contract='{contract_id_notif}', Timeframe='{timeframe_str_notif}'. Notification will be ignored for analysis.")
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to decode JSON payload from notification: {e}. Payload: {payload_str}")
     except Exception as e:
-        logger.critical(f"Critical error in main_analyzer_loop: {e}", exc_info=True)
+        logger.error(f"Error processing new bar notification: {e}", exc_info=True)
+
+async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
+    logger.info("Starting Analyzer Service event loop...")
+    await create_signals_table_if_not_exists(pool)
+
+    analysis_config = app_config.settings.get('analysis', {})
+    analysis_targets = analysis_config.get('targets', [])
+
+    if not analysis_targets:
+        logger.warning("No analysis targets configured (expected under 'analysis.targets' in settings.yaml). Analyzer service will be idle.")
+        # Keep running to listen for notifications if added dynamically, or just exit?
+        # For now, it will keep running and listening.
+
+    try:
+        async with pool.acquire() as conn:
+            await conn.add_listener('new_ohlc_bar_channel', handle_new_bar_notification)
+            logger.info("Listening for new OHLC bar notifications on 'new_ohlc_bar_channel'...")
+
+            # Keep the service alive to listen for notifications
+            # Polling logic (run_analyzer_for_target) can be run on a less frequent schedule as a fallback/sync
+            # or on startup to process backlog.
+            
+            # Initial run for all targets to process backlog before relying solely on notifications
+            logger.info("Performing initial analysis run for all configured targets to process backlog...")
+            initial_analysis_tasks = []
+            for target_group in analysis_targets:
+                analyzer_id = target_group['analyzer_id']
+                strategy_func_name = target_group.get('strategy', 'cus_cds_trend_finder')
+                strategy_func = STRATEGY_MAPPING.get(strategy_func_name) # MODIFIED: Use module-level STRATEGY_MAPPING
+
+                if not strategy_func:
+                    logger.error(f"Strategy '{strategy_func_name}' not found for analyzer '{analyzer_id}'. Skipping target group.")
+                    continue
+
+                for contract_config in target_group.get('contracts', []):
+                    contract_id = contract_config['contract_id']
+                    for tf_str in contract_config.get('timeframes', []):
+                        # Construct a target_config dict for run_analyzer_for_target
+                        single_target_run_config = {
+                            'analyzer_id': analyzer_id,
+                            'contract_id': contract_id,
+                            'timeframe': tf_str,
+                            # 'strategy': strategy_func_name # strategy_func is passed directly
+                        }
+                        task = run_analyzer_for_target(pool, single_target_run_config, strategy_func)
+                        initial_analysis_tasks.append(task)
+            
+            if initial_analysis_tasks:
+                await asyncio.gather(*initial_analysis_tasks)
+            logger.info("Initial backlog processing complete. Switching to notification-driven mode.")
+
+            while True:
+                # The listener runs in the background. This loop keeps the main coroutine alive.
+                # We could add a very infrequent polling cycle here if desired as a fallback.
+                await asyncio.sleep(3600) # Sleep for a long time, or use an Event
+                logger.debug("Analyzer service alive, listener active...") # Heartbeat log
+
+    except asyncio.CancelledError:
+        logger.info("Analyzer service loop cancelled.")
+    except Exception as e:
+        logger.error(f"Critical error in analyzer service loop: {e}", exc_info=True)
     finally:
-        logger.info("Main analyzer loop is ending.")
+        logger.info("Analyzer service loop finished.")
+
 
 async def shutdown_handler(): # This function might not be strictly needed if main_analyzer_loop handles its own cleanup
-    logger.info("Analyzer service shutting down (called via shutdown_handler)...")
-    # await close_db_pool() # Already handled by main_analyzer_loop's finally
-    logger.info("Shutdown complete (called via shutdown_handler).")
+    logger.info("AnalyzerService shutting down...")
+    # No explicit pool.close() here as it's managed by the main execution block that calls this
+    # If this service managed its own pool, it would close it here.
+    await asyncio.sleep(1) # Give time for any pending tasks if necessary
+    logger.info("AnalyzerService shutdown complete.")
 
 if __name__ == "__main__":
-    # Global 'config' instance is used here
-    
-    async def run_service_with_pool():
-        # Removed: nonlocal db_pool. db_pool will be local to this function.
-        local_db_pool = None # Use a distinct name for clarity if needed, or just db_pool
-        
-        log_cfg = config.get_logging_config()
-        if log_cfg:
-            logging.config.dictConfig(log_cfg) 
-            logger.info("Logging configured using settings.yaml.")
-        else:
-            # Fallback to basicConfig if no specific config is found or if dictConfig is not preferred initially
-            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            logger.info("Basic logging active (no valid logging section in settings.yaml or basicConfig preferred).")
+    # This setup is for running the service directly.
+    # It needs its own asyncpg.create_pool call.
 
-        db_settings = config.get_database_config()
-        if not db_settings:
-            logger.critical("Database configuration not found. Exiting.")
-            return
+    # --- Database Pool Management ---
+    db_pool_main: Optional[asyncpg.Pool] = None # This is local to the __main__ execution scope
 
-        password_env_var = db_settings.get('password_env_var')
-        actual_password = os.getenv(password_env_var) if password_env_var else None
+    async def init_db_pool_main():
+        global db_pool_main # This refers to the one in __main__ scope
+        global DB_POOL_MAIN_FOR_HANDLER # This refers to the module-level one
+        database_configs = config.settings['database']
+        active_db_key = database_configs.get('default_analysis_db', 'local_timescaledb') 
+        db_connection_details = database_configs.get(active_db_key)
+
+        if not db_connection_details:
+            logger.critical(f"Database configuration for '{active_db_key}' not found in settings.yaml.")
+            return None
+
+        # Resolve password from environment variable if specified
+        password = db_connection_details.get('password') # Direct password
+        password_env_var = db_connection_details.get('password_env_var')
+        if password_env_var:
+            env_password = os.getenv(password_env_var)
+            if env_password:
+                password = env_password
+            else:
+                logger.warning(f"Environment variable '{password_env_var}' for DB password not set. Trying direct password from config.")
         
-        db_password_to_use = actual_password
-        if not db_password_to_use and 'password' in db_settings: 
-            db_password_to_use = db_settings.get('password')
-            logger.info(f"Using direct password from config for DB user {db_settings.get('user')}")
-        elif not db_password_to_use:
-            logger.critical(f"Database password not found using env var '{password_env_var}' and not set directly in config. Exiting.")
-            return
+        if not password:
+            logger.critical(f"Database password for '{active_db_key}' could not be resolved (checked env var '{password_env_var}' and direct 'password' key).")
+            return None
 
         try:
-            local_db_pool = await asyncpg.create_pool(
-                user=db_settings['user'],
-                password=db_password_to_use,
-                database=db_settings['dbname'],
-                host=db_settings['host'],
-                port=db_settings['port'],
-                min_size=1,
-                max_size=10,
-                timeout=30.0,  # General connection timeout for acquiring from pool
-                command_timeout=60.0  # Default timeout for commands
+            db_pool_main = await asyncpg.create_pool(
+                user=db_connection_details.get('user'),
+                password=password, # Use resolved password
+                database=db_connection_details.get('dbname'),
+                host=db_connection_details.get('host'),
+                port=db_connection_details.get('port'),
+                min_size=db_connection_details.get('min_pool_size', 1),
+                max_size=db_connection_details.get('max_pool_size', 10)
             )
-            logger.info("Database connection pool created successfully for main run.")
+            DB_POOL_MAIN_FOR_HANDLER = db_pool_main # Assign to the module-level variable
+            logger.info(f"Successfully created database pool for AnalyzerService (main) using '{active_db_key}'. Min: {db_connection_details.get('min_pool_size', 1)}, Max: {db_connection_details.get('max_pool_size', 10)}")
+            return db_pool_main
+        except Exception as e:
+            logger.critical(f"Failed to create database pool for AnalyzerService (main) using '{active_db_key}': {e}", exc_info=True)
+            return None
 
-            # Ensure the table exists with the correct schema
-            await create_signals_table_if_not_exists(local_db_pool)
+    async def close_db_pool_main():
+        global db_pool_main
+        global DB_POOL_MAIN_FOR_HANDLER
+        if db_pool_main:
+            logger.info("Closing database pool for AnalyzerService (main)...")
+            await db_pool_main.close()
+            DB_POOL_MAIN_FOR_HANDLER = None # Clear the module-level reference
+            logger.info("Database pool for AnalyzerService (main) closed.")
 
-            await main_analyzer_loop(config, local_db_pool) 
-
-        except Exception as e: 
-            logger.critical(f"Critical error during service execution or pool creation: {e}", exc_info=True)
+    async def run_service_with_pool():
+        pool = await init_db_pool_main()
+        if not pool:
+            logger.error("Failed to initialize database pool. Analyzer service cannot start.")
+            return
+        
+        try:
+            await main_analyzer_loop(config, pool) # Pass config and the newly created pool
+        except asyncio.CancelledError:
+            logger.info("Analyzer service run_service_with_pool cancelled.")
         finally:
-            if local_db_pool:
-                logger.info("Closing database connection pool from main run_service_with_pool.")
-                await local_db_pool.close()
-    
+            await close_db_pool_main()
+
     try:
         asyncio.run(run_service_with_pool())
     except KeyboardInterrupt:
-        logger.info("Analyzer service interrupted by user (KeyboardInterrupt in main).")
-    except Exception as e: 
-        logger.critical(f"Unhandled exception in top-level asyncio.run: {e}", exc_info=True)
+        logger.info("AnalyzerService received KeyboardInterrupt. Shutting down...")
+    except Exception as e:
+        logger.error(f"Unhandled exception in AnalyzerService __main__: {e}", exc_info=True)
     finally:
-        logger.info("Analyzer service main execution block finished.")
-        # No explicit call to asyncio.run(shutdown_handler()) here anymore to avoid loop issues. 
+        # Ensure shutdown_handler is called if needed, or rely on close_db_pool_main
+        # asyncio.run(shutdown_handler()) # This would need its own loop management if it uses async features extensively
+        logger.info("AnalyzerService main execution finished.") 

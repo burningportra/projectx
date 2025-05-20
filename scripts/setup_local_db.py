@@ -119,6 +119,42 @@ def setup_tables(conn):
             else:
                 raise # Re-raise other errors
 
+        print("\n--- Creating Trigger Function for OHLC Bar Notifications ---")
+        notify_function_sql = """
+        CREATE OR REPLACE FUNCTION notify_new_ohlc_bar()
+        RETURNS TRIGGER AS $$
+        DECLARE
+          payload TEXT;
+        BEGIN
+          -- Construct a JSON payload with relevant information from the new OHLC bar
+          payload := json_build_object(
+            'table', TG_TABLE_NAME,
+            'action', TG_OP, -- INSERT, UPDATE, DELETE
+            'data', row_to_json(NEW) -- NEW contains the new row data for INSERT/UPDATE
+          )::TEXT;
+
+          -- Send the notification on the 'new_ohlc_bar_channel'
+          -- The payload is the JSON string created above
+          PERFORM pg_notify('new_ohlc_bar_channel', payload);
+
+          RETURN NEW; -- For an AFTER trigger, the return value is ignored, but it's good practice
+        END;
+        $$ LANGUAGE plpgsql;
+        """
+        execute_query(conn, notify_function_sql)
+        print("Trigger function 'notify_new_ohlc_bar' created or updated.")
+
+        print("\n--- Creating AFTER INSERT Trigger on ohlc_bars ---")
+        ohlc_trigger_sql = """
+        DROP TRIGGER IF EXISTS ohlc_bars_after_insert_trigger ON ohlc_bars;
+        CREATE TRIGGER ohlc_bars_after_insert_trigger
+        AFTER INSERT ON ohlc_bars
+        FOR EACH ROW
+        EXECUTE FUNCTION notify_new_ohlc_bar();
+        """
+        execute_query(conn, ohlc_trigger_sql)
+        print("Trigger 'ohlc_bars_after_insert_trigger' created on ohlc_bars table.")
+
         # --- Watermark Tables ---
         print("\n--- Creating analyzer_watermarks Table ---")
         analyzer_watermarks_schema = """
@@ -327,6 +363,42 @@ def setup_database():
                 print("'ohlc_bars' is already a hypertable.")
             else:
                 raise # Re-raise other errors
+
+        print("\n--- Creating Trigger Function for OHLC Bar Notifications ---")
+        notify_function_sql = """
+        CREATE OR REPLACE FUNCTION notify_new_ohlc_bar()
+        RETURNS TRIGGER AS $$
+        DECLARE
+          payload TEXT;
+        BEGIN
+          -- Construct a JSON payload with relevant information from the new OHLC bar
+          payload := json_build_object(
+            'table', TG_TABLE_NAME,
+            'action', TG_OP, -- INSERT, UPDATE, DELETE
+            'data', row_to_json(NEW) -- NEW contains the new row data for INSERT/UPDATE
+          )::TEXT;
+
+          -- Send the notification on the 'new_ohlc_bar_channel'
+          -- The payload is the JSON string created above
+          PERFORM pg_notify('new_ohlc_bar_channel', payload);
+
+          RETURN NEW; -- For an AFTER trigger, the return value is ignored, but it's good practice
+        END;
+        $$ LANGUAGE plpgsql;
+        """
+        execute_query(conn, notify_function_sql)
+        print("Trigger function 'notify_new_ohlc_bar' created or updated.")
+
+        print("\n--- Creating AFTER INSERT Trigger on ohlc_bars ---")
+        ohlc_trigger_sql = """
+        DROP TRIGGER IF EXISTS ohlc_bars_after_insert_trigger ON ohlc_bars;
+        CREATE TRIGGER ohlc_bars_after_insert_trigger
+        AFTER INSERT ON ohlc_bars
+        FOR EACH ROW
+        EXECUTE FUNCTION notify_new_ohlc_bar();
+        """
+        execute_query(conn, ohlc_trigger_sql)
+        print("Trigger 'ohlc_bars_after_insert_trigger' created on ohlc_bars table.")
 
         # --- Watermark Tables ---
         print("\n--- Creating analyzer_watermarks Table ---")
