@@ -117,7 +117,6 @@ export async function GET(request: NextRequest) {
       };
       
       return {
-        id: String(bar.id),
         contractId: bar.contractId,
         timestamp: bar.timestamp,
         open: bar.open,

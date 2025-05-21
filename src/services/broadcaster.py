@@ -17,6 +17,17 @@ sys.stderr.flush()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("OHLCBroadcaster")
 logger.info("Broadcaster.py: Logging configured.") # This uses the logger
+logger.setLevel(logging.ERROR) # Set level for OHLCBroadcaster to ERROR to silence INFO logs
+
+# --- Add File Handler ---
+log_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'logs', 'broadcaster.log')
+os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+file_handler = logging.FileHandler(log_file_path)
+file_handler.setLevel(logging.INFO) # Log INFO and above to file
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logging.getLogger().addHandler(file_handler) # Add to root logger to catch all
+logger.info(f"Broadcaster.py: Also logging to {log_file_path}") # Confirm file logging setup
+# --- End Add File Handler ---
 
 # --- Configuration ---
 def load_db_config():

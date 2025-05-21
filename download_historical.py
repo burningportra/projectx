@@ -91,7 +91,7 @@ async def download_historical_data(
     # Contract IDs to download - using the full qualified name format
     if contracts is None:
         contracts = [
-            "CON.F.US.MES.H25",  # Micro E-mini S&P 500 June 2025
+            "CON.F.US.MES.M25",  # Micro E-mini S&P 500 June 2025
         ]
     
     # Use default timeframes if not specified

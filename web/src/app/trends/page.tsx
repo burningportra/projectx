@@ -60,7 +60,7 @@ const TrendsPage: React.FC = () => {
 
   const [selectedContract, setSelectedContract] = useState<string>(availableContracts[0]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>(availableTimeframes[0]); // Default to 1m for testing live updates
-  const [ohlcLimit, setOhlcLimit] = useState<number>(200); // Initial historical bars
+  const ohlcLimit = 5000; // Set a large limit to fetch more bars, effectively "all" for most practical purposes
 
   const { data: ohlcApiResponse, error: ohlcError, isLoading: ohlcIsLoading } = useSWR(
     selectedContract && selectedTimeframe ? `/api/ohlc?contract=${selectedContract}&timeframe=${selectedTimeframe}&limit=${ohlcLimit}` : null,
@@ -277,7 +277,7 @@ const TrendsPage: React.FC = () => {
       console.log(`Closing WebSocket connection for ${selectedContract} ${selectedTimeframe}...`);
       ws.close();
     };
-  }, [seriesData, selectedContract, selectedTimeframe]); // Key dependencies
+  }, [selectedContract, selectedTimeframe]); // Key dependencies
 
   if (ohlcError || signalsError) return (
     <div className="p-4">
@@ -319,19 +319,6 @@ const TrendsPage: React.FC = () => {
               <option key={tf} value={tf}>{tf}</option>
             ))}
           </select>
-        </div>
-         <div>
-          <label htmlFor="ohlcLimit" className="block text-sm font-medium text-gray-700 mb-1">OHLC Bars:</label>
-          <input 
-            type="number" 
-            id="ohlcLimit" 
-            value={ohlcLimit}
-            onChange={(e) => setOhlcLimit(parseInt(e.target.value, 10) || 100)} // Default to 100 if parsing fails
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            min="50"
-            max="2000"
-            step="50"
-          />
         </div>
       </div>
 
