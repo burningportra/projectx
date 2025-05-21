@@ -54,7 +54,7 @@ model CoordinatorWatermark {
   lastProcessedSignalId BigInt? @map("last_processed_signal_id")
 
   @@map("coordinator_watermarks")
-}
+} 
 
 model DetectedSignal {
   signal_id         Int      @id @default(autoincrement())

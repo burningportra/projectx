@@ -117,14 +117,14 @@ export async function GET(request: NextRequest) {
       };
       
       return {
-        id: bar.id,
+        id: String(bar.id),
         contractId: bar.contractId,
         timestamp: bar.timestamp,
         open: bar.open,
         high: bar.high,
         low: bar.low,
         close: bar.close,
-        volume: bar.volume,
+        volume: bar.volume !== null && bar.volume !== undefined ? String(bar.volume) : null,
         timeframeUnit: bar.timeframeUnit,
         timeframeValue: bar.timeframeValue,
         // Add trend indicators from our lookup

@@ -11,12 +11,15 @@ import {
   CandlestickData,
   WhitespaceData,
   CandlestickSeries,
-  createSeriesMarkers
+  createSeriesMarkers,
+  Time, // Import Time type for series.update
 } from 'lightweight-charts';
 import useSWR from 'swr';
 
+const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:8765';
+
 const availableContracts = ['CON.F.US.MES.M25', 'CON.F.US.ES.M25', 'CON.F.US.NQ.M25'];
-const availableTimeframes = ['5m', '15m', '30m', '1h', '4h', '1d'];
+const availableTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d']; // Added 1m for live bar testing
 
 interface Signal {
   signal_id: number;
@@ -30,24 +33,34 @@ interface Signal {
   details: any;
 }
 
-interface OhlcData {
+interface OhlcDataForChart extends CandlestickData {
   time: UTCTimestamp;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
 }
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+// Helper to convert timeframe_unit (integer from backend) to char (e.g., 'm', 'h')
+const getTimeframeUnitChar = (timeframeUnit: number): string => {
+  switch (timeframeUnit) {
+    case 1: return 's'; // seconds
+    case 2: return 'm'; // minutes
+    case 3: return 'h'; // hours
+    case 4: return 'd'; // days
+    case 5: return 'w'; // weeks
+    // case 6: return 'M'; // months - uncomment if used
+    default: return '';
+  }
+};
 
 const TrendsPage: React.FC = () => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const [seriesData, setSeriesData] = useState<OhlcDataForChart[]>([]);
 
   const [selectedContract, setSelectedContract] = useState<string>(availableContracts[0]);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<string>(availableTimeframes[3]); // Default to 1h
-  const [ohlcLimit, setOhlcLimit] = useState<number>(500); // Number of OHLC bars to fetch
+  const [selectedTimeframe, setSelectedTimeframe] = useState<string>(availableTimeframes[0]); // Default to 1m for testing live updates
+  const [ohlcLimit, setOhlcLimit] = useState<number>(200); // Initial historical bars
 
   const { data: ohlcApiResponse, error: ohlcError, isLoading: ohlcIsLoading } = useSWR(
     selectedContract && selectedTimeframe ? `/api/ohlc?contract=${selectedContract}&timeframe=${selectedTimeframe}&limit=${ohlcLimit}` : null,
@@ -55,106 +68,216 @@ const TrendsPage: React.FC = () => {
   );
 
   const { data: signalsApiResponse, error: signalsError, isLoading: signalsIsLoading } = useSWR(
-    selectedContract && selectedTimeframe ? `/api/trend-starts?contract_id=${selectedContract}&timeframe=${selectedTimeframe}&limit=1000` : null, // Fetch a good number of signals
+    selectedContract && selectedTimeframe ? `/api/trend-starts?contract_id=${selectedContract}&timeframe=${selectedTimeframe}&limit=1000` : null, 
     fetcher
   );
 
-  const processChartData = useCallback(() => {
-    if (!chartRef.current || !candlestickSeriesRef.current || !ohlcApiResponse?.data || !signalsApiResponse?.data) {
+  // Initialize or update chart with historical data and markers
+  const initializeChartWithData = useCallback(() => {
+    if (!candlestickSeriesRef.current || !ohlcApiResponse?.data) {
       return;
     }
 
-    const ohlcData: OhlcData[] = ohlcApiResponse.data
+    const historicalOhlc: OhlcDataForChart[] = ohlcApiResponse.data
       .map((bar: any) => ({
         time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
-        open: bar.open,
-        high: bar.high,
-        low: bar.low,
-        close: bar.close,
+        open: parseFloat(bar.open),
+        high: parseFloat(bar.high),
+        low: parseFloat(bar.low),
+        close: parseFloat(bar.close),
       }))
-      .sort((a: OhlcData, b: OhlcData) => a.time - b.time); // Ensure ascending order for chart
-
-    candlestickSeriesRef.current.setData(ohlcData);
-
-    const signalMarkers: SeriesMarker<UTCTimestamp>[] = signalsApiResponse.data
-      .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
-      .map((signal: Signal) => ({
-        time: (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp,
-        position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
-        color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
-        shape: signal.signal_type === 'uptrend_start' ? 'arrowUp' : 'arrowDown',
-        text: signal.signal_type === 'uptrend_start' ? 'UT' : 'DT',
-        size: 1.5,
-      }));
+      .sort((a: OhlcDataForChart, b: OhlcDataForChart) => a.time - b.time);
     
-    if (candlestickSeriesRef.current && signalMarkers.length > 0) {
-      createSeriesMarkers(candlestickSeriesRef.current, signalMarkers);
+    setSeriesData(historicalOhlc); // Set initial data for WebSocket updates
+    candlestickSeriesRef.current.setData(historicalOhlc);
+
+    if (signalsApiResponse?.data) {
+      const ohlcDataMap = new Map<UTCTimestamp, OhlcDataForChart>();
+      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar));
+
+      const signalMarkers: SeriesMarker<UTCTimestamp>[] = signalsApiResponse.data
+        .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
+        .map((signal: Signal) => {
+          const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
+          const correspondingBar = ohlcDataMap.get(signalTime);
+          let markerText = signal.signal_type === 'uptrend_start' ? 'UT' : 'DT';
+
+          if (correspondingBar) {
+            if (signal.signal_type === 'uptrend_start') {
+              markerText = correspondingBar.low.toFixed(2);
+            } else if (signal.signal_type === 'downtrend_start') {
+              markerText = correspondingBar.high.toFixed(2);
+            }
+          }
+          return {
+            time: signalTime,
+            position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
+            color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
+            shape: signal.signal_type === 'uptrend_start' ? 'arrowUp' : 'arrowDown',
+            text: markerText,
+            size: 2,
+          };
+        });
+      
+      if (candlestickSeriesRef.current && signalMarkers.length > 0) {
+        // candlestickSeriesRef.current.setMarkers(signalMarkers); // Use setMarkers for replacing all markers
+        createSeriesMarkers(candlestickSeriesRef.current, signalMarkers); // Or add if not replacing all
+      }
     }
-
-    chartRef.current.timeScale().fitContent();
-
+    chartRef.current?.timeScale().fitContent();
   }, [ohlcApiResponse, signalsApiResponse, selectedContract, selectedTimeframe]);
 
-
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    chartRef.current = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 600, // Adjust as needed
-      layout: {
-        background: { color: '#ffffff' },
-        textColor: '#333',
-      },
-      grid: {
-        vertLines: {
-          color: 'rgba(197, 203, 206, 0.2)',
+    if (chartContainerRef.current && !chartRef.current) {
+      chartRef.current = createChart(chartContainerRef.current, {
+        width: chartContainerRef.current.clientWidth,
+        height: 600,
+        layout: {
+          background: { color: '#1e1e1e' }, // Dark mode background
+          textColor: '#d1d4dc', // Light text for dark mode
         },
-        horzLines: {
-          color: 'rgba(197, 203, 206, 0.2)',
+        grid: {
+          vertLines: { color: 'rgba(70, 70, 70, 0.5)' },
+          horzLines: { color: 'rgba(70, 70, 70, 0.5)' },
         },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-      },
-      rightPriceScale: {
-        borderColor: 'rgba(197, 203, 206, 0.8)',
-      },
-      timeScale: {
-        borderColor: 'rgba(197, 203, 206, 0.8)',
-        timeVisible: true,
-        secondsVisible: selectedTimeframe.endsWith('m') || selectedTimeframe.endsWith('s'), // Show seconds for minute/second timeframes
-      },
-    });
+        crosshair: { mode: CrosshairMode.Normal },
+        rightPriceScale: { borderColor: 'rgba(197, 203, 206, 0.4)' },
+        timeScale: {
+          borderColor: 'rgba(197, 203, 206, 0.4)',
+          timeVisible: true,
+          secondsVisible: selectedTimeframe.endsWith('m') || selectedTimeframe.endsWith('s'),
+        },
+      });
 
-    candlestickSeriesRef.current = chartRef.current.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-    });
+      // Ensure the chart is created and candlestick series is added correctly
+      if (chartRef.current) {
+        candlestickSeriesRef.current = chartRef.current.addSeries(CandlestickSeries, {
+          upColor: '#089981', // Green for up candles
+          downColor: '#F23645', // Red for down candles
+          borderVisible: false,
+          wickUpColor: '#089981',
+          wickDownColor: '#F23645',
+        });
+      }
+    }
 
     const handleResize = () => {
       if (chartRef.current && chartContainerRef.current) {
         chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
       }
     };
-
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-      }
+      // No need to remove chartRef.current here if it's meant to persist across selections
+      // It will be cleaned up if the component unmounts entirely
     };
-  }, [selectedTimeframe]); // Recreate chart if timeframe changes to adjust timeScale visibility
+  }, []); // Create chart once
 
   useEffect(() => {
-    processChartData();
-  }, [processChartData]);
+    if (candlestickSeriesRef.current && chartRef.current) {
+        // Update timescale seconds visibility when timeframe changes
+        chartRef.current.applyOptions({
+            timeScale: {
+                secondsVisible: selectedTimeframe.endsWith('m') || selectedTimeframe.endsWith('s'),
+            }
+        });
+        initializeChartWithData(); // Reload data when contract/timeframe changes
+    }
+  }, [selectedContract, selectedTimeframe, ohlcApiResponse, signalsApiResponse, initializeChartWithData]);
+
+
+  // EFFECT FOR WEBSOCKET CONNECTION AND LIVE DATA
+  useEffect(() => {
+    if (!candlestickSeriesRef.current || seriesData.length === 0) { // Wait for initial data
+      return;
+    }
+
+    console.log(`Attempting to connect to WebSocket: ${WEBSOCKET_URL} for ${selectedContract} ${selectedTimeframe}`);
+    const ws = new WebSocket(WEBSOCKET_URL);
+    const series = candlestickSeriesRef.current;
+
+    ws.onopen = () => {
+      console.log(`WebSocket connection established for ${selectedContract} ${selectedTimeframe}`);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data as string);
+        // console.log('WS Message:', message);
+
+        if (message.type === 'ohlc' && message.contract_id === selectedContract) {
+          const incomingTimeframe = `${message.timeframe_value}${getTimeframeUnitChar(message.timeframe_unit)}`;
+          if (incomingTimeframe === selectedTimeframe) {
+            const barData: OhlcDataForChart = {
+              time: (new Date(message.timestamp).getTime() / 1000) as UTCTimestamp,
+              open: Number(message.open),
+              high: Number(message.high),
+              low: Number(message.low),
+              close: Number(message.close),
+            };
+            series.update(barData);
+            // Update our local seriesData state as well
+            setSeriesData(currentData => {
+              const existingBarIndex = currentData.findIndex(d => d.time === barData.time);
+              if (existingBarIndex !== -1) {
+                const newData = [...currentData];
+                newData[existingBarIndex] = barData;
+                return newData;
+              } else {
+                // Add new bar and keep sorted by time
+                const newData = [...currentData, barData].sort((a,b) => a.time - b.time);
+                return newData;
+              }
+            });
+          }
+        } else if (message.type === 'tick' && message.contract_id === selectedContract) {
+          // Tick applies to the currently forming bar of the *selectedTimeframe*
+          setSeriesData(currentData => {
+            if (currentData.length === 0) return currentData;
+            
+            const lastBar = currentData[currentData.length - 1];
+            const tickPrice = Number(message.price);
+            const tickTime = (new Date(message.timestamp).getTime() / 1000) as UTCTimestamp;
+
+            // TODO: More robust logic to check if tick belongs to the current selectedTimeframe's forming bar
+            // For now, assume any tick updates the last bar of the selected timeframe if it's very recent.
+            // This might need adjustment based on how frequently your 'ohlc' type messages arrive for the selectedTimeframe.
+            // A common approach is to check if tickTime is >= lastBar.time and < next bar's expected time for selectedTimeframe.
+
+            const updatedLastBar: OhlcDataForChart = {
+              ...lastBar,
+              high: Math.max(lastBar.high, tickPrice),
+              low: Math.min(lastBar.low, tickPrice),
+              close: tickPrice,
+            };
+            
+            series.update(updatedLastBar);
+            
+            const newData = [...currentData];
+            newData[newData.length - 1] = updatedLastBar;
+            return newData;
+          });
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message or updating chart:', error, event.data);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error(`WebSocket error for ${selectedContract} ${selectedTimeframe}:`, error);
+    };
+
+    ws.onclose = (event) => {
+      console.log(`WebSocket connection closed for ${selectedContract} ${selectedTimeframe}:`, event.reason, `Code: ${event.code}`);
+    };
+
+    return () => {
+      console.log(`Closing WebSocket connection for ${selectedContract} ${selectedTimeframe}...`);
+      ws.close();
+    };
+  }, [seriesData, selectedContract, selectedTimeframe]); // Key dependencies
 
   if (ohlcError || signalsError) return (
     <div className="p-4">
@@ -239,21 +362,30 @@ const TrendsPage: React.FC = () => {
                 {signalsApiResponse.data
                   .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
                   .sort((a: Signal, b: Signal) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) // Sort by most recent first
-                  .map((signal: Signal) => (
-                  <tr key={signal.signal_id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(signal.timestamp).toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${signal.signal_type === 'uptrend_start' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {signal.signal_type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{signal.signal_price?.toFixed(2) ?? 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{signal.details?.rule_type || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      Conf: B{signal.details?.confirmed_signal_bar_index}, Trig: B{signal.details?.triggering_bar_index}
-                    </td>
-                  </tr>
-                ))}
+                  .map((signal: Signal) => {
+                    const d = new Date(signal.timestamp);
+                    const formattedTimestamp = `${d.getUTCFullYear()}-` +
+                                             `${String(d.getUTCMonth() + 1).padStart(2, '0')}-` +
+                                             `${String(d.getUTCDate()).padStart(2, '0')} ` +
+                                             `${String(d.getUTCHours()).padStart(2, '0')}:` +
+                                             `${String(d.getUTCMinutes()).padStart(2, '0')}:` +
+                                             `${String(d.getUTCSeconds()).padStart(2, '0')} UTC`;
+                    return (
+                      <tr key={signal.signal_id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formattedTimestamp}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${signal.signal_type === 'uptrend_start' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {signal.signal_type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{signal.signal_price?.toFixed(2) ?? 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{signal.details?.rule_type || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          Conf: B{signal.details?.confirmed_signal_bar_index}, Trig: B{signal.details?.triggering_bar_index}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>

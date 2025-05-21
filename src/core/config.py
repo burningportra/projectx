@@ -197,7 +197,8 @@ class Config:
     
     def get_timeframes(self) -> list:
         """Get the list of timeframes to track."""
-        return self.settings.get("timeframes", ["5m", "15m", "1h", "4h", "1d"])
+        # Correctly access nested timeframes under 'trading'
+        return self.settings.get("trading", {}).get("timeframes", ["5m", "15m", "1h", "4h", "1d"])
 
     def get_analysis_config(self) -> Optional[Dict[str, Any]]:
         """Returns the 'analysis' section of the config."""

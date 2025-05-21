@@ -434,31 +434,24 @@ async def handle_new_bar_notification(connection, pid, channel, payload_str):
     logger.info(f"Received notification on channel '{channel}' with PID {pid}. Raw payload string: {payload_str[:500]}...") # Log raw payload string (truncated)
     try:
         payload = json.loads(payload_str)
-        logger.info(f"Successfully parsed JSON payload: {payload}") # Log parsed payload
+        logger.info(f"Successfully parsed JSON payload: {payload}")
 
-        # MODIFIED: Check if action is INSERT and table name starts with _hyper_ (Timescale chunk) 
-        # or ideally, if the trigger passed a specific identifier for the ohlc_bars table.
-        # For now, we assume notifications for ohlc_bars will come from chunk tables.
-        table_name_from_payload = payload.get('table', '')
-        is_ohlc_insert = payload.get('action') == 'INSERT' and table_name_from_payload.startswith('_hyper_')
-        # A more robust trigger would add a field like 'source_table': 'ohlc_bars' to the payload.
-        logger.info(f"Checking condition for processing: action='{payload.get('action')}', table='{table_name_from_payload}'. Is OHLC insert? {is_ohlc_insert}")
+        # Determine if this is an OHLC bar notification we should process
+        is_ohlc_notification_from_ingester = payload.get('type') == 'ohlc'
+        logger.info(f"Checking notification type: '{payload.get('type')}'. Is OHLC from Ingester? {is_ohlc_notification_from_ingester}")
 
-        if is_ohlc_insert:
-            bar_data = payload.get('data')
-            logger.info(f"Extracted bar_data from payload: {bar_data}") # Log extracted bar_data
-            if not bar_data:
-                logger.warning("Notification for ohlc_bars INSERT missing data.")
-                return
+        if is_ohlc_notification_from_ingester:
+            # Extract data directly from the payload sent by live_ingester.py
+            contract_id_notif = payload.get('contract_id')
+            bar_timestamp_str = payload.get('timestamp') 
+            timeframe_unit_notif = payload.get('timeframe_unit') # Integer
+            timeframe_value_notif = payload.get('timeframe_value') # Integer
+            
+            logger.info(f"Extracted OHLC data: contract='{contract_id_notif}', ts_str='{bar_timestamp_str}', tf_unit='{timeframe_unit_notif}', tf_val='{timeframe_value_notif}'")
 
-            contract_id_notif = bar_data.get('contract_id')
-            bar_timestamp_str = bar_data.get('timestamp') 
-            timeframe_unit_notif = bar_data.get('timeframe_unit')
-            timeframe_value_notif = bar_data.get('timeframe_value')
-            logger.info(f"Extracted fields: contract_id='{contract_id_notif}', ts_str='{bar_timestamp_str}', tf_unit='{timeframe_unit_notif}', tf_val='{timeframe_value_notif}'") # Log extracted fields
-
-            if not all([contract_id_notif, bar_timestamp_str, timeframe_unit_notif is not None, timeframe_value_notif is not None]):
-                logger.warning(f"Notification missing essential data fields after extraction. Payload data: {bar_data}")
+            if not all([contract_id_notif, bar_timestamp_str, 
+                        timeframe_unit_notif is not None, timeframe_value_notif is not None]):
+                logger.warning(f"Notification missing essential data fields after extraction. Payload data: {payload}")
                 return
             
             try:
@@ -599,8 +592,8 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
 
     try:
         async with pool.acquire() as conn:
-            await conn.add_listener('new_ohlc_bar_channel', handle_new_bar_notification)
-            logger.info("Listening for new OHLC bar notifications on 'new_ohlc_bar_channel'...")
+            await conn.add_listener('ohlc_update', handle_new_bar_notification)
+            logger.info("Listening for new OHLC bar notifications on 'ohlc_update'...")
 
             # Keep the service alive to listen for notifications
             # Polling logic (run_analyzer_for_target) can be run on a less frequent schedule as a fallback/sync
@@ -631,11 +624,11 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
                     # Construct a single_target_run_config dict for run_analyzer_for_target
                     # This structure is what run_analyzer_for_target expects
                     single_target_run_config_for_backlog = {
-                        'analyzer_id': analyzer_id,
-                        'contract_id': contract_id,
-                        'timeframe': tf_str,
-                        # 'strategy': strategy_func_name # strategy_func is passed directly
-                    }
+                            'analyzer_id': analyzer_id,
+                            'contract_id': contract_id,
+                            'timeframe': tf_str,
+                            # 'strategy': strategy_func_name # strategy_func is passed directly
+                        }
                     logger.info(f"Queueing backlog analysis for: {analyzer_id} - {contract_id} [{tf_str}]")
                     task = run_analyzer_for_target(pool, single_target_run_config_for_backlog, strategy_func)
                     initial_analysis_tasks.append(task)

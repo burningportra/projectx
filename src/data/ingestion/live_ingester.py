@@ -12,6 +12,7 @@ import psycopg2
 from psycopg2 import sql
 import threading
 from functools import partial # For callbacks
+import json # Added for NOTIFY payload
 
 # --- Constants ---
 SCRIPT_NAME = "LiveIngester"
@@ -202,7 +203,7 @@ def log_last_known_bar_timestamp(contract_id, timeframe_seconds):
         logger.error(f"Unexpected error querying last bar for {contract_id} / {timeframe_seconds}s: {e}")
 
 def insert_ohlc_bar(contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_value):
-    """Inserts an OHLC bar into the database."""
+    """Inserts an OHLC bar into the database and sends a NOTIFY signal."""
     conn = get_db_connection()
     if not conn:
         logger.error("No database connection available for inserting OHLC bar.")
@@ -212,24 +213,87 @@ def insert_ohlc_bar(contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_va
     if ts.tzinfo is None:
         ts = ts.replace(tzinfo=datetime.timezone.utc)
 
-    query = sql.SQL("""
+    insert_query = sql.SQL("""
         INSERT INTO ohlc_bars (contract_id, timestamp, open, high, low, close, volume, timeframe_unit, timeframe_value)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING; 
-    """) # DO NOTHING to avoid errors if bar already exists (e.g. due to restart)
+        ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING;
+    """)
     
+    row_inserted = False # Initialize
     try:
         with conn.cursor() as cur:
-            cur.execute(query, (contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_value))
-        conn.commit()
-        logger.info(f"Inserted OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit}) O:{o} H:{h} L:{l} C:{c} V:{v}")
+            cur.execute(insert_query, (contract_id, ts, float(o), float(h), float(l), float(c), int(v), timeframe_unit, timeframe_value))
+            row_inserted = cur.rowcount > 0
+
+            if row_inserted:
+                logger.info(f"Inserted OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit}) O:{o} H:{h} L:{l} C:{c} V:{v}")
+            else:
+                logger.info(f"OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit}) likely already existed or no update needed based on ON CONFLICT.")
+
+            # Always prepare and send notification if the bar data is complete and valid
+            # The INSERT ON CONFLICT ensures the bar is in the DB (either new or existing)
+            logger.info(f"Attempting to send NOTIFY for completed bar: {contract_id} at {ts}")
+            notify_payload_dict = {
+                "type": "ohlc", 
+                "contract_id": contract_id,
+                "timestamp": ts.isoformat(),
+                "open": float(o),
+                "high": float(h),
+                "low": float(l),
+                "close": float(c),
+                "volume": int(v),
+                "timeframe_unit": timeframe_unit,
+                "timeframe_value": timeframe_value
+            }
+            notify_payload = json.dumps(notify_payload_dict)
+            notify_query = sql.SQL("SELECT pg_notify('ohlc_update', %s);")
+            cur.execute(notify_query, (notify_payload,))
+            logger.info(f"Executed NOTIFY ohlc_update for {contract_id} at {ts}")
+
+        conn.commit() 
+        logger.info(f"DB transaction committed for OHLC bar and NOTIFY for {contract_id} at {ts}. Row inserted: {row_inserted}")
+
     except psycopg2.Error as e:
-        logger.error(f"Error inserting OHLC bar: {e}")
-        conn.rollback() # Rollback on error
+        logger.error(f"Error during OHLC bar DB operation: {e}")
+        if conn: conn.rollback() # Rollback on error
     except Exception as e:
-        logger.error(f"Unexpected error inserting OHLC bar: {e}")
+        logger.error(f"Unexpected error during OHLC bar DB operation: {e}")
         if conn: conn.rollback()
 
+def send_tick_notification(contract_id_from_stream, timestamp_dt, price_decimal, volume, message_type):
+    """Sends a real-time tick notification via PostgreSQL pg_notify."""
+    conn = get_db_connection()
+    if not conn:
+        logger.error("No database connection available for sending tick notification.")
+        return
+
+    try:
+        payload_dict = {
+            "type": "tick", # To differentiate from OHLC bar messages
+            "contract_id": contract_id_from_stream,
+            "timestamp": timestamp_dt.isoformat(),
+            "price": float(price_decimal),
+            "tick_type": message_type # 'quote' or 'trade'
+        }
+        if message_type == "trade":
+            payload_dict["volume"] = float(volume) # Volume is only for trades
+
+        notify_payload = json.dumps(payload_dict)
+        
+        with conn.cursor() as cur:
+            # Use the new channel 'tick_data_channel'
+            notify_query = sql.SQL("SELECT pg_notify('tick_data_channel', %s);")
+            cur.execute(notify_query, (notify_payload,))
+            conn.commit() 
+            # Minimal logging for tick notifications to avoid flooding, maybe DEBUG level
+            # logger.debug(f"Sent NOTIFY on 'tick_data_channel' for {contract_id_from_stream} at {timestamp_dt}")
+
+    except psycopg2.Error as e:
+        logger.error(f"Error sending tick notification: {e}")
+        if conn: conn.rollback()
+    except Exception as e:
+        logger.error(f"Unexpected error sending tick notification: {e}")
+        if conn: conn.rollback()
 
 # --- OHLC Aggregator ---
 class OHLCAggregator:
@@ -472,6 +536,9 @@ def process_single_data_item(data_item, contract_id_from_stream, message_type):
     except decimal.InvalidOperation:
         logger.error(f"Invalid price format: {price} for {contract_id_from_stream}. Data: {data_item}")
         return
+
+    # Send raw tick notification before passing to aggregators
+    send_tick_notification(contract_id_from_stream, timestamp_dt, price_decimal, volume, message_type)
 
     # Pass to aggregators
     for contract_config in CONFIG.get('live_contracts', []):

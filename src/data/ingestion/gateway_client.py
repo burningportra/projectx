@@ -298,24 +298,41 @@ class GatewayClient:
                 response_data = await response.json()
                 
                 if not response.ok:
-                    error_msg = response_data.get('errorMessage', 'Unknown error')
-                    logger.error(f"API request failed: {error_msg}")
+                    # Try to get error message, otherwise use a generic one or the response text
+                    error_detail = "Unknown error"
+                    try:
+                        # Prefer errorMessage if available and not null
+                        api_err_msg = response_data.get('errorMessage')
+                        if api_err_msg is not None:
+                            error_detail = api_err_msg
+                        elif response_data: # If errorMessage is null but we have other data
+                             error_detail = f"Status: {response.status}, Response: {str(response_data)[:200]}" # Log part of response
+                        else: # Fallback if response_data is also empty or not parsable
+                            error_detail = await response.text()
+                            error_detail = f"Status: {response.status}, Response: {error_detail[:200]}"
+
+                    except Exception: # Fallback if response_data parsing failed for error
+                        pass # error_detail remains "Unknown error" or previous value
+                        
+                    logger.error(f"API request failed: {error_detail}")
                     logger.debug(f"Request data: {data}")
                     logger.debug(f"Response status: {response.status}")
-                    logger.debug(f"Response data: {response_data}")
+                    logger.debug(f"Full Response data: {response_data}")
                     raise ApiError(
-                        f"Failed to retrieve bars: {error_msg}",
+                        f"Failed to retrieve bars: {error_detail}",
                         status_code=response.status,
                         response=response_data
                     )
                     
                 if not response_data.get("success", False):
-                    error_msg = response_data.get('errorMessage', 'Unknown error')
-                    logger.error(f"API returned error: {error_msg}")
+                    error_msg_from_api = response_data.get('errorMessage')
+                    actual_error_message = error_msg_from_api if error_msg_from_api is not None else f"API success=false, null/no errorMessage. Full response: {str(response_data)[:500]}"
+                    
+                    logger.error(f"API returned error: {actual_error_message}")
                     logger.debug(f"Request data: {data}")
-                    logger.debug(f"Response data: {response_data}")
+                    logger.debug(f"Full Response data: {response_data}")
                     raise ApiError(
-                        f"API returned error: {error_msg}",
+                        f"API returned error: {actual_error_message}",
                         response=response_data
                     )
                     
