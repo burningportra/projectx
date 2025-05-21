@@ -18,3 +18,4 @@ web/src/generated/prisma/edge.js
 .DS_Store
 .DS_Store
 *.pyc
+logs/broadcaster.log
