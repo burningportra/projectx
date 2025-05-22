@@ -1,0 +1,712 @@
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=0, Index=1, Time=2025-03-17 00:00, O=5679.75, H=5759.75, L=5651.25, C=5732.25
+TREND_FINDER_DEBUG_ENTRY: k=0, skipping bar 1
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=1, Index=2, Time=2025-03-18 00:00, O=5732.0, H=5738.0, L=5651.0, C=5669.5
+TREND_FINDER_DEBUG_ENTRY: k=1, prev_bar Index=1, Time=2025-03-17 00:00, O=5679.75, H=5759.75, L=5651.25, C=5732.25
+TREND_FINDER_DEBUG_ENTRY: k=1, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=1, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=1, Not in containment. Checking PDS/PUS formation on prev_bar 1 by current_bar 2.
+TREND_FINDER_DEBUG_ENTRY: k=1, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=1, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=1, PDS formation allowed = True. Last trend type: None, Last trend bar: None, Prev bar index: 1
+TREND_FINDER_DEBUG_ENTRY: k=1, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=1, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=2, Index=3, Time=2025-03-19 00:00, O=5669.75, H=5770.5, L=5657.5, C=5729.75
+TREND_FINDER_DEBUG_ENTRY: k=2, prev_bar Index=2, Time=2025-03-18 00:00, O=5732.0, H=5738.0, L=5651.0, C=5669.5
+TREND_FINDER_DEBUG_ENTRY: k=2, Not in containment. PDS Peak Bar Index: 1, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=2, Chosen candidate for containment: Bar 1, Type: PDS_PEAK. Current bar H:5770.5, L:5657.5
+TREND_FINDER_DEBUG_ENTRY: k=2, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 1
+TREND_FINDER_DEBUG_ENTRY: k=2, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=2, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=2, CDS Rule B met
+TREND_FINDER_DEBUG_ENTRY: k=2, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=2, Not in containment. Checking PDS/PUS formation on prev_bar 2 by current_bar 3.
+TREND_FINDER_DEBUG_ENTRY: k=2, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=2, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=2, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=2, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=2, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 1, Prev bar index: 2
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=3, Index=4, Time=2025-03-20 00:00, O=5733.25, H=5765.25, L=5682.5, C=5716.25
+TREND_FINDER_DEBUG_ENTRY: k=3, prev_bar Index=3, Time=2025-03-19 00:00, O=5669.75, H=5770.5, L=5657.5, C=5729.75
+TREND_FINDER_DEBUG_ENTRY: k=3, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 2
+TREND_FINDER_DEBUG_ENTRY: k=3, Chosen candidate for containment: Bar 2, Type: PUS_LOW. Current bar H:5765.25, L:5682.5
+TREND_FINDER_DEBUG_ENTRY: k=3, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 2
+TREND_FINDER_DEBUG_ENTRY: k=3, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=3, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=3, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=3, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=3, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=3, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=3, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=3, Not in containment. Checking PDS/PUS formation on prev_bar 3 by current_bar 4.
+TREND_FINDER_DEBUG_ENTRY: k=3, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=3, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=3, PDS formation allowed = True. Last trend type: downtrend, Last trend bar: 1, Prev bar index: 3
+TREND_FINDER_DEBUG_ENTRY: k=3, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=3, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=3, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 1, Prev bar index: 3
+TREND_FINDER_DEBUG_ENTRY: k=3, Checking PUS invalidation. PUS candidate bar 2. Current H=5765.25, PUS H=5738.0, Current Idx=4, PUS Idx=2
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=4, Index=5, Time=2025-03-21 00:00, O=5715.75, H=5723.75, L=5651.25, C=5720.0
+TREND_FINDER_DEBUG_ENTRY: k=4, prev_bar Index=4, Time=2025-03-20 00:00, O=5733.25, H=5765.25, L=5682.5, C=5716.25
+TREND_FINDER_DEBUG_ENTRY: k=4, Not in containment. PDS Peak Bar Index: 3, PUS Low Bar Index: 2
+TREND_FINDER_DEBUG_ENTRY: k=4, Chosen candidate for containment: Bar 3, Type: PDS_PEAK. Current bar H:5723.75, L:5651.25
+TREND_FINDER_DEBUG_ENTRY: k=4, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 2
+TREND_FINDER_DEBUG_ENTRY: k=4, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=4, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=4, ref36_pds_context_for_check is Bar 3
+TREND_FINDER_DEBUG_ENTRY: k=4, ref36_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=4, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=4, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=4, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 3
+TREND_FINDER_DEBUG_ENTRY: k=4, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=4, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=4, After CUS/CDS checks: can_confirm_cus=True, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=4, Not in containment. Checking PDS/PUS formation on prev_bar 4 by current_bar 5.
+TREND_FINDER_DEBUG_ENTRY: k=4, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=4, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=4, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 2, Prev bar index: 4
+TREND_FINDER_DEBUG_ENTRY: k=4, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=4, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=5, Index=6, Time=2025-03-24 00:00, O=5740.0, H=5825.5, L=5739.75, C=5813.0
+TREND_FINDER_DEBUG_ENTRY: k=5, prev_bar Index=5, Time=2025-03-21 00:00, O=5715.75, H=5723.75, L=5651.25, C=5720.0
+TREND_FINDER_DEBUG_ENTRY: k=5, Not in containment. PDS Peak Bar Index: 4, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=5, Chosen candidate for containment: Bar 4, Type: PDS_PEAK. Current bar H:5825.5, L:5739.75
+TREND_FINDER_DEBUG_ENTRY: k=5, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 4
+TREND_FINDER_DEBUG_ENTRY: k=5, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=5, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=5, CDS Rule B met
+TREND_FINDER_DEBUG_ENTRY: k=5, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=5, Not in containment. Checking PDS/PUS formation on prev_bar 5 by current_bar 6.
+TREND_FINDER_DEBUG_ENTRY: k=5, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=5, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=5, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=5, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=5, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 4, Prev bar index: 5
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=6, Index=7, Time=2025-03-25 00:00, O=5813.25, H=5837.25, L=5801.5, C=5831.75
+TREND_FINDER_DEBUG_ENTRY: k=6, prev_bar Index=6, Time=2025-03-24 00:00, O=5740.0, H=5825.5, L=5739.75, C=5813.0
+TREND_FINDER_DEBUG_ENTRY: k=6, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 5
+TREND_FINDER_DEBUG_ENTRY: k=6, Chosen candidate for containment: Bar 5, Type: PUS_LOW. Current bar H:5837.25, L:5801.5
+TREND_FINDER_DEBUG_ENTRY: k=6, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 5
+TREND_FINDER_DEBUG_ENTRY: k=6, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=6, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=6, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=6, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=6, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=6, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=6, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=6, Not in containment. Checking PDS/PUS formation on prev_bar 6 by current_bar 7.
+TREND_FINDER_DEBUG_ENTRY: k=6, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=6, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=6, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=6, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=6, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 4, Prev bar index: 6
+TREND_FINDER_DEBUG_ENTRY: k=6, Checking PUS invalidation. PUS candidate bar 5. Current H=5837.25, PUS H=5723.75, Current Idx=7, PUS Idx=5
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=7, Index=8, Time=2025-03-26 00:00, O=5831.0, H=5836.5, L=5743.0, C=5754.75
+TREND_FINDER_DEBUG_ENTRY: k=7, prev_bar Index=7, Time=2025-03-25 00:00, O=5813.25, H=5837.25, L=5801.5, C=5831.75
+TREND_FINDER_DEBUG_ENTRY: k=7, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 5
+TREND_FINDER_DEBUG_ENTRY: k=7, Chosen candidate for containment: Bar 5, Type: PUS_LOW. Current bar H:5836.5, L:5743.0
+TREND_FINDER_DEBUG_ENTRY: k=7, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 5
+TREND_FINDER_DEBUG_ENTRY: k=7, sdb_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=7, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=7, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=7, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=7, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=7, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=7, After CUS/CDS checks: can_confirm_cus=True, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=7, Not in containment. Checking PDS/PUS formation on prev_bar 7 by current_bar 8.
+TREND_FINDER_DEBUG_ENTRY: k=7, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=7, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=7, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 5, Prev bar index: 7
+TREND_FINDER_DEBUG_ENTRY: k=7, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=7, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=8, Index=9, Time=2025-03-27 00:00, O=5738.25, H=5779.75, L=5720.0, C=5741.75
+TREND_FINDER_DEBUG_ENTRY: k=8, prev_bar Index=8, Time=2025-03-26 00:00, O=5831.0, H=5836.5, L=5743.0, C=5754.75
+TREND_FINDER_DEBUG_ENTRY: k=8, Not in containment. PDS Peak Bar Index: 7, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=8, Chosen candidate for containment: Bar 7, Type: PDS_PEAK. Current bar H:5779.75, L:5720.0
+TREND_FINDER_DEBUG_ENTRY: k=8, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 7
+TREND_FINDER_DEBUG_ENTRY: k=8, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=8, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=8, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=8, Not in containment. Checking PDS/PUS formation on prev_bar 8 by current_bar 9.
+TREND_FINDER_DEBUG_ENTRY: k=8, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=8, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=8, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 5, Prev bar index: 8
+TREND_FINDER_DEBUG_ENTRY: k=8, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=8, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=8, Checking PDS invalidation. PDS candidate bar 7. Current L=5720.0, PDS L=5801.5, Current Idx=9, PDS Idx=7
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=9, Index=10, Time=2025-03-28 00:00, O=5742.0, H=5748.0, L=5602.25, C=5602.75
+TREND_FINDER_DEBUG_ENTRY: k=9, prev_bar Index=9, Time=2025-03-27 00:00, O=5738.25, H=5779.75, L=5720.0, C=5741.75
+TREND_FINDER_DEBUG_ENTRY: k=9, Not in containment. PDS Peak Bar Index: 7, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=9, Chosen candidate for containment: Bar 7, Type: PDS_PEAK. Current bar H:5748.0, L:5602.25
+TREND_FINDER_DEBUG_ENTRY: k=9, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 7
+TREND_FINDER_DEBUG_ENTRY: k=9, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=9, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=9, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=9, Not in containment. Checking PDS/PUS formation on prev_bar 9 by current_bar 10.
+TREND_FINDER_DEBUG_ENTRY: k=9, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=9, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=9, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 5, Prev bar index: 9
+TREND_FINDER_DEBUG_ENTRY: k=9, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=9, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=9, Checking PDS invalidation. PDS candidate bar 7. Current L=5602.25, PDS L=5801.5, Current Idx=10, PDS Idx=7
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=10, Index=11, Time=2025-03-31 00:00, O=5590.0, H=5672.5, L=5533.75, C=5645.0
+TREND_FINDER_DEBUG_ENTRY: k=10, prev_bar Index=10, Time=2025-03-28 00:00, O=5742.0, H=5748.0, L=5602.25, C=5602.75
+TREND_FINDER_DEBUG_ENTRY: k=10, Not in containment. PDS Peak Bar Index: 7, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=10, Chosen candidate for containment: Bar 7, Type: PDS_PEAK. Current bar H:5672.5, L:5533.75
+TREND_FINDER_DEBUG_ENTRY: k=10, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 7
+TREND_FINDER_DEBUG_ENTRY: k=10, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=10, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=10, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=10, Not in containment. Checking PDS/PUS formation on prev_bar 10 by current_bar 11.
+TREND_FINDER_DEBUG_ENTRY: k=10, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=10, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=10, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 5, Prev bar index: 10
+TREND_FINDER_DEBUG_ENTRY: k=10, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=10, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=10, Checking PDS invalidation. PDS candidate bar 7. Current L=5533.75, PDS L=5801.5, Current Idx=11, PDS Idx=7
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=11, Index=12, Time=2025-04-01 00:00, O=5643.75, H=5694.75, L=5600.25, C=5672.25
+TREND_FINDER_DEBUG_ENTRY: k=11, prev_bar Index=11, Time=2025-03-31 00:00, O=5590.0, H=5672.5, L=5533.75, C=5645.0
+TREND_FINDER_DEBUG_ENTRY: k=11, Not in containment. PDS Peak Bar Index: 7, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=11, Chosen candidate for containment: Bar 7, Type: PDS_PEAK. Current bar H:5694.75, L:5600.25
+TREND_FINDER_DEBUG_ENTRY: k=11, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 7
+TREND_FINDER_DEBUG_ENTRY: k=11, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=11, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=11, CDS Rule A met
+TREND_FINDER_DEBUG_ENTRY: k=11, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=11, Not in containment. Checking PDS/PUS formation on prev_bar 11 by current_bar 12.
+TREND_FINDER_DEBUG_ENTRY: k=11, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=11, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=11, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=11, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=11, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 7, Prev bar index: 11
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=12, Index=13, Time=2025-04-02 00:00, O=5672.25, H=5776.25, L=5566.5, C=5585.0
+TREND_FINDER_DEBUG_ENTRY: k=12, prev_bar Index=12, Time=2025-04-01 00:00, O=5643.75, H=5694.75, L=5600.25, C=5672.25
+TREND_FINDER_DEBUG_ENTRY: k=12, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 11
+TREND_FINDER_DEBUG_ENTRY: k=12, Chosen candidate for containment: Bar 11, Type: PUS_LOW. Current bar H:5776.25, L:5566.5
+TREND_FINDER_DEBUG_ENTRY: k=12, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 11
+TREND_FINDER_DEBUG_ENTRY: k=12, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=12, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=12, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=12, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=12, hhll_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=12, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=12, After CUS/CDS checks: can_confirm_cus=True, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=12, Not in containment. Checking PDS/PUS formation on prev_bar 12 by current_bar 13.
+TREND_FINDER_DEBUG_ENTRY: k=12, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=12, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=12, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=12, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=13, Index=14, Time=2025-04-03 00:00, O=5554.75, H=5565.0, L=5415.25, C=5421.0
+TREND_FINDER_DEBUG_ENTRY: k=13, prev_bar Index=13, Time=2025-04-02 00:00, O=5672.25, H=5776.25, L=5566.5, C=5585.0
+TREND_FINDER_DEBUG_ENTRY: k=13, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=13, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=13, Not in containment. Checking PDS/PUS formation on prev_bar 13 by current_bar 14.
+TREND_FINDER_DEBUG_ENTRY: k=13, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=13, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=13, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 11, Prev bar index: 13
+TREND_FINDER_DEBUG_ENTRY: k=13, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=13, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=14, Index=15, Time=2025-04-04 00:00, O=5421.5, H=5435.0, L=5074.0, C=5097.0
+TREND_FINDER_DEBUG_ENTRY: k=14, prev_bar Index=14, Time=2025-04-03 00:00, O=5554.75, H=5565.0, L=5415.25, C=5421.0
+TREND_FINDER_DEBUG_ENTRY: k=14, Not in containment. PDS Peak Bar Index: 13, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=14, Chosen candidate for containment: Bar 13, Type: PDS_PEAK. Current bar H:5435.0, L:5074.0
+TREND_FINDER_DEBUG_ENTRY: k=14, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 13
+TREND_FINDER_DEBUG_ENTRY: k=14, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=14, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=14, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=14, Not in containment. Checking PDS/PUS formation on prev_bar 14 by current_bar 15.
+TREND_FINDER_DEBUG_ENTRY: k=14, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=14, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=14, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 11, Prev bar index: 14
+TREND_FINDER_DEBUG_ENTRY: k=14, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=14, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=14, Checking PDS invalidation. PDS candidate bar 13. Current L=5074.0, PDS L=5566.5, Current Idx=15, PDS Idx=13
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=15, Index=16, Time=2025-04-07 00:00, O=5007.0, H=5285.75, L=4832.5, C=5118.25
+TREND_FINDER_DEBUG_ENTRY: k=15, prev_bar Index=15, Time=2025-04-04 00:00, O=5421.5, H=5435.0, L=5074.0, C=5097.0
+TREND_FINDER_DEBUG_ENTRY: k=15, Not in containment. PDS Peak Bar Index: 13, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=15, Chosen candidate for containment: Bar 13, Type: PDS_PEAK. Current bar H:5285.75, L:4832.5
+TREND_FINDER_DEBUG_ENTRY: k=15, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 13
+TREND_FINDER_DEBUG_ENTRY: k=15, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=15, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=15, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=15, Not in containment. Checking PDS/PUS formation on prev_bar 15 by current_bar 16.
+TREND_FINDER_DEBUG_ENTRY: k=15, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=15, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=15, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 11, Prev bar index: 15
+TREND_FINDER_DEBUG_ENTRY: k=15, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=15, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=15, Checking PDS invalidation. PDS candidate bar 13. Current L=4832.5, PDS L=5566.5, Current Idx=16, PDS Idx=13
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=16, Index=17, Time=2025-04-08 00:00, O=5125.0, H=5304.5, L=4940.5, C=5012.0
+TREND_FINDER_DEBUG_ENTRY: k=16, prev_bar Index=16, Time=2025-04-07 00:00, O=5007.0, H=5285.75, L=4832.5, C=5118.25
+TREND_FINDER_DEBUG_ENTRY: k=16, Not in containment. PDS Peak Bar Index: 13, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=16, Chosen candidate for containment: Bar 13, Type: PDS_PEAK. Current bar H:5304.5, L:4940.5
+TREND_FINDER_DEBUG_ENTRY: k=16, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 13
+TREND_FINDER_DEBUG_ENTRY: k=16, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=16, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=16, CDS Rule F met
+TREND_FINDER_DEBUG_ENTRY: k=16, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=16, Not in containment. Checking PDS/PUS formation on prev_bar 16 by current_bar 17.
+TREND_FINDER_DEBUG_ENTRY: k=16, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=16, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=16, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=16, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=16, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 13, Prev bar index: 16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=17, Index=18, Time=2025-04-09 00:00, O=5007.0, H=5519.75, L=4873.5, C=5514.5
+TREND_FINDER_DEBUG_ENTRY: k=17, prev_bar Index=17, Time=2025-04-08 00:00, O=5125.0, H=5304.5, L=4940.5, C=5012.0
+TREND_FINDER_DEBUG_ENTRY: k=17, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=17, Chosen candidate for containment: Bar 16, Type: PUS_LOW. Current bar H:5519.75, L:4873.5
+TREND_FINDER_DEBUG_ENTRY: k=17, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 16
+TREND_FINDER_DEBUG_ENTRY: k=17, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=17, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=17, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=17, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=17, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=17, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=17, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=17, Not in containment. Checking PDS/PUS formation on prev_bar 17 by current_bar 18.
+TREND_FINDER_DEBUG_ENTRY: k=17, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=17, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=17, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=17, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=17, Checking PUS invalidation. PUS candidate bar 16. Current H=5519.75, PUS H=5285.75, Current Idx=18, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=18, Index=19, Time=2025-04-10 00:00, O=5502.5, H=5528.75, L=5146.75, C=5303.75
+TREND_FINDER_DEBUG_ENTRY: k=18, prev_bar Index=18, Time=2025-04-09 00:00, O=5007.0, H=5519.75, L=4873.5, C=5514.5
+TREND_FINDER_DEBUG_ENTRY: k=18, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=18, Chosen candidate for containment: Bar 16, Type: PUS_LOW. Current bar H:5528.75, L:5146.75
+TREND_FINDER_DEBUG_ENTRY: k=18, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 16
+TREND_FINDER_DEBUG_ENTRY: k=18, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=18, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=18, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=18, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=18, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=18, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=18, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=18, Not in containment. Checking PDS/PUS formation on prev_bar 18 by current_bar 19.
+TREND_FINDER_DEBUG_ENTRY: k=18, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=18, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=18, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=18, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=18, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 13, Prev bar index: 18
+TREND_FINDER_DEBUG_ENTRY: k=18, Checking PUS invalidation. PUS candidate bar 16. Current H=5528.75, PUS H=5285.75, Current Idx=19, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=19, Index=20, Time=2025-04-11 00:00, O=5300.0, H=5417.75, L=5206.75, C=5396.0
+TREND_FINDER_DEBUG_ENTRY: k=19, prev_bar Index=19, Time=2025-04-10 00:00, O=5502.5, H=5528.75, L=5146.75, C=5303.75
+TREND_FINDER_DEBUG_ENTRY: k=19, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=19, Chosen candidate for containment: Bar 16, Type: PUS_LOW. Current bar H:5417.75, L:5206.75
+TREND_FINDER_DEBUG_ENTRY: k=19, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 16
+TREND_FINDER_DEBUG_ENTRY: k=19, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=19, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=19, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=19, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=19, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=19, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=19, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=19, Not in containment. Checking PDS/PUS formation on prev_bar 19 by current_bar 20.
+TREND_FINDER_DEBUG_ENTRY: k=19, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=19, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=19, PDS formation allowed = True. Last trend type: downtrend, Last trend bar: 13, Prev bar index: 19
+TREND_FINDER_DEBUG_ENTRY: k=19, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=19, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=19, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 13, Prev bar index: 19
+TREND_FINDER_DEBUG_ENTRY: k=19, Checking PUS invalidation. PUS candidate bar 16. Current H=5417.75, PUS H=5285.75, Current Idx=20, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=20, Index=21, Time=2025-04-14 00:00, O=5447.25, H=5497.75, L=5391.0, C=5432.0
+TREND_FINDER_DEBUG_ENTRY: k=20, prev_bar Index=20, Time=2025-04-11 00:00, O=5300.0, H=5417.75, L=5206.75, C=5396.0
+TREND_FINDER_DEBUG_ENTRY: k=20, Not in containment. PDS Peak Bar Index: 19, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=20, Chosen candidate for containment: Bar 19, Type: PDS_PEAK. Current bar H:5497.75, L:5391.0
+TREND_FINDER_DEBUG_ENTRY: k=20, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=20, Checking PUS invalidation. PUS candidate bar 16. Current H=5497.75, PUS H=5285.75, Current Idx=21, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=21, Index=22, Time=2025-04-15 00:00, O=5432.0, H=5485.0, L=5413.0, C=5425.25
+TREND_FINDER_DEBUG_ENTRY: k=21, prev_bar Index=21, Time=2025-04-14 00:00, O=5447.25, H=5497.75, L=5391.0, C=5432.0
+TREND_FINDER_DEBUG_ENTRY: k=21, In containment check. Current bar H=5485.0, L=5413.0. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=21, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=21, Checking PUS invalidation. PUS candidate bar 16. Current H=5485.0, PUS H=5285.75, Current Idx=22, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=22, Index=23, Time=2025-04-16 00:00, O=5406.0, H=5425.5, L=5250.75, C=5300.0
+TREND_FINDER_DEBUG_ENTRY: k=22, prev_bar Index=22, Time=2025-04-15 00:00, O=5432.0, H=5485.0, L=5413.0, C=5425.25
+TREND_FINDER_DEBUG_ENTRY: k=22, In containment check. Current bar H=5425.5, L=5250.75. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=22, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=22, Checking PUS invalidation. PUS candidate bar 16. Current H=5425.5, PUS H=5285.75, Current Idx=23, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=23, Index=24, Time=2025-04-17 00:00, O=5306.75, H=5373.75, L=5285.5, C=5325.75
+TREND_FINDER_DEBUG_ENTRY: k=23, prev_bar Index=23, Time=2025-04-16 00:00, O=5406.0, H=5425.5, L=5250.75, C=5300.0
+TREND_FINDER_DEBUG_ENTRY: k=23, In containment check. Current bar H=5373.75, L=5285.5. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=23, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=23, Checking PUS invalidation. PUS candidate bar 16. Current H=5373.75, PUS H=5285.75, Current Idx=24, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=24, Index=25, Time=2025-04-21 00:00, O=5284.25, H=5309.5, L=5127.0, C=5184.0
+TREND_FINDER_DEBUG_ENTRY: k=24, prev_bar Index=24, Time=2025-04-17 00:00, O=5306.75, H=5373.75, L=5285.5, C=5325.75
+TREND_FINDER_DEBUG_ENTRY: k=24, In containment check. Current bar H=5309.5, L=5127.0. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=24, Not in containment. PDS Peak Bar Index: 19, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=24, Chosen candidate for containment: Bar 19, Type: PDS_PEAK. Current bar H:5309.5, L:5127.0
+TREND_FINDER_DEBUG_ENTRY: k=24, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 16
+TREND_FINDER_DEBUG_ENTRY: k=24, sdb_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=24, SDB true, initial_pds_candidate_bar_obj is Bar 19. Current L=5127.0, PDS L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=24, sdb_cus_valid_context = False
+TREND_FINDER_DEBUG_ENTRY: k=24, ref36_pds_context_for_check is Bar 19
+TREND_FINDER_DEBUG_ENTRY: k=24, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=24, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=24, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=24, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 19
+TREND_FINDER_DEBUG_ENTRY: k=24, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=24, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=24, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=24, Not in containment. Checking PDS/PUS formation on prev_bar 24 by current_bar 25.
+TREND_FINDER_DEBUG_ENTRY: k=24, pds_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=24, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=24, PDS formation allowed = True. Last trend type: downtrend, Last trend bar: 13, Prev bar index: 24
+TREND_FINDER_DEBUG_ENTRY: k=24, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=24, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=24, Checking PUS invalidation. PUS candidate bar 16. Current H=5309.5, PUS H=5285.75, Current Idx=25, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=25, Index=26, Time=2025-04-22 00:00, O=5183.0, H=5339.25, L=5171.75, C=5315.0
+TREND_FINDER_DEBUG_ENTRY: k=25, prev_bar Index=25, Time=2025-04-21 00:00, O=5284.25, H=5309.5, L=5127.0, C=5184.0
+TREND_FINDER_DEBUG_ENTRY: k=25, Not in containment. PDS Peak Bar Index: 19, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=25, Chosen candidate for containment: Bar 19, Type: PDS_PEAK. Current bar H:5339.25, L:5171.75
+TREND_FINDER_DEBUG_ENTRY: k=25, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=25, Checking PUS invalidation. PUS candidate bar 16. Current H=5339.25, PUS H=5285.75, Current Idx=26, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=26, Index=27, Time=2025-04-23 00:00, O=5375.0, H=5500.0, L=5375.0, C=5410.5
+TREND_FINDER_DEBUG_ENTRY: k=26, prev_bar Index=26, Time=2025-04-22 00:00, O=5183.0, H=5339.25, L=5171.75, C=5315.0
+TREND_FINDER_DEBUG_ENTRY: k=26, In containment check. Current bar H=5500.0, L=5375.0. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=26, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=26, Checking PUS invalidation. PUS candidate bar 16. Current H=5500.0, PUS H=5285.75, Current Idx=27, PUS Idx=16
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=27, Index=28, Time=2025-04-24 00:00, O=5408.0, H=5543.5, L=5355.5, C=5519.5
+TREND_FINDER_DEBUG_ENTRY: k=27, prev_bar Index=27, Time=2025-04-23 00:00, O=5375.0, H=5500.0, L=5375.0, C=5410.5
+TREND_FINDER_DEBUG_ENTRY: k=27, In containment check. Current bar H=5543.5, L=5355.5. Ref H=5528.75, L=5146.75
+TREND_FINDER_DEBUG_ENTRY: k=27, Not in containment. PDS Peak Bar Index: 19, PUS Low Bar Index: 16
+TREND_FINDER_DEBUG_ENTRY: k=27, Chosen candidate for containment: Bar 19, Type: PDS_PEAK. Current bar H:5543.5, L:5355.5
+TREND_FINDER_DEBUG_ENTRY: k=27, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 16
+TREND_FINDER_DEBUG_ENTRY: k=27, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=27, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=27, ref36_pds_context_for_check is Bar 19
+TREND_FINDER_DEBUG_ENTRY: k=27, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=27, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=27, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=27, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 19
+TREND_FINDER_DEBUG_ENTRY: k=27, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=27, is_BRB = True
+TREND_FINDER_DEBUG_ENTRY: k=27, BRB CDS condition met. Current L=5355.5, PDS O=5502.5
+TREND_FINDER_DEBUG_ENTRY: k=27, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=27, Not in containment. Checking PDS/PUS formation on prev_bar 27 by current_bar 28.
+TREND_FINDER_DEBUG_ENTRY: k=27, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=27, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=27, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=27, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=27, Checking PUS invalidation. PUS candidate bar 28. Current H=5543.5, PUS H=5543.5, Current Idx=28, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=28, Index=29, Time=2025-04-25 00:00, O=5528.0, H=5563.25, L=5480.0, C=5552.75
+TREND_FINDER_DEBUG_ENTRY: k=28, prev_bar Index=28, Time=2025-04-24 00:00, O=5408.0, H=5543.5, L=5355.5, C=5519.5
+TREND_FINDER_DEBUG_ENTRY: k=28, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=28, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5563.25, L:5480.0
+TREND_FINDER_DEBUG_ENTRY: k=28, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=28, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=28, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=28, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=28, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=28, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=28, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=28, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=28, Not in containment. Checking PDS/PUS formation on prev_bar 28 by current_bar 29.
+TREND_FINDER_DEBUG_ENTRY: k=28, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=28, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=28, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=28, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=28, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=29, Index=30, Time=2025-04-28 00:00, O=5543.75, H=5578.75, L=5492.75, C=5545.25
+TREND_FINDER_DEBUG_ENTRY: k=29, prev_bar Index=29, Time=2025-04-25 00:00, O=5528.0, H=5563.25, L=5480.0, C=5552.75
+TREND_FINDER_DEBUG_ENTRY: k=29, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=29, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5578.75, L:5492.75
+TREND_FINDER_DEBUG_ENTRY: k=29, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=29, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=29, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=29, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=29, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=29, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=29, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=29, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=29, Not in containment. Checking PDS/PUS formation on prev_bar 29 by current_bar 30.
+TREND_FINDER_DEBUG_ENTRY: k=29, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=29, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=29, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=29, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=29, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 29
+TREND_FINDER_DEBUG_ENTRY: k=29, Checking PUS invalidation. PUS candidate bar 28. Current H=5578.75, PUS H=5543.5, Current Idx=30, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=30, Index=31, Time=2025-04-29 00:00, O=5544.0, H=5597.5, L=5521.0, C=5582.25
+TREND_FINDER_DEBUG_ENTRY: k=30, prev_bar Index=30, Time=2025-04-28 00:00, O=5543.75, H=5578.75, L=5492.75, C=5545.25
+TREND_FINDER_DEBUG_ENTRY: k=30, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=30, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5597.5, L:5521.0
+TREND_FINDER_DEBUG_ENTRY: k=30, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=30, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=30, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=30, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=30, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=30, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=30, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=30, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=30, Not in containment. Checking PDS/PUS formation on prev_bar 30 by current_bar 31.
+TREND_FINDER_DEBUG_ENTRY: k=30, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=30, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=30, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=30, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=30, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 30
+TREND_FINDER_DEBUG_ENTRY: k=30, Checking PUS invalidation. PUS candidate bar 28. Current H=5597.5, PUS H=5543.5, Current Idx=31, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=31, Index=32, Time=2025-04-30 00:00, O=5580.25, H=5628.75, L=5455.25, C=5618.5
+TREND_FINDER_DEBUG_ENTRY: k=31, prev_bar Index=31, Time=2025-04-29 00:00, O=5544.0, H=5597.5, L=5521.0, C=5582.25
+TREND_FINDER_DEBUG_ENTRY: k=31, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=31, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5628.75, L:5455.25
+TREND_FINDER_DEBUG_ENTRY: k=31, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=31, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=31, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=31, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=31, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=31, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=31, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=31, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=31, Not in containment. Checking PDS/PUS formation on prev_bar 31 by current_bar 32.
+TREND_FINDER_DEBUG_ENTRY: k=31, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=31, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=31, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=31, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=31, Checking PUS invalidation. PUS candidate bar 28. Current H=5628.75, PUS H=5543.5, Current Idx=32, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=32, Index=33, Time=2025-05-01 00:00, O=5618.0, H=5675.5, L=5601.5, C=5611.0
+TREND_FINDER_DEBUG_ENTRY: k=32, prev_bar Index=32, Time=2025-04-30 00:00, O=5580.25, H=5628.75, L=5455.25, C=5618.5
+TREND_FINDER_DEBUG_ENTRY: k=32, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=32, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5675.5, L:5601.5
+TREND_FINDER_DEBUG_ENTRY: k=32, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=32, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=32, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=32, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=32, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=32, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=32, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=32, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=32, Not in containment. Checking PDS/PUS formation on prev_bar 32 by current_bar 33.
+TREND_FINDER_DEBUG_ENTRY: k=32, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=32, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=32, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=32, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=32, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 32
+TREND_FINDER_DEBUG_ENTRY: k=32, Checking PUS invalidation. PUS candidate bar 28. Current H=5675.5, PUS H=5543.5, Current Idx=33, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=33, Index=34, Time=2025-05-02 00:00, O=5608.0, H=5724.5, L=5600.75, C=5710.75
+TREND_FINDER_DEBUG_ENTRY: k=33, prev_bar Index=33, Time=2025-05-01 00:00, O=5618.0, H=5675.5, L=5601.5, C=5611.0
+TREND_FINDER_DEBUG_ENTRY: k=33, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=33, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5724.5, L:5600.75
+TREND_FINDER_DEBUG_ENTRY: k=33, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=33, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=33, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=33, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=33, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=33, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=33, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=33, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=33, Not in containment. Checking PDS/PUS formation on prev_bar 33 by current_bar 34.
+TREND_FINDER_DEBUG_ENTRY: k=33, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=33, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=33, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=33, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=33, Checking PUS invalidation. PUS candidate bar 28. Current H=5724.5, PUS H=5543.5, Current Idx=34, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=34, Index=35, Time=2025-05-05 00:00, O=5705.25, H=5707.0, L=5655.25, C=5671.5
+TREND_FINDER_DEBUG_ENTRY: k=34, prev_bar Index=34, Time=2025-05-02 00:00, O=5608.0, H=5724.5, L=5600.75, C=5710.75
+TREND_FINDER_DEBUG_ENTRY: k=34, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=34, Chosen candidate for containment: Bar 28, Type: PUS_LOW. Current bar H:5707.0, L:5655.25
+TREND_FINDER_DEBUG_ENTRY: k=34, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=34, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=34, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=34, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=34, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=34, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=34, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=34, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=34, Not in containment. Checking PDS/PUS formation on prev_bar 34 by current_bar 35.
+TREND_FINDER_DEBUG_ENTRY: k=34, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=34, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=34, PDS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 34
+TREND_FINDER_DEBUG_ENTRY: k=34, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=34, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=34, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 19, Prev bar index: 34
+TREND_FINDER_DEBUG_ENTRY: k=34, Checking PUS invalidation. PUS candidate bar 28. Current H=5707.0, PUS H=5543.5, Current Idx=35, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=35, Index=36, Time=2025-05-06 00:00, O=5667.0, H=5673.5, L=5605.0, C=5615.5
+TREND_FINDER_DEBUG_ENTRY: k=35, prev_bar Index=35, Time=2025-05-05 00:00, O=5705.25, H=5707.0, L=5655.25, C=5671.5
+TREND_FINDER_DEBUG_ENTRY: k=35, Not in containment. PDS Peak Bar Index: 34, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=35, Chosen candidate for containment: Bar 34, Type: PDS_PEAK. Current bar H:5673.5, L:5605.0
+TREND_FINDER_DEBUG_ENTRY: k=35, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=35, Checking PUS invalidation. PUS candidate bar 28. Current H=5673.5, PUS H=5543.5, Current Idx=36, PUS Idx=28
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=36, Index=37, Time=2025-05-07 00:00, O=5609.5, H=5690.75, L=5596.0, C=5646.5
+TREND_FINDER_DEBUG_ENTRY: k=36, prev_bar Index=36, Time=2025-05-06 00:00, O=5667.0, H=5673.5, L=5605.0, C=5615.5
+TREND_FINDER_DEBUG_ENTRY: k=36, In containment check. Current bar H=5690.75, L=5596.0. Ref H=5724.5, L=5600.75
+TREND_FINDER_DEBUG_ENTRY: k=36, Not in containment. PDS Peak Bar Index: 34, PUS Low Bar Index: 28
+TREND_FINDER_DEBUG_ENTRY: k=36, Chosen candidate for containment: Bar 34, Type: PDS_PEAK. Current bar H:5690.75, L:5596.0
+TREND_FINDER_DEBUG_ENTRY: k=36, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 28
+TREND_FINDER_DEBUG_ENTRY: k=36, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=36, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=36, ref36_pds_context_for_check is Bar 34
+TREND_FINDER_DEBUG_ENTRY: k=36, ref36_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=36, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=36, engulfing_up_triggers_cus = True
+TREND_FINDER_DEBUG_ENTRY: k=36, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 34
+TREND_FINDER_DEBUG_ENTRY: k=36, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=36, is_BRB = True
+TREND_FINDER_DEBUG_ENTRY: k=36, BRB CDS condition met. Current L=5596.0, PDS O=5608.0
+TREND_FINDER_DEBUG_ENTRY: k=36, After CUS/CDS checks: can_confirm_cus=True, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=36, Not in containment. Checking PDS/PUS formation on prev_bar 36 by current_bar 37.
+TREND_FINDER_DEBUG_ENTRY: k=36, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=36, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=36, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=36, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=37, Index=38, Time=2025-05-08 00:00, O=5645.75, H=5741.0, L=5636.5, C=5684.75
+TREND_FINDER_DEBUG_ENTRY: k=37, prev_bar Index=37, Time=2025-05-07 00:00, O=5609.5, H=5690.75, L=5596.0, C=5646.5
+TREND_FINDER_DEBUG_ENTRY: k=37, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: None
+TREND_FINDER_DEBUG_ENTRY: k=37, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=37, Not in containment. Checking PDS/PUS formation on prev_bar 37 by current_bar 38.
+TREND_FINDER_DEBUG_ENTRY: k=37, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=37, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=37, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=37, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=37, PUS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 37
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=38, Index=39, Time=2025-05-09 00:00, O=5687.75, H=5715.75, L=5662.75, C=5683.75
+TREND_FINDER_DEBUG_ENTRY: k=38, prev_bar Index=38, Time=2025-05-08 00:00, O=5645.75, H=5741.0, L=5636.5, C=5684.75
+TREND_FINDER_DEBUG_ENTRY: k=38, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 37
+TREND_FINDER_DEBUG_ENTRY: k=38, Chosen candidate for containment: Bar 37, Type: PUS_LOW. Current bar H:5715.75, L:5662.75
+TREND_FINDER_DEBUG_ENTRY: k=38, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 37
+TREND_FINDER_DEBUG_ENTRY: k=38, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=38, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=38, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=38, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=38, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=38, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=38, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=38, Not in containment. Checking PDS/PUS formation on prev_bar 38 by current_bar 39.
+TREND_FINDER_DEBUG_ENTRY: k=38, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=38, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=38, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 38
+TREND_FINDER_DEBUG_ENTRY: k=38, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=38, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=38, PUS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 38
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=39, Index=40, Time=2025-05-12 00:00, O=5743.5, H=5876.25, L=5734.0, C=5868.25
+TREND_FINDER_DEBUG_ENTRY: k=39, prev_bar Index=39, Time=2025-05-09 00:00, O=5687.75, H=5715.75, L=5662.75, C=5683.75
+TREND_FINDER_DEBUG_ENTRY: k=39, Not in containment. PDS Peak Bar Index: 38, PUS Low Bar Index: 37
+TREND_FINDER_DEBUG_ENTRY: k=39, Chosen candidate for containment: Bar 38, Type: PDS_PEAK. Current bar H:5876.25, L:5734.0
+TREND_FINDER_DEBUG_ENTRY: k=39, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 37
+TREND_FINDER_DEBUG_ENTRY: k=39, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=39, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=39, ref36_pds_context_for_check is Bar 38
+TREND_FINDER_DEBUG_ENTRY: k=39, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=39, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=39, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=39, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 38
+TREND_FINDER_DEBUG_ENTRY: k=39, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=39, is_BRB = False
+TREND_FINDER_DEBUG_ENTRY: k=39, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=39, Not in containment. Checking PDS/PUS formation on prev_bar 39 by current_bar 40.
+TREND_FINDER_DEBUG_ENTRY: k=39, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=39, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=39, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=39, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=39, PUS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 39
+TREND_FINDER_DEBUG_ENTRY: k=39, Checking PDS invalidation. PDS candidate bar 38. Current L=5734.0, PDS L=5636.5, Current Idx=40, PDS Idx=38
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=40, Index=41, Time=2025-05-13 00:00, O=5868.0, H=5926.75, L=5835.75, C=5900.75
+TREND_FINDER_DEBUG_ENTRY: k=40, prev_bar Index=40, Time=2025-05-12 00:00, O=5743.5, H=5876.25, L=5734.0, C=5868.25
+TREND_FINDER_DEBUG_ENTRY: k=40, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 37
+TREND_FINDER_DEBUG_ENTRY: k=40, Chosen candidate for containment: Bar 37, Type: PUS_LOW. Current bar H:5926.75, L:5835.75
+TREND_FINDER_DEBUG_ENTRY: k=40, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 37
+TREND_FINDER_DEBUG_ENTRY: k=40, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=40, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=40, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=40, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=40, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=40, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=40, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=40, Not in containment. Checking PDS/PUS formation on prev_bar 40 by current_bar 41.
+TREND_FINDER_DEBUG_ENTRY: k=40, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=40, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=40, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=40, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=40, PUS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 40
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=41, Index=42, Time=2025-05-14 00:00, O=5901.75, H=5925.0, L=5890.0, C=5906.0
+TREND_FINDER_DEBUG_ENTRY: k=41, prev_bar Index=41, Time=2025-05-13 00:00, O=5868.0, H=5926.75, L=5835.75, C=5900.75
+TREND_FINDER_DEBUG_ENTRY: k=41, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 37
+TREND_FINDER_DEBUG_ENTRY: k=41, Chosen candidate for containment: Bar 37, Type: PUS_LOW. Current bar H:5925.0, L:5890.0
+TREND_FINDER_DEBUG_ENTRY: k=41, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 37
+TREND_FINDER_DEBUG_ENTRY: k=41, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=41, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=41, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=41, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=41, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=41, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=41, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=41, Not in containment. Checking PDS/PUS formation on prev_bar 41 by current_bar 42.
+TREND_FINDER_DEBUG_ENTRY: k=41, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=41, pds_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=41, PDS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 41
+TREND_FINDER_DEBUG_ENTRY: k=41, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=41, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=41, PUS formation allowed = True. Last trend type: uptrend, Last trend bar: 28, Prev bar index: 41
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=42, Index=43, Time=2025-05-15 00:00, O=5904.25, H=5944.5, L=5867.0, C=5934.0
+TREND_FINDER_DEBUG_ENTRY: k=42, prev_bar Index=42, Time=2025-05-14 00:00, O=5901.75, H=5925.0, L=5890.0, C=5906.0
+TREND_FINDER_DEBUG_ENTRY: k=42, Not in containment. PDS Peak Bar Index: 41, PUS Low Bar Index: 37
+TREND_FINDER_DEBUG_ENTRY: k=42, Chosen candidate for containment: Bar 41, Type: PDS_PEAK. Current bar H:5944.5, L:5867.0
+TREND_FINDER_DEBUG_ENTRY: k=42, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 37
+TREND_FINDER_DEBUG_ENTRY: k=42, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=42, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=42, ref36_pds_context_for_check is Bar 41
+TREND_FINDER_DEBUG_ENTRY: k=42, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=42, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=42, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=42, Evaluating CDS. initial_pds_candidate_bar_obj is Bar 41
+TREND_FINDER_DEBUG_ENTRY: k=42, no_higher_high_for_brb_path = True
+TREND_FINDER_DEBUG_ENTRY: k=42, is_BRB = True
+TREND_FINDER_DEBUG_ENTRY: k=42, BRB CDS condition met. Current L=5867.0, PDS O=5868.0
+TREND_FINDER_DEBUG_ENTRY: k=42, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=True
+TREND_FINDER_DEBUG_ENTRY: k=42, Not in containment. Checking PDS/PUS formation on prev_bar 42 by current_bar 43.
+TREND_FINDER_DEBUG_ENTRY: k=42, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=42, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=42, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=42, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=42, Checking PUS invalidation. PUS candidate bar 43. Current H=5944.5, PUS H=5944.5, Current Idx=43, PUS Idx=43
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=43, Index=44, Time=2025-05-16 00:00, O=5935.5, H=5977.75, L=5923.0, C=5948.5
+TREND_FINDER_DEBUG_ENTRY: k=43, prev_bar Index=43, Time=2025-05-15 00:00, O=5904.25, H=5944.5, L=5867.0, C=5934.0
+TREND_FINDER_DEBUG_ENTRY: k=43, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 43
+TREND_FINDER_DEBUG_ENTRY: k=43, Chosen candidate for containment: Bar 43, Type: PUS_LOW. Current bar H:5977.75, L:5923.0
+TREND_FINDER_DEBUG_ENTRY: k=43, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 43
+TREND_FINDER_DEBUG_ENTRY: k=43, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=43, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=43, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=43, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=43, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=43, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=43, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=43, Not in containment. Checking PDS/PUS formation on prev_bar 43 by current_bar 44.
+TREND_FINDER_DEBUG_ENTRY: k=43, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=43, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=43, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=43, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=43, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 41, Prev bar index: 43
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=44, Index=45, Time=2025-05-19 00:00, O=5930.5, H=5987.5, L=5892.75, C=5980.75
+TREND_FINDER_DEBUG_ENTRY: k=44, prev_bar Index=44, Time=2025-05-16 00:00, O=5935.5, H=5977.75, L=5923.0, C=5948.5
+TREND_FINDER_DEBUG_ENTRY: k=44, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 43
+TREND_FINDER_DEBUG_ENTRY: k=44, Chosen candidate for containment: Bar 43, Type: PUS_LOW. Current bar H:5987.5, L:5892.75
+TREND_FINDER_DEBUG_ENTRY: k=44, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 43
+TREND_FINDER_DEBUG_ENTRY: k=44, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=44, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=44, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=44, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=44, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=44, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=44, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=44, Not in containment. Checking PDS/PUS formation on prev_bar 44 by current_bar 45.
+TREND_FINDER_DEBUG_ENTRY: k=44, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=44, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=44, pus_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=44, pus_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=44, Checking PUS invalidation. PUS candidate bar 43. Current H=5987.5, PUS H=5944.5, Current Idx=45, PUS Idx=43
+TREND_FINDER_DEBUG_ENTRY: Processing Bar k=45, Index=46, Time=2025-05-20 00:00, O=5980.25, H=5993.25, L=5926.5, C=5954.5
+TREND_FINDER_DEBUG_ENTRY: k=45, prev_bar Index=45, Time=2025-05-19 00:00, O=5930.5, H=5987.5, L=5892.75, C=5980.75
+TREND_FINDER_DEBUG_ENTRY: k=45, Not in containment. PDS Peak Bar Index: None, PUS Low Bar Index: 43
+TREND_FINDER_DEBUG_ENTRY: k=45, Chosen candidate for containment: Bar 43, Type: PUS_LOW. Current bar H:5993.25, L:5926.5
+TREND_FINDER_DEBUG_ENTRY: k=45, Evaluating CUS. initial_pus_candidate_bar_obj is Bar 43
+TREND_FINDER_DEBUG_ENTRY: k=45, sdb_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=45, sdb_cus_valid_context = True
+TREND_FINDER_DEBUG_ENTRY: k=45, ref36_pds_context_for_check is Bar None
+TREND_FINDER_DEBUG_ENTRY: k=45, ref36_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=45, hhll_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=45, engulfing_up_triggers_cus = False
+TREND_FINDER_DEBUG_ENTRY: k=45, After CUS/CDS checks: can_confirm_cus=False, can_confirm_cds=False
+TREND_FINDER_DEBUG_ENTRY: k=45, Not in containment. Checking PDS/PUS formation on prev_bar 45 by current_bar 46.
+TREND_FINDER_DEBUG_ENTRY: k=45, pds_rule_C_met = False
+TREND_FINDER_DEBUG_ENTRY: k=45, pds_rule_B_met = False
+TREND_FINDER_DEBUG_ENTRY: k=45, pus_rule_C_met = True
+TREND_FINDER_DEBUG_ENTRY: k=45, pus_rule_B_met = True
+TREND_FINDER_DEBUG_ENTRY: k=45, PUS formation allowed = True. Last trend type: downtrend, Last trend bar: 41, Prev bar index: 45
+TREND_FINDER_DEBUG_ENTRY: k=45, Checking PUS invalidation. PUS candidate bar 43. Current H=5993.25, PUS H=5944.5, Current Idx=46, PUS Idx=43

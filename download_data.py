@@ -46,7 +46,7 @@ except Exception as e:
 def fetch_ohlc_data(contract_id, timeframe_unit, timeframe_value, limit=10000):
     """Fetch OHLC data for specified contract and timeframe"""
     query = """
-    SELECT id, contract_id, timestamp, open, high, low, close, volume, 
+    SELECT contract_id, timestamp, open, high, low, close, volume, 
            timeframe_unit, timeframe_value
     FROM ohlc_bars
     WHERE contract_id = %s AND timeframe_unit = %s AND timeframe_value = %s

@@ -59,7 +59,7 @@ const TrendsPage: React.FC = () => {
   const [seriesData, setSeriesData] = useState<OhlcDataForChart[]>([]);
 
   const [selectedContract, setSelectedContract] = useState<string>(availableContracts[0]);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<string>(availableTimeframes[0]); // Default to 1m for testing live updates
+  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1d'); // Default to 1d
   const ohlcLimit = 5000; // Set a large limit to fetch more bars, effectively "all" for most practical purposes
 
   const { data: ohlcApiResponse, error: ohlcError, isLoading: ohlcIsLoading } = useSWR(
@@ -78,7 +78,8 @@ const TrendsPage: React.FC = () => {
       return;
     }
 
-    const historicalOhlc: OhlcDataForChart[] = ohlcApiResponse.data
+    // Base historical OHLC data
+    let historicalOhlc: OhlcDataForChart[] = ohlcApiResponse.data
       .map((bar: any) => ({
         time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
         open: parseFloat(bar.open),
@@ -88,16 +89,17 @@ const TrendsPage: React.FC = () => {
       }))
       .sort((a: OhlcDataForChart, b: OhlcDataForChart) => a.time - b.time);
     
-    setSeriesData(historicalOhlc); // Set initial data for WebSocket updates
-    candlestickSeriesRef.current.setData(historicalOhlc);
-
+    // Prepare and embed markers if signals API response is available
     if (signalsApiResponse?.data) {
       const ohlcDataMap = new Map<UTCTimestamp, OhlcDataForChart>();
-      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar));
+      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar)); // For text assignment
 
-      const signalMarkers: SeriesMarker<UTCTimestamp>[] = signalsApiResponse.data
+      // Create a map of markers keyed by their timestamp for efficient lookup
+      const markersByTime = new Map<UTCTimestamp, SeriesMarker<UTCTimestamp>[]>();
+
+      signalsApiResponse.data
         .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
-        .map((signal: Signal) => {
+        .forEach((signal: Signal) => {
           const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
           const correspondingBar = ohlcDataMap.get(signalTime);
           let markerText = signal.signal_type === 'uptrend_start' ? 'UT' : 'DT';
@@ -109,7 +111,8 @@ const TrendsPage: React.FC = () => {
               markerText = correspondingBar.high.toFixed(2);
             }
           }
-          return {
+          
+          const newMarker: SeriesMarker<UTCTimestamp> = {
             time: signalTime,
             position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
             color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
@@ -117,13 +120,77 @@ const TrendsPage: React.FC = () => {
             text: markerText,
             size: 2,
           };
+
+          if (!markersByTime.has(signalTime)) {
+            markersByTime.set(signalTime, []);
+          }
+          markersByTime.get(signalTime)!.push(newMarker);
         });
-      
-      if (candlestickSeriesRef.current && signalMarkers.length > 0) {
-        // candlestickSeriesRef.current.setMarkers(signalMarkers); // Use setMarkers for replacing all markers
-        createSeriesMarkers(candlestickSeriesRef.current, signalMarkers); // Or add if not replacing all
+
+      // Augment historicalOhlc with markers
+      // The SeriesMarker<Time> should be part of the CandlestickData or WhitespaceData object.
+      // Let's ensure OhlcDataForChart can hold markers.
+      // The type SeriesDataItemTypeMap[TSeriesType] is CandlestickData | WhitespaceData for 'Candlestick'.
+      // CandlestickData itself doesn't have a 'markers' property in the standard type.
+      // This implies markers are not directly embedded this way in the core library for setData.
+
+      // The series.setMarkers() method is indeed the standard way.
+      // The runtime error means something is wrong with the candlestickSeriesRef.current or the library version.
+
+      // Let's stick to trying series.setMarkers() but clear it first.
+      // If `setMarkers` isn't a function, then this will also fail, but it's the documented API.
+      // Perhaps the ref isn't initialized properly when this is first called, or is the wrong type.
+
+      // Given the runtime error, the direct `setMarkers` call is failing.
+      // Let's log the type of candlestickSeriesRef.current to be sure.
+      console.log('candlestickSeriesRef.current:', candlestickSeriesRef.current);
+      console.log('typeof setMarkers:', typeof (candlestickSeriesRef.current as any)?.setMarkers);
+
+      const signalMarkersToPlot: SeriesMarker<UTCTimestamp>[] = [];
+      if (signalsApiResponse?.data) { // Only process if there's signal data
+        signalsApiResponse.data
+          .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
+          .map((signal: Signal) => {
+            const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
+            const correspondingBar = ohlcDataMap.get(signalTime);
+            let markerText = signal.signal_type === 'uptrend_start' ? 'UT' : 'DT';
+
+            if (correspondingBar) {
+              if (signal.signal_type === 'uptrend_start') {
+                markerText = correspondingBar.low.toFixed(2);
+              } else if (signal.signal_type === 'downtrend_start') {
+                markerText = correspondingBar.high.toFixed(2);
+              }
+            }
+            signalMarkersToPlot.push({
+              time: signalTime,
+              position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
+              color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
+              shape: signal.signal_type === 'uptrend_start' ? 'arrowUp' : 'arrowDown',
+              text: markerText,
+              size: 2,
+            });
+          });
+      }
+        
+      if (candlestickSeriesRef.current) {
+        // Sort markers by time in ascending order before plotting
+        signalMarkersToPlot.sort((a, b) => a.time - b.time);
+
+        // First, attempt to clear existing markers by passing an empty array
+        createSeriesMarkers(candlestickSeriesRef.current, []); 
+        // Then, add the new markers for the current selection
+        if (signalMarkersToPlot.length > 0) {
+          createSeriesMarkers(candlestickSeriesRef.current, signalMarkersToPlot);
+        }
+      } else {
+        console.error('Candlestick series object not available. Markers will not be updated.');
       }
     }
+    
+    setSeriesData(historicalOhlc); // Set data for WebSocket updates, this does NOT draw on chart
+    candlestickSeriesRef.current.setData(historicalOhlc); // This draws the OHLC bars
+
     chartRef.current?.timeScale().fitContent();
   }, [ohlcApiResponse, signalsApiResponse, selectedContract, selectedTimeframe]);
 
