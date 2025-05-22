@@ -255,6 +255,31 @@ def _cds_rule_outside_bar(current_bar, prev_bar, initial_pds_candidate_bar_obj, 
         return False
     return check_cds_confirmation_outside_bar(current_bar, prev_bar)
 
+def _cds_rule_high_breakout_above_pds(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+    """CDS Rule: High breakout above PDS candidate confirms downtrend structure."""
+    if not initial_pds_candidate_bar_obj:
+        return False
+    
+    # Simple rule: if current bar makes a higher high than the PDS candidate,
+    # it confirms the downtrend by showing the recovery attempt failed
+    return current_bar.h > initial_pds_candidate_bar_obj.h
+
+def _cds_rule_self_confirming_pds_breakout(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+    """CDS Rule: Self-confirming PDS when current bar itself becomes the PDS and breaks above previous levels."""
+    # This rule can work even without an existing PDS candidate - it identifies
+    # bars that should be immediately confirmed as both PDS and CDS
+    
+    # If there's an existing PDS candidate, only apply if current bar IS that candidate
+    if initial_pds_candidate_bar_obj and current_bar.index != initial_pds_candidate_bar_obj.index:
+        return False
+    
+    # Self-confirm if current bar makes a significant higher high than prev_bar
+    # and shows strong bearish reversal characteristics
+    significant_higher_high = current_bar.h > prev_bar.h * 1.008  # At least 0.8% higher
+    bearish_reversal = current_bar.c < current_bar.h * 0.995  # Closes at least 0.5% below high
+    
+    return significant_higher_high and bearish_reversal
+
 CDS_RULE_DEFINITIONS = [
     ("LowThenHigherClose_vs_PDSOpen", _cds_rule_low_then_higher_close_vs_pds_open),
     ("A", _cds_rule_pattern_A),
@@ -262,22 +287,28 @@ CDS_RULE_DEFINITIONS = [
     ("F", _cds_rule_failed_rally),
     ("G", _cds_rule_pattern_G),
     ("H", _cds_rule_outside_bar),
+    ("HighBreakoutAbovePDS", _cds_rule_high_breakout_above_pds),
+    ("SelfConfirmingPDSBreakout", _cds_rule_self_confirming_pds_breakout),
 ]
 
-def _evaluate_cds_rules(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+def _evaluate_cds_rules(current_bar, prev_bar, initial_pds_candidate_bar_obj, state, all_bars):
     """
     Evaluates all Confirmed Downtrend Start (CDS) rules based on an initial PDS candidate.
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cds, cds_trigger_rule_type)
     """
+    # --- OLD GLOBAL CONTAINMENT BLOCK REMOVED ---
+    # Removed old containment blocking - now using new confirmed containment system
     can_confirm_cds = False
     cds_trigger_rule_type = None
 
     if initial_pds_candidate_bar_obj is not None:  # A PDS candidate must exist
         for rule_name, rule_func in CDS_RULE_DEFINITIONS:
-            if rule_func(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
-                can_confirm_cds = True
-                cds_trigger_rule_type = rule_name
-                break # First rule that triggers confirms CDS
-            
-    return can_confirm_cds, cds_trigger_rule_type 
+            # Allow confirmation if current_bar is the candidate itself
+            if current_bar.index == initial_pds_candidate_bar_obj.index:
+                if rule_func(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+                    return True, rule_name
+            else:
+                if rule_func(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+                    return True, rule_name
+    return False, None 

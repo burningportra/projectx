@@ -125,12 +125,14 @@ class TrendAnalyzer:
                         f"({self.state.containment_ref_type} H:{self.state.containment_ref_high}, L:{self.state.containment_ref_low})."
                     )
 
-    def _check_and_set_new_pending_signals(self, current_bar, prev_bar, cds_confirmed_this_iteration, cus_confirmed_this_iteration, current_bar_event_descriptions):
+    def _check_and_set_new_pending_signals(self, current_bar, prev_bar, cds_confirmed_this_iteration, cus_confirmed_this_iteration, current_bar_event_descriptions, all_bars):
         """
         Checks for and sets new Pending Downtrend Start (PDS) or Pending Uptrend Start (PUS) signals.
         This includes PDS Rule C and general PDS/PUS generation on prev_bar.
         Modifies state for pending signals and appends to current_bar_event_descriptions.
+        Returns True if a CDS was confirmed during this function, False otherwise.
         """
+        cds_confirmed_in_this_function = False
         new_pds_on_curr_bar_this_iteration = False
         if current_bar.h > prev_bar.h and current_bar.c < current_bar.o: 
             current_bar_event_descriptions.append(f"Pending Downtrend Start on Bar {current_bar.index} ({current_bar.date}) by Rule C")
@@ -162,6 +164,19 @@ class TrendAnalyzer:
                     current_bar_event_descriptions.append(f"Signal for Pending Downtrend Start on Bar {prev_bar.index} (general PDS rule on prev_bar)")
                     if self.state.set_new_pending_downtrend_signal(prev_bar, current_bar_event_descriptions, reason_message_suffix="(general PDS rule on prev_bar)"):
                         prev_bar_became_pds_this_cycle = True # Set flag if PDS was successfully set on prev_bar
+                        
+                        # --- IMMEDIATE SAME-BAR CDS CHECK FOR NEWLY SET PDS ON PREV_BAR ---
+                        # Only check if prev_bar has a previous bar (index > 1) and no CDS was confirmed yet
+                        if prev_bar.index > 1 and not cds_confirmed_this_iteration:
+                            current_bar_event_descriptions.append(f"DEBUG: Checking immediate CDS confirmation for newly set PDS {prev_bar.index}")
+                            prev_prev_bar = all_bars[prev_bar.index - 2]  # Get the bar before prev_bar
+                            can_confirm_cds_immediate, cds_trigger_rule_immediate = _evaluate_cds_rules(
+                                prev_bar, prev_prev_bar, prev_bar, self.state, all_bars
+                            )
+                            if can_confirm_cds_immediate:
+                                current_bar_event_descriptions.append(f"DEBUG: Immediate CDS confirmation triggered for PDS {prev_bar.index}")
+                                self._apply_cds_confirmation(prev_bar, cds_trigger_rule_immediate, all_bars, None, current_bar_event_descriptions)
+                                cds_confirmed_in_this_function = True
                 else:
                     if self.state.pds_candidate_for_cds_bar_index is not None: # Ensure there's an existing PDS to compare against
                         current_bar_event_descriptions.append(
@@ -179,6 +194,8 @@ class TrendAnalyzer:
                  is_pending_uptrend_start_rule(current_bar, prev_bar) or \
                  is_simple_pending_uptrend_start_signal(current_bar, prev_bar):
                 self.state.set_new_pending_uptrend_signal(prev_bar, current_bar_event_descriptions, reason_message_suffix="(general PUS rule on prev_bar)")
+        
+        return cds_confirmed_in_this_function
 
     def analyze(self, all_bars):
         """
@@ -235,7 +252,7 @@ class TrendAnalyzer:
 
             # --- SECTION 3: CDS (CONFIRMED DOWNTREND START) EVALUATION ---
             can_confirm_cds, cds_trigger_rule_type = _evaluate_cds_rules(
-                current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars
+                current_bar, prev_bar, initial_pds_candidate_bar_obj, self.state, all_bars
             )
 
             # --- SECTION 4: APPLY CONSEQUENCES OF CUS/CDS AND FORCED ALTERNATION ---
@@ -257,7 +274,9 @@ class TrendAnalyzer:
                 self._apply_cds_confirmation(confirmed_bar_for_this_cds, cds_trigger_rule_type, all_bars, initial_pus_candidate_bar_obj, current_bar_event_descriptions)
 
             # --- SECTION 5: CHECK FOR NEW PENDING SIGNALS (PDS/PUS on prev_bar or current_bar) ---
-            self._check_and_set_new_pending_signals(current_bar, prev_bar, cds_confirmed_this_iteration, cus_confirmed_this_iteration, current_bar_event_descriptions)
+            cds_confirmed_in_pending_signals = self._check_and_set_new_pending_signals(current_bar, prev_bar, cds_confirmed_this_iteration, cus_confirmed_this_iteration, current_bar_event_descriptions, all_bars)
+            if cds_confirmed_in_pending_signals:
+                cds_confirmed_this_iteration = True
 
             # --- SECTION 6: FINALIZE LOG ENTRY FOR THE CURRENT BAR ---
             if not current_bar_event_descriptions:

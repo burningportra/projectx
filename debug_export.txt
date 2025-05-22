@@ -1,0 +1,1309 @@
+Attempting to load bars from: data/CON.F.US.MES.M25_4h_ohlc.csv
+Successfully loaded 282 bars.
+
+Starting trend start analysis...
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 1. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 6. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 9. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 13. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 17. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 18. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 36. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 41. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 43. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 46. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 51. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 53. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 53. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 57. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 78. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 80. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 87. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 101. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 109. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 111. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 117. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 121. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 124. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 131. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 135. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 141. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 144. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 155. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 161. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 170. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 174. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 178. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 182. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 186. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 189. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 196. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 197. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 200. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 204. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 207. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 210. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 215. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 217. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 226. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 227. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 232. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 238. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 240. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 245. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 264. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 271. Caller: state.py:_reset_all_pending_downtrend_states:100
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 274. Caller: analyzer.py:_check_and_set_new_pending_signals:181
+DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: 274. Caller: state.py:_reset_all_pending_downtrend_states:100
+Trend start analysis finished.
+
+--- Generated Trend Start Log ---
+1. Nothing
+2. Signal for Pending Downtrend Start on Bar 1 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 1 (2025-03-16 22:00:00+00:00) (general PDS rule on prev_bar)
+3. 📉 Confirmed Downtrend Start from Bar 1 (2025-03-16 22:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+4. ⏳U Pending Uptrend Start on Bar 3 (2025-03-17 06:00:00+00:00) (general PUS rule on prev_bar)
+5. ➖ Neutral
+6. Pending Downtrend Start on Bar 6 (2025-03-17 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 6 (2025-03-17 18:00:00+00:00) (by Rule C: HH & Down Close)
+7. Info: prev_bar 6 (H:5759.75) not set as PDS. Existing PDS is 6 (H:5759.75). prev_bar.h is not > existing PDS.H.
+8. Info: prev_bar 7 (H:5738.0) not set as PDS. Existing PDS is 6 (H:5759.75). prev_bar.h is not > existing PDS.H.
+9. ⏳U Pending Uptrend Start on Bar 8 (2025-03-18 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 3 (2025-03-17 06:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 6 (2025-03-17 18:00:00+00:00) by Rule: A
+10. Pending Downtrend Start on Bar 8 (2025-03-18 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 9 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 8 (2025-03-18 02:00:00+00:00) (Post-CUS of 8 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 9 (2025-03-18 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 8 (2025-03-18 02:00:00+00:00) by Rule: LOWER_OHLC
+11. Info: prev_bar 10 (H:5725.0) not set as PDS. Existing PDS is 9 (H:5735.75). prev_bar.h is not > existing PDS.H.
+12. ⏳U Pending Uptrend Start on Bar 11 (2025-03-18 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 9 (2025-03-18 06:00:00+00:00) by Rule: A
+13. ➖ Neutral
+14. Signal for Pending Downtrend Start on Bar 13 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 13 (2025-03-18 22:00:00+00:00) (general PDS rule on prev_bar)
+15. DEBUG PDS Check for prev_bar=14: Current PDS Index=13, Current PDS High=5689.5, prev_bar High=5685.0; Info: prev_bar 14 (H:5685.0) not set as PDS. Existing PDS is 13 (H:5689.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 11 (2025-03-18 14:00:00+00:00) by Rule: LowUndercutHighRespect
+16. ⏳U Pending Uptrend Start on Bar 15 (2025-03-19 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 13 (2025-03-18 22:00:00+00:00) by Rule: B
+17. Pending Downtrend Start on Bar 17 (2025-03-19 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 17 (2025-03-19 14:00:00+00:00) (by Rule C: HH & Down Close)
+18. 📈 Confirmed Uptrend Start from Bar 15 (2025-03-19 06:00:00+00:00) by Rule: EngulfingUpPDSLowBreak; 📉 Confirmed Downtrend Start from Bar 17 (2025-03-19 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+19. Signal for Pending Downtrend Start on Bar 18 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 18 (2025-03-19 18:00:00+00:00) (general PDS rule on prev_bar)
+20. ⏳U Pending Uptrend Start on Bar 19 (2025-03-19 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 20 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0).
+21. Info: prev_bar 20 (H:5760.0) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 19 (2025-03-19 22:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 21 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 2 bars.
+22. Info: prev_bar 21 (H:5758.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 22 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 3 bars.
+23. Pending Downtrend Start on Bar 23 (2025-03-20 14:00:00+00:00) by Rule C; ⏳U Pending Uptrend Start on Bar 22 (2025-03-20 10:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 23 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 4 bars.
+24. Info: prev_bar 23 (H:5765.25) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 24 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 5 bars.
+25. Info: prev_bar 24 (H:5724.5) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 25 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 6 bars.
+26. Info: prev_bar 25 (H:5723.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 20 (2025-03-20 02:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 22 (2025-03-20 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 26 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 7 bars.
+27. Info: prev_bar 26 (H:5722.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 27 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 8 bars.
+28. Containment ENDED: Bar 28 💨 BREAKDOWN below Bar 18 range (was 8 bar(s) inside).; Info: prev_bar 27 (H:5717.25) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.
+29. ⏳U Pending Uptrend Start on Bar 28 (2025-03-21 10:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 18 (2025-03-19 18:00:00+00:00) by Rule: A
+30. ➖ Neutral
+31. ➖ Neutral
+32. ➖ Neutral
+33. ➖ Neutral
+34. ➖ Neutral
+35. ➖ Neutral
+36. ➖ Neutral
+37. Signal for Pending Downtrend Start on Bar 36 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 36 (2025-03-24 18:00:00+00:00) (general PDS rule on prev_bar)
+38. Info: prev_bar 37 (H:5816.25) not set as PDS. Existing PDS is 36 (H:5825.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 28 (2025-03-21 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment START: Bar 38 inside Bar 36 (PENDING_DOWNTREND_HIGH H:5825.5, L:5795.0).
+39. 📉 Confirmed Downtrend Start from Bar 36 (2025-03-24 18:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen; 🧱 Containment: Bar 39 inside Bar 36 (PENDING_DOWNTREND_HIGH H:5825.5, L:5795.0) for 2 bars.
+40. Containment ENDED: Bar 40 moves outside Bar 36 range (was 2 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 39 (2025-03-25 06:00:00+00:00) (general PUS rule on prev_bar)
+41. Pending Downtrend Start on Bar 41 (2025-03-25 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 41 (2025-03-25 14:00:00+00:00) (by Rule C: HH & Down Close)
+42. Info: prev_bar 41 (H:5837.25) not set as PDS. Existing PDS is 41 (H:5837.25). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 39 (2025-03-25 06:00:00+00:00) by Rule: LowUndercutHighRespect
+43. Pending Downtrend Start on Bar 43 (2025-03-25 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 43 (2025-03-25 22:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 41 (2025-03-25 14:00:00+00:00) by Rule: F; 🧱 Containment START: Bar 43 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0).
+44. Info: prev_bar 43 (H:5836.5) not set as PDS. Existing PDS is 43 (H:5836.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 44 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0) for 2 bars.
+45. Info: prev_bar 44 (H:5831.5) not set as PDS. Existing PDS is 43 (H:5836.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 45 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0) for 3 bars.
+46. Containment ENDED: Bar 46 💨 BREAKDOWN below Bar 41 range (was 3 bar(s) inside).; Pending Downtrend Start on Bar 46 (2025-03-26 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 46 (2025-03-26 10:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📈 Forced Uptrend: Bar 42 (2025-03-25 18:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 43 (2025-03-25 22:00:00+00:00) by Rule: F
+47. Info: prev_bar 46 (H:5834.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+48. Info: prev_bar 47 (H:5817.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+49. Info: prev_bar 48 (H:5767.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+50. ⏳U Pending Uptrend Start on Bar 49 (2025-03-26 22:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 45 (2025-03-26 06:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 46 (2025-03-26 10:00:00+00:00) by Rule: A
+51. ➖ Neutral
+52. Pending Downtrend Start on Bar 49 (2025-03-26 22:00:00+00:00); Signal for Pending Downtrend Start on Bar 51 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 49 (2025-03-26 22:00:00+00:00) (Post-CUS of 49 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 51 (2025-03-27 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 49 (2025-03-26 22:00:00+00:00) by Rule: LOWER_OHLC
+53. Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 51 (2025-03-27 06:00:00+00:00) by Rule: F
+54. Info: prev_bar 53 (H:5779.75) not set as PDS. Existing PDS is 53 (H:5779.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 54 inside Bar 53 (PENDING_DOWNTREND_HIGH H:5779.75, L:5733.75).
+55. Containment ENDED: Bar 55 moves outside Bar 53 range (was 1 bar(s) inside).; Info: prev_bar 54 (H:5771.25) not set as PDS. Existing PDS is 53 (H:5779.75). prev_bar.h is not > existing PDS.H.; Pending Downtrend Start on Bar 53 (due to trigger by 55); ⏳D Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (Post-CUS of 53 by rule LOWER_OHLC, trigger by 55); 📈 Confirmed Uptrend Start from Bar 53 (2025-03-27 14:00:00+00:00) by Rule: LOWER_OHLC
+56. ⏳U Pending Uptrend Start on Bar 55 (2025-03-27 22:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 53 (2025-03-27 14:00:00+00:00) by Rule: G; 🧱 Containment START: Bar 56 inside Bar 53 (PENDING_DOWNTREND_HIGH H:5779.75, L:5733.75).
+57. Containment ENDED: Bar 57 💨 BREAKDOWN below Bar 53 range (was 1 bar(s) inside).; Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00); Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00) (Post-CUS of 55 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 55 (2025-03-27 22:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+58. Info: prev_bar 57 (H:5748.0) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+59. Info: prev_bar 58 (H:5739.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+60. Info: prev_bar 59 (H:5711.25) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+61. Info: prev_bar 60 (H:5636.5) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+62. Info: prev_bar 61 (H:5600.0) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 61 (2025-03-30 22:00:00+00:00) (general PUS rule on prev_bar)
+63. Info: prev_bar 62 (H:5591.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+64. Info: prev_bar 63 (H:5591.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+65. ⏳U Pending Uptrend Start on Bar 64 (2025-03-31 10:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 57 (2025-03-28 06:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 61 (2025-03-30 22:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 57 (2025-03-28 06:00:00+00:00) by Rule: A
+66. ➖ Neutral
+67. Signal for Pending Downtrend Start on Bar 66 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 66 (2025-03-31 18:00:00+00:00) (general PDS rule on prev_bar)
+68. Info: prev_bar 67 (H:5645.75) not set as PDS. Existing PDS is 66 (H:5672.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 68 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25).
+69. 🧱 Containment: Bar 69 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25) for 2 bars.
+70. Info: prev_bar 69 (H:5663.5) not set as PDS. Existing PDS is 66 (H:5672.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 64 (2025-03-31 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 70 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25) for 3 bars.
+71. Containment ENDED: Bar 71 moves outside Bar 66 range (was 3 bar(s) inside).
+72. Signal for Pending Downtrend Start on Bar 71 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 71 (2025-04-01 14:00:00+00:00) (general PDS rule on prev_bar)
+73. Pending Downtrend Start on Bar 73 (2025-04-01 22:00:00+00:00) by Rule C; ⏳U Pending Uptrend Start on Bar 72 (2025-04-01 18:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 73 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25).
+74. Info: prev_bar 73 (H:5694.75) not set as PDS. Existing PDS is 71 (H:5694.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 71 (2025-04-01 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 72 (2025-04-01 18:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 74 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 2 bars.
+75. Pending Downtrend Start on Bar 75 (2025-04-02 06:00:00+00:00) by Rule C; 🧱 Containment: Bar 75 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 3 bars.
+76. Info: prev_bar 75 (H:5672.25) not set as PDS. Existing PDS is 71 (H:5694.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 76 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 4 bars.
+77. Containment ENDED: Bar 77 💨 BREAKOUT above Bar 71 range (was 4 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 76 (2025-04-02 10:00:00+00:00) (general PUS rule on prev_bar)
+78. Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00); Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00) (Post-CUS of 76 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 73 (2025-04-01 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 76 (2025-04-02 10:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+79. Info: prev_bar 78 (H:5776.25) not set as PDS. Existing PDS is 78 (H:5776.25). prev_bar.h is not > existing PDS.H.
+80. Pending Downtrend Start on Bar 80 (2025-04-03 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 80 (2025-04-03 02:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 78 (2025-04-02 18:00:00+00:00) by Rule: F
+81. Info: prev_bar 80 (H:5565.0) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+82. Info: prev_bar 81 (H:5557.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+83. Info: prev_bar 82 (H:5540.25) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+84. Info: prev_bar 83 (H:5524.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+85. Info: prev_bar 84 (H:5485.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+86. Info: prev_bar 85 (H:5435.0) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+87. Pending Downtrend Start on Bar 87 (2025-04-04 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 87 (2025-04-04 06:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📈 Forced Uptrend: Bar 79 (2025-04-02 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 80 (2025-04-03 02:00:00+00:00) by Rule: F
+88. Info: prev_bar 87 (H:5428.75) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+89. Info: prev_bar 88 (H:5395.5) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+90. Info: prev_bar 89 (H:5288.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+91. Info: prev_bar 90 (H:5212.25) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+92. Info: prev_bar 91 (H:5008.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 91 (2025-04-06 22:00:00+00:00) (general PUS rule on prev_bar)
+93. Info: prev_bar 92 (H:4993.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 91 (2025-04-06 22:00:00+00:00) by Rule: LowUndercutHighRespect
+94. ⏳U Pending Uptrend Start on Bar 93 (2025-04-07 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 87 (2025-04-04 06:00:00+00:00) by Rule: A
+95. ➖ Neutral
+96. Signal for Pending Downtrend Start on Bar 95 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 95 (2025-04-07 14:00:00+00:00) (general PDS rule on prev_bar)
+97. 🧱 Containment START: Bar 97 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25).
+98. Info: prev_bar 97 (H:5187.5) not set as PDS. Existing PDS is 95 (H:5285.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 98 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25) for 2 bars.
+99. Pending Downtrend Start on Bar 99 (2025-04-08 06:00:00+00:00) by Rule C; 🧱 Containment: Bar 99 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25) for 3 bars.
+100. Containment ENDED: Bar 100 moves outside Bar 95 range (was 3 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 99 (2025-04-08 06:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 93 (2025-04-07 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+101. Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00); Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00) (Post-CUS of 99 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 95 (2025-04-07 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 99 (2025-04-08 06:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+102. Info: prev_bar 101 (H:5304.5) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+103. Info: prev_bar 102 (H:5129.0) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+104. Info: prev_bar 103 (H:5014.0) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+105. ⏳U Pending Uptrend Start on Bar 104 (2025-04-09 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 101 (2025-04-08 14:00:00+00:00) by Rule: A
+106. ➖ Neutral
+107. ➖ Neutral
+108. ➖ Neutral
+109. Pending Downtrend Start on Bar 109 (2025-04-09 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 109 (2025-04-09 22:00:00+00:00) (by Rule C: HH & Down Close)
+110. Info: prev_bar 109 (H:5528.75) not set as PDS. Existing PDS is 109 (H:5528.75). prev_bar.h is not > existing PDS.H.
+111. Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00); Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 104 (2025-04-09 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 📉 Confirmed Downtrend Start from Bar 109 (2025-04-09 22:00:00+00:00) by Rule: F
+112. Info: prev_bar 111 (H:5488.5) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+113. Info: prev_bar 112 (H:5430.0) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+114. Info: prev_bar 113 (H:5373.75) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 113 (2025-04-10 14:00:00+00:00) (general PUS rule on prev_bar)
+115. Info: prev_bar 114 (H:5351.75) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+116. ⏳U Pending Uptrend Start on Bar 115 (2025-04-10 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 113 (2025-04-10 14:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 111 (2025-04-10 06:00:00+00:00) by Rule: A
+117. Pending Downtrend Start on Bar 117 (2025-04-11 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 117 (2025-04-11 06:00:00+00:00) (by Rule C: HH & Down Close)
+118. Info: prev_bar 117 (H:5379.5) not set as PDS. Existing PDS is 117 (H:5379.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 118 inside Bar 117 (PENDING_DOWNTREND_HIGH H:5379.5, L:5257.0).
+119. Containment ENDED: Bar 119 💨 BREAKOUT above Bar 117 range (was 1 bar(s) inside).
+120. Signal for Pending Downtrend Start on Bar 119 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 119 (2025-04-11 14:00:00+00:00) (general PDS rule on prev_bar)
+121. Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 115 (2025-04-10 22:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+122. Info: prev_bar 121 (H:5477.0) not set as PDS. Existing PDS is 121 (H:5477.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 122 inside Bar 121 (PENDING_DOWNTREND_HIGH H:5477.0, L:5409.75).
+123. 🧱 Containment: Bar 123 inside Bar 121 (PENDING_DOWNTREND_HIGH H:5477.0, L:5409.75) for 2 bars.
+124. Containment ENDED: Bar 124 moves outside Bar 121 range (was 2 bar(s) inside).
+125. Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00); Signal for Pending Downtrend Start on Bar 124 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (Post-CUS of 121 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 124 (2025-04-14 10:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 119 (2025-04-11 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 121 (2025-04-13 22:00:00+00:00) by Rule: LOWER_OHLC
+126. Info: prev_bar 125 (H:5492.0) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 125 (2025-04-14 14:00:00+00:00) (general PUS rule on prev_bar)
+127. Info: prev_bar 126 (H:5479.25) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 126 (2025-04-14 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 124 (2025-04-14 10:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 125 (2025-04-14 14:00:00+00:00) by Rule: LowUndercutHighRespect
+128. Info: prev_bar 127 (H:5442.75) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.
+129. ⏳U Pending Uptrend Start on Bar 128 (2025-04-15 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 126 (2025-04-14 18:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 124 (2025-04-14 10:00:00+00:00) by Rule: A
+130. ➖ Neutral
+131. Pending Downtrend Start on Bar 131 (2025-04-15 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 131 (2025-04-15 14:00:00+00:00) (by Rule C: HH & Down Close)
+132. Info: prev_bar 131 (H:5485.0) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+133. Info: prev_bar 132 (H:5444.75) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+134. Info: prev_bar 133 (H:5406.5) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+135. ⏳U Pending Uptrend Start on Bar 134 (2025-04-16 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 128 (2025-04-15 02:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 131 (2025-04-15 14:00:00+00:00) by Rule: A
+136. Signal for Pending Downtrend Start on Bar 135 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 135 (2025-04-16 06:00:00+00:00) (general PDS rule on prev_bar)
+137. Pending Downtrend Start on Bar 137 (2025-04-16 14:00:00+00:00); Pending Downtrend Start on Bar 137 (2025-04-16 14:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 134 (2025-04-16 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+138. Info: prev_bar 137 (H:5401.0) not set as PDS. Existing PDS is 135 (H:5425.5). prev_bar.h is not > existing PDS.H.
+139. ⏳U Pending Uptrend Start on Bar 138 (2025-04-16 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 135 (2025-04-16 06:00:00+00:00) by Rule: A
+140. ➖ Neutral
+141. Pending Downtrend Start on Bar 141 (2025-04-17 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 141 (2025-04-17 06:00:00+00:00) (by Rule C: HH & Down Close)
+142. Info: prev_bar 141 (H:5373.75) not set as PDS. Existing PDS is 141 (H:5373.75). prev_bar.h is not > existing PDS.H.
+143. Info: prev_bar 142 (H:5356.5) not set as PDS. Existing PDS is 141 (H:5373.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 138 (2025-04-16 18:00:00+00:00) by Rule: LowUndercutHighRespect
+144. Pending Downtrend Start on Bar 144 (2025-04-17 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 144 (2025-04-17 18:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 141 (2025-04-17 06:00:00+00:00) by Rule: F
+145. Info: prev_bar 144 (H:5359.75) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+146. Info: prev_bar 145 (H:5309.5) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+147. Info: prev_bar 146 (H:5285.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+148. Info: prev_bar 147 (H:5278.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+149. Info: prev_bar 148 (H:5270.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+150. Info: prev_bar 149 (H:5220.5) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+151. ⏳U Pending Uptrend Start on Bar 150 (2025-04-21 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 143 (2025-04-17 14:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 144 (2025-04-17 18:00:00+00:00) by Rule: A
+152. Signal for Pending Downtrend Start on Bar 151 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 151 (2025-04-21 22:00:00+00:00) (general PDS rule on prev_bar)
+153. ⏳U Pending Uptrend Start on Bar 152 (2025-04-22 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 150 (2025-04-21 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+154. ➖ Neutral
+155. Pending Downtrend Start on Bar 155 (2025-04-22 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 155 (2025-04-22 14:00:00+00:00) (by Rule C: HH & Down Close)
+156. Info: prev_bar 155 (H:5339.25) not set as PDS. Existing PDS is 155 (H:5339.25). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 151 (2025-04-21 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 152 (2025-04-22 02:00:00+00:00) by Rule: LowUndercutHighRespect
+157. ⏳U Pending Uptrend Start on Bar 156 (2025-04-22 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 155 (2025-04-22 14:00:00+00:00) by Rule: B
+158. Signal for Pending Downtrend Start on Bar 157 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 157 (2025-04-22 22:00:00+00:00) (general PDS rule on prev_bar)
+159. ⏳U Pending Uptrend Start on Bar 158 (2025-04-23 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 156 (2025-04-22 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+160. ➖ Neutral
+161. Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00); Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00) (Post-CUS of 158 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 157 (2025-04-22 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 158 (2025-04-23 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+162. Info: prev_bar 161 (H:5500.0) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+163. Info: prev_bar 162 (H:5435.25) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 162 (2025-04-23 18:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 163 inside Bar 161 (PENDING_DOWNTREND_HIGH H:5500.0, L:5385.5).
+164. Containment ENDED: Bar 164 💨 BREAKDOWN below Bar 161 range (was 1 bar(s) inside).; Info: prev_bar 163 (H:5421.25) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+165. Info: prev_bar 164 (H:5404.75) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+166. ⏳U Pending Uptrend Start on Bar 165 (2025-04-24 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 161 (2025-04-23 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 162 (2025-04-23 18:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 161 (2025-04-23 14:00:00+00:00) by Rule: A
+167. ➖ Neutral
+168. ➖ Neutral
+169. Signal for Pending Downtrend Start on Bar 168 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 168 (2025-04-24 18:00:00+00:00) (general PDS rule on prev_bar)
+170. ⏳U Pending Uptrend Start on Bar 169 (2025-04-24 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 165 (2025-04-24 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+171. Signal for Pending Downtrend Start on Bar 170 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 170 (2025-04-25 02:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 168 (2025-04-24 18:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 169 (2025-04-24 22:00:00+00:00) by Rule: LOWER_OHLC
+172. Info: prev_bar 171 (H:5549.25) not set as PDS. Existing PDS is 170 (H:5553.25). prev_bar.h is not > existing PDS.H.
+173. 📉 Confirmed Downtrend Start from Bar 170 (2025-04-25 02:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+174. ⏳U Pending Uptrend Start on Bar 173 (2025-04-25 14:00:00+00:00) (general PUS rule on prev_bar)
+175. Pending Downtrend Start on Bar 173 (due to trigger by 175); Signal for Pending Downtrend Start on Bar 174 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 173 (2025-04-25 14:00:00+00:00) (Post-CUS of 173 by rule LOWER_OHLC, trigger by 175); ⏳D Pending Downtrend Start on Bar 174 (2025-04-25 18:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 173 (2025-04-25 14:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment START: Bar 175 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0).
+176. Info: prev_bar 175 (H:5547.75) not set as PDS. Existing PDS is 174 (H:5563.25). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 176 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0) for 2 bars.
+177. ⏳U Pending Uptrend Start on Bar 176 (2025-04-28 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 174 (2025-04-25 18:00:00+00:00) by Rule: G; 🧱 Containment: Bar 177 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0) for 3 bars.
+178. Containment ENDED: Bar 178 moves outside Bar 173 range (was 3 bar(s) inside).
+179. Pending Downtrend Start on Bar 176 (2025-04-28 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 178 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 176 (2025-04-28 02:00:00+00:00) (Post-CUS of 176 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 178 (2025-04-28 10:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 176 (2025-04-28 02:00:00+00:00) by Rule: LOWER_OHLC
+180. ⏳U Pending Uptrend Start on Bar 179 (2025-04-28 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 178 (2025-04-28 10:00:00+00:00) by Rule: A
+181. ➖ Neutral
+182. Pending Downtrend Start on Bar 182 (2025-04-29 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 182 (2025-04-29 02:00:00+00:00) (by Rule C: HH & Down Close)
+183. Info: prev_bar 182 (H:5573.75) not set as PDS. Existing PDS is 182 (H:5573.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 179 (2025-04-28 14:00:00+00:00) by Rule: LowUndercutHighRespect
+184. Info: prev_bar 183 (H:5573.75) not set as PDS. Existing PDS is 182 (H:5573.75). prev_bar.h is not > existing PDS.H.
+185. ⏳U Pending Uptrend Start on Bar 184 (2025-04-29 10:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 182 (2025-04-29 02:00:00+00:00) by Rule: A
+186. Pending Downtrend Start on Bar 186 (2025-04-29 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 186 (2025-04-29 18:00:00+00:00) (by Rule C: HH & Down Close)
+187. Info: prev_bar 186 (H:5597.5) not set as PDS. Existing PDS is 186 (H:5597.5). prev_bar.h is not > existing PDS.H.
+188. Info: prev_bar 187 (H:5583.0) not set as PDS. Existing PDS is 186 (H:5597.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 184 (2025-04-29 10:00:00+00:00) by Rule: LowUndercutHighRespect
+189. ⏳U Pending Uptrend Start on Bar 188 (2025-04-30 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 186 (2025-04-29 18:00:00+00:00) by Rule: A
+190. Pending Downtrend Start on Bar 188 (2025-04-30 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 189 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 188 (2025-04-30 02:00:00+00:00) (Post-CUS of 188 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 189 (2025-04-30 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 188 (2025-04-30 02:00:00+00:00) by Rule: LOWER_OHLC
+191. Info: prev_bar 190 (H:5580.0) not set as PDS. Existing PDS is 189 (H:5582.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 190 (2025-04-30 10:00:00+00:00) (general PUS rule on prev_bar)
+192. ⏳U Pending Uptrend Start on Bar 191 (2025-04-30 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 189 (2025-04-30 06:00:00+00:00) by Rule: A
+193. ➖ Neutral
+194. ➖ Neutral
+195. ➖ Neutral
+196. Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00); Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (Post-CUS of 191 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 191 (2025-04-30 14:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+197. ⏳U Pending Uptrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (general PUS rule on prev_bar)
+198. Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00); Signal for Pending Downtrend Start on Bar 197 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (Post-CUS of 196 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 197 (2025-05-01 14:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 195 (2025-05-01 06:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 196 (2025-05-01 10:00:00+00:00) by Rule: LOWER_OHLC
+199. 📉 Confirmed Downtrend Start from Bar 197 (2025-05-01 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+200. Pending Downtrend Start on Bar 200 (2025-05-02 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 200 (2025-05-02 02:00:00+00:00) (by Rule C: HH & Down Close)
+201. Info: prev_bar 200 (H:5675.0) not set as PDS. Existing PDS is 200 (H:5675.0). prev_bar.h is not > existing PDS.H.
+202. ⏳U Pending Uptrend Start on Bar 201 (2025-05-02 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 199 (2025-05-01 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 200 (2025-05-02 02:00:00+00:00) by Rule: A
+203. ➖ Neutral
+204. Pending Downtrend Start on Bar 204 (2025-05-02 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 204 (2025-05-02 18:00:00+00:00) (by Rule C: HH & Down Close)
+205. Info: prev_bar 204 (H:5724.5) not set as PDS. Existing PDS is 204 (H:5724.5). prev_bar.h is not > existing PDS.H.
+206. Info: prev_bar 205 (H:5707.0) not set as PDS. Existing PDS is 204 (H:5724.5). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 205 (2025-05-04 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 201 (2025-05-02 06:00:00+00:00) by Rule: LowUndercutHighRespect
+207. Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00); Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📉 Forced Downtrend: Bar 204 (2025-05-02 18:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 205 (2025-05-04 22:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 📉 Confirmed Downtrend Start from Bar 204 (2025-05-02 18:00:00+00:00) by Rule: F
+208. Info: prev_bar 207 (H:5680.25) not set as PDS. Existing PDS is 207 (H:5680.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 207 (2025-05-05 06:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 208 inside Bar 207 (PENDING_DOWNTREND_HIGH H:5680.25, L:5655.25).
+209. Containment ENDED: Bar 209 💨 BREAKOUT above Bar 207 range (was 1 bar(s) inside).
+210. Pending Downtrend Start on Bar 210 (2025-05-05 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 210 (2025-05-05 18:00:00+00:00) (by Rule C: HH & Down Close)
+211. Info: prev_bar 210 (H:5706.0) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+212. Info: prev_bar 211 (H:5673.5) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+213. Info: prev_bar 212 (H:5663.5) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+214. Info: prev_bar 213 (H:5660.75) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+215. ⏳U Pending Uptrend Start on Bar 214 (2025-05-06 10:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 207 (2025-05-05 06:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 210 (2025-05-05 18:00:00+00:00) by Rule: A
+216. Pending Downtrend Start on Bar 214 (2025-05-06 10:00:00+00:00); Signal for Pending Downtrend Start on Bar 215 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 214 (2025-05-06 10:00:00+00:00) (Post-CUS of 214 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 215 (2025-05-06 14:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 214 (2025-05-06 10:00:00+00:00) by Rule: LOWER_OHLC
+217. ⏳U Pending Uptrend Start on Bar 216 (2025-05-06 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 215 (2025-05-06 14:00:00+00:00) by Rule: B
+218. Signal for Pending Downtrend Start on Bar 217 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 217 (2025-05-06 22:00:00+00:00) (general PDS rule on prev_bar)
+219. Info: prev_bar 218 (H:5670.0) not set as PDS. Existing PDS is 217 (H:5690.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 219 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25).
+220. Pending Downtrend Start on Bar 220 (2025-05-07 10:00:00+00:00); Pending Downtrend Start on Bar 220 (2025-05-07 10:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 216 (2025-05-06 18:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 🧱 Containment: Bar 220 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25) for 2 bars.
+221. Info: prev_bar 220 (H:5667.25) not set as PDS. Existing PDS is 217 (H:5690.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 221 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25) for 3 bars.
+222. Containment ENDED: Bar 222 moves outside Bar 217 range (was 3 bar(s) inside).; 📉 Confirmed Downtrend Start from Bar 217 (2025-05-06 22:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+223. ⏳U Pending Uptrend Start on Bar 222 (2025-05-07 18:00:00+00:00) (general PUS rule on prev_bar)
+224. ➖ Neutral
+225. ➖ Neutral
+226. Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00); Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00) (Post-CUS of 222 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 222 (2025-05-07 18:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+227. 📉 Confirmed Downtrend Start from Bar 226 (2025-05-08 10:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+228. Signal for Pending Downtrend Start on Bar 227 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 227 (2025-05-08 14:00:00+00:00) (general PDS rule on prev_bar)
+229. Info: prev_bar 228 (H:5732.0) not set as PDS. Existing PDS is 227 (H:5741.0). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 229 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75).
+230. ⏳U Pending Uptrend Start on Bar 229 (2025-05-08 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 230 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 2 bars.
+231. 🧱 Containment: Bar 231 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 3 bars.
+232. 📉 Confirmed Downtrend Start from Bar 227 (2025-05-08 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen; 🧱 Containment: Bar 232 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 4 bars.
+233. Signal for Pending Downtrend Start on Bar 232 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 232 (2025-05-09 10:00:00+00:00) (general PDS rule on prev_bar); 🧱 Containment: Bar 233 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 5 bars.
+234. Info: prev_bar 233 (H:5708.5) not set as PDS. Existing PDS is 232 (H:5715.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 233 (2025-05-09 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 234 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 6 bars.
+235. Containment ENDED: Bar 235 💨 BREAKOUT above Bar 227 range (was 6 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 234 (2025-05-09 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 229 (2025-05-08 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 232 (2025-05-09 10:00:00+00:00) by Rule: B
+236. Signal for Pending Downtrend Start on Bar 235 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 235 (2025-05-11 22:00:00+00:00) (general PDS rule on prev_bar)
+237. ⏳U Pending Uptrend Start on Bar 236 (2025-05-12 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 234 (2025-05-09 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+238. Pending Downtrend Start on Bar 238 (2025-05-12 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 238 (2025-05-12 10:00:00+00:00) (by Rule C: HH & Down Close)
+239. Info: prev_bar 238 (H:5865.5) not set as PDS. Existing PDS is 238 (H:5865.5). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 235 (2025-05-11 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 236 (2025-05-12 02:00:00+00:00) by Rule: LowUndercutHighRespect
+240. ⏳U Pending Uptrend Start on Bar 239 (2025-05-12 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 238 (2025-05-12 10:00:00+00:00) by Rule: B
+241. Signal for Pending Downtrend Start on Bar 240 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 240 (2025-05-12 18:00:00+00:00) (general PDS rule on prev_bar)
+242. Info: prev_bar 241 (H:5870.0) not set as PDS. Existing PDS is 240 (H:5876.25). prev_bar.h is not > existing PDS.H.
+243. Info: prev_bar 242 (H:5854.5) not set as PDS. Existing PDS is 240 (H:5876.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 242 (2025-05-13 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 239 (2025-05-12 14:00:00+00:00) by Rule: LowUndercutHighRespect
+244. ⏳U Pending Uptrend Start on Bar 243 (2025-05-13 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 240 (2025-05-12 18:00:00+00:00) by Rule: B
+245. ➖ Neutral
+246. Signal for Pending Downtrend Start on Bar 245 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 245 (2025-05-13 14:00:00+00:00) (general PDS rule on prev_bar)
+247. Info: prev_bar 246 (H:5926.75) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 247 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75).
+248. 🧱 Containment: Bar 248 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 2 bars.
+249. Pending Downtrend Start on Bar 249 (2025-05-14 06:00:00+00:00); Pending Downtrend Start on Bar 249 (2025-05-14 06:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 243 (2025-05-13 06:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 🧱 Containment: Bar 249 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 3 bars.
+250. ⏳U Pending Uptrend Start on Bar 249 (2025-05-14 06:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 250 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 4 bars.
+251. Info: prev_bar 250 (H:5925.0) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 245 (2025-05-13 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 249 (2025-05-14 06:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 251 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 5 bars.
+252. Info: prev_bar 251 (H:5921.0) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 251 (2025-05-14 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 252 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 6 bars.
+253. Info: prev_bar 252 (H:5917.5) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 250 (2025-05-14 10:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 251 (2025-05-14 14:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 253 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 7 bars.
+254. Containment ENDED: Bar 254 moves outside Bar 245 range (was 7 bar(s) inside).; Info: prev_bar 253 (H:5904.25) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.
+255. Info: prev_bar 254 (H:5903.25) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.
+256. ⏳U Pending Uptrend Start on Bar 255 (2025-05-15 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 245 (2025-05-13 14:00:00+00:00) by Rule: A
+257. ➖ Neutral
+258. Signal for Pending Downtrend Start on Bar 257 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 257 (2025-05-15 14:00:00+00:00) (general PDS rule on prev_bar)
+259. Info: prev_bar 258 (H:5941.5) not set as PDS. Existing PDS is 257 (H:5944.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 259 inside Bar 257 (PENDING_DOWNTREND_HIGH H:5944.5, L:5886.75).
+260. Info: prev_bar 259 (H:5940.25) not set as PDS. Existing PDS is 257 (H:5944.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 260 inside Bar 257 (PENDING_DOWNTREND_HIGH H:5944.5, L:5886.75) for 2 bars.
+261. Containment ENDED: Bar 261 💨 BREAKOUT above Bar 257 range (was 2 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 260 (2025-05-16 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 255 (2025-05-15 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+262. ➖ Neutral
+263. ➖ Neutral
+264. Pending Downtrend Start on Bar 264 (2025-05-16 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 264 (2025-05-16 18:00:00+00:00) (by Rule C: HH & Down Close)
+265. Info: prev_bar 264 (H:5977.75) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+266. Info: prev_bar 265 (H:5948.0) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+267. Info: prev_bar 266 (H:5934.75) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+268. ⏳U Pending Uptrend Start on Bar 267 (2025-05-19 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 257 (2025-05-15 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 260 (2025-05-16 02:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 264 (2025-05-16 18:00:00+00:00) by Rule: A
+269. ➖ Neutral
+270. Signal for Pending Downtrend Start on Bar 269 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 269 (2025-05-19 14:00:00+00:00) (general PDS rule on prev_bar)
+271. Pending Downtrend Start on Bar 271 (2025-05-19 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 271 (2025-05-19 22:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 267 (2025-05-19 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+272. Info: prev_bar 271 (H:5993.25) not set as PDS. Existing PDS is 271 (H:5993.25). prev_bar.h is not > existing PDS.H.
+273. Info: prev_bar 272 (H:5974.25) not set as PDS. Existing PDS is 271 (H:5993.25). prev_bar.h is not > existing PDS.H.
+274. Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 271 (2025-05-19 22:00:00+00:00) by Rule: F
+275. Info: prev_bar 274 (H:5974.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 275 inside Bar 274 (PENDING_DOWNTREND_HIGH H:5974.75, L:5950.5).
+276. Containment ENDED: Bar 276 moves outside Bar 274 range (was 1 bar(s) inside).; Info: prev_bar 275 (H:5971.0) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; Pending Downtrend Start on Bar 274 (due to trigger by 276); ⏳D Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (Post-CUS of 274 by rule LOWER_OHLC, trigger by 276); 📈 Confirmed Uptrend Start from Bar 274 (2025-05-20 10:00:00+00:00) by Rule: LOWER_OHLC
+277. Info: prev_bar 276 (H:5962.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 276 (2025-05-20 18:00:00+00:00) (general PUS rule on prev_bar)
+278. Info: prev_bar 277 (H:5958.0) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.
+279. Info: prev_bar 278 (H:5948.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.
+280. Info: prev_bar 279 (H:5934.25) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 275 (2025-05-20 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 276 (2025-05-20 18:00:00+00:00) by Rule: LowUndercutHighRespect
+281. Pending Downtrend Start on Bar 281 (2025-05-21 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 281 (2025-05-21 14:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 274 (2025-05-20 10:00:00+00:00) by Rule: F
+282. Info: prev_bar 281 (H:5956.25) not set as PDS. Existing PDS is 281 (H:5956.25). prev_bar.h is not > existing PDS.H.
+--- End of Trend Start Log ---
+
+Starting export of confirmed trend starts to trend_analysis/confirmed_trend_starts.csv...
+
+Exporting log entry 1: 1. Nothing
+  No trend confirmation found in entry.
+
+Exporting log entry 2: 2. Signal for Pending Downtrend Start on Bar 1 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 1 (2025-03-16 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 3: 3. 📉 Confirmed Downtrend Start from Bar 1 (2025-03-16 22:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 1, '2025-03-16 22:00:00+00:00')
+    Added DT: ('downtrend', 1, '2025-03-16 22:00:00+00:00')
+
+Exporting log entry 4: 4. ⏳U Pending Uptrend Start on Bar 3 (2025-03-17 06:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 5: 5. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 6: 6. Pending Downtrend Start on Bar 6 (2025-03-17 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 6 (2025-03-17 18:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 7: 7. Info: prev_bar 6 (H:5759.75) not set as PDS. Existing PDS is 6 (H:5759.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 8: 8. Info: prev_bar 7 (H:5738.0) not set as PDS. Existing PDS is 6 (H:5759.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 9: 9. ⏳U Pending Uptrend Start on Bar 8 (2025-03-18 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 3 (2025-03-17 06:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 6 (2025-03-17 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 6, '2025-03-17 18:00:00+00:00')
+    Added DT: ('downtrend', 6, '2025-03-17 18:00:00+00:00')
+  Matched UT: key=('uptrend', 3, '2025-03-17 06:00:00+00:00')
+    Added UT: ('uptrend', 3, '2025-03-17 06:00:00+00:00')
+
+Exporting log entry 10: 10. Pending Downtrend Start on Bar 8 (2025-03-18 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 9 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 8 (2025-03-18 02:00:00+00:00) (Post-CUS of 8 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 9 (2025-03-18 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 8 (2025-03-18 02:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 8, '2025-03-18 02:00:00+00:00')
+    Added UT: ('uptrend', 8, '2025-03-18 02:00:00+00:00')
+
+Exporting log entry 11: 11. Info: prev_bar 10 (H:5725.0) not set as PDS. Existing PDS is 9 (H:5735.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 12: 12. ⏳U Pending Uptrend Start on Bar 11 (2025-03-18 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 9 (2025-03-18 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 9, '2025-03-18 06:00:00+00:00')
+    Added DT: ('downtrend', 9, '2025-03-18 06:00:00+00:00')
+
+Exporting log entry 13: 13. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 14: 14. Signal for Pending Downtrend Start on Bar 13 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 13 (2025-03-18 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 15: 15. DEBUG PDS Check for prev_bar=14: Current PDS Index=13, Current PDS High=5689.5, prev_bar High=5685.0; Info: prev_bar 14 (H:5685.0) not set as PDS. Existing PDS is 13 (H:5689.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 11 (2025-03-18 14:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 11, '2025-03-18 14:00:00+00:00')
+    Added UT: ('uptrend', 11, '2025-03-18 14:00:00+00:00')
+
+Exporting log entry 16: 16. ⏳U Pending Uptrend Start on Bar 15 (2025-03-19 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 13 (2025-03-18 22:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 13, '2025-03-18 22:00:00+00:00')
+    Added DT: ('downtrend', 13, '2025-03-18 22:00:00+00:00')
+
+Exporting log entry 17: 17. Pending Downtrend Start on Bar 17 (2025-03-19 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 17 (2025-03-19 14:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 18: 18. 📈 Confirmed Uptrend Start from Bar 15 (2025-03-19 06:00:00+00:00) by Rule: EngulfingUpPDSLowBreak; 📉 Confirmed Downtrend Start from Bar 17 (2025-03-19 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 17, '2025-03-19 14:00:00+00:00')
+    Added DT: ('downtrend', 17, '2025-03-19 14:00:00+00:00')
+  Matched UT: key=('uptrend', 15, '2025-03-19 06:00:00+00:00')
+    Added UT: ('uptrend', 15, '2025-03-19 06:00:00+00:00')
+
+Exporting log entry 19: 19. Signal for Pending Downtrend Start on Bar 18 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 18 (2025-03-19 18:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 20: 20. ⏳U Pending Uptrend Start on Bar 19 (2025-03-19 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 20 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0).
+  No trend confirmation found in entry.
+
+Exporting log entry 21: 21. Info: prev_bar 20 (H:5760.0) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 19 (2025-03-19 22:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 21 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 2 bars.
+  Matched UT: key=('uptrend', 19, '2025-03-19 22:00:00+00:00')
+    Added UT: ('uptrend', 19, '2025-03-19 22:00:00+00:00')
+
+Exporting log entry 22: 22. Info: prev_bar 21 (H:5758.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 22 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 23: 23. Pending Downtrend Start on Bar 23 (2025-03-20 14:00:00+00:00) by Rule C; ⏳U Pending Uptrend Start on Bar 22 (2025-03-20 10:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 23 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 4 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 24: 24. Info: prev_bar 23 (H:5765.25) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 24 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 5 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 25: 25. Info: prev_bar 24 (H:5724.5) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 25 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 6 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 26: 26. Info: prev_bar 25 (H:5723.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 20 (2025-03-20 02:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 22 (2025-03-20 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 26 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 7 bars.
+  Matched UT: key=('uptrend', 22, '2025-03-20 10:00:00+00:00')
+    Added UT: ('uptrend', 22, '2025-03-20 10:00:00+00:00')
+
+Exporting log entry 27: 27. Info: prev_bar 26 (H:5722.75) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 27 inside Bar 18 (PENDING_DOWNTREND_HIGH H:5770.5, L:5681.0) for 8 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 28: 28. Containment ENDED: Bar 28 💨 BREAKDOWN below Bar 18 range (was 8 bar(s) inside).; Info: prev_bar 27 (H:5717.25) not set as PDS. Existing PDS is 18 (H:5770.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 29: 29. ⏳U Pending Uptrend Start on Bar 28 (2025-03-21 10:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 18 (2025-03-19 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 18, '2025-03-19 18:00:00+00:00')
+    Added DT: ('downtrend', 18, '2025-03-19 18:00:00+00:00')
+
+Exporting log entry 30: 30. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 31: 31. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 32: 32. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 33: 33. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 34: 34. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 35: 35. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 36: 36. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 37: 37. Signal for Pending Downtrend Start on Bar 36 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 36 (2025-03-24 18:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 38: 38. Info: prev_bar 37 (H:5816.25) not set as PDS. Existing PDS is 36 (H:5825.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 28 (2025-03-21 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment START: Bar 38 inside Bar 36 (PENDING_DOWNTREND_HIGH H:5825.5, L:5795.0).
+  Matched UT: key=('uptrend', 28, '2025-03-21 10:00:00+00:00')
+    Added UT: ('uptrend', 28, '2025-03-21 10:00:00+00:00')
+
+Exporting log entry 39: 39. 📉 Confirmed Downtrend Start from Bar 36 (2025-03-24 18:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen; 🧱 Containment: Bar 39 inside Bar 36 (PENDING_DOWNTREND_HIGH H:5825.5, L:5795.0) for 2 bars.
+  Matched DT: key=('downtrend', 36, '2025-03-24 18:00:00+00:00')
+    Added DT: ('downtrend', 36, '2025-03-24 18:00:00+00:00')
+
+Exporting log entry 40: 40. Containment ENDED: Bar 40 moves outside Bar 36 range (was 2 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 39 (2025-03-25 06:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 41: 41. Pending Downtrend Start on Bar 41 (2025-03-25 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 41 (2025-03-25 14:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 42: 42. Info: prev_bar 41 (H:5837.25) not set as PDS. Existing PDS is 41 (H:5837.25). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 39 (2025-03-25 06:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 39, '2025-03-25 06:00:00+00:00')
+    Added UT: ('uptrend', 39, '2025-03-25 06:00:00+00:00')
+
+Exporting log entry 43: 43. Pending Downtrend Start on Bar 43 (2025-03-25 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 43 (2025-03-25 22:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 41 (2025-03-25 14:00:00+00:00) by Rule: F; 🧱 Containment START: Bar 43 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0).
+  Matched DT: key=('downtrend', 41, '2025-03-25 14:00:00+00:00')
+    Added DT: ('downtrend', 41, '2025-03-25 14:00:00+00:00')
+
+Exporting log entry 44: 44. Info: prev_bar 43 (H:5836.5) not set as PDS. Existing PDS is 43 (H:5836.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 44 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 45: 45. Info: prev_bar 44 (H:5831.5) not set as PDS. Existing PDS is 43 (H:5836.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 45 inside Bar 41 (PENDING_DOWNTREND_HIGH H:5837.25, L:5812.0) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 46: 46. Containment ENDED: Bar 46 💨 BREAKDOWN below Bar 41 range (was 3 bar(s) inside).; Pending Downtrend Start on Bar 46 (2025-03-26 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 46 (2025-03-26 10:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📈 Forced Uptrend: Bar 42 (2025-03-25 18:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 43 (2025-03-25 22:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 43, '2025-03-25 22:00:00+00:00')
+    Added DT: ('downtrend', 43, '2025-03-25 22:00:00+00:00')
+
+Exporting log entry 47: 47. Info: prev_bar 46 (H:5834.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 48: 48. Info: prev_bar 47 (H:5817.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 49: 49. Info: prev_bar 48 (H:5767.5) not set as PDS. Existing PDS is 46 (H:5834.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 50: 50. ⏳U Pending Uptrend Start on Bar 49 (2025-03-26 22:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 45 (2025-03-26 06:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 46 (2025-03-26 10:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 46, '2025-03-26 10:00:00+00:00')
+    Added DT: ('downtrend', 46, '2025-03-26 10:00:00+00:00')
+
+Exporting log entry 51: 51. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 52: 52. Pending Downtrend Start on Bar 49 (2025-03-26 22:00:00+00:00); Signal for Pending Downtrend Start on Bar 51 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 49 (2025-03-26 22:00:00+00:00) (Post-CUS of 49 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 51 (2025-03-27 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 49 (2025-03-26 22:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 49, '2025-03-26 22:00:00+00:00')
+    Added UT: ('uptrend', 49, '2025-03-26 22:00:00+00:00')
+
+Exporting log entry 53: 53. Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 51 (2025-03-27 06:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 51, '2025-03-27 06:00:00+00:00')
+    Added DT: ('downtrend', 51, '2025-03-27 06:00:00+00:00')
+
+Exporting log entry 54: 54. Info: prev_bar 53 (H:5779.75) not set as PDS. Existing PDS is 53 (H:5779.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 54 inside Bar 53 (PENDING_DOWNTREND_HIGH H:5779.75, L:5733.75).
+  No trend confirmation found in entry.
+
+Exporting log entry 55: 55. Containment ENDED: Bar 55 moves outside Bar 53 range (was 1 bar(s) inside).; Info: prev_bar 54 (H:5771.25) not set as PDS. Existing PDS is 53 (H:5779.75). prev_bar.h is not > existing PDS.H.; Pending Downtrend Start on Bar 53 (due to trigger by 55); ⏳D Pending Downtrend Start on Bar 53 (2025-03-27 14:00:00+00:00) (Post-CUS of 53 by rule LOWER_OHLC, trigger by 55); 📈 Confirmed Uptrend Start from Bar 53 (2025-03-27 14:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 53, '2025-03-27 14:00:00+00:00')
+    Added UT: ('uptrend', 53, '2025-03-27 14:00:00+00:00')
+
+Exporting log entry 56: 56. ⏳U Pending Uptrend Start on Bar 55 (2025-03-27 22:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 53 (2025-03-27 14:00:00+00:00) by Rule: G; 🧱 Containment START: Bar 56 inside Bar 53 (PENDING_DOWNTREND_HIGH H:5779.75, L:5733.75).
+  Matched DT: key=('downtrend', 53, '2025-03-27 14:00:00+00:00')
+    Added DT: ('downtrend', 53, '2025-03-27 14:00:00+00:00')
+
+Exporting log entry 57: 57. Containment ENDED: Bar 57 💨 BREAKDOWN below Bar 53 range (was 1 bar(s) inside).; Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00); Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 57 (2025-03-28 06:00:00+00:00) (Post-CUS of 55 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 55 (2025-03-27 22:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 55, '2025-03-27 22:00:00+00:00')
+    Added UT: ('uptrend', 55, '2025-03-27 22:00:00+00:00')
+
+Exporting log entry 58: 58. Info: prev_bar 57 (H:5748.0) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 59: 59. Info: prev_bar 58 (H:5739.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 60: 60. Info: prev_bar 59 (H:5711.25) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 61: 61. Info: prev_bar 60 (H:5636.5) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 62: 62. Info: prev_bar 61 (H:5600.0) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 61 (2025-03-30 22:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 63: 63. Info: prev_bar 62 (H:5591.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 64: 64. Info: prev_bar 63 (H:5591.75) not set as PDS. Existing PDS is 57 (H:5748.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 65: 65. ⏳U Pending Uptrend Start on Bar 64 (2025-03-31 10:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 57 (2025-03-28 06:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 61 (2025-03-30 22:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 57 (2025-03-28 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 57, '2025-03-28 06:00:00+00:00')
+    Added DT: ('downtrend', 57, '2025-03-28 06:00:00+00:00')
+  Matched UT: key=('uptrend', 61, '2025-03-30 22:00:00+00:00')
+    Added UT: ('uptrend', 61, '2025-03-30 22:00:00+00:00')
+
+Exporting log entry 66: 66. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 67: 67. Signal for Pending Downtrend Start on Bar 66 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 66 (2025-03-31 18:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 68: 68. Info: prev_bar 67 (H:5645.75) not set as PDS. Existing PDS is 66 (H:5672.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 68 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25).
+  No trend confirmation found in entry.
+
+Exporting log entry 69: 69. 🧱 Containment: Bar 69 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 70: 70. Info: prev_bar 69 (H:5663.5) not set as PDS. Existing PDS is 66 (H:5672.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 64 (2025-03-31 10:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 70 inside Bar 66 (PENDING_DOWNTREND_HIGH H:5672.5, L:5595.25) for 3 bars.
+  Matched UT: key=('uptrend', 64, '2025-03-31 10:00:00+00:00')
+    Added UT: ('uptrend', 64, '2025-03-31 10:00:00+00:00')
+
+Exporting log entry 71: 71. Containment ENDED: Bar 71 moves outside Bar 66 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+
+Exporting log entry 72: 72. Signal for Pending Downtrend Start on Bar 71 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 71 (2025-04-01 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 73: 73. Pending Downtrend Start on Bar 73 (2025-04-01 22:00:00+00:00) by Rule C; ⏳U Pending Uptrend Start on Bar 72 (2025-04-01 18:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 73 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25).
+  No trend confirmation found in entry.
+
+Exporting log entry 74: 74. Info: prev_bar 73 (H:5694.75) not set as PDS. Existing PDS is 71 (H:5694.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 71 (2025-04-01 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 72 (2025-04-01 18:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 74 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 2 bars.
+  Matched UT: key=('uptrend', 72, '2025-04-01 18:00:00+00:00')
+    Added UT: ('uptrend', 72, '2025-04-01 18:00:00+00:00')
+
+Exporting log entry 75: 75. Pending Downtrend Start on Bar 75 (2025-04-02 06:00:00+00:00) by Rule C; 🧱 Containment: Bar 75 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 76: 76. Info: prev_bar 75 (H:5672.25) not set as PDS. Existing PDS is 71 (H:5694.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 76 inside Bar 71 (PENDING_DOWNTREND_HIGH H:5694.75, L:5600.25) for 4 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 77: 77. Containment ENDED: Bar 77 💨 BREAKOUT above Bar 71 range (was 4 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 76 (2025-04-02 10:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 78: 78. Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00); Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 78 (2025-04-02 18:00:00+00:00) (Post-CUS of 76 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 73 (2025-04-01 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 76 (2025-04-02 10:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 76, '2025-04-02 10:00:00+00:00')
+    Added UT: ('uptrend', 76, '2025-04-02 10:00:00+00:00')
+
+Exporting log entry 79: 79. Info: prev_bar 78 (H:5776.25) not set as PDS. Existing PDS is 78 (H:5776.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 80: 80. Pending Downtrend Start on Bar 80 (2025-04-03 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 80 (2025-04-03 02:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 78 (2025-04-02 18:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 78, '2025-04-02 18:00:00+00:00')
+    Added DT: ('downtrend', 78, '2025-04-02 18:00:00+00:00')
+
+Exporting log entry 81: 81. Info: prev_bar 80 (H:5565.0) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 82: 82. Info: prev_bar 81 (H:5557.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 83: 83. Info: prev_bar 82 (H:5540.25) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 84: 84. Info: prev_bar 83 (H:5524.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 85: 85. Info: prev_bar 84 (H:5485.5) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 86: 86. Info: prev_bar 85 (H:5435.0) not set as PDS. Existing PDS is 80 (H:5565.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 87: 87. Pending Downtrend Start on Bar 87 (2025-04-04 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 87 (2025-04-04 06:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📈 Forced Uptrend: Bar 79 (2025-04-02 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 80 (2025-04-03 02:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 80, '2025-04-03 02:00:00+00:00')
+    Added DT: ('downtrend', 80, '2025-04-03 02:00:00+00:00')
+
+Exporting log entry 88: 88. Info: prev_bar 87 (H:5428.75) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 89: 89. Info: prev_bar 88 (H:5395.5) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 90: 90. Info: prev_bar 89 (H:5288.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 91: 91. Info: prev_bar 90 (H:5212.25) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 92: 92. Info: prev_bar 91 (H:5008.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 91 (2025-04-06 22:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 93: 93. Info: prev_bar 92 (H:4993.0) not set as PDS. Existing PDS is 87 (H:5428.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 91 (2025-04-06 22:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 91, '2025-04-06 22:00:00+00:00')
+    Added UT: ('uptrend', 91, '2025-04-06 22:00:00+00:00')
+
+Exporting log entry 94: 94. ⏳U Pending Uptrend Start on Bar 93 (2025-04-07 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 87 (2025-04-04 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 87, '2025-04-04 06:00:00+00:00')
+    Added DT: ('downtrend', 87, '2025-04-04 06:00:00+00:00')
+
+Exporting log entry 95: 95. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 96: 96. Signal for Pending Downtrend Start on Bar 95 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 95 (2025-04-07 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 97: 97. 🧱 Containment START: Bar 97 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25).
+  No trend confirmation found in entry.
+
+Exporting log entry 98: 98. Info: prev_bar 97 (H:5187.5) not set as PDS. Existing PDS is 95 (H:5285.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 98 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 99: 99. Pending Downtrend Start on Bar 99 (2025-04-08 06:00:00+00:00) by Rule C; 🧱 Containment: Bar 99 inside Bar 95 (PENDING_DOWNTREND_HIGH H:5285.75, L:4977.25) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 100: 100. Containment ENDED: Bar 100 moves outside Bar 95 range (was 3 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 99 (2025-04-08 06:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 93 (2025-04-07 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 93, '2025-04-07 06:00:00+00:00')
+    Added UT: ('uptrend', 93, '2025-04-07 06:00:00+00:00')
+
+Exporting log entry 101: 101. Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00); Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 101 (2025-04-08 14:00:00+00:00) (Post-CUS of 99 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 95 (2025-04-07 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 99 (2025-04-08 06:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 99, '2025-04-08 06:00:00+00:00')
+    Added UT: ('uptrend', 99, '2025-04-08 06:00:00+00:00')
+
+Exporting log entry 102: 102. Info: prev_bar 101 (H:5304.5) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 103: 103. Info: prev_bar 102 (H:5129.0) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 104: 104. Info: prev_bar 103 (H:5014.0) not set as PDS. Existing PDS is 101 (H:5304.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 105: 105. ⏳U Pending Uptrend Start on Bar 104 (2025-04-09 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 101 (2025-04-08 14:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 101, '2025-04-08 14:00:00+00:00')
+    Added DT: ('downtrend', 101, '2025-04-08 14:00:00+00:00')
+
+Exporting log entry 106: 106. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 107: 107. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 108: 108. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 109: 109. Pending Downtrend Start on Bar 109 (2025-04-09 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 109 (2025-04-09 22:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 110: 110. Info: prev_bar 109 (H:5528.75) not set as PDS. Existing PDS is 109 (H:5528.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 111: 111. Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00); Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 111 (2025-04-10 06:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 104 (2025-04-09 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 📉 Confirmed Downtrend Start from Bar 109 (2025-04-09 22:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 109, '2025-04-09 22:00:00+00:00')
+    Added DT: ('downtrend', 109, '2025-04-09 22:00:00+00:00')
+  Matched UT: key=('uptrend', 104, '2025-04-09 02:00:00+00:00')
+    Added UT: ('uptrend', 104, '2025-04-09 02:00:00+00:00')
+
+Exporting log entry 112: 112. Info: prev_bar 111 (H:5488.5) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 113: 113. Info: prev_bar 112 (H:5430.0) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 114: 114. Info: prev_bar 113 (H:5373.75) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 113 (2025-04-10 14:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 115: 115. Info: prev_bar 114 (H:5351.75) not set as PDS. Existing PDS is 111 (H:5488.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 116: 116. ⏳U Pending Uptrend Start on Bar 115 (2025-04-10 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 113 (2025-04-10 14:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 111 (2025-04-10 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 111, '2025-04-10 06:00:00+00:00')
+    Added DT: ('downtrend', 111, '2025-04-10 06:00:00+00:00')
+  Matched UT: key=('uptrend', 113, '2025-04-10 14:00:00+00:00')
+    Added UT: ('uptrend', 113, '2025-04-10 14:00:00+00:00')
+
+Exporting log entry 117: 117. Pending Downtrend Start on Bar 117 (2025-04-11 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 117 (2025-04-11 06:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 118: 118. Info: prev_bar 117 (H:5379.5) not set as PDS. Existing PDS is 117 (H:5379.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 118 inside Bar 117 (PENDING_DOWNTREND_HIGH H:5379.5, L:5257.0).
+  No trend confirmation found in entry.
+
+Exporting log entry 119: 119. Containment ENDED: Bar 119 💨 BREAKOUT above Bar 117 range (was 1 bar(s) inside).
+  No trend confirmation found in entry.
+
+Exporting log entry 120: 120. Signal for Pending Downtrend Start on Bar 119 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 119 (2025-04-11 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 121: 121. Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 115 (2025-04-10 22:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 115, '2025-04-10 22:00:00+00:00')
+    Added UT: ('uptrend', 115, '2025-04-10 22:00:00+00:00')
+
+Exporting log entry 122: 122. Info: prev_bar 121 (H:5477.0) not set as PDS. Existing PDS is 121 (H:5477.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 122 inside Bar 121 (PENDING_DOWNTREND_HIGH H:5477.0, L:5409.75).
+  No trend confirmation found in entry.
+
+Exporting log entry 123: 123. 🧱 Containment: Bar 123 inside Bar 121 (PENDING_DOWNTREND_HIGH H:5477.0, L:5409.75) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 124: 124. Containment ENDED: Bar 124 moves outside Bar 121 range (was 2 bar(s) inside).
+  No trend confirmation found in entry.
+
+Exporting log entry 125: 125. Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00); Signal for Pending Downtrend Start on Bar 124 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 121 (2025-04-13 22:00:00+00:00) (Post-CUS of 121 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 124 (2025-04-14 10:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 119 (2025-04-11 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 121 (2025-04-13 22:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 121, '2025-04-13 22:00:00+00:00')
+    Added UT: ('uptrend', 121, '2025-04-13 22:00:00+00:00')
+
+Exporting log entry 126: 126. Info: prev_bar 125 (H:5492.0) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 125 (2025-04-14 14:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 127: 127. Info: prev_bar 126 (H:5479.25) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 126 (2025-04-14 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 124 (2025-04-14 10:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 125 (2025-04-14 14:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 125, '2025-04-14 14:00:00+00:00')
+    Added UT: ('uptrend', 125, '2025-04-14 14:00:00+00:00')
+
+Exporting log entry 128: 128. Info: prev_bar 127 (H:5442.75) not set as PDS. Existing PDS is 124 (H:5497.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 129: 129. ⏳U Pending Uptrend Start on Bar 128 (2025-04-15 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 126 (2025-04-14 18:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 124 (2025-04-14 10:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 124, '2025-04-14 10:00:00+00:00')
+    Added DT: ('downtrend', 124, '2025-04-14 10:00:00+00:00')
+  Matched UT: key=('uptrend', 126, '2025-04-14 18:00:00+00:00')
+    Added UT: ('uptrend', 126, '2025-04-14 18:00:00+00:00')
+
+Exporting log entry 130: 130. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 131: 131. Pending Downtrend Start on Bar 131 (2025-04-15 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 131 (2025-04-15 14:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 132: 132. Info: prev_bar 131 (H:5485.0) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 133: 133. Info: prev_bar 132 (H:5444.75) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 134: 134. Info: prev_bar 133 (H:5406.5) not set as PDS. Existing PDS is 131 (H:5485.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 135: 135. ⏳U Pending Uptrend Start on Bar 134 (2025-04-16 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 128 (2025-04-15 02:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 131 (2025-04-15 14:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 131, '2025-04-15 14:00:00+00:00')
+    Added DT: ('downtrend', 131, '2025-04-15 14:00:00+00:00')
+  Matched UT: key=('uptrend', 128, '2025-04-15 02:00:00+00:00')
+    Added UT: ('uptrend', 128, '2025-04-15 02:00:00+00:00')
+
+Exporting log entry 136: 136. Signal for Pending Downtrend Start on Bar 135 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 135 (2025-04-16 06:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 137: 137. Pending Downtrend Start on Bar 137 (2025-04-16 14:00:00+00:00); Pending Downtrend Start on Bar 137 (2025-04-16 14:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 134 (2025-04-16 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 134, '2025-04-16 02:00:00+00:00')
+    Added UT: ('uptrend', 134, '2025-04-16 02:00:00+00:00')
+
+Exporting log entry 138: 138. Info: prev_bar 137 (H:5401.0) not set as PDS. Existing PDS is 135 (H:5425.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 139: 139. ⏳U Pending Uptrend Start on Bar 138 (2025-04-16 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 135 (2025-04-16 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 135, '2025-04-16 06:00:00+00:00')
+    Added DT: ('downtrend', 135, '2025-04-16 06:00:00+00:00')
+
+Exporting log entry 140: 140. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 141: 141. Pending Downtrend Start on Bar 141 (2025-04-17 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 141 (2025-04-17 06:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 142: 142. Info: prev_bar 141 (H:5373.75) not set as PDS. Existing PDS is 141 (H:5373.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 143: 143. Info: prev_bar 142 (H:5356.5) not set as PDS. Existing PDS is 141 (H:5373.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 138 (2025-04-16 18:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 138, '2025-04-16 18:00:00+00:00')
+    Added UT: ('uptrend', 138, '2025-04-16 18:00:00+00:00')
+
+Exporting log entry 144: 144. Pending Downtrend Start on Bar 144 (2025-04-17 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 144 (2025-04-17 18:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 141 (2025-04-17 06:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 141, '2025-04-17 06:00:00+00:00')
+    Added DT: ('downtrend', 141, '2025-04-17 06:00:00+00:00')
+
+Exporting log entry 145: 145. Info: prev_bar 144 (H:5359.75) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 146: 146. Info: prev_bar 145 (H:5309.5) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 147: 147. Info: prev_bar 146 (H:5285.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 148: 148. Info: prev_bar 147 (H:5278.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 149: 149. Info: prev_bar 148 (H:5270.0) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 150: 150. Info: prev_bar 149 (H:5220.5) not set as PDS. Existing PDS is 144 (H:5359.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 151: 151. ⏳U Pending Uptrend Start on Bar 150 (2025-04-21 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 143 (2025-04-17 14:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 144 (2025-04-17 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 144, '2025-04-17 18:00:00+00:00')
+    Added DT: ('downtrend', 144, '2025-04-17 18:00:00+00:00')
+
+Exporting log entry 152: 152. Signal for Pending Downtrend Start on Bar 151 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 151 (2025-04-21 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 153: 153. ⏳U Pending Uptrend Start on Bar 152 (2025-04-22 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 150 (2025-04-21 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 150, '2025-04-21 18:00:00+00:00')
+    Added UT: ('uptrend', 150, '2025-04-21 18:00:00+00:00')
+
+Exporting log entry 154: 154. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 155: 155. Pending Downtrend Start on Bar 155 (2025-04-22 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 155 (2025-04-22 14:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 156: 156. Info: prev_bar 155 (H:5339.25) not set as PDS. Existing PDS is 155 (H:5339.25). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 151 (2025-04-21 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 152 (2025-04-22 02:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 152, '2025-04-22 02:00:00+00:00')
+    Added UT: ('uptrend', 152, '2025-04-22 02:00:00+00:00')
+
+Exporting log entry 157: 157. ⏳U Pending Uptrend Start on Bar 156 (2025-04-22 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 155 (2025-04-22 14:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 155, '2025-04-22 14:00:00+00:00')
+    Added DT: ('downtrend', 155, '2025-04-22 14:00:00+00:00')
+
+Exporting log entry 158: 158. Signal for Pending Downtrend Start on Bar 157 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 157 (2025-04-22 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 159: 159. ⏳U Pending Uptrend Start on Bar 158 (2025-04-23 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 156 (2025-04-22 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 156, '2025-04-22 18:00:00+00:00')
+    Added UT: ('uptrend', 156, '2025-04-22 18:00:00+00:00')
+
+Exporting log entry 160: 160. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 161: 161. Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00); Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 161 (2025-04-23 14:00:00+00:00) (Post-CUS of 158 by rule HigherHighLowerLowDownClose); ⚠️📉 Forced Downtrend: Bar 157 (2025-04-22 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 158 (2025-04-23 02:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 158, '2025-04-23 02:00:00+00:00')
+    Added UT: ('uptrend', 158, '2025-04-23 02:00:00+00:00')
+
+Exporting log entry 162: 162. Info: prev_bar 161 (H:5500.0) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 163: 163. Info: prev_bar 162 (H:5435.25) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 162 (2025-04-23 18:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 163 inside Bar 161 (PENDING_DOWNTREND_HIGH H:5500.0, L:5385.5).
+  No trend confirmation found in entry.
+
+Exporting log entry 164: 164. Containment ENDED: Bar 164 💨 BREAKDOWN below Bar 161 range (was 1 bar(s) inside).; Info: prev_bar 163 (H:5421.25) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 165: 165. Info: prev_bar 164 (H:5404.75) not set as PDS. Existing PDS is 161 (H:5500.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 166: 166. ⏳U Pending Uptrend Start on Bar 165 (2025-04-24 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 161 (2025-04-23 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 162 (2025-04-23 18:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 161 (2025-04-23 14:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 161, '2025-04-23 14:00:00+00:00')
+    Added DT: ('downtrend', 161, '2025-04-23 14:00:00+00:00')
+  Matched UT: key=('uptrend', 162, '2025-04-23 18:00:00+00:00')
+    Added UT: ('uptrend', 162, '2025-04-23 18:00:00+00:00')
+
+Exporting log entry 167: 167. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 168: 168. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 169: 169. Signal for Pending Downtrend Start on Bar 168 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 168 (2025-04-24 18:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 170: 170. ⏳U Pending Uptrend Start on Bar 169 (2025-04-24 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 165 (2025-04-24 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 165, '2025-04-24 06:00:00+00:00')
+    Added UT: ('uptrend', 165, '2025-04-24 06:00:00+00:00')
+
+Exporting log entry 171: 171. Signal for Pending Downtrend Start on Bar 170 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 170 (2025-04-25 02:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 168 (2025-04-24 18:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 169 (2025-04-24 22:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 169, '2025-04-24 22:00:00+00:00')
+    Added UT: ('uptrend', 169, '2025-04-24 22:00:00+00:00')
+
+Exporting log entry 172: 172. Info: prev_bar 171 (H:5549.25) not set as PDS. Existing PDS is 170 (H:5553.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 173: 173. 📉 Confirmed Downtrend Start from Bar 170 (2025-04-25 02:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 170, '2025-04-25 02:00:00+00:00')
+    Added DT: ('downtrend', 170, '2025-04-25 02:00:00+00:00')
+
+Exporting log entry 174: 174. ⏳U Pending Uptrend Start on Bar 173 (2025-04-25 14:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 175: 175. Pending Downtrend Start on Bar 173 (due to trigger by 175); Signal for Pending Downtrend Start on Bar 174 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 173 (2025-04-25 14:00:00+00:00) (Post-CUS of 173 by rule LOWER_OHLC, trigger by 175); ⏳D Pending Downtrend Start on Bar 174 (2025-04-25 18:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 173 (2025-04-25 14:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment START: Bar 175 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0).
+  Matched UT: key=('uptrend', 173, '2025-04-25 14:00:00+00:00')
+    Added UT: ('uptrend', 173, '2025-04-25 14:00:00+00:00')
+
+Exporting log entry 176: 176. Info: prev_bar 175 (H:5547.75) not set as PDS. Existing PDS is 174 (H:5563.25). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 176 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 177: 177. ⏳U Pending Uptrend Start on Bar 176 (2025-04-28 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 174 (2025-04-25 18:00:00+00:00) by Rule: G; 🧱 Containment: Bar 177 inside Bar 173 (PENDING_UPTREND_LOW H:5554.5, L:5480.0) for 3 bars.
+  Matched DT: key=('downtrend', 174, '2025-04-25 18:00:00+00:00')
+    Added DT: ('downtrend', 174, '2025-04-25 18:00:00+00:00')
+
+Exporting log entry 178: 178. Containment ENDED: Bar 178 moves outside Bar 173 range (was 3 bar(s) inside).
+  No trend confirmation found in entry.
+
+Exporting log entry 179: 179. Pending Downtrend Start on Bar 176 (2025-04-28 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 178 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 176 (2025-04-28 02:00:00+00:00) (Post-CUS of 176 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 178 (2025-04-28 10:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 176 (2025-04-28 02:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 176, '2025-04-28 02:00:00+00:00')
+    Added UT: ('uptrend', 176, '2025-04-28 02:00:00+00:00')
+
+Exporting log entry 180: 180. ⏳U Pending Uptrend Start on Bar 179 (2025-04-28 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 178 (2025-04-28 10:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 178, '2025-04-28 10:00:00+00:00')
+    Added DT: ('downtrend', 178, '2025-04-28 10:00:00+00:00')
+
+Exporting log entry 181: 181. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 182: 182. Pending Downtrend Start on Bar 182 (2025-04-29 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 182 (2025-04-29 02:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 183: 183. Info: prev_bar 182 (H:5573.75) not set as PDS. Existing PDS is 182 (H:5573.75). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 179 (2025-04-28 14:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 179, '2025-04-28 14:00:00+00:00')
+    Added UT: ('uptrend', 179, '2025-04-28 14:00:00+00:00')
+
+Exporting log entry 184: 184. Info: prev_bar 183 (H:5573.75) not set as PDS. Existing PDS is 182 (H:5573.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 185: 185. ⏳U Pending Uptrend Start on Bar 184 (2025-04-29 10:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 182 (2025-04-29 02:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 182, '2025-04-29 02:00:00+00:00')
+    Added DT: ('downtrend', 182, '2025-04-29 02:00:00+00:00')
+
+Exporting log entry 186: 186. Pending Downtrend Start on Bar 186 (2025-04-29 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 186 (2025-04-29 18:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 187: 187. Info: prev_bar 186 (H:5597.5) not set as PDS. Existing PDS is 186 (H:5597.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 188: 188. Info: prev_bar 187 (H:5583.0) not set as PDS. Existing PDS is 186 (H:5597.5). prev_bar.h is not > existing PDS.H.; 📈 Confirmed Uptrend Start from Bar 184 (2025-04-29 10:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 184, '2025-04-29 10:00:00+00:00')
+    Added UT: ('uptrend', 184, '2025-04-29 10:00:00+00:00')
+
+Exporting log entry 189: 189. ⏳U Pending Uptrend Start on Bar 188 (2025-04-30 02:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 186 (2025-04-29 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 186, '2025-04-29 18:00:00+00:00')
+    Added DT: ('downtrend', 186, '2025-04-29 18:00:00+00:00')
+
+Exporting log entry 190: 190. Pending Downtrend Start on Bar 188 (2025-04-30 02:00:00+00:00); Signal for Pending Downtrend Start on Bar 189 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 188 (2025-04-30 02:00:00+00:00) (Post-CUS of 188 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 189 (2025-04-30 06:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 188 (2025-04-30 02:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 188, '2025-04-30 02:00:00+00:00')
+    Added UT: ('uptrend', 188, '2025-04-30 02:00:00+00:00')
+
+Exporting log entry 191: 191. Info: prev_bar 190 (H:5580.0) not set as PDS. Existing PDS is 189 (H:5582.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 190 (2025-04-30 10:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 192: 192. ⏳U Pending Uptrend Start on Bar 191 (2025-04-30 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 189 (2025-04-30 06:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 189, '2025-04-30 06:00:00+00:00')
+    Added DT: ('downtrend', 189, '2025-04-30 06:00:00+00:00')
+
+Exporting log entry 193: 193. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 194: 194. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 195: 195. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 196: 196. Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00); Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (Post-CUS of 191 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 191 (2025-04-30 14:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 191, '2025-04-30 14:00:00+00:00')
+    Added UT: ('uptrend', 191, '2025-04-30 14:00:00+00:00')
+
+Exporting log entry 197: 197. ⏳U Pending Uptrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 198: 198. Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00); Signal for Pending Downtrend Start on Bar 197 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 196 (2025-05-01 10:00:00+00:00) (Post-CUS of 196 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 197 (2025-05-01 14:00:00+00:00) (general PDS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 195 (2025-05-01 06:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 196 (2025-05-01 10:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 196, '2025-05-01 10:00:00+00:00')
+    Added UT: ('uptrend', 196, '2025-05-01 10:00:00+00:00')
+
+Exporting log entry 199: 199. 📉 Confirmed Downtrend Start from Bar 197 (2025-05-01 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 197, '2025-05-01 14:00:00+00:00')
+    Added DT: ('downtrend', 197, '2025-05-01 14:00:00+00:00')
+
+Exporting log entry 200: 200. Pending Downtrend Start on Bar 200 (2025-05-02 02:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 200 (2025-05-02 02:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 201: 201. Info: prev_bar 200 (H:5675.0) not set as PDS. Existing PDS is 200 (H:5675.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 202: 202. ⏳U Pending Uptrend Start on Bar 201 (2025-05-02 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 199 (2025-05-01 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 200 (2025-05-02 02:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 200, '2025-05-02 02:00:00+00:00')
+    Added DT: ('downtrend', 200, '2025-05-02 02:00:00+00:00')
+
+Exporting log entry 203: 203. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 204: 204. Pending Downtrend Start on Bar 204 (2025-05-02 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 204 (2025-05-02 18:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 205: 205. Info: prev_bar 204 (H:5724.5) not set as PDS. Existing PDS is 204 (H:5724.5). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 206: 206. Info: prev_bar 205 (H:5707.0) not set as PDS. Existing PDS is 204 (H:5724.5). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 205 (2025-05-04 22:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 201 (2025-05-02 06:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 201, '2025-05-02 06:00:00+00:00')
+    Added UT: ('uptrend', 201, '2025-05-02 06:00:00+00:00')
+
+Exporting log entry 207: 207. Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00); Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 207 (2025-05-05 06:00:00+00:00) (by Rule C: HH & Down Close); ⚠️📉 Forced Downtrend: Bar 204 (2025-05-02 18:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 205 (2025-05-04 22:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 📉 Confirmed Downtrend Start from Bar 204 (2025-05-02 18:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 204, '2025-05-02 18:00:00+00:00')
+    Added DT: ('downtrend', 204, '2025-05-02 18:00:00+00:00')
+  Matched UT: key=('uptrend', 205, '2025-05-04 22:00:00+00:00')
+    Added UT: ('uptrend', 205, '2025-05-04 22:00:00+00:00')
+
+Exporting log entry 208: 208. Info: prev_bar 207 (H:5680.25) not set as PDS. Existing PDS is 207 (H:5680.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 207 (2025-05-05 06:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 208 inside Bar 207 (PENDING_DOWNTREND_HIGH H:5680.25, L:5655.25).
+  No trend confirmation found in entry.
+
+Exporting log entry 209: 209. Containment ENDED: Bar 209 💨 BREAKOUT above Bar 207 range (was 1 bar(s) inside).
+  No trend confirmation found in entry.
+
+Exporting log entry 210: 210. Pending Downtrend Start on Bar 210 (2025-05-05 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 210 (2025-05-05 18:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 211: 211. Info: prev_bar 210 (H:5706.0) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 212: 212. Info: prev_bar 211 (H:5673.5) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 213: 213. Info: prev_bar 212 (H:5663.5) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 214: 214. Info: prev_bar 213 (H:5660.75) not set as PDS. Existing PDS is 210 (H:5706.0). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 215: 215. ⏳U Pending Uptrend Start on Bar 214 (2025-05-06 10:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 207 (2025-05-05 06:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 210 (2025-05-05 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 210, '2025-05-05 18:00:00+00:00')
+    Added DT: ('downtrend', 210, '2025-05-05 18:00:00+00:00')
+  Matched UT: key=('uptrend', 207, '2025-05-05 06:00:00+00:00')
+    Added UT: ('uptrend', 207, '2025-05-05 06:00:00+00:00')
+
+Exporting log entry 216: 216. Pending Downtrend Start on Bar 214 (2025-05-06 10:00:00+00:00); Signal for Pending Downtrend Start on Bar 215 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 214 (2025-05-06 10:00:00+00:00) (Post-CUS of 214 by rule LOWER_OHLC); ⏳D Pending Downtrend Start on Bar 215 (2025-05-06 14:00:00+00:00) (general PDS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 214 (2025-05-06 10:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 214, '2025-05-06 10:00:00+00:00')
+    Added UT: ('uptrend', 214, '2025-05-06 10:00:00+00:00')
+
+Exporting log entry 217: 217. ⏳U Pending Uptrend Start on Bar 216 (2025-05-06 18:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 215 (2025-05-06 14:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 215, '2025-05-06 14:00:00+00:00')
+    Added DT: ('downtrend', 215, '2025-05-06 14:00:00+00:00')
+
+Exporting log entry 218: 218. Signal for Pending Downtrend Start on Bar 217 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 217 (2025-05-06 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 219: 219. Info: prev_bar 218 (H:5670.0) not set as PDS. Existing PDS is 217 (H:5690.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 219 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25).
+  No trend confirmation found in entry.
+
+Exporting log entry 220: 220. Pending Downtrend Start on Bar 220 (2025-05-07 10:00:00+00:00); Pending Downtrend Start on Bar 220 (2025-05-07 10:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 216 (2025-05-06 18:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 🧱 Containment: Bar 220 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25) for 2 bars.
+  Matched UT: key=('uptrend', 216, '2025-05-06 18:00:00+00:00')
+    Added UT: ('uptrend', 216, '2025-05-06 18:00:00+00:00')
+
+Exporting log entry 221: 221. Info: prev_bar 220 (H:5667.25) not set as PDS. Existing PDS is 217 (H:5690.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 221 inside Bar 217 (PENDING_DOWNTREND_HIGH H:5690.75, L:5608.25) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 222: 222. Containment ENDED: Bar 222 moves outside Bar 217 range (was 3 bar(s) inside).; 📉 Confirmed Downtrend Start from Bar 217 (2025-05-06 22:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 217, '2025-05-06 22:00:00+00:00')
+    Added DT: ('downtrend', 217, '2025-05-06 22:00:00+00:00')
+
+Exporting log entry 223: 223. ⏳U Pending Uptrend Start on Bar 222 (2025-05-07 18:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 224: 224. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 225: 225. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 226: 226. Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00); Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 226 (2025-05-08 10:00:00+00:00) (Post-CUS of 222 by rule HigherHighLowerLowDownClose); 📈 Confirmed Uptrend Start from Bar 222 (2025-05-07 18:00:00+00:00) by Rule: HigherHighLowerLowDownClose
+  Matched UT: key=('uptrend', 222, '2025-05-07 18:00:00+00:00')
+    Added UT: ('uptrend', 222, '2025-05-07 18:00:00+00:00')
+
+Exporting log entry 227: 227. 📉 Confirmed Downtrend Start from Bar 226 (2025-05-08 10:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen
+  Matched DT: key=('downtrend', 226, '2025-05-08 10:00:00+00:00')
+    Added DT: ('downtrend', 226, '2025-05-08 10:00:00+00:00')
+
+Exporting log entry 228: 228. Signal for Pending Downtrend Start on Bar 227 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 227 (2025-05-08 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 229: 229. Info: prev_bar 228 (H:5732.0) not set as PDS. Existing PDS is 227 (H:5741.0). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 229 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75).
+  No trend confirmation found in entry.
+
+Exporting log entry 230: 230. ⏳U Pending Uptrend Start on Bar 229 (2025-05-08 22:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 230 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 231: 231. 🧱 Containment: Bar 231 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 3 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 232: 232. 📉 Confirmed Downtrend Start from Bar 227 (2025-05-08 14:00:00+00:00) by Rule: LowThenHigherClose_vs_PDSOpen; 🧱 Containment: Bar 232 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 4 bars.
+  Matched DT: key=('downtrend', 227, '2025-05-08 14:00:00+00:00')
+    Added DT: ('downtrend', 227, '2025-05-08 14:00:00+00:00')
+
+Exporting log entry 233: 233. Signal for Pending Downtrend Start on Bar 232 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 232 (2025-05-09 10:00:00+00:00) (general PDS rule on prev_bar); 🧱 Containment: Bar 233 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 5 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 234: 234. Info: prev_bar 233 (H:5708.5) not set as PDS. Existing PDS is 232 (H:5715.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 233 (2025-05-09 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 234 inside Bar 227 (PENDING_DOWNTREND_HIGH H:5741.0, L:5652.75) for 6 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 235: 235. Containment ENDED: Bar 235 💨 BREAKOUT above Bar 227 range (was 6 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 234 (2025-05-09 18:00:00+00:00) (general PUS rule on prev_bar); ⚠️📈 Forced Uptrend: Bar 229 (2025-05-08 22:00:00+00:00) due to consecutive downtrends.; 📉 Confirmed Downtrend Start from Bar 232 (2025-05-09 10:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 232, '2025-05-09 10:00:00+00:00')
+    Added DT: ('downtrend', 232, '2025-05-09 10:00:00+00:00')
+
+Exporting log entry 236: 236. Signal for Pending Downtrend Start on Bar 235 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 235 (2025-05-11 22:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 237: 237. ⏳U Pending Uptrend Start on Bar 236 (2025-05-12 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 234 (2025-05-09 18:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 234, '2025-05-09 18:00:00+00:00')
+    Added UT: ('uptrend', 234, '2025-05-09 18:00:00+00:00')
+
+Exporting log entry 238: 238. Pending Downtrend Start on Bar 238 (2025-05-12 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 238 (2025-05-12 10:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 239: 239. Info: prev_bar 238 (H:5865.5) not set as PDS. Existing PDS is 238 (H:5865.5). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 235 (2025-05-11 22:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 236 (2025-05-12 02:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 236, '2025-05-12 02:00:00+00:00')
+    Added UT: ('uptrend', 236, '2025-05-12 02:00:00+00:00')
+
+Exporting log entry 240: 240. ⏳U Pending Uptrend Start on Bar 239 (2025-05-12 14:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 238 (2025-05-12 10:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 238, '2025-05-12 10:00:00+00:00')
+    Added DT: ('downtrend', 238, '2025-05-12 10:00:00+00:00')
+
+Exporting log entry 241: 241. Signal for Pending Downtrend Start on Bar 240 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 240 (2025-05-12 18:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 242: 242. Info: prev_bar 241 (H:5870.0) not set as PDS. Existing PDS is 240 (H:5876.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 243: 243. Info: prev_bar 242 (H:5854.5) not set as PDS. Existing PDS is 240 (H:5876.25). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 242 (2025-05-13 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 239 (2025-05-12 14:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 239, '2025-05-12 14:00:00+00:00')
+    Added UT: ('uptrend', 239, '2025-05-12 14:00:00+00:00')
+
+Exporting log entry 244: 244. ⏳U Pending Uptrend Start on Bar 243 (2025-05-13 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 240 (2025-05-12 18:00:00+00:00) by Rule: B
+  Matched DT: key=('downtrend', 240, '2025-05-12 18:00:00+00:00')
+    Added DT: ('downtrend', 240, '2025-05-12 18:00:00+00:00')
+
+Exporting log entry 245: 245. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 246: 246. Signal for Pending Downtrend Start on Bar 245 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 245 (2025-05-13 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 247: 247. Info: prev_bar 246 (H:5926.75) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 247 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75).
+  No trend confirmation found in entry.
+
+Exporting log entry 248: 248. 🧱 Containment: Bar 248 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 249: 249. Pending Downtrend Start on Bar 249 (2025-05-14 06:00:00+00:00); Pending Downtrend Start on Bar 249 (2025-05-14 06:00:00+00:00) by Rule C; 📈 Confirmed Uptrend Start from Bar 243 (2025-05-13 06:00:00+00:00) by Rule: HigherHighLowerLowDownClose; 🧱 Containment: Bar 249 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 3 bars.
+  Matched UT: key=('uptrend', 243, '2025-05-13 06:00:00+00:00')
+    Added UT: ('uptrend', 243, '2025-05-13 06:00:00+00:00')
+
+Exporting log entry 250: 250. ⏳U Pending Uptrend Start on Bar 249 (2025-05-14 06:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 250 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 4 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 251: 251. Info: prev_bar 250 (H:5925.0) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 245 (2025-05-13 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 249 (2025-05-14 06:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 251 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 5 bars.
+  Matched UT: key=('uptrend', 249, '2025-05-14 06:00:00+00:00')
+    Added UT: ('uptrend', 249, '2025-05-14 06:00:00+00:00')
+
+Exporting log entry 252: 252. Info: prev_bar 251 (H:5921.0) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 251 (2025-05-14 14:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment: Bar 252 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 6 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 253: 253. Info: prev_bar 252 (H:5917.5) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 250 (2025-05-14 10:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 251 (2025-05-14 14:00:00+00:00) by Rule: LOWER_OHLC; 🧱 Containment: Bar 253 inside Bar 245 (PENDING_DOWNTREND_HIGH H:5926.75, L:5887.75) for 7 bars.
+  Matched UT: key=('uptrend', 251, '2025-05-14 14:00:00+00:00')
+    Added UT: ('uptrend', 251, '2025-05-14 14:00:00+00:00')
+
+Exporting log entry 254: 254. Containment ENDED: Bar 254 moves outside Bar 245 range (was 7 bar(s) inside).; Info: prev_bar 253 (H:5904.25) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 255: 255. Info: prev_bar 254 (H:5903.25) not set as PDS. Existing PDS is 245 (H:5926.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 256: 256. ⏳U Pending Uptrend Start on Bar 255 (2025-05-15 06:00:00+00:00) (general PUS rule on prev_bar); 📉 Confirmed Downtrend Start from Bar 245 (2025-05-13 14:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 245, '2025-05-13 14:00:00+00:00')
+    Added DT: ('downtrend', 245, '2025-05-13 14:00:00+00:00')
+
+Exporting log entry 257: 257. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 258: 258. Signal for Pending Downtrend Start on Bar 257 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 257 (2025-05-15 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 259: 259. Info: prev_bar 258 (H:5941.5) not set as PDS. Existing PDS is 257 (H:5944.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment START: Bar 259 inside Bar 257 (PENDING_DOWNTREND_HIGH H:5944.5, L:5886.75).
+  No trend confirmation found in entry.
+
+Exporting log entry 260: 260. Info: prev_bar 259 (H:5940.25) not set as PDS. Existing PDS is 257 (H:5944.5). prev_bar.h is not > existing PDS.H.; 🧱 Containment: Bar 260 inside Bar 257 (PENDING_DOWNTREND_HIGH H:5944.5, L:5886.75) for 2 bars.
+  No trend confirmation found in entry.
+
+Exporting log entry 261: 261. Containment ENDED: Bar 261 💨 BREAKOUT above Bar 257 range (was 2 bar(s) inside).; ⏳U Pending Uptrend Start on Bar 260 (2025-05-16 02:00:00+00:00) (general PUS rule on prev_bar); 📈 Confirmed Uptrend Start from Bar 255 (2025-05-15 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 255, '2025-05-15 06:00:00+00:00')
+    Added UT: ('uptrend', 255, '2025-05-15 06:00:00+00:00')
+
+Exporting log entry 262: 262. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 263: 263. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 264: 264. Pending Downtrend Start on Bar 264 (2025-05-16 18:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 264 (2025-05-16 18:00:00+00:00) (by Rule C: HH & Down Close)
+  No trend confirmation found in entry.
+
+Exporting log entry 265: 265. Info: prev_bar 264 (H:5977.75) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 266: 266. Info: prev_bar 265 (H:5948.0) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 267: 267. Info: prev_bar 266 (H:5934.75) not set as PDS. Existing PDS is 264 (H:5977.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 268: 268. ⏳U Pending Uptrend Start on Bar 267 (2025-05-19 06:00:00+00:00) (general PUS rule on prev_bar); ⚠️📉 Forced Downtrend: Bar 257 (2025-05-15 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 260 (2025-05-16 02:00:00+00:00) by Rule: LowUndercutHighRespect; 📉 Confirmed Downtrend Start from Bar 264 (2025-05-16 18:00:00+00:00) by Rule: A
+  Matched DT: key=('downtrend', 264, '2025-05-16 18:00:00+00:00')
+    Added DT: ('downtrend', 264, '2025-05-16 18:00:00+00:00')
+  Matched UT: key=('uptrend', 260, '2025-05-16 02:00:00+00:00')
+    Added UT: ('uptrend', 260, '2025-05-16 02:00:00+00:00')
+
+Exporting log entry 269: 269. ➖ Neutral
+  No trend confirmation found in entry.
+
+Exporting log entry 270: 270. Signal for Pending Downtrend Start on Bar 269 (general PDS rule on prev_bar); ⏳D Pending Downtrend Start on Bar 269 (2025-05-19 14:00:00+00:00) (general PDS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 271: 271. Pending Downtrend Start on Bar 271 (2025-05-19 22:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 271 (2025-05-19 22:00:00+00:00) (by Rule C: HH & Down Close); 📈 Confirmed Uptrend Start from Bar 267 (2025-05-19 06:00:00+00:00) by Rule: HighBreakoutAfterPUSAndInterveningPDS
+  Matched UT: key=('uptrend', 267, '2025-05-19 06:00:00+00:00')
+    Added UT: ('uptrend', 267, '2025-05-19 06:00:00+00:00')
+
+Exporting log entry 272: 272. Info: prev_bar 271 (H:5993.25) not set as PDS. Existing PDS is 271 (H:5993.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 273: 273. Info: prev_bar 272 (H:5974.25) not set as PDS. Existing PDS is 271 (H:5993.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 274: 274. Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 271 (2025-05-19 22:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 271, '2025-05-19 22:00:00+00:00')
+    Added DT: ('downtrend', 271, '2025-05-19 22:00:00+00:00')
+
+Exporting log entry 275: 275. Info: prev_bar 274 (H:5974.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (general PUS rule on prev_bar); 🧱 Containment START: Bar 275 inside Bar 274 (PENDING_DOWNTREND_HIGH H:5974.75, L:5950.5).
+  No trend confirmation found in entry.
+
+Exporting log entry 276: 276. Containment ENDED: Bar 276 moves outside Bar 274 range (was 1 bar(s) inside).; Info: prev_bar 275 (H:5971.0) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; Pending Downtrend Start on Bar 274 (due to trigger by 276); ⏳D Pending Downtrend Start on Bar 274 (2025-05-20 10:00:00+00:00) (Post-CUS of 274 by rule LOWER_OHLC, trigger by 276); 📈 Confirmed Uptrend Start from Bar 274 (2025-05-20 10:00:00+00:00) by Rule: LOWER_OHLC
+  Matched UT: key=('uptrend', 274, '2025-05-20 10:00:00+00:00')
+    Added UT: ('uptrend', 274, '2025-05-20 10:00:00+00:00')
+
+Exporting log entry 277: 277. Info: prev_bar 276 (H:5962.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⏳U Pending Uptrend Start on Bar 276 (2025-05-20 18:00:00+00:00) (general PUS rule on prev_bar)
+  No trend confirmation found in entry.
+
+Exporting log entry 278: 278. Info: prev_bar 277 (H:5958.0) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 279: 279. Info: prev_bar 278 (H:5948.75) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+
+Exporting log entry 280: 280. Info: prev_bar 279 (H:5934.25) not set as PDS. Existing PDS is 274 (H:5974.75). prev_bar.h is not > existing PDS.H.; ⚠️📉 Forced Downtrend: Bar 275 (2025-05-20 14:00:00+00:00) due to consecutive uptrends.; 📈 Confirmed Uptrend Start from Bar 276 (2025-05-20 18:00:00+00:00) by Rule: LowUndercutHighRespect
+  Matched UT: key=('uptrend', 276, '2025-05-20 18:00:00+00:00')
+    Added UT: ('uptrend', 276, '2025-05-20 18:00:00+00:00')
+
+Exporting log entry 281: 281. Pending Downtrend Start on Bar 281 (2025-05-21 14:00:00+00:00) by Rule C; ⏳D Pending Downtrend Start on Bar 281 (2025-05-21 14:00:00+00:00) (by Rule C: HH & Down Close); 📉 Confirmed Downtrend Start from Bar 274 (2025-05-20 10:00:00+00:00) by Rule: F
+  Matched DT: key=('downtrend', 274, '2025-05-20 10:00:00+00:00')
+    Added DT: ('downtrend', 274, '2025-05-20 10:00:00+00:00')
+
+Exporting log entry 282: 282. Info: prev_bar 281 (H:5956.25) not set as PDS. Existing PDS is 281 (H:5956.25). prev_bar.h is not > existing PDS.H.
+  No trend confirmation found in entry.
+Exported 105 confirmed trend starts to trend_analysis/confirmed_trend_starts.csv
+Export of confirmed trend starts finished.

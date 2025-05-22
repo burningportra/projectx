@@ -186,6 +186,8 @@ def _evaluate_cus_rules(current_bar, prev_bar, initial_pus_candidate_bar_obj, in
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cus, cus_trigger_rule_type)
     """
+    # --- OLD GLOBAL CONTAINMENT BLOCK REMOVED ---
+    # Removed old containment blocking - now using new confirmed containment system
     can_confirm_cus = False
     cus_trigger_rule_type = None
 
@@ -195,5 +197,4 @@ def _evaluate_cus_rules(current_bar, prev_bar, initial_pus_candidate_bar_obj, in
                 can_confirm_cus = True
                 cus_trigger_rule_type = rule_name
                 break # First rule that triggers confirms CUS
-            
     return can_confirm_cus, cus_trigger_rule_type 

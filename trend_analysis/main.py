@@ -1,6 +1,7 @@
 from .analyzer import TrendAnalyzer
 from .utils.bar_loader import load_bars_from_alt_csv
 from .utils.event_exporter import export_trend_start_events
+import csv
 
 if __name__ == "__main__":
     """
@@ -34,6 +35,24 @@ if __name__ == "__main__":
             for entry in output_log:
                 print(entry)
             print("--- End of Trend Start Log ---")
+
+            # Export the full debug log to a CSV file.
+            debug_log_csv_path = "trend_analysis/full_debug_log.csv"
+            print(f"\nStarting export of full debug log to {debug_log_csv_path}...")
+            try:
+                with open(debug_log_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+                    fieldnames = ['BarLogIndex', 'LogDetails']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for entry in output_log:
+                        parts = entry.split('.', 1)
+                        bar_log_index = parts[0].strip() if len(parts) > 0 else ""
+                        log_details = parts[1].strip() if len(parts) > 1 else entry.strip()
+                        writer.writerow({'BarLogIndex': bar_log_index, 'LogDetails': log_details})
+                print(f"Successfully exported full debug log to {debug_log_csv_path}")
+            except Exception as e:
+                print(f"Error exporting full debug log: {e}")
+
 
             # Export the confirmed trend starts extracted from the log to a CSV file.
             output_csv_path = "trend_analysis/confirmed_trend_starts.csv"

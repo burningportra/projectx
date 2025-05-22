@@ -51,9 +51,20 @@ def export_trend_start_events(log_entries, output_csv="trend_analysis/confirmed_
     # This ensures consistent ordering.
     rows.sort(key=lambda x: (x['bar_index'], x['trend_start_type']))
     
+    # **FIX #3**: Remove same-bar oscillations by keeping only first confirmation per bar
+    seen_bars = set()
+    filtered_rows = []
+    for row in rows:
+        bar_idx = row['bar_index']
+        if bar_idx not in seen_bars:
+            filtered_rows.append(row)
+            seen_bars.add(bar_idx)
+        else:
+            print(f"WARNING: Removed same-bar oscillation for Bar {bar_idx} ({row['trend_start_type']} at {row['date']})")
+    
     # Write the de-duplicated and sorted trend starts to the CSV file.
     with open(output_csv, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['trend_start_type', 'bar_index', 'date'])
         writer.writeheader() # Write the header row
-        writer.writerows(rows) # Write all trend start data
-    print(f"Exported {len(rows)} confirmed trend starts to {output_csv}") 
+        writer.writerows(filtered_rows) # Write all trend start data
+    print(f"Exported {len(filtered_rows)} confirmed trend starts to {output_csv} (removed {len(rows) - len(filtered_rows)} same-bar oscillations)") 

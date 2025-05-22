@@ -13,41 +13,63 @@ class State:
         self.pending_uptrend_start_bar_index = None # 1-based index of the bar that initiated a pending uptrend
         self.pending_uptrend_start_anchor_low = None  # The low price of the bar that initiated the pending uptrend
 
-        # Confirmed Downtrend Start (CDS) candidate state (this is a PDS being evaluated for CDS)
-        self.pds_candidate_for_cds_bar_index = None # 1-based index of the PDS bar that is the current candidate for CDS confirmation
-        self.pds_candidate_for_cds_high = None  # The high price of that PDS candidate bar
-        self.pds_candidate_for_cds_low = None   # The low price of that PDS candidate bar
+        # Confirmed Downtrend Start (CDS) candidate state (this is a PDS being evaluated for confirmation)
+        self.pds_candidate_for_cds_bar_index = None
+        self.pds_candidate_for_cds_high = None
+        self.pds_candidate_origin_bar_index_in_current_containment = None # Stores PDS origin if set during current old-style containment
 
-        # Confirmed Uptrend Start (CUS) candidate state (this is a PUS being evaluated for CUS)
-        self.pus_candidate_for_cus_bar_index = None # 1-based index of the PUS bar that is the current candidate for CUS confirmation
-        self.pus_candidate_for_cus_low = None   # The low price of that PUS candidate bar
-        self.pus_candidate_for_cus_high = None  # The high price of that PUS candidate bar
+        # Confirmed Uptrend Start (CUS) candidate state (this is a PUS being evaluated for confirmation)
+        self.pus_candidate_for_cus_bar_index = None
+        self.pus_candidate_for_cus_low = None
+        self.pus_candidate_for_cus_high = None # Added high for CUS candidate
+        self.pus_candidate_origin_bar_index_in_current_containment = None # Stores PUS origin if set during current old-style containment
         
-        self.log_entries = [] # Stores log messages generated during processing
-
-        # Containment State: Tracks if price action is contained within a prior significant bar's range.
-        self.in_containment = False # Flag indicating if currently in a containment zone
-        self.containment_ref_bar_index = None # Index of the bar defining the containment range
-        self.containment_ref_type = None # "PENDING_DOWNTREND_HIGH" or "PENDING_UPTREND_LOW" - type of bar defining containment
-        self.containment_ref_high = None # High of the reference bar for containment
-        self.containment_ref_low = None  # Low of the reference bar for containment
-        self.containment_start_bar_index_for_log = None # Bar that first entered containment (for logging)
-        self.containment_consecutive_bars_inside = 0 # Number of bars strictly inside the containment range after it started
-
-        # Overall trend state for enforcing strict Uptrend/Downtrend alternation
-        self.current_confirmed_trend_is_uptrend = None # True if current confirmed trend is UPTREND, False if DOWNTREND, None if Neutral
-
-        # State for forcing alternation between confirmed uptrends and downtrends
+        # General trend state
         self.last_confirmed_trend_type = None # 'uptrend' or 'downtrend'
-        self.last_confirmed_trend_bar_index = None # Index of the bar where the last trend was confirmed
+        self.last_confirmed_trend_bar_index = None # Index of the bar that was confirmed as the start of the last trend
+        self.last_confirmed_trend_anchor_high = None # High of the bar that started the last confirmed trend
+        self.last_confirmed_trend_anchor_low = None  # Low of the bar that started the last confirmed trend
+
+        # Old Containment state (based on PENDING candidates - to be deprecated by confirmed containment)
+        self.in_containment = False # This flag is still used by rules, but its meaning will change
+        self.containment_ref_bar_index = None
+        self.containment_ref_type = "None" # 'PENDING_DOWNTREND_HIGH' or 'PENDING_UPTREND_LOW'
+        self.containment_ref_high = None
+        self.containment_ref_low = None
+        self.containment_consecutive_bars_inside = 0
+        self.containment_start_bar_index_for_log = None # For logging when containment started
+
+        # New Confirmed Containment State (based on CONFIRMED CUS/CDS)
+        self.last_confirmed_cus_bar_index: int | None = None
+        self.last_confirmed_cus_bar_low: float | None = None
+        self.last_confirmed_cus_bar_high: float | None = None # Added for symmetry, might be useful
+        self.last_confirmed_cds_bar_index: int | None = None
+        self.last_confirmed_cds_bar_high: float | None = None
+        self.last_confirmed_cds_bar_low: float | None = None # Added for symmetry
+
+        self.confirmed_containment_active: bool = False
+        self.confirmed_containment_ref_high: float | None = None
+        self.confirmed_containment_ref_low: float | None = None
+        self.confirmed_containment_defined_by_cus_idx: int | None = None
+        self.confirmed_containment_defined_by_cds_idx: int | None = None
+        self.confirmed_containment_consecutive_bars_inside: int = 0 # For new confirmed containment
+        self.confirmed_containment_start_bar_index_for_log: int | None = None # For new confirmed containment
+
+        self.log_entries = []
 
     def _reset_pending_uptrend_signal_state(self):
         """Clears the basic pending uptrend signal state."""
         self.pending_uptrend_start_bar_index = None
         self.pending_uptrend_start_anchor_low = None
 
-    def _reset_pus_candidate_state(self):
-        """Clears the PUS candidate state for CUS evaluation."""
+    def _reset_pus_candidate_state(self, event_descriptions_list=None, reason=None):
+        msg = f"DEBUG: Resetting PUS candidate (was {self.pus_candidate_for_cus_bar_index})"
+        if reason:
+            msg += f" due to {reason}"
+        if event_descriptions_list is not None:
+            event_descriptions_list.append(msg)
+        else:
+            print(msg)
         self.pus_candidate_for_cus_bar_index = None
         self.pus_candidate_for_cus_low = None
         self.pus_candidate_for_cus_high = None
@@ -57,40 +79,14 @@ class State:
         self._reset_pending_uptrend_signal_state()
         self._reset_pus_candidate_state()
 
-    def _reset_pds_candidate_state(self):
-        """Clears the PDS candidate state for CDS evaluation."""
-        # Log when this is called and from where
-        current_frame = inspect.currentframe()
-        caller_frame = inspect.getouterframes(current_frame, 2)
-        # Find the relevant calling context within the TrendAnalyzer class methods
-        analyzer_caller_info = "Unknown caller"
-        if len(caller_frame) > 1:
-            # caller_frame[1] is the immediate caller
-            # We might need to go up further if it's a helper within a helper
-            # For now, let's assume the immediate caller or one level up is in TrendAnalyzer
-            for frame_info in caller_frame[1:]:
-                func_name = frame_info.function
-                # Check if the function name belongs to a typical analyzer method or a helper
-                if func_name.startswith('_apply_') or func_name.startswith('_check_and_set_') or func_name.startswith('_reset_all_'):
-                    analyzer_caller_info = f"{frame_info.filename.split('/')[-1]}:{func_name}:{frame_info.lineno}"
-                    break # Found a relevant caller
-            else: # If no specific analyzer method found, use immediate caller
-                 analyzer_caller_info = f"{caller_frame[1].filename.split('/')[-1]}:{caller_frame[1].function}:{caller_frame[1].lineno}"
-
-        # Add to log_entries if available, otherwise print (for direct state manipulation)
-        reset_log_message = f"DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: {self.pds_candidate_for_cds_bar_index}. Caller: {analyzer_caller_info}"
-        # This assumes log_entries is part of the state object for analyzer. If not, this needs adjustment
-        # For now, let's assume we can append to a list or just print
-        # To append to the main log, we'd need a way to pass current_bar_event_descriptions here or use a global/shared log
-        # For simplicity, if self.log_entries exists and is a list, use it.
-        if hasattr(self, 'log_entries') and isinstance(self.log_entries, list):
-            # This will add it to the main log, but it might be out of order with the bar index.
-            # A dedicated debug list in State might be better, or pass event_descriptions.
-            # For now, let's make it a distinct print to not interfere with primary log structure if it's sensitive.
-            print(reset_log_message) # Print for now to ensure visibility
+    def _reset_pds_candidate_state(self, event_descriptions_list=None, reason=None):
+        msg = f"DEBUG: Resetting PDS candidate (was {self.pds_candidate_for_cds_bar_index})"
+        if reason:
+            msg += f" due to {reason}"
+        if event_descriptions_list is not None:
+            event_descriptions_list.append(msg)
         else:
-            print(reset_log_message) # Fallback to print
-
+            print(msg)
         self.pds_candidate_for_cds_bar_index = None
         self.pds_candidate_for_cds_high = None
         self.pds_candidate_for_cds_low = None
@@ -99,16 +95,92 @@ class State:
         """Clears all state related to pending downtrends and PDS candidates."""
         self._reset_pds_candidate_state() # This will now also log its call
 
-    def _reset_containment_state(self):
-        """Resets all containment-related attributes."""
-        self.in_containment = False
+    def _reset_containment_state(self, event_descriptions_list=None):
+        """Resets all OLD STYLE containment-related attributes (based on PENDING candidates).
+        Also invalidates PUS/PDS candidates if they originated during the PENDING containment period that just ended,
+        UNLESS the candidate's origin bar is the same as the containment reference bar (the bar that started containment).
+        THIS METHOD WILL BE PHASED OUT OR REPURPOSED FOR CONFIRMED CONTAINMENT.
+        """
+        log_prefix = "DEBUG PENDING_CONT_RESET:"
+        # Check and invalidate PUS candidate if it originated in the ending *pending* containment
+        if self.pus_candidate_origin_bar_index_in_current_containment is not None and \
+           self.pus_candidate_for_cus_bar_index == self.pus_candidate_origin_bar_index_in_current_containment and \
+           self.pus_candidate_for_cus_bar_index != self.containment_ref_bar_index: # Don't invalidate if it IS the ref bar
+            if event_descriptions_list is not None:
+                event_descriptions_list.append(f"{log_prefix} Invalidating PUS cand {self.pus_candidate_for_cus_bar_index} (originated in ended pending cont.)")
+            self._reset_pus_candidate_state(event_descriptions_list, reason="Pending containment ended, PUS candidate originated within")
+        
+        # Check and invalidate PDS candidate if it originated in the ending *pending* containment
+        if self.pds_candidate_origin_bar_index_in_current_containment is not None and \
+           self.pds_candidate_for_cds_bar_index == self.pds_candidate_origin_bar_index_in_current_containment and \
+           self.pds_candidate_for_cds_bar_index != self.containment_ref_bar_index: # Don't invalidate if it IS the ref bar
+            if event_descriptions_list is not None:
+                event_descriptions_list.append(f"{log_prefix} Invalidating PDS cand {self.pds_candidate_for_cds_bar_index} (originated in ended pending cont.)")
+            self._reset_pds_candidate_state(event_descriptions_list, reason="Pending containment ended, PDS candidate originated within")
+
+        # Reset old containment state variables
+        self.in_containment = False # This will be controlled by confirmed_containment_active logic
         self.containment_ref_bar_index = None
-        self.containment_ref_type = None
+        self.containment_ref_type = "None"
         self.containment_ref_high = None
         self.containment_ref_low = None
-        self.containment_start_bar_index_for_log = None
         self.containment_consecutive_bars_inside = 0
-    
+        self.containment_start_bar_index_for_log = None
+        self.pus_candidate_origin_bar_index_in_current_containment = None
+        self.pds_candidate_origin_bar_index_in_current_containment = None
+        if event_descriptions_list is not None:
+            event_descriptions_list.append(f"{log_prefix} Old pending-style containment attributes reset.")
+
+    def _reset_confirmed_containment_state_and_invalidate_candidates(self, event_descriptions_list=None):
+        """
+        Resets confirmed containment attributes and invalidates PUS/PDS candidates
+        that originated *strictly between* the CUS and CDS that defined the ended containment.
+        """
+        log_prefix = "DEBUG CONF_CONT_RESET:"
+        cus_def_idx = self.confirmed_containment_defined_by_cus_idx
+        cds_def_idx = self.confirmed_containment_defined_by_cds_idx
+
+        if cus_def_idx is not None and cds_def_idx is not None:
+            # Determine the range of bars strictly within the containment
+            # These are 1-based indices
+            start_range_idx = min(cus_def_idx, cds_def_idx)
+            end_range_idx = max(cus_def_idx, cds_def_idx)
+
+            # Invalidate PUS candidate if it originated strictly within the ended confirmed containment
+            if self.pus_candidate_for_cus_bar_index is not None and \
+               start_range_idx < self.pus_candidate_for_cus_bar_index < end_range_idx:
+                if event_descriptions_list is not None:
+                    event_descriptions_list.append(
+                        f"{log_prefix} Invalidating PUS cand {self.pus_candidate_for_cus_bar_index} "
+                        f"(originated within ended confirmed cont. {start_range_idx}-{end_range_idx})."
+                    )
+                self._reset_pus_candidate_state(event_descriptions_list, reason="Confirmed containment ended, PUS originated within")
+
+            # Invalidate PDS candidate if it originated strictly within the ended confirmed containment
+            if self.pds_candidate_for_cds_bar_index is not None and \
+               start_range_idx < self.pds_candidate_for_cds_bar_index < end_range_idx:
+                if event_descriptions_list is not None:
+                    event_descriptions_list.append(
+                        f"{log_prefix} Invalidating PDS cand {self.pds_candidate_for_cds_bar_index} "
+                        f"(originated within ended confirmed cont. {start_range_idx}-{end_range_idx})."
+                    )
+                self._reset_pds_candidate_state(event_descriptions_list, reason="Confirmed containment ended, PDS originated within")
+        
+        if event_descriptions_list is not None:
+            event_descriptions_list.append(
+                f"{log_prefix} Confirmed containment (was {cus_def_idx} L:{self.confirmed_containment_ref_low} / "
+                f"{cds_def_idx} H:{self.confirmed_containment_ref_high}) ended."
+            )
+
+        self.confirmed_containment_active = False
+        self.confirmed_containment_ref_high = None
+        self.confirmed_containment_ref_low = None
+        self.confirmed_containment_defined_by_cus_idx = None
+        self.confirmed_containment_defined_by_cds_idx = None
+        self.confirmed_containment_consecutive_bars_inside = 0
+        self.confirmed_containment_start_bar_index_for_log = None
+        # The 'in_containment' flag (used by rules) will be set to False by the analyzer when confirmed_containment_active becomes False.
+
     def set_new_pending_downtrend_signal(self, bar_obj, event_descriptions_list, reason_message_suffix=""):
         """
         Sets a new Pending Downtrend Start (PDS) signal on the given bar_obj.
@@ -127,16 +199,23 @@ class State:
             self.pds_candidate_for_cds_high = bar_obj.h
             self.pds_candidate_for_cds_low = bar_obj.l
             
+            if self.in_containment: # Check if currently in containment
+                # If this PDS is new or updates the existing PDS candidate during containment
+                if self.pds_candidate_origin_bar_index_in_current_containment is None or \
+                   bar_obj.index == self.pds_candidate_for_cds_bar_index:
+                    self.pds_candidate_origin_bar_index_in_current_containment = bar_obj.index
+            
             log_message = f"⏳D Pending Downtrend Start on Bar {bar_obj.index} ({bar_obj.date})"
             if reason_message_suffix:
                 log_message += f" {reason_message_suffix}"
             event_descriptions_list.append(log_message)
 
-            # If a PUS was set on this *same* bar, it's invalidated by this new PDS.
-            if self.pending_uptrend_start_bar_index == bar_obj.index:
-                self._reset_pending_uptrend_signal_state()
-            if self.pus_candidate_for_cus_bar_index == bar_obj.index:
-                self._reset_pus_candidate_state()
+            # Allow PUS and PDS to coexist on the same bar.
+            # The following lines were removed/commented out:
+            # if self.pending_uptrend_start_bar_index == bar_obj.index:
+            #     self._reset_pending_uptrend_signal_state()
+            # if self.pus_candidate_for_cus_bar_index == bar_obj.index:
+            #     self._reset_pus_candidate_state(event_descriptions_list, reason=f"PDS also set on same bar {bar_obj.index}")
             return True
         return False
 
@@ -158,6 +237,12 @@ class State:
             self.pus_candidate_for_cus_low = bar_obj.l
             self.pus_candidate_for_cus_high = bar_obj.h
             
+            if self.in_containment: # Check if currently in containment
+                # If this PUS is new or updates the existing PUS candidate during containment
+                if self.pus_candidate_origin_bar_index_in_current_containment is None or \
+                   bar_obj.index == self.pus_candidate_for_cus_bar_index:
+                    self.pus_candidate_origin_bar_index_in_current_containment = bar_obj.index
+            
             log_message = f"⏳U Pending Uptrend Start on Bar {bar_obj.index} ({bar_obj.date})"
             if reason_message_suffix:
                 log_message += f" {reason_message_suffix}"
@@ -166,57 +251,101 @@ class State:
 
         # If a PDS was set on this *same* bar, it's invalidated by this new PUS.
         # This handles cases where a bar might ambiguously signal both.
-        if self.pds_candidate_for_cds_bar_index == bar_obj.index:
-            self._reset_pds_candidate_state()
+        # Allow PUS and PDS to coexist on the same bar.
+        # The following lines were removed/commented out:
+        # if self.pds_candidate_for_cds_bar_index == bar_obj.index:
+        #     self._reset_pds_candidate_state(event_descriptions_list, reason=f"PUS also set on same bar {bar_obj.index}")
         return pus_candidate_updated
 
     def confirm_uptrend(self, confirmed_cus_bar, all_bars, event_descriptions_list, trigger_rule_type=None):
         """
-        Confirms an uptrend based on confirmed_cus_bar.
-        Handles forced alternation, logs the CUS, and updates overall trend state.
+        Confirms an uptrend, updates state including last confirmed trend, 
+        and establishes new confirmed containment if applicable.
         """
-        # --- Forced Alternation Logic for CUS ---
-        if self.last_confirmed_trend_type == 'uptrend' and \
-           (self.last_confirmed_trend_bar_index is not None and confirmed_cus_bar and confirmed_cus_bar.index > self.last_confirmed_trend_bar_index):
-            intervening_high_bar_for_forced_cds = find_intervening_bar_for_forced_trend(
-                all_bars, self.last_confirmed_trend_bar_index, confirmed_cus_bar.index, find_lowest_low_for_forced_cus=False
-            )
-            if intervening_high_bar_for_forced_cds:
-                event_descriptions_list.append(f"⚠️📉 Forced Downtrend: Bar {intervening_high_bar_for_forced_cds.index} ({intervening_high_bar_for_forced_cds.date}) due to consecutive uptrends.")
-                # Note: This forced CDS doesn't change the primary CUS being confirmed now,
-                # but it acknowledges a trend that should have been there.
-                # We could potentially also update last_confirmed_trend_type/bar_index here if the forced CDS should take precedence immediately,
-                # but current logic is to log it and proceed with CUS confirmation.
+        cus_bar_index = confirmed_cus_bar.index
+        event_descriptions_list.append(f"DEBUG: Confirmed CUS at Bar {cus_bar_index}")
+        self.last_confirmed_trend_type = "uptrend"
+        self.last_confirmed_trend_bar_index = cus_bar_index
+        self.last_confirmed_trend_anchor_low = confirmed_cus_bar.l
+        self.last_confirmed_trend_anchor_high = confirmed_cus_bar.h # Store high as well
 
-        # --- Log CUS and Update State --- 
-        log_message = f"📈 Confirmed Uptrend Start from Bar {confirmed_cus_bar.index} ({confirmed_cus_bar.date})"
-        if trigger_rule_type:
-            log_message += f" by Rule: {trigger_rule_type}"
-        event_descriptions_list.append(log_message)
-        self.current_confirmed_trend_is_uptrend = True 
-        self.last_confirmed_trend_type = 'uptrend' 
-        self.last_confirmed_trend_bar_index = confirmed_cus_bar.index
+        self.last_confirmed_cus_bar_index = cus_bar_index
+        self.last_confirmed_cus_bar_low = confirmed_cus_bar.l
+        self.last_confirmed_cus_bar_high = confirmed_cus_bar.h
+        
+        # Check for and establish new confirmed containment
+        if self.last_confirmed_cds_bar_index is not None:
+            # Ensure CUS is after CDS to form a valid range, or CDS is after CUS
+            # The key is they are two *opposing* confirmed signals.
+            # The order doesn't strictly matter for defining the H/L range, but for logging/understanding it might.
+            # We assume the analyzer ensures trends alternate for this to make sense.
+            
+            # A CUS has just been confirmed. If there's a prior CDS, they form containment.
+            self.confirmed_containment_active = True
+            self.confirmed_containment_defined_by_cus_idx = cus_bar_index
+            self.confirmed_containment_defined_by_cds_idx = self.last_confirmed_cds_bar_index
+            
+            # Containment Low is CUS low, Containment High is CDS high
+            self.confirmed_containment_ref_low = self.last_confirmed_cus_bar_low
+            self.confirmed_containment_ref_high = self.last_confirmed_cds_bar_high # From the existing CDS
+
+            # Reset consecutive inside bars counter for this new confirmed containment
+            self.confirmed_containment_consecutive_bars_inside = 0 
+            # Log start of this containment from the perspective of the CUS/CDS that formed it (this will be handled by analyzer)
+
+            event_descriptions_list.append(
+                f"DEBUG: New CONFIRMED CONTAINMENT established by CUS {cus_bar_index} (L:{self.confirmed_containment_ref_low}) "
+                f"and prior CDS {self.last_confirmed_cds_bar_index} (H:{self.confirmed_containment_ref_high}). Active: {self.confirmed_containment_active}"
+            )
+            # The 'in_containment' flag for rules will be set by the analyzer based on confirmed_containment_active
+        else:
+            event_descriptions_list.append(
+                 f"DEBUG: CUS {cus_bar_index} confirmed, but no prior CDS to form confirmed containment."
+            )
+
+        event_message_suffix = f" (Rule: {trigger_rule_type})" if trigger_rule_type else ""
+        event_descriptions_list.append(f"📈 Confirmed Uptrend Start from Bar {confirmed_cus_bar.index} ({confirmed_cus_bar.date}){event_message_suffix}")
 
     def confirm_downtrend(self, confirmed_cds_bar, all_bars, event_descriptions_list, trigger_rule_type=None):
         """
-        Confirms a downtrend based on confirmed_cds_bar.
-        Handles forced alternation, logs the CDS, and updates overall trend state.
+        Confirms a downtrend, updates state including last confirmed trend,
+        and establishes new confirmed containment if applicable.
         """
-        # --- Forced Alternation Logic for CDS ---
-        if self.last_confirmed_trend_type == 'downtrend' and \
-           (self.last_confirmed_trend_bar_index is not None and confirmed_cds_bar and confirmed_cds_bar.index > self.last_confirmed_trend_bar_index):
-            intervening_low_bar_for_forced_cus = find_intervening_bar_for_forced_trend(
-                all_bars, self.last_confirmed_trend_bar_index, confirmed_cds_bar.index, find_lowest_low_for_forced_cus=True
-            )
-            if intervening_low_bar_for_forced_cus:
-                event_descriptions_list.append(f"⚠️📈 Forced Uptrend: Bar {intervening_low_bar_for_forced_cus.index} ({intervening_low_bar_for_forced_cus.date}) due to consecutive downtrends.")
-                # Similar to CUS, this forced CUS is logged but doesn't override the current CDS confirmation immediately.
+        cds_bar_index = confirmed_cds_bar.index
+        event_descriptions_list.append(f"DEBUG: Confirmed CDS at Bar {cds_bar_index}")
+        self.last_confirmed_trend_type = "downtrend"
+        self.last_confirmed_trend_bar_index = cds_bar_index
+        self.last_confirmed_trend_anchor_high = confirmed_cds_bar.h
+        self.last_confirmed_trend_anchor_low = confirmed_cds_bar.l # Store low as well
 
-        # --- Log CDS and Update State --- 
-        log_message = f"📉 Confirmed Downtrend Start from Bar {confirmed_cds_bar.index} ({confirmed_cds_bar.date})"
-        if trigger_rule_type:
-            log_message += f" by Rule: {trigger_rule_type}"
-        event_descriptions_list.append(log_message)
-        self.current_confirmed_trend_is_uptrend = False 
-        self.last_confirmed_trend_type = 'downtrend' 
-        self.last_confirmed_trend_bar_index = confirmed_cds_bar.index 
+        self.last_confirmed_cds_bar_index = cds_bar_index
+        self.last_confirmed_cds_bar_high = confirmed_cds_bar.h
+        self.last_confirmed_cds_bar_low = confirmed_cds_bar.l
+
+        # Check for and establish new confirmed containment
+        if self.last_confirmed_cus_bar_index is not None:
+            # A CDS has just been confirmed. If there's a prior CUS, they form containment.
+            self.confirmed_containment_active = True
+            self.confirmed_containment_defined_by_cds_idx = cds_bar_index
+            self.confirmed_containment_defined_by_cus_idx = self.last_confirmed_cus_bar_index
+
+            # Containment High is CDS high, Containment Low is CUS low
+            self.confirmed_containment_ref_high = self.last_confirmed_cds_bar_high
+            self.confirmed_containment_ref_low = self.last_confirmed_cus_bar_low # From the existing CUS
+            
+            # Reset consecutive inside bars counter for this new confirmed containment
+            self.confirmed_containment_consecutive_bars_inside = 0
+            # Log start of this containment (this will be handled by analyzer)
+
+            event_descriptions_list.append(
+                f"DEBUG: New CONFIRMED CONTAINMENT established by CDS {cds_bar_index} (H:{self.confirmed_containment_ref_high}) "
+                f"and prior CUS {self.last_confirmed_cus_bar_index} (L:{self.confirmed_containment_ref_low}). Active: {self.confirmed_containment_active}"
+            )
+            # The 'in_containment' flag for rules will be set by the analyzer based on confirmed_containment_active
+        else:
+            event_descriptions_list.append(
+                f"DEBUG: CDS {cds_bar_index} confirmed, but no prior CUS to form confirmed containment."
+            )
+
+        event_message_suffix = f" (Rule: {trigger_rule_type})" if trigger_rule_type else ""
+        event_descriptions_list.append(f"📉 Confirmed Downtrend Start from Bar {confirmed_cds_bar.index} ({confirmed_cds_bar.date}){event_message_suffix}") 
