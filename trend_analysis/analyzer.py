@@ -134,21 +134,36 @@ class TrendAnalyzer:
         new_pds_on_curr_bar_this_iteration = False
         if current_bar.h > prev_bar.h and current_bar.c < current_bar.o: 
             current_bar_event_descriptions.append(f"Pending Downtrend Start on Bar {current_bar.index} ({current_bar.date}) by Rule C")
-            self.state.set_new_pending_downtrend_signal(current_bar, current_bar_event_descriptions, reason_message_suffix="(by Rule C: HH & Down Close)")
-            new_pds_on_curr_bar_this_iteration = True
+            # Capture if state was actually changed by the call
+            if self.state.set_new_pending_downtrend_signal(current_bar, current_bar_event_descriptions, reason_message_suffix="(by Rule C: HH & Down Close)"):
+                new_pds_on_curr_bar_this_iteration = True # Set only if PDS was truly set/updated
             
+        prev_bar_became_pds_this_cycle = False # New flag initialized to False
+
         if not cds_confirmed_this_iteration and not new_pds_on_curr_bar_this_iteration:
             # Check for general PDS on prev_bar
             if is_lower_ohlc_bar(current_bar, prev_bar) or \
                is_pending_downtrend_start_rule(current_bar, prev_bar) or \
                is_simple_pending_downtrend_start_signal(current_bar, prev_bar):
+                
+                # DEBUG LOGGING FOR PDS CHECK ON PREV_BAR=14 - This can be removed later
+                if prev_bar.index == 14:
+                    debug_log_msg = (
+                        f"DEBUG PDS Check for prev_bar={prev_bar.index}: "
+                        f"Current PDS Index={self.state.pds_candidate_for_cds_bar_index}, "
+                        f"Current PDS High={self.state.pds_candidate_for_cds_high}, "
+                        f"prev_bar High={prev_bar.h}"
+                    )
+                    current_bar_event_descriptions.append(debug_log_msg)
+
                 # Only attempt to set prev_bar as PDS if it offers a higher high than current PDS, or if no PDS exists
                 if self.state.pds_candidate_for_cds_bar_index is None or \
                    prev_bar.h > self.state.pds_candidate_for_cds_high:
                     current_bar_event_descriptions.append(f"Signal for Pending Downtrend Start on Bar {prev_bar.index} (general PDS rule on prev_bar)")
-                    self.state.set_new_pending_downtrend_signal(prev_bar, current_bar_event_descriptions, reason_message_suffix="(general PDS rule on prev_bar)")
+                    if self.state.set_new_pending_downtrend_signal(prev_bar, current_bar_event_descriptions, reason_message_suffix="(general PDS rule on prev_bar)"):
+                        prev_bar_became_pds_this_cycle = True # Set flag if PDS was successfully set on prev_bar
                 else:
-                    if self.state.pds_candidate_for_cds_bar_index is not None:
+                    if self.state.pds_candidate_for_cds_bar_index is not None: # Ensure there's an existing PDS to compare against
                         current_bar_event_descriptions.append(
                             f"Info: prev_bar {prev_bar.index} (H:{prev_bar.h}) not set as PDS. "
                             f"Existing PDS is {self.state.pds_candidate_for_cds_bar_index} (H:{self.state.pds_candidate_for_cds_high}). "
@@ -157,8 +172,9 @@ class TrendAnalyzer:
             
         # Check for new PUS on prev_bar
         # Allow PUS to form on prev_bar even if a CUS for a *different* PUS candidate was confirmed in this iteration.
-        # Still prevent PUS on prev_bar if current_bar itself formed a strong PDS (like Rule C by HH & Down Close), as that's contradictory.
-        if not new_pds_on_curr_bar_this_iteration: # Check if current bar itself became a PDS by Rule C
+        # Still prevent PUS on prev_bar if current_bar itself formed a strong PDS (like Rule C by HH & Down Close), 
+        # AND if prev_bar itself didn't just become PDS.
+        if not new_pds_on_curr_bar_this_iteration and not prev_bar_became_pds_this_cycle: # Added 'and not prev_bar_became_pds_this_cycle'
             if is_higher_ohlc_bar(current_bar, prev_bar) or \
                  is_pending_uptrend_start_rule(current_bar, prev_bar) or \
                  is_simple_pending_uptrend_start_signal(current_bar, prev_bar):

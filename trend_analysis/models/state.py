@@ -1,4 +1,5 @@
 from ..utils.forced_trend_helper import find_intervening_bar_for_forced_trend
+import inspect # Add this at the top of state.py if not already there
 
 class State:
     """Holds the current state of the trend analysis algorithm as it processes bars."""
@@ -58,13 +59,45 @@ class State:
 
     def _reset_pds_candidate_state(self):
         """Clears the PDS candidate state for CDS evaluation."""
+        # Log when this is called and from where
+        current_frame = inspect.currentframe()
+        caller_frame = inspect.getouterframes(current_frame, 2)
+        # Find the relevant calling context within the TrendAnalyzer class methods
+        analyzer_caller_info = "Unknown caller"
+        if len(caller_frame) > 1:
+            # caller_frame[1] is the immediate caller
+            # We might need to go up further if it's a helper within a helper
+            # For now, let's assume the immediate caller or one level up is in TrendAnalyzer
+            for frame_info in caller_frame[1:]:
+                func_name = frame_info.function
+                # Check if the function name belongs to a typical analyzer method or a helper
+                if func_name.startswith('_apply_') or func_name.startswith('_check_and_set_') or func_name.startswith('_reset_all_'):
+                    analyzer_caller_info = f"{frame_info.filename.split('/')[-1]}:{func_name}:{frame_info.lineno}"
+                    break # Found a relevant caller
+            else: # If no specific analyzer method found, use immediate caller
+                 analyzer_caller_info = f"{caller_frame[1].filename.split('/')[-1]}:{caller_frame[1].function}:{caller_frame[1].lineno}"
+
+        # Add to log_entries if available, otherwise print (for direct state manipulation)
+        reset_log_message = f"DEBUG STATE: _reset_pds_candidate_state called. Current PDS Index before reset: {self.pds_candidate_for_cds_bar_index}. Caller: {analyzer_caller_info}"
+        # This assumes log_entries is part of the state object for analyzer. If not, this needs adjustment
+        # For now, let's assume we can append to a list or just print
+        # To append to the main log, we'd need a way to pass current_bar_event_descriptions here or use a global/shared log
+        # For simplicity, if self.log_entries exists and is a list, use it.
+        if hasattr(self, 'log_entries') and isinstance(self.log_entries, list):
+            # This will add it to the main log, but it might be out of order with the bar index.
+            # A dedicated debug list in State might be better, or pass event_descriptions.
+            # For now, let's make it a distinct print to not interfere with primary log structure if it's sensitive.
+            print(reset_log_message) # Print for now to ensure visibility
+        else:
+            print(reset_log_message) # Fallback to print
+
         self.pds_candidate_for_cds_bar_index = None
         self.pds_candidate_for_cds_high = None
         self.pds_candidate_for_cds_low = None
 
     def _reset_all_pending_downtrend_states(self):
         """Clears all state related to pending downtrends and PDS candidates."""
-        self._reset_pds_candidate_state()
+        self._reset_pds_candidate_state() # This will now also log its call
 
     def _reset_containment_state(self):
         """Resets all containment-related attributes."""
