@@ -1,0 +1,222 @@
+CONFIRM CDS: confirmed_bar_for_this_cds=6, pds_candidate_for_cds_bar_index=6
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=3, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5670.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=3, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5670.25
+CONFIRM CUS: current_bar=9, confirmed_bar_for_this_cus=8, pus_candidate_for_cus_bar_index=8
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=8, pus_candidate_for_cus_low=5707.75, pus_candidate_for_cus_high=5720.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=8, pus_candidate_for_cus_low=5707.75, pus_candidate_for_cus_high=5720.25
+DEBUG CUS EVAL: current_bar=12, prev_bar=11, pus_cand=11, pds_cand=10
+  PUS_CAND: O=5668.5, H=5681.25, L=5651.0, C=5668.5
+  PDS_CAND: O=5723.5, H=5725.0, L=5666.75, C=5668.25
+  CURRENT: O=5668.5, H=5682.5, L=5657.25, C=5669.5
+  PREV:    O=5668.5, H=5681.25, L=5651.0, C=5668.5
+    Rule LOWER_OHLC: False
+    Rule LowUndercutHighRespect: True
+CONFIRM CDS: confirmed_bar_for_this_cds=10, pds_candidate_for_cds_bar_index=10
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=11, pus_candidate_for_cus_low=5651.0, pus_candidate_for_cus_high=5681.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=11, pus_candidate_for_cus_low=5651.0, pus_candidate_for_cus_high=5681.25
+DEBUG CUS EVAL: current_bar=13, prev_bar=12, pus_cand=12, pds_cand=None
+  PUS_CAND: O=5668.5, H=5682.5, L=5657.25, C=5669.5
+  CURRENT: O=5669.75, H=5689.5, L=5660.75, C=5682.0
+  PREV:    O=5668.5, H=5682.5, L=5657.25, C=5669.5
+    Rule LOWER_OHLC: False
+    Rule LowUndercutHighRespect: False
+    Rule HigherHighLowerLowDownClose: False
+    Rule EngulfingUpPDSLowBreak: False
+CONFIRM CUS: current_bar=15, confirmed_bar_for_this_cus=12, pus_candidate_for_cus_bar_index=12
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=12, pus_candidate_for_cus_low=5657.25, pus_candidate_for_cus_high=5682.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=12, pus_candidate_for_cus_low=5657.25, pus_candidate_for_cus_high=5682.5
+CONFIRM CDS: confirmed_bar_for_this_cds=14, pds_candidate_for_cds_bar_index=14
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=15, pus_candidate_for_cus_low=5657.5, pus_candidate_for_cus_high=5684.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=15, pus_candidate_for_cus_low=5657.5, pus_candidate_for_cus_high=5684.25
+CONFIRM CUS: current_bar=24, confirmed_bar_for_this_cus=18, pus_candidate_for_cus_bar_index=18
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=18, pus_candidate_for_cus_low=5681.0, pus_candidate_for_cus_high=5770.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=18, pus_candidate_for_cus_low=5681.0, pus_candidate_for_cus_high=5770.5
+CONFIRM CDS: confirmed_bar_for_this_cds=27, pds_candidate_for_cds_bar_index=27
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=28, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5705.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=28, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5705.0
+CONFIRM CUS: current_bar=39, confirmed_bar_for_this_cus=29, pus_candidate_for_cus_bar_index=29
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=29, pus_candidate_for_cus_low=5652.5, pus_candidate_for_cus_high=5712.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=29, pus_candidate_for_cus_low=5652.5, pus_candidate_for_cus_high=5712.25
+CONFIRM CDS: confirmed_bar_for_this_cds=37, pds_candidate_for_cds_bar_index=37
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=39, pus_candidate_for_cus_low=5801.5, pus_candidate_for_cus_high=5813.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=39, pus_candidate_for_cus_low=5801.5, pus_candidate_for_cus_high=5813.75
+CONFIRM CUS: current_bar=51, confirmed_bar_for_this_cus=49, pus_candidate_for_cus_bar_index=49
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=49, pus_candidate_for_cus_low=5730.5, pus_candidate_for_cus_high=5755.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=49, pus_candidate_for_cus_low=5730.5, pus_candidate_for_cus_high=5755.25
+CONFIRM CDS: confirmed_bar_for_this_cds=53, pds_candidate_for_cds_bar_index=53
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=57, confirmed_bar_for_this_cus=55, pus_candidate_for_cus_bar_index=55
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=55, pus_candidate_for_cus_low=5728.25, pus_candidate_for_cus_high=5744.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=55, pus_candidate_for_cus_low=5728.25, pus_candidate_for_cus_high=5744.5
+CONFIRM CDS: confirmed_bar_for_this_cds=63, pds_candidate_for_cds_bar_index=63
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=64, pus_candidate_for_cus_low=5533.75, pus_candidate_for_cus_high=5577.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=64, pus_candidate_for_cus_low=5533.75, pus_candidate_for_cus_high=5577.5
+CONFIRM CUS: current_bar=71, confirmed_bar_for_this_cus=65, pus_candidate_for_cus_bar_index=65
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=65, pus_candidate_for_cus_low=5559.0, pus_candidate_for_cus_high=5617.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=65, pus_candidate_for_cus_low=5559.0, pus_candidate_for_cus_high=5617.25
+CONFIRM CDS: confirmed_bar_for_this_cds=73, pds_candidate_for_cds_bar_index=73
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=71, pus_candidate_for_cus_low=5600.25, pus_candidate_for_cus_high=5694.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=71, pus_candidate_for_cus_low=5600.25, pus_candidate_for_cus_high=5694.75
+CONFIRM CUS: current_bar=78, confirmed_bar_for_this_cus=76, pus_candidate_for_cus_bar_index=76
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=76, pus_candidate_for_cus_low=5610.75, pus_candidate_for_cus_high=5661.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=76, pus_candidate_for_cus_low=5610.75, pus_candidate_for_cus_high=5661.5
+CONFIRM CDS: confirmed_bar_for_this_cds=80, pds_candidate_for_cds_bar_index=80
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=93, confirmed_bar_for_this_cus=91, pus_candidate_for_cus_bar_index=91
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=91, pus_candidate_for_cus_low=4832.5, pus_candidate_for_cus_high=5008.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=91, pus_candidate_for_cus_low=4832.5, pus_candidate_for_cus_high=5008.0
+CONFIRM CDS: confirmed_bar_for_this_cds=99, pds_candidate_for_cds_bar_index=99
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=93, pus_candidate_for_cus_low=4842.25, pus_candidate_for_cus_high=4960.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=93, pus_candidate_for_cus_low=4842.25, pus_candidate_for_cus_high=4960.0
+CONFIRM CUS: current_bar=106, confirmed_bar_for_this_cus=104, pus_candidate_for_cus_bar_index=104
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=104, pus_candidate_for_cus_low=4873.5, pus_candidate_for_cus_high=4999.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=104, pus_candidate_for_cus_low=4873.5, pus_candidate_for_cus_high=4999.75
+CONFIRM CDS: confirmed_bar_for_this_cds=109, pds_candidate_for_cds_bar_index=109
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=106, pus_candidate_for_cus_low=4901.75, pus_candidate_for_cus_high=5070.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=106, pus_candidate_for_cus_low=4901.75, pus_candidate_for_cus_high=5070.75
+CONFIRM CUS: current_bar=137, confirmed_bar_for_this_cus=113, pus_candidate_for_cus_bar_index=113
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=113, pus_candidate_for_cus_low=5146.75, pus_candidate_for_cus_high=5373.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=113, pus_candidate_for_cus_low=5146.75, pus_candidate_for_cus_high=5373.75
+CONFIRM CDS: confirmed_bar_for_this_cds=137, pds_candidate_for_cds_bar_index=137
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=138, pus_candidate_for_cus_low=5250.75, pus_candidate_for_cus_high=5317.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=138, pus_candidate_for_cus_low=5250.75, pus_candidate_for_cus_high=5317.0
+CONFIRM CUS: current_bar=143, confirmed_bar_for_this_cus=139, pus_candidate_for_cus_bar_index=139
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=139, pus_candidate_for_cus_low=5293.0, pus_candidate_for_cus_high=5332.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=139, pus_candidate_for_cus_low=5293.0, pus_candidate_for_cus_high=5332.5
+CONFIRM CDS: confirmed_bar_for_this_cds=144, pds_candidate_for_cds_bar_index=144
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=156, confirmed_bar_for_this_cus=150, pus_candidate_for_cus_bar_index=150
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=150, pus_candidate_for_cus_low=5127.0, pus_candidate_for_cus_high=5193.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=150, pus_candidate_for_cus_low=5127.0, pus_candidate_for_cus_high=5193.25
+CONFIRM CDS: confirmed_bar_for_this_cds=155, pds_candidate_for_cds_bar_index=155
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=156, pus_candidate_for_cus_low=5262.0, pus_candidate_for_cus_high=5329.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=156, pus_candidate_for_cus_low=5262.0, pus_candidate_for_cus_high=5329.75
+CONFIRM CUS: current_bar=161, confirmed_bar_for_this_cus=157, pus_candidate_for_cus_bar_index=157
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=157, pus_candidate_for_cus_low=5375.0, pus_candidate_for_cus_high=5424.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=157, pus_candidate_for_cus_low=5375.0, pus_candidate_for_cus_high=5424.0
+CONFIRM CDS: confirmed_bar_for_this_cds=164, pds_candidate_for_cds_bar_index=164
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=165, pus_candidate_for_cus_low=5355.5, pus_candidate_for_cus_high=5398.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=165, pus_candidate_for_cus_low=5355.5, pus_candidate_for_cus_high=5398.25
+CONFIRM CUS: current_bar=173, confirmed_bar_for_this_cus=166, pus_candidate_for_cus_bar_index=166
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=166, pus_candidate_for_cus_low=5375.25, pus_candidate_for_cus_high=5441.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=166, pus_candidate_for_cus_low=5375.25, pus_candidate_for_cus_high=5441.5
+CONFIRM CDS: confirmed_bar_for_this_cds=175, pds_candidate_for_cds_bar_index=175
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=173, pus_candidate_for_cus_low=5480.0, pus_candidate_for_cus_high=5554.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=173, pus_candidate_for_cus_low=5480.0, pus_candidate_for_cus_high=5554.5
+CONFIRM CUS: current_bar=183, confirmed_bar_for_this_cus=179, pus_candidate_for_cus_bar_index=179
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=179, pus_candidate_for_cus_low=5492.75, pus_candidate_for_cus_high=5564.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=179, pus_candidate_for_cus_low=5492.75, pus_candidate_for_cus_high=5564.25
+CONFIRM CDS: confirmed_bar_for_this_cds=183, pds_candidate_for_cds_bar_index=183
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=184, pus_candidate_for_cus_low=5521.0, pus_candidate_for_cus_high=5567.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=184, pus_candidate_for_cus_low=5521.0, pus_candidate_for_cus_high=5567.5
+CONFIRM CUS: current_bar=196, confirmed_bar_for_this_cus=190, pus_candidate_for_cus_bar_index=190
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=190, pus_candidate_for_cus_low=5455.25, pus_candidate_for_cus_high=5580.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=190, pus_candidate_for_cus_low=5455.25, pus_candidate_for_cus_high=5580.0
+CONFIRM CDS: confirmed_bar_for_this_cds=197, pds_candidate_for_cds_bar_index=197
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=196, pus_candidate_for_cus_low=5626.75, pus_candidate_for_cus_high=5662.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=196, pus_candidate_for_cus_low=5626.75, pus_candidate_for_cus_high=5662.5
+CONFIRM CUS: current_bar=207, confirmed_bar_for_this_cus=201, pus_candidate_for_cus_bar_index=201
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=201, pus_candidate_for_cus_low=5633.5, pus_candidate_for_cus_high=5662.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=201, pus_candidate_for_cus_low=5633.5, pus_candidate_for_cus_high=5662.25
+CONFIRM CDS: confirmed_bar_for_this_cds=210, pds_candidate_for_cds_bar_index=210
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=207, pus_candidate_for_cus_low=5655.25, pus_candidate_for_cus_high=5680.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=207, pus_candidate_for_cus_low=5655.25, pus_candidate_for_cus_high=5680.25
+CONFIRM CUS: current_bar=219, confirmed_bar_for_this_cus=216, pus_candidate_for_cus_bar_index=216
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=216, pus_candidate_for_cus_low=5605.0, pus_candidate_for_cus_high=5651.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=216, pus_candidate_for_cus_low=5605.0, pus_candidate_for_cus_high=5651.75
+CONFIRM CDS: confirmed_bar_for_this_cds=220, pds_candidate_for_cds_bar_index=220
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=226, confirmed_bar_for_this_cus=222, pus_candidate_for_cus_bar_index=222
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=222, pus_candidate_for_cus_low=5596.0, pus_candidate_for_cus_high=5675.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=222, pus_candidate_for_cus_low=5596.0, pus_candidate_for_cus_high=5675.0
+CONFIRM CDS: confirmed_bar_for_this_cds=226, pds_candidate_for_cds_bar_index=226
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=230, confirmed_bar_for_this_cus=227, pus_candidate_for_cus_bar_index=227
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=227, pus_candidate_for_cus_low=5652.75, pus_candidate_for_cus_high=5741.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=227, pus_candidate_for_cus_low=5652.75, pus_candidate_for_cus_high=5741.0
+CONFIRM CDS: confirmed_bar_for_this_cds=238, pds_candidate_for_cds_bar_index=238
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=233, pus_candidate_for_cus_low=5662.75, pus_candidate_for_cus_high=5708.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=233, pus_candidate_for_cus_low=5662.75, pus_candidate_for_cus_high=5708.5
+CONFIRM CUS: current_bar=247, confirmed_bar_for_this_cus=239, pus_candidate_for_cus_bar_index=239
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=239, pus_candidate_for_cus_low=5805.75, pus_candidate_for_cus_high=5860.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=239, pus_candidate_for_cus_low=5805.75, pus_candidate_for_cus_high=5860.75
+CONFIRM CDS: confirmed_bar_for_this_cds=246, pds_candidate_for_cds_bar_index=246
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=247, pus_candidate_for_cus_low=5898.5, pus_candidate_for_cus_high=5909.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=247, pus_candidate_for_cus_low=5898.5, pus_candidate_for_cus_high=5909.75
+CONFIRM CUS: current_bar=256, confirmed_bar_for_this_cus=255, pus_candidate_for_cus_bar_index=255
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=255, pus_candidate_for_cus_low=5867.0, pus_candidate_for_cus_high=5896.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=255, pus_candidate_for_cus_low=5867.0, pus_candidate_for_cus_high=5896.5
+CONFIRM CDS: confirmed_bar_for_this_cds=264, pds_candidate_for_cds_bar_index=264
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=256, pus_candidate_for_cus_low=5875.25, pus_candidate_for_cus_high=5898.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=256, pus_candidate_for_cus_low=5875.25, pus_candidate_for_cus_high=5898.5
+CONFIRM CUS: current_bar=273, confirmed_bar_for_this_cus=267, pus_candidate_for_cus_bar_index=267
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=267, pus_candidate_for_cus_low=5892.75, pus_candidate_for_cus_high=5923.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=267, pus_candidate_for_cus_low=5892.75, pus_candidate_for_cus_high=5923.5
+CONFIRM CDS: confirmed_bar_for_this_cds=6, pds_candidate_for_cds_bar_index=6
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=3, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5670.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=3, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5670.25
+DEBUG CUS EVAL: current_bar=12, prev_bar=11, pus_cand=11, pds_cand=6
+  PUS_CAND: O=5668.5, H=5681.25, L=5651.0, C=5668.5
+  PDS_CAND: O=5733.5, H=5759.75, L=5725.5, C=5732.25
+  CURRENT: O=5668.5, H=5682.5, L=5657.25, C=5669.5
+  PREV:    O=5668.5, H=5681.25, L=5651.0, C=5668.5
+    Rule LOWER_OHLC: False
+    Rule LowUndercutHighRespect: False
+    Rule HigherHighLowerLowDownClose: False
+    Rule EngulfingUpPDSLowBreak: False
+DEBUG CUS EVAL: current_bar=13, prev_bar=12, pus_cand=11, pds_cand=6
+  PUS_CAND: O=5668.5, H=5681.25, L=5651.0, C=5668.5
+  PDS_CAND: O=5733.5, H=5759.75, L=5725.5, C=5732.25
+  CURRENT: O=5669.75, H=5689.5, L=5660.75, C=5682.0
+  PREV:    O=5668.5, H=5682.5, L=5657.25, C=5669.5
+    Rule LOWER_OHLC: False
+    Rule LowUndercutHighRespect: False
+    Rule HigherHighLowerLowDownClose: False
+    Rule EngulfingUpPDSLowBreak: False
+CONFIRM CUS: current_bar=18, confirmed_bar_for_this_cus=11, pus_candidate_for_cus_bar_index=11
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=11, pus_candidate_for_cus_low=5651.0, pus_candidate_for_cus_high=5681.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=11, pus_candidate_for_cus_low=5651.0, pus_candidate_for_cus_high=5681.25
+CONFIRM CDS: confirmed_bar_for_this_cds=23, pds_candidate_for_cds_bar_index=23
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=18, pus_candidate_for_cus_low=5681.0, pus_candidate_for_cus_high=5770.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=18, pus_candidate_for_cus_low=5681.0, pus_candidate_for_cus_high=5770.5
+CONFIRM CUS: current_bar=30, confirmed_bar_for_this_cus=28, pus_candidate_for_cus_bar_index=28
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=28, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5705.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=28, pus_candidate_for_cus_low=5651.25, pus_candidate_for_cus_high=5705.0
+CONFIRM CDS: confirmed_bar_for_this_cds=37, pds_candidate_for_cds_bar_index=37
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=30, pus_candidate_for_cus_low=5688.0, pus_candidate_for_cus_high=5722.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=30, pus_candidate_for_cus_low=5688.0, pus_candidate_for_cus_high=5722.25
+CONFIRM CUS: current_bar=42, confirmed_bar_for_this_cus=39, pus_candidate_for_cus_bar_index=39
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=39, pus_candidate_for_cus_low=5801.5, pus_candidate_for_cus_high=5813.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=39, pus_candidate_for_cus_low=5801.5, pus_candidate_for_cus_high=5813.75
+CONFIRM CDS: confirmed_bar_for_this_cds=41, pds_candidate_for_cds_bar_index=41
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=None, pus_candidate_for_cus_low=None, pus_candidate_for_cus_high=None
+CONFIRM CUS: current_bar=51, confirmed_bar_for_this_cus=49, pus_candidate_for_cus_bar_index=49
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=49, pus_candidate_for_cus_low=5730.5, pus_candidate_for_cus_high=5755.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=49, pus_candidate_for_cus_low=5730.5, pus_candidate_for_cus_high=5755.25
+CONFIRM CDS: confirmed_bar_for_this_cds=238, pds_candidate_for_cds_bar_index=238
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=91, pus_candidate_for_cus_low=4832.5, pus_candidate_for_cus_high=5008.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=91, pus_candidate_for_cus_low=4832.5, pus_candidate_for_cus_high=5008.0
+CONFIRM CUS: current_bar=243, confirmed_bar_for_this_cus=239, pus_candidate_for_cus_bar_index=239
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=239, pus_candidate_for_cus_low=5805.75, pus_candidate_for_cus_high=5860.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=239, pus_candidate_for_cus_low=5805.75, pus_candidate_for_cus_high=5860.75
+CONFIRM CDS: confirmed_bar_for_this_cds=241, pds_candidate_for_cds_bar_index=241
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=243, pus_candidate_for_cus_low=5837.75, pus_candidate_for_cus_high=5851.0
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=243, pus_candidate_for_cus_low=5837.75, pus_candidate_for_cus_high=5851.0
+CONFIRM CUS: current_bar=247, confirmed_bar_for_this_cus=244, pus_candidate_for_cus_bar_index=244
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=244, pus_candidate_for_cus_low=5845.0, pus_candidate_for_cus_high=5895.25
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=244, pus_candidate_for_cus_low=5845.0, pus_candidate_for_cus_high=5895.25
+CONFIRM CDS: confirmed_bar_for_this_cds=246, pds_candidate_for_cds_bar_index=246
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=247, pus_candidate_for_cus_low=5898.5, pus_candidate_for_cus_high=5909.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=247, pus_candidate_for_cus_low=5898.5, pus_candidate_for_cus_high=5909.75
+CONFIRM CUS: current_bar=274, confirmed_bar_for_this_cus=255, pus_candidate_for_cus_bar_index=255
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=255, pus_candidate_for_cus_low=5867.0, pus_candidate_for_cus_high=5896.5
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=255, pus_candidate_for_cus_low=5867.0, pus_candidate_for_cus_high=5896.5
+CONFIRM CDS: confirmed_bar_for_this_cds=271, pds_candidate_for_cds_bar_index=271
+RESET ALL PENDING UP CANDIDATES: pus_candidate_for_cus_bar_index=276, pus_candidate_for_cus_low=5926.5, pus_candidate_for_cus_high=5962.75
+RESET PUS CANDIDATE: pus_candidate_for_cus_bar_index=276, pus_candidate_for_cus_low=5926.5, pus_candidate_for_cus_high=5962.75
