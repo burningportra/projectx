@@ -1,7 +1,20 @@
 import csv
+import argparse # Added for command-line arguments
 
 # --- Configuration Constants ---
 CUS_EXHAUSTION_MAX_BARS_FROM_CANDIDATE = 5
+# MIN_BARS_FOR_CDS_CONFIRMATION = 2 # Reverted this global constant
+
+# Global debug flags, to be set by command-line arguments
+DEBUG_MODE_ACTIVE = False
+DEBUG_START_INDEX = -1
+DEBUG_END_INDEX = -1
+
+# --- Debug Helper Function ---
+def log_debug(bar_index, message):
+    """Prints a debug message if the current bar_index is within the debug range."""
+    if DEBUG_MODE_ACTIVE and (DEBUG_START_INDEX <= bar_index <= DEBUG_END_INDEX):
+        print(f"[DEBUG Bar {bar_index}]: {message}")
 
 # --- Data Structures ---
 class Bar:
@@ -65,6 +78,7 @@ class State:
         self.pus_candidate_for_cus_high = None  # The high price of that PUS candidate bar
         
         self.log_entries = [] # Stores log messages generated during processing
+        log_debug(0, "Initial State: No PUS/PDS candidates. last_confirmed_trend=None. Not in containment.") # Initial debug log for state
 
         # Containment State: Tracks if price action is contained within a prior significant bar's range.
         self.in_containment = False # Flag indicating if currently in a containment zone
@@ -138,8 +152,9 @@ class State:
             )
             return False # PDS not set or updated
 
-        # DEBUG PRINT ADDED
+        # DEBUG PRINT ADDED - Retaining for now, can be replaced/enhanced by new log_debug calls
         print(f"DEBUG PDS Set Check: bar_obj_idx={bar_obj.index}, bar_obj.h={bar_obj.h}, prev_bar_h_check_passed=True, current_PDS_cand_idx={self.pds_candidate_for_cds_bar_index}, current_PDS_cand_h={self.pds_candidate_for_cds_high}, comparison_H_gt_CandH={(bar_obj.h > self.pds_candidate_for_cds_high) if self.pds_candidate_for_cds_bar_index is not None and self.pds_candidate_for_cds_high is not None else 'N/A_NoCand'}, is_None_Cand={self.pds_candidate_for_cds_bar_index is None}")
+        log_debug(bar_obj.index, f"Attempting to set PDS on Bar {bar_obj.index}. Current PDS cand: {self.pds_candidate_for_cds_bar_index} (H:{self.pds_candidate_for_cds_high}). Prev bar H check passed.")
 
         if self.pds_candidate_for_cds_bar_index is None or \
            bar_obj.h > self.pds_candidate_for_cds_high:
@@ -154,11 +169,12 @@ class State:
             if reason_message_suffix:
                 log_message += f" {reason_message_suffix}"
             event_descriptions_list.append(log_message)
-
-            # FIX 1: Made consistent - clear both basic and candidate states for PUS
-            if self.pending_uptrend_start_bar_index == bar_obj.index:
-                self._reset_pending_uptrend_signal_state()
+            # MODIFICATION: Allow a bar to be a PDS candidate even if it's also a PUS candidate.
+            # if self.pus_candidate_for_cus_bar_index == bar_obj.index:
+            #     self._reset_pus_candidate_state()
+            log_debug(bar_obj.index, f"PDS set/updated on Bar {bar_obj.index} (H:{bar_obj.h}, L:{bar_obj.l}). Cleared PUS on same bar if present.")
             return True
+        log_debug(bar_obj.index, f"PDS on Bar {bar_obj.index} not set/updated (existing cand Bar {self.pds_candidate_for_cds_bar_index} has H:{self.pds_candidate_for_cds_high}).")
         return False
 
     def set_new_pending_uptrend_signal(self, bar_obj, event_descriptions_list, reason_message_suffix=""):
@@ -173,6 +189,7 @@ class State:
         self.pending_uptrend_start_anchor_low = bar_obj.l
         
         pus_candidate_updated = False
+        log_debug(bar_obj.index, f"Attempting to set PUS on Bar {bar_obj.index}. Current PUS cand: {self.pus_candidate_for_cus_bar_index} (L:{self.pus_candidate_for_cus_low}).")
         if self.pus_candidate_for_cus_bar_index is None or \
            bar_obj.l < self.pus_candidate_for_cus_low:
             self.pus_candidate_for_cus_bar_index = bar_obj.index
@@ -184,6 +201,9 @@ class State:
                 log_message += f" {reason_message_suffix}"
             event_descriptions_list.append(log_message)
             pus_candidate_updated = True
+            log_debug(bar_obj.index, f"PUS set/updated on Bar {bar_obj.index} (L:{bar_obj.l}, H:{bar_obj.h}). Cleared PDS on same bar if present.")
+        else:
+            log_debug(bar_obj.index, f"PUS on Bar {bar_obj.index} not set/updated (existing cand Bar {self.pus_candidate_for_cus_bar_index} has L:{self.pus_candidate_for_cus_low}).")
 
         # FIX 1: Made consistent - clear both basic and candidate states for PDS
         if self.pending_downtrend_start_bar_index == bar_obj.index:
@@ -207,12 +227,14 @@ class State:
                 self.current_confirmed_trend_is_uptrend = False
                 self.last_confirmed_trend_type = 'downtrend'
                 self.last_confirmed_trend_bar_index = intervening_high_bar_for_forced_cds.index
+                log_debug(confirmed_cus_bar.index if confirmed_cus_bar else 0, f"FORCED CDS from Bar {intervening_high_bar_for_forced_cds.index} due to CUS at {confirmed_cus_bar.index if confirmed_cus_bar else 'N/A'}. Last confirmed: DOWNTREND at {self.last_confirmed_trend_bar_index}")
 
         # FIX 4: Removed duplicate call - now log CUS and update state only once
         event_descriptions_list.append(f"Confirmed Uptrend Start from Bar {confirmed_cus_bar.index} ({confirmed_cus_bar.date})")
         self.current_confirmed_trend_is_uptrend = True 
         self.last_confirmed_trend_type = 'uptrend' 
         self.last_confirmed_trend_bar_index = confirmed_cus_bar.index
+        log_debug(confirmed_cus_bar.index, f"CUS Confirmed from Bar {confirmed_cus_bar.index}. Last confirmed: UPTREND at {self.last_confirmed_trend_bar_index}")
 
     def confirm_downtrend(self, confirmed_cds_bar, all_bars, event_descriptions_list):
         """
@@ -231,12 +253,14 @@ class State:
                 self.current_confirmed_trend_is_uptrend = True
                 self.last_confirmed_trend_type = 'uptrend'
                 self.last_confirmed_trend_bar_index = intervening_low_bar_for_forced_cus.index
+                log_debug(confirmed_cds_bar.index if confirmed_cds_bar else 0, f"FORCED CUS from Bar {intervening_low_bar_for_forced_cus.index} due to CDS at {confirmed_cds_bar.index if confirmed_cds_bar else 'N/A'}. Last confirmed: UPTREND at {self.last_confirmed_trend_bar_index}")
 
         # FIX 4: Removed duplicate call - now log CDS and update state only once
         event_descriptions_list.append(f"Confirmed Downtrend Start from Bar {confirmed_cds_bar.index} ({confirmed_cds_bar.date})")
         self.current_confirmed_trend_is_uptrend = False 
         self.last_confirmed_trend_type = 'downtrend' 
         self.last_confirmed_trend_bar_index = confirmed_cds_bar.index
+        log_debug(confirmed_cds_bar.index, f"CDS Confirmed from Bar {confirmed_cds_bar.index}. Last confirmed: DOWNTREND at {self.last_confirmed_trend_bar_index}")
 
 # --- General Helper Functions (Moved Up) ---
 def load_bars_from_alt_csv(filename="trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv"):
@@ -394,7 +418,10 @@ def check_cus_confirmation_low_undercut_high_respect(current_bar, prev_bar, pds_
     cond_low_undercut = current_bar.l < pds_candidate_bar.l
     cond_high_respect = current_bar.h <= pds_candidate_bar.h
     cond_closes_higher = current_bar.c > prev_bar.c
-    return cond_low_undercut and cond_high_respect and cond_closes_higher
+    result = cond_low_undercut and cond_high_respect and cond_closes_higher
+    if result:
+        log_debug(current_bar.index, f"CUS Rule 'check_cus_confirmation_low_undercut_high_respect' MET for PDS cand {pds_candidate_bar.index if pds_candidate_bar else 'None'}")
+    return result
 
 def check_cus_confirmation_higher_high_lower_low_down_close(current_bar, prev_bar):
     """
@@ -413,7 +440,10 @@ def check_cus_confirmation_higher_high_lower_low_down_close(current_bar, prev_ba
     cond1_higher_high = current_bar.h > prev_bar.h
     cond2_lower_low = current_bar.l < prev_bar.l
     cond3_down_close = current_bar.c < current_bar.o 
-    return cond1_higher_high and cond2_lower_low and cond3_down_close
+    result = cond1_higher_high and cond2_lower_low and cond3_down_close
+    if result:
+        log_debug(current_bar.index, "CUS Rule 'check_cus_confirmation_higher_high_lower_low_down_close' MET")
+    return result
 
 def check_cus_confirmation_engulfing_up_with_pds_low_break(current_bar, prev_bar, pds_candidate_bar_for_context):
     """
@@ -438,7 +468,10 @@ def check_cus_confirmation_engulfing_up_with_pds_low_break(current_bar, prev_bar
     if pds_candidate_bar_for_context is None:
         return False 
     cond5_break_pds_low = current_bar.l < pds_candidate_bar_for_context.l
-    return cond1_higher_high and cond2_lower_low and cond3_closes_higher_than_prev_close and cond4_up_bar and cond5_break_pds_low
+    result = cond1_higher_high and cond2_lower_low and cond3_closes_higher_than_prev_close and cond4_up_bar and cond5_break_pds_low
+    if result:
+        log_debug(current_bar.index, f"CUS Rule 'check_cus_confirmation_engulfing_up_with_pds_low_break' MET for PDS cand {pds_candidate_bar_for_context.index if pds_candidate_bar_for_context else 'None'}")
+    return result
 
 # --- CUS Rule Wrapper Functions ---
 def _cus_rule_exhaustion_reversal(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
@@ -453,6 +486,8 @@ def _cus_rule_exhaustion_reversal(current_bar, prev_bar, initial_pus_candidate_b
         return False
     if current_bar.index - initial_pus_candidate_bar_obj.index > CUS_EXHAUSTION_MAX_BARS_FROM_CANDIDATE:
         return False
+    # Added detailed log for this specific rule return
+    log_debug(current_bar.index, f"CUS Rule '_cus_rule_exhaustion_reversal' MET for PUS {initial_pus_candidate_bar_obj.index}")
     return True
 
 def _cus_rule_low_undercut_high_respect(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
@@ -485,14 +520,25 @@ def _evaluate_cus_rules(current_bar, prev_bar, initial_pus_candidate_bar_obj, in
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cus, cus_trigger_rule_type)
     """
+    # If in containment and current_bar is not the one that started containment, suppress CUS.
+    if state.in_containment and state.containment_start_bar_index_for_log != current_bar.index:
+        log_debug(current_bar.index, "CUS Evaluation: Suppressed due to being deep in containment.")
+        return False, None
+
     can_confirm_cus = False
     cus_trigger_rule_type = None
     if initial_pus_candidate_bar_obj is not None: 
         for rule_name, rule_func in CUS_RULE_DEFINITIONS:
+            log_debug(current_bar.index, f"CUS Evaluation: Checking rule '{rule_name}' for PUS on Bar {initial_pus_candidate_bar_obj.index}.")
             if rule_func(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
                 can_confirm_cus = True
                 cus_trigger_rule_type = rule_name
+                log_debug(current_bar.index, f"CUS Evaluation: Rule '{rule_name}' MET for PUS on Bar {initial_pus_candidate_bar_obj.index}.")
                 break
+            else:
+                log_debug(current_bar.index, f"CUS Evaluation: Rule '{rule_name}' NOT MET for PUS on Bar {initial_pus_candidate_bar_obj.index}.")
+    else:
+        log_debug(current_bar.index, "CUS Evaluation: No initial PUS candidate to evaluate.")
     return can_confirm_cus, cus_trigger_rule_type
 
 # --- Detailed CDS Confirmation Check Functions ---
@@ -504,9 +550,12 @@ def check_cds_confirmation_low_then_higher_close_vs_pds_open(current_bar, prev_b
             if all_bars[j_1based_idx - 1].h > peak_bar.h:
                 no_higher_high_for_low_then_higher_path = False
                 break
-    return is_low_then_higher_close_bar(current_bar, prev_bar) and \
+    result = is_low_then_higher_close_bar(current_bar, prev_bar) and \
            no_higher_high_for_low_then_higher_path and \
            current_bar.l < peak_bar.o
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_low_then_higher_close_vs_pds_open' MET for PDS {peak_bar.index}")
+    return result
 
 def check_cds_confirmation_pattern_A(current_bar, prev_bar, peak_bar, all_bars):
     """
@@ -546,7 +595,10 @@ def check_cds_confirmation_pattern_A(current_bar, prev_bar, peak_bar, all_bars):
                     found_pullback = True
                     break
     
-    return found_pullback and cond1 and cond2 and no_higher_high_between and cond3
+    result = found_pullback and cond1 and cond2 and no_higher_high_between and cond3
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_pattern_A' MET for PDS {peak_bar.index}")
+    return result
 
 def check_cds_confirmation_pattern_B(current_bar, prev_bar, peak_bar, all_bars):
     """
@@ -588,7 +640,10 @@ def check_cds_confirmation_pattern_B(current_bar, prev_bar, peak_bar, all_bars):
                     found_pullback = True
                     break
     
-    return found_pullback and cond1 and cond2 and cond3 and no_higher_high_between
+    result = found_pullback and cond1 and cond2 and cond3 and no_higher_high_between
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_pattern_B' MET for PDS {peak_bar.index}")
+    return result
 
 def check_cds_confirmation_failed_rally(current_bar, prev_bar, peak_bar, all_bars):
     """
@@ -630,7 +685,10 @@ def check_cds_confirmation_failed_rally(current_bar, prev_bar, peak_bar, all_bar
         return False
 
     current_bar_closes_down = current_bar.c < current_bar.o
-    return current_bar_closes_down 
+    result = current_bar_closes_down 
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_failed_rally' MET for PDS {peak_bar.index}")
+    return result
 
 def check_cds_confirmation_pattern_G(current_bar, prev_bar, peak_bar, all_bars):
     """
@@ -662,7 +720,10 @@ def check_cds_confirmation_pattern_G(current_bar, prev_bar, peak_bar, all_bars):
         return False
 
     prev_bar_broke_low = prev_bar.l < peak_bar.l
-    return prev_bar_broke_low
+    result = prev_bar_broke_low
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_pattern_G' MET for PDS {peak_bar.index}")
+    return result
 
 def check_cds_confirmation_outside_bar(current_bar, prev_bar_is_peak):
     """
@@ -683,7 +744,10 @@ def check_cds_confirmation_outside_bar(current_bar, prev_bar_is_peak):
     higher_high = current_bar.h > prev_bar_is_peak.h
     lower_low = current_bar.l < prev_bar_is_peak.l
     closes_stronger = current_bar.c > prev_bar_is_peak.c 
-    return higher_high and lower_low and closes_stronger
+    result = higher_high and lower_low and closes_stronger
+    if result:
+        log_debug(current_bar.index, f"CDS Rule 'check_cds_confirmation_outside_bar' MET for PDS {prev_bar_is_peak.index}")
+    return result
 
 # --- CDS Rule Wrapper Functions ---
 def _cds_rule_low_then_higher_close_vs_pds_open(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
@@ -741,21 +805,36 @@ CDS_RULE_DEFINITIONS = [
     (CDS_RULE_OUTSIDE_BAR_STRONGER_CLOSE, _cds_rule_outside_bar),
 ]
 
-def _evaluate_cds_rules(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
+def _evaluate_cds_rules(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars, state):
     """
     Evaluates all Confirmed Downtrend Start (CDS) rules based on an initial PDS candidate.
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cds, cds_trigger_rule_type)
     """
+    ALLOWED_BARS_INTO_CONTAINMENT_FOR_CDS_CONFIRM = 1 # 0:only start; 1:start+next
+
+    # If in containment, suppress CDS if current_bar is too deep into containment.
+    if state.in_containment and \
+       state.containment_start_bar_index_for_log is not None and \
+       current_bar.index > state.containment_start_bar_index_for_log + ALLOWED_BARS_INTO_CONTAINMENT_FOR_CDS_CONFIRM:
+        log_debug(current_bar.index, f"CDS Evaluation: Suppressed. Bar {current_bar.index} is > {ALLOWED_BARS_INTO_CONTAINMENT_FOR_CDS_CONFIRM} bars after containment start ({state.containment_start_bar_index_for_log}).")
+        return False, None
+
     can_confirm_cds = False
     cds_trigger_rule_type = None
 
     if initial_pds_candidate_bar_obj is not None:  # A PDS candidate must exist
         for rule_name, rule_func in CDS_RULE_DEFINITIONS:
+            log_debug(current_bar.index, f"CDS Evaluation: Checking rule '{rule_name}' for PDS on Bar {initial_pds_candidate_bar_obj.index}.")
             if rule_func(current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars):
                 can_confirm_cds = True
                 cds_trigger_rule_type = rule_name
+                log_debug(current_bar.index, f"CDS Evaluation: Rule '{rule_name}' MET for PDS on Bar {initial_pds_candidate_bar_obj.index}.")
                 break # First rule that triggers confirms CDS
+            else:
+                log_debug(current_bar.index, f"CDS Evaluation: Rule '{rule_name}' NOT MET for PDS on Bar {initial_pds_candidate_bar_obj.index}.")
+    else:
+        log_debug(current_bar.index, "CDS Evaluation: No initial PDS candidate to evaluate.")
             
     return can_confirm_cds, cds_trigger_rule_type
 
@@ -776,10 +855,12 @@ def _apply_cus_confirmation(current_bar, confirmed_bar_for_this_cus, cus_trigger
         # For this pattern, the current bar itself becomes PDS
         # The bar before current_bar is prev_bar (which is all_bars[current_bar.index - 2])
         prev_to_current_bar = all_bars[current_bar.index - 2] if current_bar.index > 1 else None
+        log_debug(current_bar.index, f"Apply CUS: Rule '{cus_trigger_rule_type}' triggered. Attempting PDS on current_bar ({current_bar.index}) due to pattern.")
         state.set_new_pending_downtrend_signal(current_bar, prev_to_current_bar, current_bar_event_descriptions, 
                                               "(from HigherHighLowerLowDownClose pattern)")
     elif cus_trigger_rule_type == "EngulfingUpPDSLowBreak":
         # For engulfing patterns, we don't automatically create a PDS
+        log_debug(current_bar.index, f"Apply CUS: Rule '{cus_trigger_rule_type}' triggered. No automatic PDS generation for this rule.")
         pass
     else:
         # For other patterns, check if the CUS bar qualifies as a PDS
@@ -794,6 +875,7 @@ def _apply_cus_confirmation(current_bar, confirmed_bar_for_this_cus, cus_trigger
                     idx_before_confirmed_cus = confirmed_bar_for_this_cus.index - 2 
                     if idx_before_confirmed_cus >= 0 and idx_before_confirmed_cus < len(all_bars):
                         prev_to_confirmed_cus_bar = all_bars[idx_before_confirmed_cus]
+                log_debug(current_bar.index, f"Apply CUS: Rule '{cus_trigger_rule_type}' triggered. Attempting PDS on confirmed_cus_bar ({confirmed_bar_for_this_cus.index}) due to trigger by Bar {cus_triggering_bar.index}.")
                 state.set_new_pending_downtrend_signal(confirmed_bar_for_this_cus, prev_to_confirmed_cus_bar, current_bar_event_descriptions,
                                                      f"(due to trigger by Bar {cus_triggering_bar.index})")
 
@@ -808,10 +890,12 @@ def _apply_cds_confirmation(confirmed_bar_for_this_cds, state, all_bars, initial
     # FIX 7: Fixed the condition - should check if PUS candidate is at or before CDS bar
     if state.pus_candidate_for_cus_bar_index is not None and \
        state.pus_candidate_for_cus_bar_index <= confirmed_bar_for_this_cds.index:
+        log_debug(confirmed_bar_for_this_cds.index, f"Apply CDS: PUS candidate on/before CDS Bar {confirmed_bar_for_this_cds.index} (PUS at {state.pus_candidate_for_cus_bar_index}) is being reset.")
         state._reset_all_pending_uptrend_states()
     
     # Clear the PDS state that was just confirmed by this CDS.
     if state.pds_candidate_for_cds_bar_index == confirmed_bar_for_this_cds.index:
+        log_debug(confirmed_bar_for_this_cds.index, f"Apply CDS: PDS candidate on CDS Bar {confirmed_bar_for_this_cds.index} is being reset as it is now confirmed.")
         state._reset_all_pending_downtrend_states()
 
 def _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj, initial_pus_candidate_bar_obj, current_bar_event_descriptions):
@@ -820,6 +904,7 @@ def _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj,
     Modifies state.in_containment and related fields, and appends to current_bar_event_descriptions.
     """
     if state.in_containment:
+        log_debug(current_bar.index, f"Containment Logic: Currently IN containment (Ref Bar: {state.containment_ref_bar_index}, H:{state.containment_ref_high}, L:{state.containment_ref_low}).")
         if current_bar.index == state.containment_start_bar_index_for_log:
             pass 
         elif current_bar.h <= state.containment_ref_high and \
@@ -830,6 +915,7 @@ def _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj,
                 f"({state.containment_ref_type} H:{state.containment_ref_high}, L:{state.containment_ref_low}) "
                 f"for {state.containment_consecutive_bars_inside} bars."
             )
+            log_debug(current_bar.index, f"Containment Logic: Bar {current_bar.index} remains inside. Consecutive: {state.containment_consecutive_bars_inside}.")
         else: # current bar is outside the containment range
             break_type = "moves outside"
             if current_bar.c > state.containment_ref_high: break_type = "BREAKOUT above"
@@ -838,6 +924,7 @@ def _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj,
                 f"Containment ENDED: Bar {current_bar.index} {break_type} Bar {state.containment_ref_bar_index} range "
                 f"(was {state.containment_consecutive_bars_inside} bar(s) inside)."
             )
+            log_debug(current_bar.index, f"Containment Logic: ENDED. Bar {current_bar.index} {break_type} range. Was {state.containment_consecutive_bars_inside} bars inside.")
             state._reset_containment_state()
         
     # Check for new containment if not currently in one
@@ -867,6 +954,7 @@ def _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj,
                     f"Containment START: Bar {current_bar.index} inside Bar {state.containment_ref_bar_index} "
                     f"({state.containment_ref_type} H:{state.containment_ref_high}, L:{state.containment_ref_low})."
                 )
+                log_debug(current_bar.index, f"Containment Logic: START. Bar {current_bar.index} inside Bar {state.containment_ref_bar_index} ({state.containment_ref_type}).")
 
 def _check_and_set_new_pending_signals(current_bar, prev_bar, bar_before_prev_bar, state, cds_confirmed_this_iteration, cus_confirmed_this_iteration, current_bar_event_descriptions):
     """
@@ -874,29 +962,58 @@ def _check_and_set_new_pending_signals(current_bar, prev_bar, bar_before_prev_ba
     This includes PDS Rule C and general PDS/PUS generation on prev_bar.
     Modifies state for pending signals and appends to current_bar_event_descriptions.
     """
+    # If in containment and current_bar is not the one that started containment, suppress new signals.
+    if state.in_containment and state.containment_start_bar_index_for_log != current_bar.index:
+        log_debug(current_bar.index, "Signal Generation: Suppressed due to being deep in containment.")
+        return
+
     # FIX 8: Only process Rule C if no CDS was confirmed this iteration
     new_pds_on_curr_bar_this_iteration = False
     if not cds_confirmed_this_iteration and current_bar.h > prev_bar.h and current_bar.c < current_bar.o: 
         # For Rule C, PDS is on current_bar, so prev_to_pds_candidate is prev_bar
-        state.set_new_pending_downtrend_signal(current_bar, prev_bar, current_bar_event_descriptions, "by Rule C")
-        new_pds_on_curr_bar_this_iteration = True
+        log_debug(current_bar.index, f"Signal Generation: Checking Rule C for PDS on current_bar ({current_bar.index}).")
+        if state.set_new_pending_downtrend_signal(current_bar, prev_bar, current_bar_event_descriptions, "by Rule C"):
+            new_pds_on_curr_bar_this_iteration = True
+            log_debug(current_bar.index, f"Signal Generation: Rule C MET. PDS set on current_bar ({current_bar.index}).")
+        else:
+            log_debug(current_bar.index, f"Signal Generation: Rule C NOT MET or PDS rejected for current_bar ({current_bar.index}).")
         
     # Check for PDS on prev_bar
     if not cds_confirmed_this_iteration and not new_pds_on_curr_bar_this_iteration:
-        if (is_lower_ohlc_bar(current_bar, prev_bar) or
-            is_pending_downtrend_start_rule(current_bar, prev_bar) or
-            is_simple_pending_downtrend_start_signal(current_bar, prev_bar)):
-            # Check if set_new_pending_downtrend_signal actually updated the candidate
+        log_debug(current_bar.index, f"Signal Generation: Checking PDS for prev_bar ({prev_bar.index}) triggered by current_bar ({current_bar.index}).")
+        # Define conditions for PDS on prev_bar for clarity in debugging
+        cond_lower_ohlc = is_lower_ohlc_bar(current_bar, prev_bar)
+        cond_pds_rule = is_pending_downtrend_start_rule(current_bar, prev_bar)
+        cond_simple_pds = is_simple_pending_downtrend_start_signal(current_bar, prev_bar)
+        log_debug(current_bar.index, f"Signal Generation (PDS on prev_bar {prev_bar.index}): is_lower_ohlc_bar={cond_lower_ohlc}, is_pending_downtrend_start_rule={cond_pds_rule}, is_simple_pending_downtrend_start_signal={cond_simple_pds}")
+
+        if cond_lower_ohlc or cond_pds_rule or cond_simple_pds:
             # PDS is on prev_bar, so prev_to_pds_candidate is bar_before_prev_bar
-            state.set_new_pending_downtrend_signal(prev_bar, bar_before_prev_bar, current_bar_event_descriptions) 
+            if state.set_new_pending_downtrend_signal(prev_bar, bar_before_prev_bar, current_bar_event_descriptions):
+                 log_debug(current_bar.index, f"Signal Generation: PDS conditions MET. PDS set/updated on prev_bar ({prev_bar.index}).")
+            else:
+                 log_debug(current_bar.index, f"Signal Generation: PDS conditions MET BUT PDS on prev_bar ({prev_bar.index}) was rejected or not updated (e.g. H < prev H, or existing cand better).")
+        else:
+            log_debug(current_bar.index, f"Signal Generation: No PDS conditions met for prev_bar ({prev_bar.index}).")
+            
     
     # Check for PUS on prev_bar - PUS logic doesn't need the new preceding bar check
     if not cus_confirmed_this_iteration and \
        not new_pds_on_curr_bar_this_iteration:
-        if (is_higher_ohlc_bar(current_bar, prev_bar) or
-            is_pending_uptrend_start_rule(current_bar, prev_bar) or
-            is_simple_pending_uptrend_start_signal(current_bar, prev_bar)):
-            state.set_new_pending_uptrend_signal(prev_bar, current_bar_event_descriptions)
+        log_debug(current_bar.index, f"Signal Generation: Checking PUS for prev_bar ({prev_bar.index}) triggered by current_bar ({current_bar.index}).")
+        # Define conditions for PUS on prev_bar for clarity in debugging
+        cond_higher_ohlc = is_higher_ohlc_bar(current_bar, prev_bar)
+        cond_pus_rule = is_pending_uptrend_start_rule(current_bar, prev_bar)
+        cond_simple_pus = is_simple_pending_uptrend_start_signal(current_bar, prev_bar)
+        log_debug(current_bar.index, f"Signal Generation (PUS on prev_bar {prev_bar.index}): is_higher_ohlc_bar={cond_higher_ohlc}, is_pending_uptrend_start_rule={cond_pus_rule}, is_simple_pending_uptrend_start_signal={cond_simple_pus}")
+
+        if cond_higher_ohlc or cond_pus_rule or cond_simple_pus:
+            if state.set_new_pending_uptrend_signal(prev_bar, current_bar_event_descriptions):
+                log_debug(current_bar.index, f"Signal Generation: PUS conditions MET. PUS set/updated on prev_bar ({prev_bar.index}).")
+            else:
+                log_debug(current_bar.index, f"Signal Generation: PUS conditions MET BUT PUS on prev_bar ({prev_bar.index}) was not updated (e.g. existing cand better).")
+        else:
+            log_debug(current_bar.index, f"Signal Generation: No PUS conditions met for prev_bar ({prev_bar.index}).")
 
 def process_trend_logic(all_bars):
     """
@@ -917,6 +1034,8 @@ def process_trend_logic(all_bars):
     for k in range(len(all_bars)):
         log_index_for_this_entry = k + 1 # 1-based index for logging clarity
         current_bar_event_descriptions = [] # Collect all event descriptions for the current bar
+        log_debug(log_index_for_this_entry, f"Processing Bar {log_index_for_this_entry} ({all_bars[k].date if k < len(all_bars) else 'N/A'}) ------------------")
+        log_debug(log_index_for_this_entry, f"Bar OHLC: O:{all_bars[k].o} H:{all_bars[k].h} L:{all_bars[k].l} C:{all_bars[k].c}")
 
         # --- INITIALIZATION FOR THE CURRENT BAR --- 
         # The first bar cannot be compared to a previous one, so log "Nothing" and continue.
@@ -938,6 +1057,9 @@ def process_trend_logic(all_bars):
         initial_pus_candidate_bar_obj = None
         if initial_pus_candidate_idx is not None:
             initial_pus_candidate_bar_obj = all_bars[initial_pus_candidate_idx - 1]
+        log_debug(log_index_for_this_entry, f"Initial State - PUS Candidate: Bar {initial_pus_candidate_idx if initial_pus_candidate_idx else 'None'} (L:{initial_pus_candidate_bar_obj.l if initial_pus_candidate_bar_obj else 'N/A'}) | PDS Candidate: Bar {state.pds_candidate_for_cds_bar_index if state.pds_candidate_for_cds_bar_index else 'None'} (H:{all_bars[state.pds_candidate_for_cds_bar_index-1].h if state.pds_candidate_for_cds_bar_index else 'N/A'})")
+        log_debug(log_index_for_this_entry, f"Initial State - Last Confirmed Trend: {state.last_confirmed_trend_type} at Bar {state.last_confirmed_trend_bar_index if state.last_confirmed_trend_bar_index else 'None'}")
+        log_debug(log_index_for_this_entry, f"Initial State - Containment: {state.in_containment} (Ref Bar: {state.containment_ref_bar_index if state.containment_ref_bar_index else 'None'}, H:{state.containment_ref_high if state.containment_ref_high else 'N/A'}, L:{state.containment_ref_low if state.containment_ref_low else 'N/A'}, Start Bar: {state.containment_start_bar_index_for_log if state.containment_start_bar_index_for_log else 'None'}, Consecutive Inside: {state.containment_consecutive_bars_inside})")
 
         initial_pds_candidate_idx = state.pds_candidate_for_cds_bar_index
         initial_pds_candidate_bar_obj = None
@@ -954,7 +1076,7 @@ def process_trend_logic(all_bars):
 
         # --- SECTION 3: CDS (CONFIRMED DOWNTREND START) EVALUATION ---
         can_confirm_cds, cds_trigger_rule_type = _evaluate_cds_rules(
-            current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars
+            current_bar, prev_bar, initial_pds_candidate_bar_obj, all_bars, state
         )
 
         # --- SECTION 4: APPLY CONSEQUENCES OF CUS/CDS AND FORCED ALTERNATION ---
@@ -1052,10 +1174,21 @@ if __name__ == "__main__":
     prints the generated log, and exports confirmed trend starts to a CSV.
     Includes basic error handling for file operations.
     """
+    parser = argparse.ArgumentParser(description="Trend Start Analysis Script")
+    parser.add_argument("--debug-start", type=int, help="Start bar index for detailed debugging (1-based)")
+    parser.add_argument("--debug-end", type=int, help="End bar index for detailed debugging (1-based)")
+    args = parser.parse_args()
+
+    if args.debug_start is not None and args.debug_end is not None:
+        DEBUG_MODE_ACTIVE = True
+        DEBUG_START_INDEX = args.debug_start
+        DEBUG_END_INDEX = args.debug_end
+        print(f"*** DETAILED DEBUG MODE ACTIVE for bars {DEBUG_START_INDEX} to {DEBUG_END_INDEX} ***")
+
     try:
         # Define the path to the CSV data file.
         # This path is relative to the workspace root if the script is run from there.
-        csv_file_path = "data/CON.F.US.MES.M25_4h_ohlc.csv" 
+        csv_file_path = "data/CON.F.US.MES.M25_4h_ohlc.csv"
         
         print(f"Attempting to load bars from: {csv_file_path}")
         all_bars_chronological = load_bars_from_alt_csv(filename=csv_file_path)
