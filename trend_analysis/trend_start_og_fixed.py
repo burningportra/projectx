@@ -4,6 +4,7 @@ import argparse # Added for command-line arguments
 # --- Configuration Constants ---
 CUS_EXHAUSTION_MAX_BARS_FROM_CANDIDATE = 5
 # MIN_BARS_FOR_CDS_CONFIRMATION = 2 # Reverted this global constant
+ALLOWED_BARS_INTO_CONTAINMENT_FOR_CUS_CONFIRM = 2 # New constant for CUS in containment
 
 # Global debug flags, to be set by command-line arguments
 DEBUG_MODE_ACTIVE = False
@@ -398,6 +399,22 @@ def is_simple_pending_uptrend_start_signal(current_bar, prev_bar):
     """
     return current_bar.l >= prev_bar.l
 
+def is_hhll_down_close_pattern(current_bar, prev_bar): # Renamed for clarity, same as check_cus_confirmation_higher_high_lower_low_down_close
+    """
+    Checks for Higher High, Lower Low, Down Close pattern.
+    Pattern: Current bar is an "outside bar" relative to prev_bar (higher high AND lower low),
+             and current_bar closes below its own open (a down-closing bar). 
+    Args:
+        current_bar (Bar): The bar being evaluated.
+        prev_bar (Bar): The bar immediately preceding current_bar.
+    Returns:
+        bool: True if conditions are met, False otherwise.
+    """
+    cond1_higher_high = current_bar.h > prev_bar.h
+    cond2_lower_low = current_bar.l < prev_bar.l
+    cond3_down_close = current_bar.c < current_bar.o 
+    return cond1_higher_high and cond2_lower_low and cond3_down_close
+
 # --- Detailed CUS Confirmation Check Functions ---
 def check_cus_confirmation_low_undercut_high_respect(current_bar, prev_bar, pds_candidate_bar):
     """
@@ -506,11 +523,79 @@ def _cus_rule_engulfing_up_pds_low_break(current_bar, prev_bar, initial_pus_cand
     """CUS Rule Wrapper: EngulfingUpPDSLowBreak (bullish engulfing that breaks PDS low)."""
     return check_cus_confirmation_engulfing_up_with_pds_low_break(current_bar, prev_bar, initial_pds_candidate_bar_obj)
 
+def _cus_rule_breakout_after_failed_low_v2(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
+    """
+    CUS Rule: Breakout After Failed Low.
+    Confirms a PUS if:
+    1. A PUS candidate exists.
+    2. A subsequent PDS candidate exists (after the PUS).
+    3. The PUS candidate's low has not been violated by any bar between PUS and current_bar-1.
+    4. Current bar makes a new high above the PDS candidate's high.
+    5. Current bar closes higher than previous bar's close.
+    6. Current bar is an up-bar (closes above its open).
+    """
+    if not initial_pus_candidate_bar_obj or not initial_pds_candidate_bar_obj:
+        log_debug(current_bar.index, f"CUS Rule '_cus_rule_breakout_after_failed_low_v2' REJECTED: No initial PUS ({initial_pus_candidate_bar_obj.index if initial_pus_candidate_bar_obj else 'None'}) or PDS ({initial_pds_candidate_bar_obj.index if initial_pds_candidate_bar_obj else 'None'}) candidate.")
+        return False
+    if not (initial_pds_candidate_bar_obj.index > initial_pus_candidate_bar_obj.index):
+        log_debug(current_bar.index, f"CUS Rule '_cus_rule_breakout_after_failed_low_v2' REJECTED: PDS candidate Bar {initial_pds_candidate_bar_obj.index} not after PUS candidate Bar {initial_pus_candidate_bar_obj.index}.")
+        return False
+
+    # Check if PUS low was respected
+    pus_low_respected = True
+    # Loop from PUS bar's 0-based index + 1  to prev_bar's 0-based index
+    # PUS bar index is 1-based. So loop from PUS.index (0-based) to prev_bar.index (0-based)
+    # Corrected loop range: from bar *after* PUS candidate up to *prev_bar*
+    loop_start_0idx = initial_pus_candidate_bar_obj.index # This is 1-based index of PUS bar, so all_bars[initial_pus_candidate_bar_obj.index] is the bar *after* PUS.
+                                                        # If initial_pus_candidate_bar_obj.index is 61 (1-based), then all_bars[60] is PUS bar. We check from all_bars[61].
+    
+    # loop_start_0idx should be the 0-based index of the bar immediately *after* the PUS candidate
+    loop_start_0idx_for_all_bars = initial_pus_candidate_bar_obj.index # initial_pus_candidate_bar_obj.index is 1-based, so all_bars[this_1_based_index -1] is the PUS bar.
+                                                                  # The bar *after* PUS is all_bars[this_1_based_index]. So loop_start_0idx = initial_pus_candidate_bar_obj.index
+
+    # prev_bar is all_bars[current_bar.index - 2] if current_bar.index is 1-based.
+    # Or, if k is current_bar's 0-based index, prev_bar is all_bars[k-1].
+    # The loop should go up to, and include, prev_bar.
+    # So, if current_bar.index is k_1based, prev_bar is at k_1based-1. Its 0-based index is k_1based-2.
+    # loop_end_0idx = current_bar.index - 2 # 0-based index of prev_bar
+    
+    # Simpler: Iterate from index of (PUS_bar + 1) to (current_bar -1)
+    # PUS bar has 1-based index: initial_pus_candidate_bar_obj.index
+    # We need to check bars: initial_pus_candidate_bar_obj.index + 1, ..., current_bar.index - 1 (all 1-based)
+    
+    check_from_1_based_idx = initial_pus_candidate_bar_obj.index + 1
+    check_to_1_based_idx = current_bar.index - 1
+
+
+    if check_from_1_based_idx <= check_to_1_based_idx: # Ensure valid range to check
+        for bar_1_based_idx_to_check in range(check_from_1_based_idx, check_to_1_based_idx + 1):
+            # Convert 1-based to 0-based for all_bars access
+            bar_to_check_0_idx = bar_1_based_idx_to_check - 1
+            if 0 <= bar_to_check_0_idx < len(all_bars): # Defensive check
+                if all_bars[bar_to_check_0_idx].l < initial_pus_candidate_bar_obj.l:
+                    pus_low_respected = False
+                    log_debug(current_bar.index, f"CUS Rule '_cus_rule_breakout_after_failed_low_v2' REJECTED: PUS_Low_Violated by Bar {all_bars[bar_to_check_0_idx].index} (L:{all_bars[bar_to_check_0_idx].l}) vs PUS Bar {initial_pus_candidate_bar_obj.index} (L:{initial_pus_candidate_bar_obj.l})")
+                    break
+    if not pus_low_respected:
+        return False
+
+    cond_new_high_vs_pds = current_bar.h > initial_pds_candidate_bar_obj.h
+    cond_closes_higher_prev = current_bar.c > prev_bar.c
+    cond_up_bar = current_bar.c > current_bar.o
+
+    result = cond_new_high_vs_pds and cond_closes_higher_prev and cond_up_bar
+    if result:
+        log_debug(current_bar.index, f"CUS Rule '_cus_rule_breakout_after_failed_low_v2' MET for PUS {initial_pus_candidate_bar_obj.index} and PDS {initial_pds_candidate_bar_obj.index}")
+    else:
+        log_debug(current_bar.index, f"CUS Rule '_cus_rule_breakout_after_failed_low_v2' NOT MET. PUS:{initial_pus_candidate_bar_obj.index if initial_pus_candidate_bar_obj else 'N/A'}, PDS:{initial_pds_candidate_bar_obj.index if initial_pds_candidate_bar_obj else 'N/A'}. cond_new_high_vs_pds:{cond_new_high_vs_pds}, cond_closes_higher_prev:{cond_closes_higher_prev}, cond_up_bar:{cond_up_bar}, pus_low_respected:{pus_low_respected}")
+    return result
+
 CUS_RULE_DEFINITIONS = [
     ("EXHAUSTION_REVERSAL", _cus_rule_exhaustion_reversal),
     ("LowUndercutHighRespect", _cus_rule_low_undercut_high_respect),
     ("HigherHighLowerLowDownClose", _cus_rule_hhll_down_close),
     ("EngulfingUpPDSLowBreak", _cus_rule_engulfing_up_pds_low_break),
+    ("BreakoutAfterFailedLowV2", _cus_rule_breakout_after_failed_low_v2),
 ]
 
 def _evaluate_cus_rules(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
@@ -520,9 +605,11 @@ def _evaluate_cus_rules(current_bar, prev_bar, initial_pus_candidate_bar_obj, in
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cus, cus_trigger_rule_type)
     """
-    # If in containment and current_bar is not the one that started containment, suppress CUS.
-    if state.in_containment and state.containment_start_bar_index_for_log != current_bar.index:
-        log_debug(current_bar.index, "CUS Evaluation: Suppressed due to being deep in containment.")
+    # If in containment, allow CUS for a few bars.
+    if state.in_containment and \
+       state.containment_start_bar_index_for_log is not None and \
+       current_bar.index > state.containment_start_bar_index_for_log + ALLOWED_BARS_INTO_CONTAINMENT_FOR_CUS_CONFIRM:
+        log_debug(current_bar.index, f"CUS Evaluation: Suppressed. Bar {current_bar.index} is > {ALLOWED_BARS_INTO_CONTAINMENT_FOR_CUS_CONFIRM} bars after containment start ({state.containment_start_bar_index_for_log}).")
         return False, None
 
     can_confirm_cus = False
@@ -998,17 +1085,23 @@ def _check_and_set_new_pending_signals(current_bar, prev_bar, bar_before_prev_ba
             
     
     # Check for PUS on prev_bar - PUS logic doesn't need the new preceding bar check
+    # FIX: Relaxed condition for PUS checking to be independent of cus_confirmed_this_iteration (REVERTING THIS FIX)
     if not cus_confirmed_this_iteration and \
        not new_pds_on_curr_bar_this_iteration:
+    # if not new_pds_on_curr_bar_this_iteration: # Only blocked by PDS on current bar (REVERTED)
         log_debug(current_bar.index, f"Signal Generation: Checking PUS for prev_bar ({prev_bar.index}) triggered by current_bar ({current_bar.index}).")
         # Define conditions for PUS on prev_bar for clarity in debugging
         cond_higher_ohlc = is_higher_ohlc_bar(current_bar, prev_bar)
         cond_pus_rule = is_pending_uptrend_start_rule(current_bar, prev_bar)
         cond_simple_pus = is_simple_pending_uptrend_start_signal(current_bar, prev_bar)
-        log_debug(current_bar.index, f"Signal Generation (PUS on prev_bar {prev_bar.index}): is_higher_ohlc_bar={cond_higher_ohlc}, is_pending_uptrend_start_rule={cond_pus_rule}, is_simple_pending_uptrend_start_signal={cond_simple_pus}")
+        # New condition to set PUS on prev_bar if current_bar forms a HHLL Down Close pattern relative to prev_bar
+        cond_curr_triggers_pus_on_prev_via_hhll = is_hhll_down_close_pattern(current_bar, prev_bar)
+        
+        log_debug(current_bar.index, f"Signal Generation (PUS on prev_bar {prev_bar.index}): is_higher_ohlc_bar={cond_higher_ohlc}, is_pending_uptrend_start_rule={cond_pus_rule}, is_simple_pending_uptrend_start_signal={cond_simple_pus}, cond_curr_triggers_pus_on_prev_via_hhll={cond_curr_triggers_pus_on_prev_via_hhll}")
 
-        if cond_higher_ohlc or cond_pus_rule or cond_simple_pus:
-            if state.set_new_pending_uptrend_signal(prev_bar, current_bar_event_descriptions):
+        if cond_higher_ohlc or cond_pus_rule or cond_simple_pus or cond_curr_triggers_pus_on_prev_via_hhll:
+            if state.set_new_pending_uptrend_signal(prev_bar, current_bar_event_descriptions, 
+                                              reason_message_suffix=f"(triggered by current_bar {current_bar.index} with HHLL)" if cond_curr_triggers_pus_on_prev_via_hhll else ""):
                 log_debug(current_bar.index, f"Signal Generation: PUS conditions MET. PUS set/updated on prev_bar ({prev_bar.index}).")
             else:
                 log_debug(current_bar.index, f"Signal Generation: PUS conditions MET BUT PUS on prev_bar ({prev_bar.index}) was not updated (e.g. existing cand better).")
@@ -1065,6 +1158,39 @@ def process_trend_logic(all_bars):
         initial_pds_candidate_bar_obj = None
         if initial_pds_candidate_idx is not None:
             initial_pds_candidate_bar_obj = all_bars[initial_pds_candidate_idx - 1]
+
+        # --- PUS Invalidation due to Lower Low Break ---
+        # Check if the initial PUS candidate (if any) has been invalidated by a lower low
+        # occurring between the PUS candidate bar and the bar *before* current_bar.
+        if initial_pus_candidate_bar_obj: # A PUS candidate must exist to be invalidated
+            # Determine the range of bars to check for a lower low
+            # Start checking from the bar immediately *after* the PUS candidate
+            # PUS candidate bar has 1-based index: initial_pus_candidate_bar_obj.index
+            # So, its 0-based index in all_bars is initial_pus_candidate_bar_obj.index - 1
+            
+            # We check bars from (PUS_candidate_index + 1) up to (current_bar_index - 1) [1-based indices]
+            first_bar_to_check_1_based = initial_pus_candidate_bar_obj.index + 1
+            # MODIFICATION: Check up to bar_before_prev_bar, so prev_bar (potential CUS trigger) is not included
+            last_bar_to_check_1_based = current_bar.index - 2
+
+            original_pus_candidate_index_for_log = initial_pus_candidate_bar_obj.index # Store for logging
+
+            if first_bar_to_check_1_based <= last_bar_to_check_1_based: # Ensure there's a valid range
+                for bar_1_idx_in_range in range(first_bar_to_check_1_based, last_bar_to_check_1_based + 1):
+                    bar_to_check_0_idx = bar_1_idx_in_range -1 # Convert to 0-based for all_bars access
+                    if 0 <= bar_to_check_0_idx < len(all_bars): # Bounds check
+                        if all_bars[bar_to_check_0_idx].l < initial_pus_candidate_bar_obj.l:
+                            log_debug(log_index_for_this_entry, 
+                                      f"PUS Invalidation: PUS Candidate Bar {original_pus_candidate_index_for_log} (L:{initial_pus_candidate_bar_obj.l}) "
+                                      f"invalidated by Bar {all_bars[bar_to_check_0_idx].index}'s Low ({all_bars[bar_to_check_0_idx].l}).")
+                            state._reset_all_pending_uptrend_states()
+                            current_bar_event_descriptions.append(
+                                f"PUS Candidate at Bar {original_pus_candidate_index_for_log} invalidated by lower low before Bar {current_bar.index}."
+                            )
+                            initial_pus_candidate_bar_obj = None # Nullify for current iteration's CUS eval
+                            initial_pus_candidate_idx = None     # Nullify its 1-based index too
+                            break # Stop checking once invalidated
+
 
         # --- SECTION 1: CONTAINMENT LOGIC --- 
         _handle_containment_logic(current_bar, state, initial_pds_candidate_bar_obj, initial_pus_candidate_bar_obj, current_bar_event_descriptions)
