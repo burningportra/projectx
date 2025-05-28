@@ -513,6 +513,15 @@ def _cus_rule_low_undercut_high_respect(current_bar, prev_bar, initial_pus_candi
     if not pds_context and state.pds_candidate_for_cds_bar_index is not None:
         if 0 <= (state.pds_candidate_for_cds_bar_index - 1) < len(all_bars):
             pds_context = all_bars[state.pds_candidate_for_cds_bar_index - 1]
+
+    if not initial_pus_candidate_bar_obj or not pds_context:
+        log_debug(current_bar.index, f"CUS Rule 'LowUndercutHighRespect' REJECTED: Missing PUS ({initial_pus_candidate_bar_obj.index if initial_pus_candidate_bar_obj else 'None'}) or PDS context ({pds_context.index if pds_context else 'None'}).")
+        return False
+
+    if pds_context.index <= initial_pus_candidate_bar_obj.index:
+        log_debug(current_bar.index, f"CUS Rule 'LowUndercutHighRespect' REJECTED: PDS context (Bar {pds_context.index}) not after PUS candidate (Bar {initial_pus_candidate_bar_obj.index}).")
+        return False
+        
     return check_cus_confirmation_low_undercut_high_respect(current_bar, prev_bar, pds_context)
 
 def _cus_rule_hhll_down_close(current_bar, prev_bar, initial_pus_candidate_bar_obj, initial_pds_candidate_bar_obj, state, all_bars):
