@@ -2,9 +2,9 @@ import csv
 import argparse # Added for command-line arguments
 
 # --- Configuration Constants ---
-CUS_EXHAUSTION_MAX_BARS_FROM_CANDIDATE = 5
+CUS_EXHAUSTION_MAX_BARS_FROM_CANDIDATE = 6
 # MIN_BARS_FOR_CDS_CONFIRMATION = 2 # Reverted this global constant
-ALLOWED_BARS_INTO_CONTAINMENT_FOR_CUS_CONFIRM = 2 # New constant for CUS in containment
+ALLOWED_BARS_INTO_CONTAINMENT_FOR_CUS_CONFIRM = 5 # New constant for CUS in containment
 
 # Global debug flags, to be set by command-line arguments
 DEBUG_MODE_ACTIVE = False
@@ -907,7 +907,7 @@ def _evaluate_cds_rules(current_bar, prev_bar, initial_pds_candidate_bar_obj, al
     Returns:
         tuple: (bool, str or None) indicating (can_confirm_cds, cds_trigger_rule_type)
     """
-    ALLOWED_BARS_INTO_CONTAINMENT_FOR_CDS_CONFIRM = 1 # 0:only start; 1:start+next
+    ALLOWED_BARS_INTO_CONTAINMENT_FOR_CDS_CONFIRM = 5 # 0:only start; 1:start+next
 
     # If in containment, suppress CDS if current_bar is too deep into containment.
     if state.in_containment and \
@@ -984,9 +984,10 @@ def _apply_cds_confirmation(confirmed_bar_for_this_cds, state, all_bars, initial
     state.confirm_downtrend(confirmed_bar_for_this_cds, all_bars, current_bar_event_descriptions)
 
     # FIX 7: Fixed the condition - should check if PUS candidate is at or before CDS bar
+    # MODIFIED: Only reset PUS if it's strictly BEFORE the CDS bar, not on the same bar.
     if state.pus_candidate_for_cus_bar_index is not None and \
-       state.pus_candidate_for_cus_bar_index <= confirmed_bar_for_this_cds.index:
-        log_debug(confirmed_bar_for_this_cds.index, f"Apply CDS: PUS candidate on/before CDS Bar {confirmed_bar_for_this_cds.index} (PUS at {state.pus_candidate_for_cus_bar_index}) is being reset.")
+       state.pus_candidate_for_cus_bar_index < confirmed_bar_for_this_cds.index:
+        log_debug(confirmed_bar_for_this_cds.index, f"Apply CDS: PUS candidate strictly before CDS Bar {confirmed_bar_for_this_cds.index} (PUS at {state.pus_candidate_for_cus_bar_index}) is being reset.")
         state._reset_all_pending_uptrend_states()
     
     # Clear the PDS state that was just confirmed by this CDS.
