@@ -1265,32 +1265,32 @@ def export_trend_start_events(log_entries, output_csv="trend_analysis/confirmed_
 
     for entry_idx, entry in enumerate(log_entries):
         # Search for Confirmed Downtrend Starts (CDS)
-        m_cds = cds_re.search(entry)
-        if m_cds:
-            bar_idx = int(m_cds.group(1))
-            date_str = m_cds.group(2)
-            event_key = ('downtrend', bar_idx, date_str) # Create a unique key for this event
-            if event_key not in processed_entries: # Add to rows if it's a new, unique event
-                rows.append({
-                    'trend_start_type': 'downtrend',
-                    'bar_index': bar_idx, 
-                    'date': date_str
-                })
-                processed_entries.add(event_key)
+        for m_cds in cds_re.finditer(entry): # MODIFIED: Use finditer
+            if m_cds: # finditer returns an iterator, so check if match object exists
+                bar_idx = int(m_cds.group(1))
+                date_str = m_cds.group(2)
+                event_key = ('downtrend', bar_idx, date_str) # Create a unique key for this event
+                if event_key not in processed_entries: # Add to rows if it's a new, unique event
+                    rows.append({
+                        'trend_start_type': 'downtrend',
+                        'bar_index': bar_idx, 
+                        'date': date_str
+                    })
+                    processed_entries.add(event_key)
         
         # Search for Confirmed Uptrend Starts (CUS)
-        m_cus = cus_re.search(entry)
-        if m_cus:
-            bar_idx = int(m_cus.group(1))
-            date_str = m_cus.group(2)
-            event_key = ('uptrend', bar_idx, date_str) # Create a unique key for this event
-            if event_key not in processed_entries: # Add to rows if it's a new, unique event
-                rows.append({
-                    'trend_start_type': 'uptrend',
-                    'bar_index': bar_idx, 
-                    'date': date_str
-                })
-                processed_entries.add(event_key)
+        for m_cus in cus_re.finditer(entry): # MODIFIED: Use finditer
+            if m_cus: # finditer returns an iterator, so check if match object exists
+                bar_idx = int(m_cus.group(1))
+                date_str = m_cus.group(2)
+                event_key = ('uptrend', bar_idx, date_str) # Create a unique key for this event
+                if event_key not in processed_entries: # Add to rows if it's a new, unique event
+                    rows.append({
+                        'trend_start_type': 'uptrend',
+                        'bar_index': bar_idx, 
+                        'date': date_str
+                    })
+                    processed_entries.add(event_key)
 
     # Sort rows by bar_index first, then by trend_start_type if bar_index is the same.
     # This ensures consistent ordering.
