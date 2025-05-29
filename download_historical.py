@@ -12,6 +12,7 @@ import sys
 import asyncio
 import logging
 import argparse
+import subprocess
 from datetime import datetime, timezone, timedelta
 
 # ---- START DEBUG ----
@@ -31,6 +32,7 @@ from src.core.logging_config import setup_logging
 from src.data.ingestion.gateway_client import GatewayClient
 from src.data.storage.db_handler import DBHandler
 from src.data.validation import validate_bars
+from src.core.exceptions import DatabaseError
 
 
 # Default timeframes to download if none specified
@@ -40,6 +42,44 @@ from src.data.validation import validate_bars
 # - "Xd" = timeframe_unit=4 (day), timeframe_value=X
 # - "Xw" = timeframe_unit=5 (week), timeframe_value=X
 DEFAULT_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
+
+
+def ensure_timescaledb_running(logger):
+    """
+    Check if TimescaleDB is running and start it if not.
+    """
+    try:
+        # Check if container is running
+        result = subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}", "--filter", "name=projectx_timescaledb"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        if "projectx_timescaledb" in result.stdout:
+            logger.info("TimescaleDB container is already running")
+            return True
+            
+        logger.info("TimescaleDB not running, attempting to start...")
+        
+        # Try to start the container using the script
+        script_path = os.path.join(os.getcwd(), "run_timescaledb_docker.sh")
+        if os.path.exists(script_path):
+            subprocess.run(["chmod", "+x", script_path], check=True)
+            result = subprocess.run([script_path], capture_output=True, text=True, check=True)
+            logger.info("TimescaleDB started successfully")
+            return True
+        else:
+            logger.error(f"TimescaleDB startup script not found at {script_path}")
+            return False
+            
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to check/start TimescaleDB: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error checking TimescaleDB: {e}")
+        return False
 
 
 async def download_historical_data(
@@ -76,9 +116,35 @@ async def download_historical_data(
     db_type = "TimescaleDB" if config.use_timescale() else "SQLite"
     logger.info(f"Using {db_type} for data storage")
     
+    # Auto-start TimescaleDB if using it and not running
+    if config.use_timescale():
+        if not ensure_timescaledb_running(logger):
+            logger.error("Failed to start TimescaleDB. Please check Docker installation and try again.")
+            return 1
+        
+        # Give the database a moment to fully initialize
+        logger.info("Waiting for TimescaleDB to initialize...")
+        await asyncio.sleep(3)
+    
     # Create database handler
     db_handler = DBHandler(config)
-    await db_handler.setup()
+    
+    try:
+        await db_handler.setup()
+    except DatabaseError as e:
+        if config.use_timescale():
+            logger.error(f"Database connection failed: {e}")
+            logger.info("TimescaleDB may still be starting up. Waiting and retrying...")
+            await asyncio.sleep(5)
+            try:
+                await db_handler.setup()
+                logger.info("Database connection successful on retry")
+            except DatabaseError as retry_e:
+                logger.error(f"Database setup failed after retry: {retry_e}")
+                logger.error("Please check TimescaleDB status manually: docker ps | grep timescale")
+                return 1
+        else:
+            raise
     
     # Create gateway client
     gateway_client = GatewayClient(config)
