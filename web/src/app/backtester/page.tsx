@@ -101,43 +101,6 @@ const BacktesterPage = () => {
   // Current timeframe config
   const [timeframeConfig, setTimeframeConfig] = useState<TimeframeConfig | null>(null);
 
-  // Mock trade data for demonstration
-  const [mockTrades] = useState([
-    {
-      id: 'T001',
-      entryTime: Date.now() / 1000 - 86400 * 5, // 5 days ago
-      exitTime: Date.now() / 1000 - 86400 * 4, // 4 days ago
-      entryPrice: 4250.50,
-      exitPrice: 4275.25,
-      size: 1,
-      type: 'BUY' as const,
-      profitOrLoss: 24.75,
-      status: 'CLOSED' as const,
-    },
-    {
-      id: 'T002',
-      entryTime: Date.now() / 1000 - 86400 * 3, // 3 days ago
-      exitTime: Date.now() / 1000 - 86400 * 2, // 2 days ago
-      entryPrice: 4280.00,
-      exitPrice: 4265.50,
-      size: 1,
-      type: 'BUY' as const,
-      profitOrLoss: -14.50,
-      status: 'CLOSED' as const,
-    },
-    {
-      id: 'T003',
-      entryTime: Date.now() / 1000 - 86400, // 1 day ago
-      exitTime: Date.now() / 1000 - 3600, // 1 hour ago
-      entryPrice: 4270.25,
-      exitPrice: 4295.75,
-      size: 1,
-      type: 'BUY' as const,
-      profitOrLoss: 25.50,
-      status: 'CLOSED' as const,
-    },
-  ]);
-
   // EMA Strategy state
   const [strategyTrades, setStrategyTrades] = useState<any[]>([]);
   const [isRunningBacktest, setIsRunningBacktest] = useState(false);
@@ -373,11 +336,6 @@ const BacktesterPage = () => {
     setIsRunningBacktest(false);
     console.log(`EMA strategy completed. Generated ${trades.length} trades.`);
   }, [calculateEMA]);
-
-  // Calculate demo metrics from mock trades
-  const mockTotalPnL = mockTrades.reduce((sum, trade) => sum + trade.profitOrLoss, 0);
-  const mockWinningTrades = mockTrades.filter(t => t.profitOrLoss > 0);
-  const mockWinRate = mockTrades.length > 0 ? (mockWinningTrades.length / mockTrades.length) * 100 : 0;
 
   // Auto-playback effect
   useEffect(() => {
@@ -623,17 +581,17 @@ const BacktesterPage = () => {
     }
   }, [barFormationMode, runEmaBacktest, resetLiveStrategy]);
 
-  // Calculate metrics from strategy trades or fallback to mock trades
+  // Calculate metrics from strategy trades - only show real data, no mock fallback
   const liveTradesData = liveStrategyState.completedTrades.length > 0 ? liveStrategyState.completedTrades : 
-                         strategyTrades.length > 0 ? strategyTrades : mockTrades;
+                         strategyTrades.length > 0 ? strategyTrades : [];
   const liveTotalPnL = liveTradesData.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
   const liveWinningTrades = liveTradesData.filter(t => (t.profitOrLoss || 0) > 0);
   const liveWinRate = liveTradesData.length > 0 ? (liveWinningTrades.length / liveTradesData.length) * 100 : 0;
 
   // Debug the trade data being used
-  console.log(`[TradeData] Using data source: ${liveStrategyState.completedTrades.length > 0 ? 'liveStrategyState.completedTrades' : strategyTrades.length > 0 ? 'strategyTrades' : 'mockTrades'}`);
+  console.log(`[TradeData] Using data source: ${liveStrategyState.completedTrades.length > 0 ? 'liveStrategyState.completedTrades' : strategyTrades.length > 0 ? 'strategyTrades' : 'empty'}`);
   console.log(`[TradeData] Live trades count: ${liveTradesData.length}, Total P&L: ${liveTotalPnL}, Win rate: ${liveWinRate.toFixed(1)}%`);
-  console.log(`[TradeData] Source counts - Live: ${liveStrategyState.completedTrades.length}, Strategy: ${strategyTrades.length}, Mock: ${mockTrades.length}`);
+  console.log(`[TradeData] Source counts - Live: ${liveStrategyState.completedTrades.length}, Strategy: ${strategyTrades.length}`);
 
   return (
     <Layout>
@@ -676,6 +634,10 @@ const BacktesterPage = () => {
               barFormationMode={barFormationMode}
               timeframeConfig={timeframeConfig}
               tradeMarkers={liveTradeMarkers}
+              emaData={{
+                fastEma: liveStrategyState.fastEmaValues,
+                slowEma: liveStrategyState.slowEmaValues,
+              }}
             /> 
           </div>
           

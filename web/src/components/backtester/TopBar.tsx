@@ -22,11 +22,13 @@ interface TopBarProps {
 const availableTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
 
 const speedOptions = [
-  { label: 'Very Slow', value: PlaybackSpeed.VERY_SLOW },
-  { label: 'Slow', value: PlaybackSpeed.SLOW },
-  { label: 'Normal', value: PlaybackSpeed.NORMAL },
-  { label: 'Fast', value: PlaybackSpeed.FAST },
-  { label: 'Very Fast', value: PlaybackSpeed.VERY_FAST },
+  { label: '1x', value: PlaybackSpeed.NORMAL },
+  { label: '2x', value: PlaybackSpeed.FAST_2X },
+  { label: '4x', value: PlaybackSpeed.FAST_4X },
+  { label: '8x', value: PlaybackSpeed.FAST_8X },
+  { label: '16x', value: PlaybackSpeed.FAST_16X },
+  { label: '32x', value: PlaybackSpeed.VERY_FAST_32X },
+  { label: '64x', value: PlaybackSpeed.INSANE_64X },
 ];
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -181,12 +183,16 @@ const TopBar: React.FC<TopBarProps> = ({
             </div>
 
             {/* Speed Control */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Speed:</label>
-              <select
+              <select 
                 value={playbackSpeed}
                 onChange={(e) => onSpeedChange(parseInt(e.target.value) as PlaybackSpeed)}
-                className="px-3 py-1 border border-gray-300 rounded text-sm"
+                className={`px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  playbackSpeed <= PlaybackSpeed.FAST_4X ? 'bg-white' : 
+                  playbackSpeed <= PlaybackSpeed.FAST_16X ? 'bg-yellow-50 border-yellow-300' : 
+                  'bg-red-50 border-red-300 text-red-700 font-semibold'
+                }`}
               >
                 {speedOptions.map(option => (
                   <option key={option.value} value={option.value}>

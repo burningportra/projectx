@@ -77,11 +77,13 @@ export interface BacktestResults {
 
 // Enum for playback speeds
 export enum PlaybackSpeed {
-  VERY_SLOW = 2000,  // 2 seconds per bar
-  SLOW = 1000,       // 1 second per bar
-  NORMAL = 500,      // 0.5 seconds per bar
-  FAST = 250,        // 0.25 seconds per bar
-  VERY_FAST = 100,   // 0.1 seconds per bar
+  NORMAL = 1000,     // 1x speed - 1 second per bar
+  FAST_2X = 500,     // 2x speed - 0.5 seconds per bar
+  FAST_4X = 250,     // 4x speed - 0.25 seconds per bar
+  FAST_8X = 125,     // 8x speed - 0.125 seconds per bar
+  FAST_16X = 62,     // 16x speed - ~0.06 seconds per bar
+  VERY_FAST_32X = 31, // 32x speed - ~0.03 seconds per bar
+  INSANE_64X = 15,   // 64x speed - ~0.015 seconds per bar (ULTRA FAST!)
 }
 
 // Enum for bar formation modes

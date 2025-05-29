@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimulatedTrade } from '@/lib/types/backtester';
+import PnLChart from './PnLChart';
 
 interface AnalysisPanelProps {
   trades: SimulatedTrade[];
@@ -95,16 +96,14 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
             </Card>
           </div>
 
-          {/* P&L Chart Placeholder */}
+          {/* P&L Chart */}
           <Card>
             <CardHeader>
               <CardTitle>P&L Chart</CardTitle>
               <CardDescription>Cumulative profit and loss over time</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">P&L Chart will be implemented here</p>
-              </div>
+              <PnLChart trades={trades} totalPnL={totalPnL} />
             </CardContent>
           </Card>
         </TabsContent>

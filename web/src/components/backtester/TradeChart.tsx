@@ -6,9 +6,11 @@ import {
   ISeriesApi,
   UTCTimestamp,
   CandlestickData,
+  LineData,
   CrosshairMode,
   LineStyle,
   CandlestickSeries,
+  LineSeries,
   SeriesMarker,
   Time,
 } from 'lightweight-charts';
@@ -31,6 +33,10 @@ interface TradeChartProps {
   barFormationMode: BarFormationMode;
   timeframeConfig: TimeframeConfig | null;
   tradeMarkers?: TradeMarker[];
+  emaData?: {
+    fastEma: number[];
+    slowEma: number[];
+  };
 }
 
 const TradeChart: React.FC<TradeChartProps> = ({ 
@@ -40,11 +46,14 @@ const TradeChart: React.FC<TradeChartProps> = ({
   currentSubBarIndex, 
   barFormationMode,
   timeframeConfig,
-  tradeMarkers
+  tradeMarkers,
+  emaData
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const ema12SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ema26SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
   const lastViewportUpdateRef = useRef<number>(0);
   const userHasInteractedRef = useRef<boolean>(false); // Track if user has manually zoomed/scrolled
@@ -92,6 +101,34 @@ const TradeChart: React.FC<TradeChartProps> = ({
         });
         console.log('[TradeChart] Candlestick series added.');
 
+        // Add EMA 12 line series (blue)
+        ema12SeriesRef.current = chart.addSeries(LineSeries, {
+            color: '#2196F3',
+            lineWidth: 2,
+            lineStyle: LineStyle.Solid,
+            title: 'EMA 12',
+            priceFormat: {
+                type: 'price',
+                precision: 2,
+                minMove: 0.01,
+            },
+        });
+        console.log('[TradeChart] EMA 12 series added.');
+
+        // Add EMA 26 line series (red)
+        ema26SeriesRef.current = chart.addSeries(LineSeries, {
+            color: '#F44336',
+            lineWidth: 2,
+            lineStyle: LineStyle.Solid,
+            title: 'EMA 26',
+            priceFormat: {
+                type: 'price',
+                precision: 2,
+                minMove: 0.01,
+            },
+        });
+        console.log('[TradeChart] EMA 26 series added.');
+
         // Track user interactions (zoom/scroll) to avoid overriding manual adjustments
         const timeScale = chart.timeScale();
         timeScale.subscribeVisibleTimeRangeChange(() => {
@@ -121,6 +158,8 @@ const TradeChart: React.FC<TradeChartProps> = ({
         chartRef.current = null;
       }
       candlestickSeriesRef.current = null;
+      ema12SeriesRef.current = null;
+      ema26SeriesRef.current = null;
     };
   }, []);
 
@@ -200,6 +239,32 @@ const TradeChart: React.FC<TradeChartProps> = ({
         candlestickSeriesRef.current.setData(chartReadyData);
         console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars');
       }
+    }
+
+    // Update EMA lines if data is available
+    if (emaData && ema12SeriesRef.current && ema26SeriesRef.current) {
+      const { fastEma, slowEma } = emaData;
+      
+      // Show EMA data up to current bar index
+      const ema12Data: LineData[] = [];
+      const ema26Data: LineData[] = [];
+      
+      for (let i = 0; i <= Math.min(currentBarIndex, fastEma.length - 1, slowEma.length - 1); i++) {
+        if (fastEma[i] && slowEma[i] && mainTimeframeBars[i]) {
+          ema12Data.push({
+            time: mainTimeframeBars[i].time as UTCTimestamp,
+            value: fastEma[i],
+          });
+          ema26Data.push({
+            time: mainTimeframeBars[i].time as UTCTimestamp,
+            value: slowEma[i],
+          });
+        }
+      }
+      
+      ema12SeriesRef.current.setData(ema12Data);
+      ema26SeriesRef.current.setData(ema26Data);
+      console.log(`[TradeChart] Updated EMA lines: EMA12 (${ema12Data.length} points), EMA26 (${ema26Data.length} points)`);
     }
 
     // Handle chart scaling and viewport
@@ -302,7 +367,7 @@ const TradeChart: React.FC<TradeChartProps> = ({
         console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);
       }
     }
-  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers]);
+  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData]);
 
   // Reset initial load flag when new data is loaded
   useEffect(() => {
