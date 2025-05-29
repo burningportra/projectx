@@ -25,3 +25,6 @@ src/core/__pycache__/__init__.cpython-313.pyc
 /logs
 logs/projectx.log
 logs/broadcaster.log
+/src/__pycache__
+/src/data/ingestion/__pycache__
+*.pyc

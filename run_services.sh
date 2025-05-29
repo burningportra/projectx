@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # Create logs directory if it doesn't exist
-mkdir -p logs
 
 # Kill existing services to prevent "address already in use" errors
 echo "Attempting to stop any existing services..."
@@ -11,6 +10,16 @@ pkill -f "src.analysis.analyzer_service"
 echo "Waiting for ports to release..."
 sleep 1 # Add a 1-second delay
 echo "Existing services (if any) should be stopped and ports released."
+
+# Check if TimescaleDB is ready
+echo "Checking TimescaleDB connection..."
+if pg_isready -h localhost -p 5433 -U postgres -d projectx; then
+    echo "TimescaleDB is ready."
+else
+    echo "TimescaleDB is not ready. Please ensure it is running and accessible."
+    echo "You might need to run: sh run_timescaledb_docker.sh"
+    exit 1
+fi
 
 # Start the live ingester in the background with nohup and output redirection
 echo "Starting live_ingester.py in background (see logs/ingester.log)..."
