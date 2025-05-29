@@ -1,92 +1,93 @@
 # Trend Analysis Module
 
-This module analyzes historical Open-High-Low-Close (OHLC) price data to identify and confirm trend starts, specifically Confirmed Uptrend Starts (CUS) and Confirmed Downtrend Starts (CDS).
+This module is responsible for analyzing financial market data (OHLC bars) to identify and confirm trend starts, specifically Confirmed Uptrend Starts (CUS) and Confirmed Downtrend Starts (CDS).
 
 ## Purpose
 
-The primary goal is to process a sequence of price bars and, based on a set of predefined patterns and rules, determine points in time where a new uptrend or downtrend is confirmed. The analysis includes identifying pending signals and then evaluating them for confirmation.
+The core logic processes a sequence of price bars to detect patterns and conditions that signify a potential shift in trend direction. It uses a stateful approach to track pending signals and apply confirmation rules. The output includes a list of identified trend start signals and detailed debug logs.
 
-## Structure
+## Module Structure
 
-The module is organized into several sub-directories and key files:
+The module has been refactored into several Python files for better organization and maintainability:
 
-```
-trend_analysis/
-├── models/                # Data structures
-│   ├── bar.py             # Defines the Bar class for OHLC data
-│   └── state.py           # Defines the State class for tracking analysis state
-├── patterns/              # Basic bar pattern recognition functions
-│   └── bar_patterns.py    # e.g., is_higher_ohlc_bar, is_lower_ohlc_bar
-├── rules/                 # Specific rules for trend confirmation
-│   ├── cds_rules.py       # Rules for Confirmed Downtrend Starts (CDS)
-│   └── cus_rules.py       # Rules for Confirmed Uptrend Starts (CUS)
-├── utils/                 # Utility functions
-│   ├── bar_loader.py      # Loads bar data from CSV
-│   ├── event_exporter.py  # Exports confirmed trend starts to CSV
-│   ├── forced_trend_helper.py # Helper for forced trend alternation logic
-│   └── log_utils.py       # Utilities for formatting log messages
-├── analyzer.py            # Contains the core TrendAnalyzer class
-├── main.py                # Entry point for running the analysis
-└── README.md              # This file
-```
-
-## Key Components
-
-*   **`models/bar.py`**:
-    *   `Bar` class: Represents a single OHLC price bar with its timestamp, open, high, low, close prices, and chronological index.
-*   **`models/state.py`**:
-    *   `State` class: Holds the current state of the trend analysis algorithm as it processes bars. This includes information about pending uptrend/downtrend signals (PUS/PDS), candidates for confirmation, containment zones, and the last confirmed trend type.
-*   **`patterns/bar_patterns.py`**:
-    *   Contains functions that define basic relationships between two bars (e.g., `is_lower_ohlc_bar`, `is_higher_ohlc_bar`) and simple signal rules (e.g., `is_pending_downtrend_start_rule`).
-*   **`rules/cus_rules.py` & `rules/cds_rules.py`**:
-    *   These files contain more complex rule functions that define the specific conditions under which a Pending Uptrend Start (PUS) becomes a Confirmed Uptrend Start (CUS), or a Pending Downtrend Start (PDS) becomes a Confirmed Downtrend Start (CDS).
-    *   They include collections of rule definitions (`CUS_RULE_DEFINITIONS`, `CDS_RULE_DEFINITIONS`) and functions to evaluate these rules.
-*   **`utils/`**:
-    *   `bar_loader.py`: `load_bars_from_alt_csv` function to read OHLC data from a CSV file.
-    *   `event_exporter.py`: `export_trend_start_events` function to parse the analysis log and write confirmed trend starts to a CSV.
-    *   `log_utils.py`: `get_unique_sorted_events` to help in creating clean log entries.
-    *   `forced_trend_helper.py`: `find_intervening_bar_for_forced_trend` for the logic ensuring alternating up and down trends.
-*   **`analyzer.py`**:
-    *   `TrendAnalyzer` class: This is the core of the system. Its `analyze` method iterates through the loaded bars, utilizing the `State` object, patterns, and rules to identify and log trend signals and confirmations.
-*   **`main.py`**:
-    *   The main script to execute the trend analysis. It handles loading data, initializing the `TrendAnalyzer`, running the analysis, printing the log, and exporting the results.
+-   `trend_start_og_fixed.py`:
+    -   The main executable script.
+    -   Handles loading data, orchestrating the analysis process using `process_trend_logic`, and exporting results (trend signals and debug logs to CSV).
+    -   Contains the primary `process_trend_logic` function which implements the core trend detection algorithm.
+    -   Defines `_create_signal_dict` for standardizing signal output and `export_trend_start_events_to_csv` for writing signals to a CSV file.
+-   `trend_models.py`:
+    -   Defines the core data structures:
+        -   `Bar`: Represents a single OHLC price bar with associated metadata (timestamp, o, h, l, c, volume, index).
+        -   `State`: Manages the evolving state of the trend analysis (pending signals, confirmed trends, containment zones, last confirmed trend type/index, etc.).
+-   `trend_utils.py`:
+    -   Provides utility functions used across the module:
+        -   `log_debug`: Conditional debug logging, creating structured log entries.
+        -   `get_and_clear_debug_logs`: Retrieves and clears collected debug messages.
+        -   `load_bars_from_alt_csv`: Loads and parses bar data from CSV files into `Bar` objects.
+        -   `get_unique_sorted_events`: Helper for formatting log messages (currently used for bar summaries).
+        -   `find_intervening_bar_for_forced_trend`: Locates specific bars (lowest low or highest high in a range) for the forced trend alternation logic.
+-   `trend_patterns.py`:
+    -   Contains helper functions to identify various bar patterns (e.g., `is_lower_ohlc_bar`, `is_higher_ohlc_bar`, `is_hhll_down_close_pattern`, `is_pending_downtrend_start_rule`). These patterns are fundamental building blocks for identifying PUS/PDS and confirming CUS/CDS.
+-   `cus_rules.py`:
+    -   Encapsulates all logic related to Confirmed Uptrend Starts (CUS).
+    -   Defines specific CUS confirmation rule functions (e.g., `_cus_rule_exhaustion_reversal`, `_cus_rule_low_undercut_high_respect`).
+    -   Contains `_evaluate_cus_rules` to check all CUS rules against a PUS candidate and `_apply_cus_confirmation` to handle the consequences of a CUS (updating state, potentially setting up a PDS).
+-   `cds_rules.py`:
+    -   Encapsulates all logic related to Confirmed Downtrend Starts (CDS).
+    -   Defines specific CDS confirmation rule functions (e.g., `_cds_rule_pattern_A`, `_cds_rule_failed_rally`).
+    -   Contains `_evaluate_cds_rules` to check all CDS rules against a PDS candidate and `_apply_cds_confirmation` to handle the consequences of a CDS (updating state, potentially invalidating a PUS).
+-   `signal_logic.py`:
+    -   Manages the generation of new Pending Uptrend Starts (PUS) and Pending Downtrend Starts (PDS).
+    -   Includes `_handle_containment_logic` to identify and track periods where price action is contained within a prior significant bar's range, potentially suppressing signal confirmations.
+    -   Contains `_check_and_set_new_pending_signals` for evaluating bar patterns and setting new PUS/PDS candidates in the `State` object.
 
 ## How to Run
 
-1.  **Prerequisites**: Ensure you have Python installed. No external libraries beyond standard Python are strictly required for the core logic, but the data loading and export use the `csv` module.
-2.  **Input Data**: The analysis expects a CSV file containing OHLC data. By default, `main.py` looks for `data/CON.F.US.MES.M25_4h_ohlc.csv` (relative to the project root). The CSV should have columns like `timestamp`, `open`, `high`, `low`, `close`.
-3.  **Execution**:
-    *   Navigate to the root directory of the project (e.g., `/Users/kevtrinh/Code/projectx/`).
-    *   Run the `main.py` script as a module using the following command:
-        ```bash
-        python -m trend_analysis.main
-        ```
+1.  **Navigate to the Parent Directory**:
+    Open your terminal and ensure your current working directory is the parent of `trend_analysis` (e.g., `projectx`).
+
+2.  **Execute as a Module**:
+    Run the main script using the following command structure:
+    ```bash
+    python3 -m trend_analysis.trend_start_og_fixed [OPTIONS]
+    ```
+
+3.  **Command-Line Options**:
+    The script accepts several command-line arguments to customize its behavior:
+    -   `--input-csv <FILE_PATH>`: Specifies the path to the input CSV file containing OHLCV data.
+        -   Default: `data/CON.F.US.MES.M25_1d_ohlc.csv` (relative to `projectx` if not an absolute path).
+        -   The CSV file must contain columns: `timestamp`, `open`, `high`, `low`, `close`, and `volume`.
+        -   Bars are assumed to be in chronological order.
+    -   `--output-csv <FILE_PATH>`: Specifies the path for the output CSV file where confirmed trend start signals will be saved.
+        -   Default: `trend_analysis/confirmed_trend_starts_output.csv`.
+    -   `--debug-log-csv <FILE_PATH>`: Specifies the path for the output CSV file where detailed debug logs will be saved (if debug mode is active).
+        -   Default: `trend_analysis/debug_log_output.csv`.
+    -   `--debug-start <BAR_INDEX>`: Activates detailed debug logging starting from the specified 1-based bar index. Must be used with `--debug-end`.
+    -   `--debug-end <BAR_INDEX>`: Activates detailed debug logging up to the specified 1-based bar index. Must be used with `--debug-start`.
+
+    Example:
+    ```bash
+    python3 -m trend_analysis.trend_start_og_fixed --input-csv data/my_data.csv --output-csv trend_analysis/my_signals.csv --debug-start 100 --debug-end 200 --debug-log-csv trend_analysis/my_debug_logs.csv
+    ```
+
 4.  **Output**:
-    *   The script will print a detailed log of events for each bar to the console.
-    *   A CSV file named `confirmed_trend_starts.csv` will be created in the `trend_analysis` directory, listing all Confirmed Uptrend Starts (CUS) and Confirmed Downtrend Starts (CDS) with their bar index and date.
+    -   **Console Log**: General progress messages will be printed to the console. If debug mode is active for a bar range, detailed logs for those bars will also appear if not redirected.
+    -   **Signals CSV Export**: The file specified by `--output-csv` will contain the list of confirmed CUS and CDS events with their bar index, date, triggering rule, and trigger bar index.
+    -   **Debug Log CSV Export**: If debug mode is active and `--debug-log-csv` is specified, a CSV file will be generated containing detailed, structured log entries for each processed bar within the debug range. This includes state information at each step.
 
-## Workflow Overview
+## Key Concepts
 
-1.  **Load Data**: `main.py` uses `load_bars_from_alt_csv` (from `utils.bar_loader`) to read OHLC data into a list of `Bar` objects.
-2.  **Initialize Analyzer**: An instance of `TrendAnalyzer` is created. This also initializes a `State` object.
-3.  **Process Bars**: The `TrendAnalyzer.analyze()` method iterates through each `Bar`:
-    *   For each bar (except the first), it compares the `current_bar` with the `prev_bar`.
-    *   It retrieves the current PUS and PDS candidates from the `State`.
-    *   **Containment Logic**: Checks if the current bar is within a previously established containment zone or if a new containment zone starts.
-    *   **CUS/CDS Evaluation**: It calls `_evaluate_cus_rules` and `_evaluate_cds_rules` which iterate through predefined rule functions (from `rules/cus_rules.py` and `rules/cds_rules.py`) to see if the current bar's action confirms an existing PUS or PDS candidate.
-    *   **Apply Confirmations**: If a CUS or CDS is confirmed:
-        *   The `State` is updated (e.g., `confirm_uptrend`, `confirm_downtrend`).
-        *   Relevant pending signal states are reset.
-        *   Logic for generating new PDS/PUS signals immediately after a confirmation is applied.
-    *   **New Pending Signals**: Checks for new PUS or PDS signals based on `bar_patterns` and updates the `State`.
-    *   **Logging**: Descriptions of all significant events for the current bar are collected, sorted uniquely, and added to the `State`'s log.
-4.  **Export Results**: After processing all bars, `main.py` uses `export_trend_start_events` (from `utils.event_exporter`) to parse the log entries and save the confirmed trend starts into `trend_analysis/confirmed_trend_starts.csv`.
+-   **PUS (Pending Uptrend Start)**: An initial signal based on bar patterns indicating a potential uptrend might be forming. The system tracks the "best" PUS candidate (lowest low).
+-   **PDS (Pending Downtrend Start)**: An initial signal based on bar patterns indicating a potential downtrend might be forming. The system tracks the "best" PDS candidate (highest high).
+-   **CUS (Confirmed Uptrend Start)**: A PUS that has met specific confirmation criteria (defined in `cus_rules.py`), officially marking an uptrend start.
+-   **CDS (Confirmed Downtrend Start)**: A PDS that has met specific confirmation criteria (defined in `cds_rules.py`), officially marking a downtrend start.
+-   **Containment Logic**: Identifies periods where price action is confined within the high and low of a previous significant PUS or PDS candidate bar. Confirmations might be suppressed or handled differently during containment to avoid premature signals in choppy markets.
+-   **Forced Alternation**: The logic attempts to enforce that confirmed uptrends and downtrends alternate strictly. If a CUS is confirmed while the last trend was also an uptrend (or CDS after CDS), a "forced" opposing trend start might be inserted based on the most extreme intervening price action (highest high for forced CDS, lowest low for forced CUS).
+-   **Signal Dictionary**: A standardized dictionary format (created by `_create_signal_dict`) used to represent trend start signals, including timestamp, price details, and rule information.
 
-## Customization & Extension
+## Dependencies
 
-*   **Adding New Patterns**: New functions can be added to `patterns/bar_patterns.py` to identify different basic bar relationships.
-*   **Adding New Rules**:
-    *   To introduce new CUS or CDS confirmation logic, define new rule functions (similar to `check_cus_confirmation_...` or `check_cds_confirmation_...`) in the respective `cus_rules.py` or `cds_rules.py` files.
-    *   Create corresponding wrapper functions (like `_cus_rule_...` or `_cds_rule_...`).
-    *   Add these new rule wrappers to the `CUS_RULE_DEFINITIONS` or `CDS_RULE_DEFINITIONS` lists. The `TrendAnalyzer` will then automatically pick them up during evaluation.
-*   **Modifying State**: If more complex state tracking is needed, the `State` class in `models/state.py` can be extended. 
+-   `pandas`: Used internally by `trend_utils.load_bars_from_alt_csv` for reading CSV data. Ensure it is installed in your Python environment.
+    ```bash
+    pip install pandas
+    ``` 

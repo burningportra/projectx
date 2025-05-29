@@ -49,22 +49,13 @@ DEBUG_LOG_DIR = CSV_LOG_DIR
 DEBUG_LOG_FIELDNAMES = [
     "event_timestamp", "event_type", "message", 
     "processing_bar_timestamp", "processing_bar_index", "processing_bar_ohlc",
-    "confirmed_bar_index", "rule", 
-    "pus_low_bar_index", "pus_low_value",
-    "pds_high_bar_index", "pds_high_value",
-    "pds_bar_index", "pds_high",
-    "pus_bar_index", "pus_low",
-    "original_cus_bar_index", "original_cds_bar_index",
-    "ref_bar_index", "ref_type", "ref_high", "ref_low",
-    "last_trend_type", "last_trend_bar",
-    "current_bar_low_val", "pds_low_val",
-    "current_bar_high_val", "pus_high_val",
-    "pds_anchor_high",
-    "pds_confirmed_peak_bar_index", "pds_confirmed_peak_high", "pds_confirmed_peak_low",
-    "pus_anchor_low",
-    "pus_confirmed_low_bar_index", "pus_confirmed_low_low", "pus_confirmed_low_high",
-    "in_containment", "containment_ref_bar_index", 
-    "overall_trend_is_up"
+    "pds_potential_idx", "pds_anchor_h",
+    "pds_candidate_idx", "pds_candidate_h", "pds_candidate_l",
+    "pus_potential_idx", "pus_anchor_l",
+    "pus_candidate_idx", "pus_candidate_l", "pus_candidate_h",
+    "in_containment", "containment_ref_idx", "containment_ref_type",
+    "last_trend_type", "last_trend_idx",
+    "overall_trend_up",
 ]
 
 def write_strategy_debug_logs_to_csv(

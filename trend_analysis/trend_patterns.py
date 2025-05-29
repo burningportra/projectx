@@ -1,7 +1,5 @@
-from ..models.bar import Bar
-
 # --- Helper Functions for Bar Patterns ---
-def is_lower_ohlc_bar(current_bar, prev_bar): # Previously SDB (Simple Down Bar)
+def is_lower_ohlc_bar(current_bar, prev_bar):
   """Checks if current_bar has lower Open, High, Low, Close (OHLC) compared to prev_bar.
      Lower low, lower high, lower close than prev_bar. (Open is not explicitly checked here but implied by "lower prices")
   """
@@ -24,13 +22,6 @@ def is_low_then_higher_close_bar(current_bar, prev_bar): # Previously BRB (Bulli
   return (current_bar.l < prev_bar.l and \
           current_bar.h > prev_bar.h and \
           current_bar.c > prev_bar.c)
-
-def is_high_then_lower_close_bar(current_bar, prev_bar): # Previously BeRB (Bearish Reversal Bar)
-  """Checks if current_bar has a higher high, but lower low and lower close than prev_bar.
-  """
-  return (current_bar.h > prev_bar.h and \
-          current_bar.l < prev_bar.l and \
-          current_bar.c < prev_bar.c)
 
 def is_pending_downtrend_start_rule(current_bar, prev_bar):
     """Rule for Pending Downtrend Start (PDS) on prev_bar.
@@ -64,4 +55,20 @@ def is_simple_pending_uptrend_start_signal(current_bar, prev_bar):
     Signal on prev_bar if current_bar does not make a lower low than prev_bar.
     This is a basic condition often used in conjunction with other bar patterns.
     """
-    return current_bar.l >= prev_bar.l 
+    return current_bar.l >= prev_bar.l
+
+def is_hhll_down_close_pattern(current_bar, prev_bar): # Renamed for clarity, same as check_cus_confirmation_higher_high_lower_low_down_close
+    """
+    Checks for Higher High, Lower Low, Down Close pattern.
+    Pattern: Current bar is an "outside bar" relative to prev_bar (higher high AND lower low),
+             and current_bar closes below its own open (a down-closing bar). 
+    Args:
+        current_bar (Bar): The bar being evaluated.
+        prev_bar (Bar): The bar immediately preceding current_bar.
+    Returns:
+        bool: True if conditions are met, False otherwise.
+    """
+    cond1_higher_high = current_bar.h > prev_bar.h
+    cond2_lower_low = current_bar.l < prev_bar.l
+    cond3_down_close = current_bar.c < current_bar.o 
+    return cond1_higher_high and cond2_lower_low and cond3_down_close 
