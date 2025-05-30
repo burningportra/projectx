@@ -2,20 +2,28 @@ import csv
 import argparse
 import pandas as pd # Keep for potential future use, though not directly used by core logic now
 import datetime # Ensure datetime is imported
+import sys
+import os
 from typing import List
-from .trend_models import Bar, State
-from . import trend_utils
-from . import trend_patterns
-from . import cus_rules
-from . import cds_rules
-from . import signal_logic
+
+# Add the project root to Python path for package imports
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from trend_analysis.trend_models import Bar, State
+import trend_analysis.trend_utils as trend_utils
+import trend_analysis.trend_patterns as trend_patterns
+import trend_analysis.cus_rules as cus_rules
+import trend_analysis.cds_rules as cds_rules
+import trend_analysis.signal_logic as signal_logic
 
 # Ensure all imported utility functions are available if used directly in this file later
-# from .trend_utils import log_debug, load_bars_from_alt_csv, get_unique_sorted_events, find_intervening_bar_for_forced_trend 
-# from .trend_patterns import ...
-# from .cus_rules import ...
-# from .cds_rules import ...
-# from .signal_logic import ...
+# from trend_analysis.trend_utils import log_debug, load_bars_from_alt_csv, get_unique_sorted_events, find_intervening_bar_for_forced_trend 
+# from trend_analysis.trend_patterns import ...
+# from trend_analysis.cus_rules import ...
+# from trend_analysis.cds_rules import ...
+# from trend_analysis.signal_logic import ...
 
 def _create_signal_dict(bar_obj: Bar, signal_type: str, triggering_bar_index: int, rule_type: str, contract_id: str = "", timeframe_str: str = "") -> dict:
     """Helper to create a standardized signal dictionary."""
@@ -234,7 +242,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Trend Start Analysis Script")
     parser.add_argument("--debug-start", type=int, help="Start bar index for detailed debugging (1-based)")
     parser.add_argument("--debug-end", type=int, help="End bar index for detailed debugging (1-based)")
-    parser.add_argument("--input-csv", type=str, default="data/CON.F.US.MES.M25_1d_ohlc.csv", help="Input CSV file path")
+    parser.add_argument("--input-csv", type=str, default="trend_analysis/data/CON.F.US.MES.M25_1d_ohlc.csv", help="Input CSV file path")
     parser.add_argument("--output-csv", type=str, default="trend_analysis/confirmed_trend_starts_output.csv", help="Output CSV file path for signals")
     parser.add_argument("--debug-log-csv", type=str, default="trend_analysis/debug_log_output.csv", help="Output CSV file path for debug logs")
     args = parser.parse_args()

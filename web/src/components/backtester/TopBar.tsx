@@ -17,6 +17,8 @@ interface TopBarProps {
   onSpeedChange: (speed: PlaybackSpeed) => void;
   onReset: () => void;
   onBarFormationModeChange: (mode: BarFormationMode) => void;
+  selectedStrategy: string;
+  onStrategyChange: (strategy: string) => void;
 }
 
 const availableTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
@@ -29,6 +31,11 @@ const speedOptions = [
   { label: '16x', value: PlaybackSpeed.FAST_16X },
   { label: '32x', value: PlaybackSpeed.VERY_FAST_32X },
   { label: '64x', value: PlaybackSpeed.INSANE_64X },
+];
+
+const strategyOptions = [
+  { label: 'EMA Crossover', value: 'ema' },
+  { label: 'Trend Start (CUS/CDS)', value: 'trendstart' },
 ];
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -46,9 +53,11 @@ const TopBar: React.FC<TopBarProps> = ({
   onSpeedChange,
   onReset,
   onBarFormationModeChange,
+  selectedStrategy,
+  onStrategyChange,
 }) => {
   const [contractId, setContractId] = useState<string>('CON.F.US.MES.M25');
-  const [timeframe, setTimeframe] = useState<string>(availableTimeframes[4]); // Default to 1h
+  const [timeframe, setTimeframe] = useState<string>(availableTimeframes[6]); // Default to 1d
   const [limit, setLimit] = useState<number>(500);
 
   const handleLoadClick = () => {
@@ -195,6 +204,22 @@ const TopBar: React.FC<TopBarProps> = ({
                 }`}
               >
                 {speedOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Strategy Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Strategy:</label>
+              <select
+                value={selectedStrategy}
+                onChange={(e) => onStrategyChange(e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded text-sm"
+              >
+                {strategyOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

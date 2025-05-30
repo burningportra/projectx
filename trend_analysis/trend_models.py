@@ -141,7 +141,6 @@ class State:
             return False # PDS not set or updated
 
         # DEBUG PRINT ADDED - Retaining for now, can be replaced/enhanced by new trend_utils.log_debug calls
-        print(f"DEBUG PDS Set Check: bar_obj_idx={bar_obj.index}, bar_obj.h={bar_obj.h}, prev_bar_h_check_passed=True, current_PDS_cand_idx={self.pds_candidate_for_cds_bar_index}, current_PDS_cand_h={self.pds_candidate_for_cds_high}, comparison_H_gt_CandH={(bar_obj.h > self.pds_candidate_for_cds_high) if self.pds_candidate_for_cds_bar_index is not None and self.pds_candidate_for_cds_high is not None else 'N/A_NoCand'}, is_None_Cand={self.pds_candidate_for_cds_bar_index is None}")
         trend_utils.log_debug(bar_obj.index, f"Attempting to set PDS on Bar {bar_obj.index}. Current PDS cand: {self.pds_candidate_for_cds_bar_index} (H:{self.pds_candidate_for_cds_high}). Prev bar H check passed.")
 
         if self.pds_candidate_for_cds_bar_index is None or \

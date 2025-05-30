@@ -335,33 +335,63 @@ const TradeChart: React.FC<TradeChartProps> = ({
 
       // Update trade markers based on current playback position
       if (candlestickSeriesRef.current && tradeMarkers && chartRef.current) {
-        const currentTime = mainTimeframeBars[currentBarIndex]?.time;
-        console.log(`[TradeChart] Processing markers. Total markers: ${tradeMarkers.length}, current time: ${currentTime}`);
+        console.log(`[TradeChart] Processing markers. Total markers: ${tradeMarkers.length}, mode: ${barFormationMode}`);
         
-        // Filter markers to only show those up to current playback position
-        const visibleMarkers: SeriesMarker<Time>[] = tradeMarkers
-          .filter(marker => marker.time <= (currentTime || 0))
-          .map(marker => ({
-            time: marker.time as Time,
-            position: marker.position,
-            color: marker.color,
-            shape: marker.shape,
-            text: marker.text,
-            size: marker.size || 1,
-          }));
+        let markersToShow: SeriesMarker<Time>[] = [];
+        
+        if (barFormationMode === BarFormationMode.INSTANT) {
+          // Instant mode: show markers for completed bars (up to and including current bar)
+          const currentTime = mainTimeframeBars[currentBarIndex]?.time;
+          markersToShow = tradeMarkers
+            .filter(marker => marker.time <= (currentTime || 0))
+            .map(marker => ({
+              time: marker.time as Time,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+              size: marker.size || 1,
+            }));
+          console.log(`[TradeChart] Instant mode: Filtered to ${markersToShow.length} markers (currentBarIndex: ${currentBarIndex})`);
+        } else if (barFormationMode === BarFormationMode.PROGRESSIVE) {
+          // Progressive mode: show markers only for COMPLETED main bars
+          // A marker appears after its bar is fully formed (all sub-bars processed)
+          markersToShow = tradeMarkers
+            .filter(marker => {
+              // Find which main bar this marker belongs to
+              const markerMainBarIndex = mainTimeframeBars.findIndex(bar => bar.time === marker.time);
+              
+              if (markerMainBarIndex < 0) return false; // Invalid marker
+              
+              // Show marker only if its main bar is completed
+              // Bar is completed if we've moved past it OR if we're at the end of its sub-bars
+              const isBarCompleted = markerMainBarIndex < currentBarIndex ||
+                (markerMainBarIndex === currentBarIndex && 
+                 subTimeframeBars.length > 0 && 
+                 currentSubBarIndex >= subTimeframeBars.filter(sb => sb.parentBarIndex === currentBarIndex).length - 1);
+              
+              console.log(`[TradeChart] Marker at main bar ${markerMainBarIndex}: ${isBarCompleted ? 'SHOW' : 'HIDE'} (currentBarIndex: ${currentBarIndex}, currentSubBarIndex: ${currentSubBarIndex})`);
+              return isBarCompleted;
+            })
+            .map(marker => ({
+              time: marker.time as Time,
+              position: marker.position,
+              color: marker.color,
+              shape: marker.shape,
+              text: marker.text,
+              size: marker.size || 1,
+            }));
+          console.log(`[TradeChart] Progressive mode: Filtered to ${markersToShow.length} markers (showing after candle close)`);
+        }
 
-        console.log(`[TradeChart] Filtered to ${visibleMarkers.length} visible markers`);
-        console.log(`[TradeChart] Visible markers:`, visibleMarkers);
+        console.log(`[TradeChart] Final visible markers:`, markersToShow);
 
-        // Set markers on the series - try different approaches
+        // Set markers on the series
         try {
-          // Use the correct Lightweight Charts API for setting markers
-          createSeriesMarkers(candlestickSeriesRef.current, visibleMarkers);
-          console.log(`[TradeChart] Successfully set ${visibleMarkers.length} markers using createSeriesMarkers`);
+          createSeriesMarkers(candlestickSeriesRef.current, markersToShow);
+          console.log(`[TradeChart] Successfully set ${markersToShow.length} markers`);
         } catch (error) {
           console.error('[TradeChart] Failed to set markers:', error);
-          console.log('[TradeChart] Series object:', candlestickSeriesRef.current);
-          console.log('[TradeChart] Visible markers:', visibleMarkers);
         }
       } else {
         console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);

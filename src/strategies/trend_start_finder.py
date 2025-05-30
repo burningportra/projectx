@@ -2,6 +2,8 @@ import pandas as pd
 import datetime
 from datetime import timezone
 import logging
+import json
+import sys
 from typing import List, Dict, Optional, Any, Tuple
 
 # Import the refactored components
@@ -119,37 +121,115 @@ def generate_trend_starts(
 
     return signals_found, debug_log_entries
 
+def process_api_input():
+    """Process input from stdin for API integration"""
+    try:
+        # Read JSON input from stdin
+        input_data = sys.stdin.read()
+        data = json.loads(input_data)
+        
+        # Extract parameters
+        bars_data = data.get('bars', [])
+        contract_id = data.get('contract_id', 'UNKNOWN')
+        timeframe = data.get('timeframe', '1h')
+        debug = data.get('debug', False)
+        
+        if not bars_data:
+            print("No bars data provided")
+            return
+        
+        # Convert to DataFrame
+        bars_df = pd.DataFrame(bars_data)
+        
+        # Ensure timestamp column
+        if 'timestamp' not in bars_df.columns:
+            print("timestamp column required in bars data")
+            return
+            
+        # Convert timestamp to datetime
+        bars_df['timestamp'] = pd.to_datetime(bars_df['timestamp'])
+        
+        # Generate trend starts
+        signals, debug_logs = generate_trend_starts(
+            bars_df, 
+            contract_id, 
+            timeframe,
+            debug=debug
+        )
+        
+        # Helper function to serialize timestamps and other non-JSON types
+        def serialize_for_json(obj):
+            if isinstance(obj, pd.Timestamp):
+                return obj.isoformat()
+            elif isinstance(obj, datetime.datetime):
+                return obj.isoformat()
+            elif isinstance(obj, dict):
+                return {k: serialize_for_json(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [serialize_for_json(item) for item in obj]
+            else:
+                return obj
+        
+        # Output results in parseable format
+        print("\n--- Signals Found ---")
+        if signals:
+            for s_idx, s_val in enumerate(signals):
+                # Serialize the signal to make it JSON-compatible
+                serialized_signal = serialize_for_json(s_val)
+                print(f"Signal {s_idx + 1}: {serialized_signal}")
+        else:
+            print("No signals generated.")
+
+        print("\n--- Debug Logs Collected ---")
+        if debug_logs:
+            for dl_idx, dl_val in enumerate(debug_logs):
+                bar_idx_log = dl_val.get('processing_bar_index', 'N/A')
+                msg_log = dl_val.get('message', 'N/A')
+                print(f"Debug Log {dl_idx + 1}: Bar {bar_idx_log} - {msg_log}")
+        else:
+            print("No debug logs collected (or debug range didn't match any bars).")
+            
+    except Exception as e:
+        print(f"Error processing API input: {e}", file=sys.stderr)
+        sys.exit(1)
+
 if __name__ == '__main__':
-    print(f"trend_start_finder.py (Refactored Entry Point) loaded as main.")
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s')
-
-    data = {
-        'timestamp': pd.to_datetime([
-            '2023-01-01 10:00:00', '2023-01-01 11:00:00', '2023-01-01 12:00:00', 
-            '2023-01-01 13:00:00', '2023-01-01 14:00:00', '2023-01-01 15:00:00'
-        ], utc=True),
-        'open': [100, 101, 102, 103, 104, 105],
-        'high': [105, 106, 107, 108, 109, 110],
-        'low': [99, 100, 101, 102, 103, 104],
-        'close': [101, 102, 103, 104, 105, 106],
-        'volume': [1000, 1100, 1200, 1300, 1400, 1500]
-    }
-    sample_df = pd.DataFrame(data)
-
-    signals, debug_logs = generate_trend_starts(sample_df, "TEST.CON.CLI", "1h", debug=True)
-    
-    print("\n--- Signals Found ---")
-    if signals:
-        for s_idx, s_val in enumerate(signals):
-            print(f"Signal {s_idx + 1}: {s_val}")
+    # Check if we're being called from API (stdin has data) or standalone
+    if not sys.stdin.isatty():
+        # Called from API - process stdin
+        process_api_input()
     else:
-        print("No signals generated.")
+        # Standalone mode - use sample data
+        print(f"trend_start_finder.py (Refactored Entry Point) loaded as main.")
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s')
 
-    print("\n--- Debug Logs Collected ---")
-    if debug_logs:
-        for dl_idx, dl_val in enumerate(debug_logs):
-            bar_idx_log = dl_val.get('processing_bar_index', 'N/A')
-            msg_log = dl_val.get('message', 'N/A')
-            print(f"Debug Log {dl_idx + 1}: Bar {bar_idx_log} - {msg_log}")
-    else:
-        print("No debug logs collected (or debug range didn't match any bars).")
+        data = {
+            'timestamp': pd.to_datetime([
+                '2023-01-01 10:00:00', '2023-01-01 11:00:00', '2023-01-01 12:00:00', 
+                '2023-01-01 13:00:00', '2023-01-01 14:00:00', '2023-01-01 15:00:00'
+            ], utc=True),
+            'open': [100, 101, 102, 103, 104, 105],
+            'high': [105, 106, 107, 108, 109, 110],
+            'low': [99, 100, 101, 102, 103, 104],
+            'close': [101, 102, 103, 104, 105, 106],
+            'volume': [1000, 1100, 1200, 1300, 1400, 1500]
+        }
+        sample_df = pd.DataFrame(data)
+
+        signals, debug_logs = generate_trend_starts(sample_df, "TEST.CON.CLI", "1h", debug=True)
+        
+        print("\n--- Signals Found ---")
+        if signals:
+            for s_idx, s_val in enumerate(signals):
+                print(f"Signal {s_idx + 1}: {s_val}")
+        else:
+            print("No signals generated.")
+
+        print("\n--- Debug Logs Collected ---")
+        if debug_logs:
+            for dl_idx, dl_val in enumerate(debug_logs):
+                bar_idx_log = dl_val.get('processing_bar_index', 'N/A')
+                msg_log = dl_val.get('message', 'N/A')
+                print(f"Debug Log {dl_idx + 1}: Bar {bar_idx_log} - {msg_log}")
+        else:
+            print("No debug logs collected (or debug range didn't match any bars).")
