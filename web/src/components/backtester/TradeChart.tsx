@@ -87,15 +87,15 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     });
     currentLines.clear();
 
-    console.log(`[updateOrderLines] Processing ${openPositions.length} open positions and ${pendingOrders.length} pending orders`);
+    // console.log(`[updateOrderLines] Processing ${openPositions.length} open positions and ${pendingOrders.length} pending orders`);
 
     // Add price lines for open positions
     openPositions.forEach((position, index) => {
-      console.log(`[updateOrderLines] Position ${index}:`, {
-        entryPrice: position.entryPrice,
-        stopLossPrice: position.stopLossPrice,
-        takeProfitPrice: position.takeProfitPrice
-      });
+      // console.log(`[updateOrderLines] Position ${index}:`, {
+      //   entryPrice: position.entryPrice,
+      //   stopLossPrice: position.stopLossPrice,
+      //   takeProfitPrice: position.takeProfitPrice
+      // });
 
       // Entry price line (blue, solid)
       if (position.entryPrice) {
@@ -107,9 +107,9 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           title: `Entry: $${position.entryPrice.toFixed(2)}`,
         });
         currentLines.set(`entry_${index}`, entryLine);
-        console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
+        // console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
       } else {
-        console.log(`[updateOrderLines] No entry price for position ${index}`);
+        // console.log(`[updateOrderLines] No entry price for position ${index}`);
       }
 
       // Stop Loss line (red, dashed)
@@ -166,13 +166,13 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         currentLines.set(`order_${order.id}`, orderLine);
       });
 
-    console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
+    // console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
   }, [candlestickSeriesRef, openPositions, pendingOrders, mainTimeframeBars, currentBarIndex]);
 
   useEffect(() => {
-    console.log('[TradeChart] Data/playback useEffect triggered. Mode:', barFormationMode, 'Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'Current bar:', currentBarIndex, 'Current sub:', currentSubBarIndex);
+    // console.log('[TradeChart] Data/playback useEffect triggered. Mode:', barFormationMode, 'Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'Current bar:', currentBarIndex, 'Current sub:', currentSubBarIndex);
     if (!candlestickSeriesRef.current || !mainTimeframeBars || mainTimeframeBars.length === 0) {
-      console.log('[TradeChart] No series or main bars available.');
+      // console.log('[TradeChart] No series or main bars available.');
       if (candlestickSeriesRef.current) {
         candlestickSeriesRef.current.setData([]);
       }
@@ -182,7 +182,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     if (barFormationMode === BarFormationMode.INSTANT) {
       // Instant mode: show complete bars up to currentBarIndex
       const barsToShow = mainTimeframeBars.slice(0, currentBarIndex + 1);
-      console.log('[TradeChart] Instant mode: Showing', barsToShow.length, 'complete bars');
+      // console.log('[TradeChart] Instant mode: Showing', barsToShow.length, 'complete bars');
       
       const chartReadyData: CandlestickData[] = barsToShow.map(bar => ({
         time: bar.time as UTCTimestamp,
@@ -198,19 +198,19 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     } else if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
       // Progressive mode: show completed bars + progressively forming current bar
       const completedBars = mainTimeframeBars.slice(0, currentBarIndex);
-      console.log('[TradeChart] Progressive mode: Showing', completedBars.length, 'completed bars');
+      // console.log('[TradeChart] Progressive mode: Showing', completedBars.length, 'completed bars');
       
       // Get sub-bars for the current main bar
       const subBarsForCurrentMain = subTimeframeBars.filter(
         subBar => subBar.parentBarIndex === currentBarIndex
       );
       
-      console.log('[TradeChart] Found', subBarsForCurrentMain.length, 'sub-bars for main bar', currentBarIndex);
+      // console.log('[TradeChart] Found', subBarsForCurrentMain.length, 'sub-bars for main bar', currentBarIndex);
       
       if (subBarsForCurrentMain.length > 0) {
         // Calculate the OHLC for the current forming bar using sub-bars up to currentSubBarIndex
         const subBarsToInclude = subBarsForCurrentMain.slice(0, currentSubBarIndex + 1);
-        console.log('[TradeChart] Including', subBarsToInclude.length, 'sub-bars for current forming bar (up to index', currentSubBarIndex, ')');
+        // console.log('[TradeChart] Including', subBarsToInclude.length, 'sub-bars for current forming bar (up to index', currentSubBarIndex, ')');
         
         if (subBarsToInclude.length > 0) {
           const currentMainBar = mainTimeframeBars[currentBarIndex];
@@ -236,7 +236,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           candlestickSeriesRef.current.setData(allBarsToShow);
           // Update price lines immediately after setData to prevent clearing
           updateOrderLines(); // eslint-disable-line react-hooks/exhaustive-deps
-          console.log('[TradeChart] Progressive: Set data with', allBarsToShow.length, 'bars (forming bar OHLC:', formingBar.open, formingBar.high, formingBar.low, formingBar.close, ')');
+          // console.log('[TradeChart] Progressive: Set data with', allBarsToShow.length, 'bars (forming bar OHLC:', formingBar.open, formingBar.high, formingBar.low, formingBar.close, ')');
         }
       } else {
         // No sub-bars available, fall back to completed bars only
@@ -251,7 +251,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         candlestickSeriesRef.current.setData(chartReadyData);
         // Update price lines immediately after setData to prevent clearing
         updateOrderLines(); // eslint-disable-line react-hooks/exhaustive-deps
-        console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars (no sub-bars found)');
+        // console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars (no sub-bars found)');
       }
     }
 
@@ -422,7 +422,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
 
   useEffect(() => {
     if (!chartContainerRef.current || chartRef.current) return; 
-    console.log('[TradeChart] Initializing chart and series...');
+    // console.log('[TradeChart] Initializing chart and series...');
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
@@ -459,7 +459,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
             wickUpColor: '#26a69a',
             wickDownColor: '#ef5350',
         });
-        console.log('[TradeChart] Candlestick series added.');
+        // console.log('[TradeChart] Candlestick series added.');
 
         // Add EMA 12 line series (blue)
         ema12SeriesRef.current = chart.addSeries(LineSeries, {
@@ -473,7 +473,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
                 minMove: 0.01,
             },
         });
-        console.log('[TradeChart] EMA 12 series added.');
+        // console.log('[TradeChart] EMA 12 series added.');
 
         // Add EMA 26 line series (red)
         ema26SeriesRef.current = chart.addSeries(LineSeries, {
@@ -487,7 +487,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
                 minMove: 0.01,
             },
         });
-        console.log('[TradeChart] EMA 26 series added.');
+        // console.log('[TradeChart] EMA 26 series added.');
 
         // Track user interactions (zoom/scroll) to avoid overriding manual adjustments
         const timeScale = chart.timeScale();
@@ -500,7 +500,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           }
         });
     } else {
-      console.error('[TradeChart] Chart creation failed.');
+      // console.error('[TradeChart] Chart creation failed.');
     }
 
     const handleResize = () => {

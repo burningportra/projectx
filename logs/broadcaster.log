@@ -1,7 +1,7 @@
 Broadcaster.py: Top of file reached (stderr)
-Broadcaster.py: Imports done (stderr)
-2025-05-29 21:38:33,628 - OHLCBroadcaster - INFO - Broadcaster.py: Logging configured.
-2025-05-29 21:38:33,649 - websockets.server - INFO - server listening on 127.0.0.1:8765
-2025-05-29 21:38:33,649 - websockets.server - INFO - server listening on [::1]:8765
-765
-2025-05-29 21:38:33,649 - websockets.server - INFO - server listening on [::1]:8765
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/kevtrinh/Code/projectx/src/services/broadcaster.py", line 6, in <module>
+    import asyncpg
+ModuleNotFoundError: No module named 'asyncpg'

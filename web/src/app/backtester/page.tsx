@@ -64,13 +64,13 @@ const getTimeframeConfig = (mainTimeframe: string): TimeframeConfig => {
 const mapSubBarsToMainBars = (mainBars: BacktestBarData[], subBars: BacktestBarData[], config: TimeframeConfig): SubBarData[] => {
   const mappedSubBars: SubBarData[] = [];
   
-  console.log(`[mapSubBarsToMainBars] Starting mapping for ${config.main}/${config.sub}. Main bars: ${mainBars.length}, Sub bars: ${subBars.length}`);
+  // console.log(`[mapSubBarsToMainBars] Starting mapping for ${config.main}/${config.sub}. Main bars: ${mainBars.length}, Sub bars: ${subBars.length}`);
   
   // Debug timestamp ranges to understand data alignment
-  if (mainBars.length > 0 && subBars.length > 0) {
-    console.log(`[mapSubBarsToMainBars] Main bars: ${new Date(mainBars[0].time * 1000).toISOString()} to ${new Date(mainBars[mainBars.length - 1].time * 1000).toISOString()}`);
-    console.log(`[mapSubBarsToMainBars] Sub bars: ${new Date(subBars[0].time * 1000).toISOString()} to ${new Date(subBars[subBars.length - 1].time * 1000).toISOString()}`);
-  }
+  // if (mainBars.length > 0 && subBars.length > 0) {
+  //   console.log(`[mapSubBarsToMainBars] Main bars: ${new Date(mainBars[0].time * 1000).toISOString()} to ${new Date(mainBars[mainBars.length - 1].time * 1000).toISOString()}`);
+  //   console.log(`[mapSubBarsToMainBars] Sub bars: ${new Date(subBars[0].time * 1000).toISOString()} to ${new Date(subBars[subBars.length - 1].time * 1000).toISOString()}`);
+  // }
   
   mainBars.forEach((mainBar, mainBarIndex) => {
     // Find sub-bars that fall within this main bar's timeframe
@@ -89,7 +89,7 @@ const mapSubBarsToMainBars = (mainBars: BacktestBarData[], subBars: BacktestBarD
     });
   });
   
-  console.log(`[mapSubBarsToMainBars] Mapping complete. Mapped ${mappedSubBars.length} sub-bars total.`);
+  // console.log(`[mapSubBarsToMainBars] Mapping complete. Mapped ${mappedSubBars.length} sub-bars total.`);
   return mappedSubBars.sort((a, b) => a.time - b.time);
 };
 
@@ -114,7 +114,7 @@ const findFirstValidMainBarIndex = (subTimeframeBars: SubBarData[]): number => {
   
   // Find the minimum parentBarIndex among all sub-bars
   const minParentIndex = Math.min(...subTimeframeBars.map(sb => sb.parentBarIndex));
-  console.log(`[findFirstValidMainBarIndex] First main bar with sub-bars: ${minParentIndex}`);
+  // console.log(`[findFirstValidMainBarIndex] First main bar with sub-bars: ${minParentIndex}`);
   return Math.max(0, minParentIndex); // Ensure non-negative
 };
 
@@ -228,7 +228,7 @@ const BacktesterPage = () => {
     
     if (needsFullRebuild) {
       // Full rebuild needed (going backward or first time)
-      console.log(`[buildStrategyStateUpToBar] Full rebuild from 0 to ${targetBarIndex} (was at ${lastProcessedIndex})`);
+      // console.log(`[buildStrategyStateUpToBar] Full rebuild from 0 to ${targetBarIndex} (was at ${lastProcessedIndex})`);
       
       // Reset strategies for clean rebuild
       if (selectedStrategy === 'ema') {
@@ -241,7 +241,7 @@ const BacktesterPage = () => {
       await processStrategyBars(0, targetBarIndex);
     } else if (targetBarIndex > lastProcessedIndex) {
       // Incremental update - only process new bars
-      console.log(`[buildStrategyStateUpToBar] Incremental update from ${lastProcessedIndex + 1} to ${targetBarIndex}`);
+      // console.log(`[buildStrategyStateUpToBar] Incremental update from ${lastProcessedIndex + 1} to ${targetBarIndex}`);
       await processStrategyBars(lastProcessedIndex + 1, targetBarIndex);
     }
     // If targetBarIndex === lastProcessedIndex, no processing needed
@@ -249,7 +249,7 @@ const BacktesterPage = () => {
 
   // Extracted strategy processing logic for reuse
   const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
-    const newMarkers: any[] = [...liveTradeMarkers]; // Start with existing markers
+    const trendMarkers: any[] = [...liveTradeMarkers]; // Start with existing markers
     let stateUpdate: any = {};
     
     if (selectedStrategy === 'ema') {
@@ -269,7 +269,7 @@ const BacktesterPage = () => {
             text: result.signal.type === 'BUY' ? 'BUY' : 'SELL',
             size: 1,
           };
-          newMarkers.push(marker);
+          trendMarkers.push(marker);
         }
       }
       
@@ -300,43 +300,44 @@ const BacktesterPage = () => {
           const result = await strategy.processBar(
             currentBar, 
             barIndex, 
-            mainTimeframeBars,
+            mainTimeframeBars.slice(0, barIndex + 1),
             currentContract,
             currentTimeframe
           );
           
-          if (result.signal) {
-            const marker = {
-              time: mainTimeframeBars[barIndex].time,
-              position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
-              color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
-              shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
-              text: result.signal.type === 'BUY' ? 'CUS' : 'CDS',
-              size: 1,
-            };
-            newMarkers.push(marker);
-          }
+          // Note: Trading signals (BUY/SELL) are different from trend start signals (CUS/CDS)
+          // Trend start signals are handled separately below via strategy.getTrendSignals()
+          
         } catch (error) {
-          console.error(`[TrendStart Strategy] Error processing bar ${barIndex}:`, error);
+          // console.error(`[TrendStart Strategy] Error processing bar ${barIndex}:`, error);
         }
       }
       
-      // Add trend signal markers (only for the processed range)
+      // Add trend signal markers (show ALL signals, not just current range)
       const trendSignals = strategy.getTrendSignals();
+      // console.log(`[BacktesterPage][Chart] Processing ${trendSignals.length} trend signals for chart markers`);
+      
       for (const trendSignal of trendSignals) {
-        if (trendSignal.barIndex >= startIndex && trendSignal.barIndex <= endIndex) {
+        // console.log(`[BacktesterPage][Chart] Checking signal: ${trendSignal.type} at bar ${trendSignal.barIndex} (${trendSignal.rule})`);
+        
+        // Show ALL signals that have valid bar data, regardless of current processing range
+        if (trendSignal.barIndex >= 0 && trendSignal.barIndex < mainTimeframeBars.length) {
           const signalBar = mainTimeframeBars[trendSignal.barIndex];
           if (signalBar) {
             const trendMarker = {
               time: signalBar.time,
-              position: trendSignal.type === 'CUS' ? 'belowBar' : 'aboveBar',
-              color: trendSignal.type === 'CUS' ? '#4CAF50' : '#F44336',
-              shape: trendSignal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
-              text: `${trendSignal.rule}`,
-              size: 1.2,
+              position: trendSignal.type === 'CUS' ? 'belowBar' as const : 'aboveBar' as const,
+              color: trendSignal.type === 'CUS' ? '#00ff00' : '#ff0000',
+              shape: trendSignal.type === 'CUS' ? 'arrowUp' as const : 'arrowDown' as const,
+              size: 2
             };
-            newMarkers.push(trendMarker);
+            trendMarkers.push(trendMarker);
+            // console.log(`[BacktesterPage][Chart] ✓ Added ${trendSignal.type} marker at bar ${trendSignal.barIndex} (${signalBar.time})`);
+          } else {
+            // console.log(`[BacktesterPage][Chart] ⚠ No bar data found for signal at index ${trendSignal.barIndex}`);
           }
+        } else {
+          // console.log(`[BacktesterPage][Chart] ⚠ Signal at bar ${trendSignal.barIndex} outside valid bar range 0-${mainTimeframeBars.length - 1}`);
         }
       }
       
@@ -346,7 +347,7 @@ const BacktesterPage = () => {
       
       // Log when trades close for debugging
       if (!currentOpenTrade && currentPendingOrders.length === 0) {
-        console.log(`[TrendStart Strategy] No open trades or pending orders at bar ${endIndex} - all order lines should disappear`);
+        // console.log(`[TrendStart Strategy] No open trades or pending orders at bar ${endIndex} - all order lines should disappear`);
       }
       
       stateUpdate = {
@@ -363,7 +364,7 @@ const BacktesterPage = () => {
     }
     
     // Update markers and state
-    setLiveTradeMarkers(newMarkers);
+    setLiveTradeMarkers(trendMarkers);
     setLiveStrategyState(stateUpdate);
   }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe, emaStrategy, trendStartStrategy, liveTradeMarkers]);
 
@@ -372,7 +373,7 @@ const BacktesterPage = () => {
     if (selectedStrategy === 'ema') {
       const orderManager = (emaStrategy as any).orderManager;
       if (orderManager?.cancelOrder(orderId)) {
-        console.log(`[BacktesterPage] Cancelled order ${orderId}`);
+        // console.log(`[BacktesterPage] Cancelled order ${orderId}`);
         // Trigger state update
         buildStrategyStateUpToBar(currentBarIndex);
       }
@@ -381,12 +382,11 @@ const BacktesterPage = () => {
 
   // Auto-playback effect
   useEffect(() => {
-    console.log(`[Playback Effect] isPlaying: ${isPlaying}, mainTimeframeBars.length: ${mainTimeframeBars.length}, currentBarIndex: ${currentBarIndex}, barFormationMode: ${barFormationMode}`);
+    // console.log(`[Playback Effect] isPlaying: ${isPlaying}, mainTimeframeBars.length: ${mainTimeframeBars.length}, currentBarIndex: ${currentBarIndex}, barFormationMode: ${barFormationMode}`);
     
     if (isPlaying && mainTimeframeBars.length > 0) {
-      console.log(`[Playback Effect] Starting playback interval with speed: ${playbackSpeed}ms`);
+      // console.log(`[Playback Effect] Starting playback interval with speed: ${playbackSpeed}ms`);
       playbackIntervalRef.current = setInterval(() => {
-        console.log(`[Playback Interval] Advancing from currentBarIndex: ${currentBarIndex}, currentSubBarIndex: ${currentSubBarIndex}, mode: ${barFormationMode}`);
         
         if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
           // Progressive mode: advance through sub-bars
@@ -398,44 +398,40 @@ const BacktesterPage = () => {
               subBar => subBar.parentBarIndex === currentBarIndex
             );
             
-            console.log(`[Playback Interval] Progressive mode - subBarsForCurrentMain: ${subBarsForCurrentMain.length}, currentSubBarIndex: ${prevSubIndex}`);
             
             if (prevSubIndex >= subBarsForCurrentMain.length - 1) {
               // Finished current main bar, move to next main bar
-              console.log(`[Playback Interval] Moving to next main bar`);
               setCurrentBarIndex(prevBarIndex => {
                 if (prevBarIndex >= mainTimeframeBars.length - 1) {
-                  console.log(`[Playback Interval] Reached end of data, stopping playback`);
+             //     console.log(`[Playback Interval] Reached end of data, stopping playback`);
                   setIsPlaying(false); // Stop when we reach the end
                   return prevBarIndex;
                 }
                 const newBarIndex = prevBarIndex + 1;
-                console.log(`[Playback Interval] Advanced to bar index: ${newBarIndex}`);
                 return newBarIndex;
               });
               return 0; // Reset sub-bar index for new main bar
             }
             const newSubIndex = prevSubIndex + 1;
-            console.log(`[Playback Interval] Advanced to sub-bar index: ${newSubIndex}`);
             return newSubIndex;
           });
         } else {
           // Instant mode: advance through main bars directly
-          console.log(`[Playback Interval] Instant mode - advancing main bar`);
+        //  console.log(`[Playback Interval] Instant mode - advancing main bar`);
           setCurrentBarIndex(prevIndex => {
             if (prevIndex >= mainTimeframeBars.length - 1) {
-              console.log(`[Playback Interval] Reached end of data, stopping playback`);
+            //  console.log(`[Playback Interval] Reached end of data, stopping playback`);
               setIsPlaying(false); // Stop when we reach the end
               return prevIndex;
             }
             const newIndex = prevIndex + 1;
-            console.log(`[Playback Interval] Advanced to bar index: ${newIndex}`);
+        //    console.log(`[Playback Interval] Advanced to bar index: ${newIndex}`);
             return newIndex;
           });
         }
       }, playbackSpeed);
     } else {
-      console.log(`[Playback Effect] Clearing playback interval - isPlaying: ${isPlaying}, bars: ${mainTimeframeBars.length}`);
+      //console.log(`[Playback Effect] Clearing playback interval - isPlaying: ${isPlaying}, bars: ${mainTimeframeBars.length}`);
       if (playbackIntervalRef.current) {
         clearInterval(playbackIntervalRef.current);
         playbackIntervalRef.current = null;
@@ -464,7 +460,7 @@ const BacktesterPage = () => {
         // console.log(`[Strategy Effect] Calling buildStrategyStateUpToBar(${currentBarIndex})`);
         lastStrategyUpdateRef.current = now;
         buildStrategyStateUpToBar(currentBarIndex).catch(error => {
-          console.error('[Strategy Effect] Error in buildStrategyStateUpToBar:', error);
+          // console.error('[Strategy Effect] Error in buildStrategyStateUpToBar:', error);
         });
       }
       // If throttled, the update will be skipped but will be processed on the next effect trigger
@@ -512,9 +508,9 @@ const BacktesterPage = () => {
     const filledOrdersCount = liveStrategyState.filledOrders.length;
     
     if (!hasOpenTrade && pendingOrdersCount === 0) {
-      console.log(`[BacktesterPage] Trade closed - no open trades or pending orders. All order lines should disappear. Filled orders: ${filledOrdersCount}`);
+      // console.log(`[BacktesterPage] Trade closed - no open trades or pending orders. All order lines should disappear. Filled orders: ${filledOrdersCount}`);
     } else if (hasOpenTrade) {
-      console.log(`[BacktesterPage] Open trade detected - showing order lines. Pending: ${pendingOrdersCount}, Filled: ${filledOrdersCount}`);
+      // console.log(`[BacktesterPage] Open trade detected - showing order lines. Pending: ${pendingOrdersCount}, Filled: ${filledOrdersCount}`);
     }
   }, [liveStrategyState.openTrade, liveStrategyState.pendingOrders.length, liveStrategyState.filledOrders.length]);
 
@@ -571,7 +567,7 @@ const BacktesterPage = () => {
     // In progressive mode, start from first valid main bar if sub-bars are available
     if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
       const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
-      console.log(`[handleReset] Progressive mode: resetting to first valid bar index ${firstValidBarIndex}`);
+      // console.log(`[handleReset] Progressive mode: resetting to first valid bar index ${firstValidBarIndex}`);
       setCurrentBarIndex(firstValidBarIndex);
     } else {
       setCurrentBarIndex(0);
@@ -589,7 +585,7 @@ const BacktesterPage = () => {
     // When switching to progressive mode, auto-start from first valid main bar
     if (mode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
       const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
-      console.log(`[handleBarFormationModeChange] Switching to progressive mode: auto-starting from bar ${firstValidBarIndex}`);
+      // console.log(`[handleBarFormationModeChange] Switching to progressive mode: auto-starting from bar ${firstValidBarIndex}`);
       setCurrentBarIndex(firstValidBarIndex);
     }
   }, [subTimeframeBars]);
@@ -615,7 +611,7 @@ const BacktesterPage = () => {
       // Fetch main timeframe data
       const mainApiUrl = `/api/market-data/bars?contractId=${encodeURIComponent(params.contractId)}&timeframeUnit=${parseTimeframeForApi(config.main).unit}&timeframeValue=${parseTimeframeForApi(config.main).value}&limit=${params.limit}&all=false`;
       
-      console.log(`Fetching main timeframe data from: ${mainApiUrl}`);
+      // console.log(`Fetching main timeframe data from: ${mainApiUrl}`);
       const mainResponse = await fetch(mainApiUrl);
       if (!mainResponse.ok) {
         const errorData = await mainResponse.json();
@@ -644,7 +640,7 @@ const BacktesterPage = () => {
         const subLimit = params.limit * config.subBarsPerMain * 2; // Extra buffer
         const subApiUrl = `/api/market-data/bars?contractId=${encodeURIComponent(params.contractId)}&timeframeUnit=${parseTimeframeForApi(config.sub).unit}&timeframeValue=${parseTimeframeForApi(config.sub).value}&limit=${subLimit}&all=false`;
         
-        console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetching sub-timeframe data from: ${subApiUrl}`);
+        // console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetching sub-timeframe data from: ${subApiUrl}`);
         try {
           const subResponse = await fetch(subApiUrl);
           if (subResponse.ok) {
@@ -659,61 +655,60 @@ const BacktesterPage = () => {
                 volume: bar.volume !== null && bar.volume !== undefined ? parseFloat(bar.volume) : undefined,
               })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
 
-              console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetched ${formattedSubBars.length} raw sub-bars.`);
-              if (formattedSubBars.length > 0) {
-                console.log(`[handleLoadData - ${config.main}/${config.sub}] Raw sub-bars range: ${new Date(formattedSubBars[0].time * 1000).toISOString()} to ${new Date(formattedSubBars[formattedSubBars.length - 1].time * 1000).toISOString()}`);
-              }
-              if (formattedMainBars.length > 0) {
-                  console.log(`[handleLoadData - ${config.main}/${config.sub}] Main bars range: ${new Date(formattedMainBars[0].time * 1000).toISOString()} to ${new Date(formattedMainBars[formattedMainBars.length-1].time * 1000).toISOString()}`);
-              }
+              // console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetched ${formattedSubBars.length} raw sub-bars.`);
+              // if (formattedSubBars.length > 0) {
+              //   console.log(`[handleLoadData - ${config.main}/${config.sub}] Raw sub-bars range: ${new Date(formattedSubBars[0].time * 1000).toISOString()} to ${new Date(formattedSubBars[formattedSubBars.length - 1].time * 1000).toISOString()}`);
+              // }
+              // if (formattedMainBars.length > 0) {
+              //     console.log(`[handleLoadData - ${config.main}/${config.sub}] Main bars range: ${new Date(formattedMainBars[0].time * 1000).toISOString()} to ${new Date(formattedMainBars[formattedMainBars.length-1].time * 1000).toISOString()}`);
+              // }
 
               const mappedSubBars = mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config);
               setSubTimeframeBars(mappedSubBars);
-              console.log(`[handleLoadData - ${config.main}/${config.sub}] Mapped ${mappedSubBars.length} sub-bars to ${formattedMainBars.length} main bars.`);
+              // console.log(`[handleLoadData - ${config.main}/${config.sub}] Mapped ${mappedSubBars.length} sub-bars to ${formattedMainBars.length} main bars.`);
               
               // Debug: Check first few mappings
-              if (mappedSubBars.length > 0) {
-                console.log(`[handleLoadData - ${config.main}/${config.sub}] Sample sub-bar mappings:`, mappedSubBars.slice(0, Math.min(10, mappedSubBars.length)).map(sb => `Sub bar @ ${new Date(sb.time * 1000).toISOString()} -> Main bar index ${sb.parentBarIndex}`));
-              } else if (formattedSubBars.length > 0 && formattedMainBars.length > 0) {
-                console.warn(`[handleLoadData - ${config.main}/${config.sub}] No sub-bars were mapped despite having raw sub-bar and main-bar data. Check timestamp alignments and mapSubBarsToMainBars logic for this timeframe pair.`);
-              }
+              // if (mappedSubBars.length > 0) {
+              //   console.log(`[handleLoadData - ${config.main}/${config.sub}] Sample sub-bar mappings:`, mappedSubBars.slice(0, Math.min(10, mappedSubBars.length)).map(sb => `Sub bar @ ${new Date(sb.time * 1000).toISOString()} -> Main bar index ${sb.parentBarIndex}`));
+              // } else if (formattedSubBars.length > 0 && formattedMainBars.length > 0) {
+              //   console.warn(`[handleLoadData - ${config.main}/${config.sub}] No sub-bars were mapped despite having raw sub-bar and main-bar data. Check timestamp alignments and mapSubBarsToMainBars logic for this timeframe pair.`);
+              // }
               
               // Auto-start from first valid main bar in progressive mode
               if (barFormationMode === BarFormationMode.PROGRESSIVE && mappedSubBars.length > 0) {
                 const firstValidBarIndex = findFirstValidMainBarIndex(mappedSubBars);
                 if (firstValidBarIndex > 0) {
-                  console.log(`[handleLoadData - ${config.main}/${config.sub}] Auto-starting from main bar ${firstValidBarIndex} (first bar with sub-bars) instead of 0`);
-                  setCurrentBarIndex(firstValidBarIndex);
-                  setCurrentSubBarIndex(0);
+                  // console.log(`[handleLoadData - ${config.main}/${config.sub}] Auto-starting from main bar ${firstValidBarIndex} (first bar with sub-bars) instead of 0`);
+                  // setCurrentBarIndex(firstValidBarIndex);
+                  // setCurrentSubBarIndex(0);
                 }
               }
             } else {
-              console.warn(`[handleLoadData - ${config.main}/${config.sub}] Sub-timeframe API call for ${config.sub} was OK, but subData.bars is missing or not an array. SubData:`, subData);
+              // console.warn(`[handleLoadData - ${config.main}/${config.sub}] Sub-timeframe API call for ${config.sub} was OK, but subData.bars is missing or not an array. SubData:`, subData);
               setSubTimeframeBars([]); // Ensure empty
             }
           } else {
-            const errorText = await subResponse.text();
-            console.warn(`[handleLoadData - ${config.main}/${config.sub}] Failed to fetch sub-timeframe data for ${config.sub}. Status: ${subResponse.status}. Response: ${errorText}`);
+            // console.warn(`[handleLoadData - ${config.main}/${config.sub}] Failed to fetch sub-timeframe data for ${config.sub}. Status: ${subResponse.status}. Response: ${errorText}`);
             setSubTimeframeBars([]); // Ensure empty
           }
         } catch (subFetchError: any) {
-            console.error(`[handleLoadData - ${config.main}/${config.sub}] Error fetching sub-timeframe data for ${config.sub}:`, subFetchError.message, subFetchError);
+            // console.error(`[handleLoadData - ${config.main}/${config.sub}] Error fetching sub-timeframe data for ${config.sub}:`, subFetchError.message, subFetchError);
             setSubTimeframeBars([]); // Ensure empty
         }
       } else {
         if (barFormationMode !== BarFormationMode.PROGRESSIVE) {
-          console.log(`[handleLoadData - ${config.main}/${config.sub}] Progressive mode not enabled. No sub-timeframe data fetched.`);
+          // console.log(`[handleLoadData - ${config.main}/${config.sub}] Progressive mode not enabled. No sub-timeframe data fetched.`);
         } else { // config.main === config.sub
-          console.log(`[handleLoadData - ${config.main}/${config.sub}] Main and sub timeframes are the same (${config.main}). No separate sub-timeframe data fetched.`);
+          // console.log(`[handleLoadData - ${config.main}/${config.sub}] Main and sub timeframes are the same (${config.main}). No separate sub-timeframe data fetched.`);
         }
         setSubTimeframeBars([]); // Ensure empty if not fetching
       }
 
-      console.log('Main timeframe bars loaded:', formattedMainBars.length);
+      // console.log('Main timeframe bars loaded:', formattedMainBars.length);
 
       // Strategy will be processed automatically by buildStrategyStateUpToBar
     } catch (err: any) {
-      console.error('Error fetching or processing data:', err);
+      // console.error('Error fetching or processing data:', err);
       setError(err.message || 'Failed to load data.');
     } finally {
       setIsLoading(false);
@@ -728,7 +723,7 @@ const BacktesterPage = () => {
 
   // Handle strategy configuration changes
   const handleConfigChange = useCallback(async (newConfig: StrategyConfig) => {
-    console.log('[BacktesterPage] Strategy configuration changed:', newConfig);
+    // console.log('[BacktesterPage] Strategy configuration changed:', newConfig);
     
     // Update the strategy configuration state
     setStrategyConfig(newConfig);
@@ -752,7 +747,7 @@ const BacktesterPage = () => {
       
       // Reset and re-run the strategy if we have data
       if (mainTimeframeBars.length > 0) {
-        console.log('[BacktesterPage] Re-running EMA backtest with new configuration');
+        // console.log('[BacktesterPage] Re-running EMA backtest with new configuration');
         
         // Reset playback to beginning
         setCurrentBarIndex(0);
@@ -785,7 +780,7 @@ const BacktesterPage = () => {
       
       // Reset and re-run the strategy if we have data
       if (mainTimeframeBars.length > 0) {
-        console.log('[BacktesterPage] Re-running TrendStart backtest with new configuration');
+        // console.log('[BacktesterPage] Re-running TrendStart backtest with new configuration');
         
         // Reset playback to beginning
         setCurrentBarIndex(0);
@@ -860,10 +855,10 @@ const BacktesterPage = () => {
                   }] : [];
                   
                   if (liveStrategyState.openTrade) {
-                    console.log('[BacktesterPage] Passing openTrade to TradeChart:', {
-                      openTrade: liveStrategyState.openTrade,
-                      positions: positions
-                    });
+                    // console.log('[BacktesterPage] Passing openTrade to TradeChart:', {
+                    //   openTrade: liveStrategyState.openTrade,
+                    //   positions: positions
+                    // });
                   }
                   
                   return positions;

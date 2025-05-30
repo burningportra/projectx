@@ -205,19 +205,40 @@ export class TrendStartStrategy {
 
   // Processes signals from TrendIdentifier and updates strategy's internal view
   private processNewTrendSignals(identifiedSignals: TrendLibSignal[]): StrategyTrendSignal[] {
+    // Add debug logging for 1d to track signal processing
+    if (identifiedSignals.length > 0) {
+      // console.log(`[TrendStartStrategy][processNewTrendSignals] Received ${identifiedSignals.length} signals from TrendIdentifier`);
+      identifiedSignals.forEach((sig, idx) => {
+        // console.log(`[TrendStartStrategy][processNewTrendSignals] Input signal ${idx + 1}: ${sig.type} at bar ${sig.barIndex} - ${sig.rule}`);
+      });
+    }
+    
     const newStrategySignals: StrategyTrendSignal[] = [];
     const existingSignalKeys = new Set(this.trackedTrendSignals.map(s => `${s.barIndex}-${s.type}-${s.rule}`));
     
+    // console.log(`[TrendStartStrategy][processNewTrendSignals] Current tracked signals count: ${this.trackedTrendSignals.length}`);
+    // console.log(`[TrendStartStrategy][processNewTrendSignals] Existing signal keys: ${Array.from(existingSignalKeys)}`);
+    
     identifiedSignals.forEach(libSignal => {
       const signalKey = `${libSignal.barIndex}-${libSignal.type}-${libSignal.rule}`;
+      // console.log(`[TrendStartStrategy][processNewTrendSignals] Checking signal key: ${signalKey}`);
+      
       if (!existingSignalKeys.has(signalKey)) {
         const strategySignal: StrategyTrendSignal = { ...libSignal }; // Adapt if needed
         this.trackedTrendSignals.push(strategySignal);
         newStrategySignals.push(strategySignal);
         this.currentTrendDirection = strategySignal.type === 'CUS' ? 'UP' : 'DOWN';
+        // console.log(`[TrendStartStrategy][processNewTrendSignals] ✓ Added new signal: ${signalKey}, total tracked: ${this.trackedTrendSignals.length}`);
+      } else {
+        // console.log(`[TrendStartStrategy][processNewTrendSignals] ⚠ Signal already exists: ${signalKey}`);
       }
     });
+    
     this.trackedTrendSignals.sort((a,b) => a.barIndex - b.barIndex); // Keep sorted by bar index
+    
+    // console.log(`[TrendStartStrategy][processNewTrendSignals] Final tracked signals count: ${this.trackedTrendSignals.length}`);
+    // console.log(`[TrendStartStrategy][processNewTrendSignals] Returning ${newStrategySignals.length} new signals`);
+    
     return newStrategySignals.sort((a,b) => a.barIndex - b.barIndex); // Return new ones sorted
   }
   
@@ -481,6 +502,10 @@ export class TrendStartStrategy {
 
   // Get detected trend start signals
   public getTrendSignals(): StrategyTrendSignal[] {
+    // console.log(`[TrendStartStrategy][getTrendSignals] Returning ${this.trackedTrendSignals.length} tracked signals`);
+    this.trackedTrendSignals.forEach((sig, idx) => {
+      // console.log(`[TrendStartStrategy][getTrendSignals] Signal ${idx + 1}: ${sig.type} at bar ${sig.barIndex} - ${sig.rule}`);
+    });
     return this.trackedTrendSignals;
   }
 

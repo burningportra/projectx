@@ -40,6 +40,20 @@ def generate_trend_starts(
     """
     log_prefix = f"[generate_trend_starts_v2][{contract_id}][{timeframe_str}]"
     
+    # Special logging for 1d timeframe
+    if timeframe_str == '1d':
+        logger.info(f"{log_prefix} ===== 1D PYTHON TREND START DEBUG =====")
+        logger.info(f"{log_prefix} Received DataFrame with {len(bars_df)} bars")
+        logger.info(f"{log_prefix} Debug mode: {debug}")
+        if not bars_df.empty:
+            logger.info(f"{log_prefix} DataFrame columns: {list(bars_df.columns)}")
+            logger.info(f"{log_prefix} First 3 bars:")
+            for i, row in bars_df.head(3).iterrows():
+                logger.info(f"{log_prefix}   Bar {i}: {row['timestamp']} OHLC={row['open']}/{row['high']}/{row['low']}/{row['close']}")
+            logger.info(f"{log_prefix} Last 3 bars:")
+            for i, row in bars_df.tail(3).iterrows():
+                logger.info(f"{log_prefix}   Bar {i}: {row['timestamp']} OHLC={row['open']}/{row['high']}/{row['low']}/{row['close']}")
+    
     initial_debug_active = trend_utils.DEBUG_MODE_ACTIVE
     initial_debug_start = trend_utils.DEBUG_START_INDEX
     initial_debug_end = trend_utils.DEBUG_END_INDEX
@@ -79,6 +93,10 @@ def generate_trend_starts(
                 volume=vol,
                 index=i + 1, 
             ))
+            
+            if timeframe_str == '1d' and i < 5:
+                logger.info(f"{log_prefix} Converted bar {i+1}: {bar_ts.isoformat()} OHLC={o}/{h}/{l}/{c}")
+                
         except AttributeError as e:
             logger.error(f"{log_prefix} Error processing row {i} from DataFrame: Missing attribute {e}. Row: {row_tuple}")
             if debug: 
@@ -109,6 +127,16 @@ def generate_trend_starts(
         contract_id=contract_id, 
         timeframe_str=timeframe_str
     )
+
+    if timeframe_str == '1d':
+        logger.info(f"{log_prefix} ===== PYTHON TREND ANALYSIS RESULTS =====")
+        logger.info(f"{log_prefix} Generated {len(signals_found)} signals")
+        for i, signal in enumerate(signals_found):
+            logger.info(f"{log_prefix} Signal {i+1}: {signal}")
+        logger.info(f"{log_prefix} Debug log entries: {len(debug_log_entries)}")
+        if debug_log_entries:
+            for i, log_entry in enumerate(debug_log_entries[:10]):  # Show first 10 log entries
+                logger.info(f"{log_prefix} Debug {i+1}: {log_entry}")
 
     logger.info(f"{log_prefix} Finished. Generated {len(signals_found)} signals.")
     if debug_log_entries:
