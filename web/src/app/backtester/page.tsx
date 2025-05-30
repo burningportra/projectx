@@ -64,6 +64,14 @@ const getTimeframeConfig = (mainTimeframe: string): TimeframeConfig => {
 const mapSubBarsToMainBars = (mainBars: BacktestBarData[], subBars: BacktestBarData[], config: TimeframeConfig): SubBarData[] => {
   const mappedSubBars: SubBarData[] = [];
   
+  console.log(`[mapSubBarsToMainBars] Starting mapping for ${config.main}/${config.sub}. Main bars: ${mainBars.length}, Sub bars: ${subBars.length}`);
+  
+  // Debug timestamp ranges to understand data alignment
+  if (mainBars.length > 0 && subBars.length > 0) {
+    console.log(`[mapSubBarsToMainBars] Main bars: ${new Date(mainBars[0].time * 1000).toISOString()} to ${new Date(mainBars[mainBars.length - 1].time * 1000).toISOString()}`);
+    console.log(`[mapSubBarsToMainBars] Sub bars: ${new Date(subBars[0].time * 1000).toISOString()} to ${new Date(subBars[subBars.length - 1].time * 1000).toISOString()}`);
+  }
+  
   mainBars.forEach((mainBar, mainBarIndex) => {
     // Find sub-bars that fall within this main bar's timeframe
     const mainBarStart = mainBar.time;
@@ -81,6 +89,7 @@ const mapSubBarsToMainBars = (mainBars: BacktestBarData[], subBars: BacktestBarD
     });
   });
   
+  console.log(`[mapSubBarsToMainBars] Mapping complete. Mapped ${mappedSubBars.length} sub-bars total.`);
   return mappedSubBars.sort((a, b) => a.time - b.time);
 };
 
@@ -97,6 +106,16 @@ const getTimeframeSeconds = (timeframe: string): number => {
     case 'w': return value * 60 * 60 * 24 * 7;
     default: return 60; // Default to 1 minute
   }
+};
+
+// Helper to find the first main bar that has sub-bars
+const findFirstValidMainBarIndex = (subTimeframeBars: SubBarData[]): number => {
+  if (subTimeframeBars.length === 0) return 0;
+  
+  // Find the minimum parentBarIndex among all sub-bars
+  const minParentIndex = Math.min(...subTimeframeBars.map(sb => sb.parentBarIndex));
+  console.log(`[findFirstValidMainBarIndex] First main bar with sub-bars: ${minParentIndex}`);
+  return Math.max(0, minParentIndex); // Ensure non-negative
 };
 
 const BacktesterPage = () => {
@@ -548,16 +567,32 @@ const BacktesterPage = () => {
 
   const handleReset = useCallback(() => {
     setIsPlaying(false);
-    setCurrentBarIndex(0);
+    
+    // In progressive mode, start from first valid main bar if sub-bars are available
+    if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
+      const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
+      console.log(`[handleReset] Progressive mode: resetting to first valid bar index ${firstValidBarIndex}`);
+      setCurrentBarIndex(firstValidBarIndex);
+    } else {
+      setCurrentBarIndex(0);
+    }
+    
     setCurrentSubBarIndex(0);
     resetLiveStrategy();
-  }, [resetLiveStrategy]);
+  }, [resetLiveStrategy, barFormationMode, subTimeframeBars]);
 
   const handleBarFormationModeChange = useCallback((mode: BarFormationMode) => {
     setBarFormationMode(mode);
     setIsPlaying(false);
     setCurrentSubBarIndex(0);
-  }, []);
+    
+    // When switching to progressive mode, auto-start from first valid main bar
+    if (mode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
+      const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
+      console.log(`[handleBarFormationModeChange] Switching to progressive mode: auto-starting from bar ${firstValidBarIndex}`);
+      setCurrentBarIndex(firstValidBarIndex);
+    }
+  }, [subTimeframeBars]);
 
   const handleLoadData = useCallback(async (params: { contractId: string; timeframe: string; limit: number }) => {
     setIsLoading(true);
@@ -609,34 +644,69 @@ const BacktesterPage = () => {
         const subLimit = params.limit * config.subBarsPerMain * 2; // Extra buffer
         const subApiUrl = `/api/market-data/bars?contractId=${encodeURIComponent(params.contractId)}&timeframeUnit=${parseTimeframeForApi(config.sub).unit}&timeframeValue=${parseTimeframeForApi(config.sub).value}&limit=${subLimit}&all=false`;
         
-        console.log(`Fetching sub-timeframe data from: ${subApiUrl}`);
-        const subResponse = await fetch(subApiUrl);
-        if (subResponse.ok) {
-          const subData = await subResponse.json();
-          if (subData.bars && Array.isArray(subData.bars)) {
-            const formattedSubBars: BacktestBarData[] = subData.bars.map((bar: any) => ({
-              time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
-              open: parseFloat(bar.open),
-              high: parseFloat(bar.high),
-              low: parseFloat(bar.low),
-              close: parseFloat(bar.close),
-              volume: bar.volume !== null && bar.volume !== undefined ? parseFloat(bar.volume) : undefined,
-            })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
+        console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetching sub-timeframe data from: ${subApiUrl}`);
+        try {
+          const subResponse = await fetch(subApiUrl);
+          if (subResponse.ok) {
+            const subData = await subResponse.json();
+            if (subData.bars && Array.isArray(subData.bars)) {
+              const formattedSubBars: BacktestBarData[] = subData.bars.map((bar: any) => ({
+                time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
+                open: parseFloat(bar.open),
+                high: parseFloat(bar.high),
+                low: parseFloat(bar.low),
+                close: parseFloat(bar.close),
+                volume: bar.volume !== null && bar.volume !== undefined ? parseFloat(bar.volume) : undefined,
+              })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
 
-            const mappedSubBars = mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config);
-            setSubTimeframeBars(mappedSubBars);
-            console.log(`Loaded ${mappedSubBars.length} sub-timeframe bars for ${formattedMainBars.length} main bars`);
-            
-            // Debug: Check first few mappings
-            if (mappedSubBars.length > 0) {
-              console.log('Sample sub-bar mappings:', mappedSubBars.slice(0, 10).map(sb => `Sub bar ${sb.time} -> Main bar ${sb.parentBarIndex}`));
+              console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetched ${formattedSubBars.length} raw sub-bars.`);
+              if (formattedSubBars.length > 0) {
+                console.log(`[handleLoadData - ${config.main}/${config.sub}] Raw sub-bars range: ${new Date(formattedSubBars[0].time * 1000).toISOString()} to ${new Date(formattedSubBars[formattedSubBars.length - 1].time * 1000).toISOString()}`);
+              }
+              if (formattedMainBars.length > 0) {
+                  console.log(`[handleLoadData - ${config.main}/${config.sub}] Main bars range: ${new Date(formattedMainBars[0].time * 1000).toISOString()} to ${new Date(formattedMainBars[formattedMainBars.length-1].time * 1000).toISOString()}`);
+              }
+
+              const mappedSubBars = mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config);
+              setSubTimeframeBars(mappedSubBars);
+              console.log(`[handleLoadData - ${config.main}/${config.sub}] Mapped ${mappedSubBars.length} sub-bars to ${formattedMainBars.length} main bars.`);
+              
+              // Debug: Check first few mappings
+              if (mappedSubBars.length > 0) {
+                console.log(`[handleLoadData - ${config.main}/${config.sub}] Sample sub-bar mappings:`, mappedSubBars.slice(0, Math.min(10, mappedSubBars.length)).map(sb => `Sub bar @ ${new Date(sb.time * 1000).toISOString()} -> Main bar index ${sb.parentBarIndex}`));
+              } else if (formattedSubBars.length > 0 && formattedMainBars.length > 0) {
+                console.warn(`[handleLoadData - ${config.main}/${config.sub}] No sub-bars were mapped despite having raw sub-bar and main-bar data. Check timestamp alignments and mapSubBarsToMainBars logic for this timeframe pair.`);
+              }
+              
+              // Auto-start from first valid main bar in progressive mode
+              if (barFormationMode === BarFormationMode.PROGRESSIVE && mappedSubBars.length > 0) {
+                const firstValidBarIndex = findFirstValidMainBarIndex(mappedSubBars);
+                if (firstValidBarIndex > 0) {
+                  console.log(`[handleLoadData - ${config.main}/${config.sub}] Auto-starting from main bar ${firstValidBarIndex} (first bar with sub-bars) instead of 0`);
+                  setCurrentBarIndex(firstValidBarIndex);
+                  setCurrentSubBarIndex(0);
+                }
+              }
+            } else {
+              console.warn(`[handleLoadData - ${config.main}/${config.sub}] Sub-timeframe API call for ${config.sub} was OK, but subData.bars is missing or not an array. SubData:`, subData);
+              setSubTimeframeBars([]); // Ensure empty
             }
+          } else {
+            const errorText = await subResponse.text();
+            console.warn(`[handleLoadData - ${config.main}/${config.sub}] Failed to fetch sub-timeframe data for ${config.sub}. Status: ${subResponse.status}. Response: ${errorText}`);
+            setSubTimeframeBars([]); // Ensure empty
           }
-        } else {
-          console.warn('Failed to fetch sub-timeframe data:', subResponse.status);
+        } catch (subFetchError: any) {
+            console.error(`[handleLoadData - ${config.main}/${config.sub}] Error fetching sub-timeframe data for ${config.sub}:`, subFetchError.message, subFetchError);
+            setSubTimeframeBars([]); // Ensure empty
         }
       } else {
-        console.log('Progressive mode disabled or main/sub timeframes are the same - no sub-timeframe data needed');
+        if (barFormationMode !== BarFormationMode.PROGRESSIVE) {
+          console.log(`[handleLoadData - ${config.main}/${config.sub}] Progressive mode not enabled. No sub-timeframe data fetched.`);
+        } else { // config.main === config.sub
+          console.log(`[handleLoadData - ${config.main}/${config.sub}] Main and sub timeframes are the same (${config.main}). No separate sub-timeframe data fetched.`);
+        }
+        setSubTimeframeBars([]); // Ensure empty if not fetching
       }
 
       console.log('Main timeframe bars loaded:', formattedMainBars.length);
