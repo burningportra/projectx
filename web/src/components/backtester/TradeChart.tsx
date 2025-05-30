@@ -87,8 +87,16 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     });
     currentLines.clear();
 
+    console.log(`[updateOrderLines] Processing ${openPositions.length} open positions and ${pendingOrders.length} pending orders`);
+
     // Add price lines for open positions
     openPositions.forEach((position, index) => {
+      console.log(`[updateOrderLines] Position ${index}:`, {
+        entryPrice: position.entryPrice,
+        stopLossPrice: position.stopLossPrice,
+        takeProfitPrice: position.takeProfitPrice
+      });
+
       // Entry price line (blue, solid)
       if (position.entryPrice) {
         const entryLine = series.createPriceLine({
@@ -99,6 +107,9 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           title: `Entry: $${position.entryPrice.toFixed(2)}`,
         });
         currentLines.set(`entry_${index}`, entryLine);
+        console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
+      } else {
+        console.log(`[updateOrderLines] No entry price for position ${index}`);
       }
 
       // Stop Loss line (red, dashed)

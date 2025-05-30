@@ -852,11 +852,22 @@ const BacktesterPage = () => {
                 } : undefined}
                 pendingOrders={liveStrategyState.pendingOrders}
                 filledOrders={liveStrategyState.filledOrders}
-                openPositions={liveStrategyState.openTrade ? [{
-                  entryPrice: liveStrategyState.openTrade.entryPrice,
-                  stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                  takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
-                }] : []}
+                openPositions={(() => {
+                  const positions = liveStrategyState.openTrade ? [{
+                    entryPrice: liveStrategyState.openTrade.entryPrice,
+                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                  }] : [];
+                  
+                  if (liveStrategyState.openTrade) {
+                    console.log('[BacktesterPage] Passing openTrade to TradeChart:', {
+                      openTrade: liveStrategyState.openTrade,
+                      positions: positions
+                    });
+                  }
+                  
+                  return positions;
+                })()}
               /> 
             </div>
             
