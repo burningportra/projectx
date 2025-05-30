@@ -6,10 +6,13 @@ import TradeChart from '@/components/backtester/TradeChart';
 import TopBar from '@/components/backtester/TopBar';
 import CompactResultsPanel from '@/components/backtester/CompactResultsPanel';
 import AnalysisPanel from '@/components/backtester/AnalysisPanel';
+import OrdersPanel from '@/components/backtester/OrdersPanel';
 import { BacktestBarData, SubBarData, PlaybackSpeed, BarFormationMode, TimeframeConfig } from '@/lib/types/backtester';
 import { UTCTimestamp } from 'lightweight-charts';
 import { EmaStrategy } from '@/lib/strategies/EmaStrategy';
 import { TrendStartStrategy } from '@/lib/strategies/TrendStartStrategy';
+import { BacktestEngine, BacktestConfig } from '@/lib/trading/BacktestEngine';
+import { Order, Position } from '@/lib/trading/orders/types';
 
 // Helper to parse timeframe string (e.g., "5m", "1h") into unit and value for API
 const parseTimeframeForApi = (timeframe: string): { unit: number; value: number } => {
@@ -132,6 +135,67 @@ const BacktesterPage = () => {
   const [currentContract, setCurrentContract] = useState<string>('CON.F.US.MES.M25');
   const [currentTimeframe, setCurrentTimeframe] = useState<string>('1d');
 
+  // BacktestEngine and Order Management state
+  const [backtestEngine, setBacktestEngine] = useState<BacktestEngine | null>(null);
+  const [currentOrders, setCurrentOrders] = useState<Order[]>([]);
+  const [currentPositions, setCurrentPositions] = useState<Position[]>([]);
+  const [equityCurveData, setEquityCurveData] = useState<Array<{ time: number; value: number }>>([]);
+  
+  // Trading parameters state
+  const [tradingParams, setTradingParams] = useState<BacktestConfig>({
+    contractId: 'CON.F.US.MES.M25',
+    commission: 5.0,        // $5 per contract
+    slippage: 0,           // No slippage for now
+    initialCapital: 10000,  // $10,000
+    positionSize: 1,       // 1 contract
+    maxPositionSize: 5,    // Max 5 contracts
+    useMarketOrders: true,
+    enableStopLoss: false,
+    enableTakeProfit: false,
+  });
+
+  // Advanced metrics state
+  const [advancedMetrics, setAdvancedMetrics] = useState({
+    sharpeRatio: 0,
+    maxDrawdown: 0,
+    profitFactor: 0,
+    averageWin: 0,
+    averageLoss: 0,
+    totalCommission: 0,
+  });
+
+  // Initialize BacktestEngine when trading params change
+  useEffect(() => {
+    const engine = new BacktestEngine({
+      ...tradingParams,
+      contractId: currentContract,
+    });
+
+    // Listen to engine events
+    engine.on('positionUpdated', (position: Position) => {
+      setCurrentPositions(prev => {
+        const updated = [...prev];
+        const index = updated.findIndex(p => p.symbol === position.symbol);
+        if (index >= 0) {
+          updated[index] = position;
+        } else {
+          updated.push(position);
+        }
+        return updated;
+      });
+    });
+
+    engine.on('equityUpdated', (equity: number, realizedPnL: number, unrealizedPnL: number) => {
+      // Update results with new P&L
+      setResults(prev => ({
+        ...prev,
+        profitOrLoss: realizedPnL + unrealizedPnL,
+      }));
+    });
+
+    setBacktestEngine(engine);
+  }, [tradingParams, currentContract]);
+
   // Reset live strategy when new data loads
   const resetLiveStrategy = useCallback(() => {
     setLiveStrategyState({
@@ -149,206 +213,124 @@ const BacktesterPage = () => {
 
   // Process all bars from 0 to currentBarIndex to build complete strategy state
   const buildStrategyStateUpToBar = useCallback(async (targetBarIndex: number) => {
-    if (mainTimeframeBars.length === 0 || targetBarIndex >= mainTimeframeBars.length) {
-      console.log(`[buildStrategyStateUpToBar] Skipping - no bars or invalid index. Bars: ${mainTimeframeBars.length}, Target: ${targetBarIndex}`);
+    if (mainTimeframeBars.length === 0 || targetBarIndex >= mainTimeframeBars.length || !backtestEngine) {
+      console.log(`[buildStrategyStateUpToBar] Skipping - no bars, invalid index, or no engine. Bars: ${mainTimeframeBars.length}, Target: ${targetBarIndex}, Engine: ${!!backtestEngine}`);
       return;
     }
     
     console.log(`[buildStrategyStateUpToBar] Building ${selectedStrategy} strategy state from bar 0 to ${targetBarIndex}`);
     
-    // Prepare state data outside of setState
-    let newCompletedTrades: any[] = [];
+    // Reset engine and load bars
+    backtestEngine.loadBars(mainTimeframeBars);
+    
+    // Process each bar using the appropriate strategy
     const newMarkers: any[] = [];
-    let stateUpdate: any = {};
+    let currentStrategy: any;
     
     if (selectedStrategy === 'ema') {
-      // EMA Strategy Logic
-      const newFastEmaValues: number[] = [];
-      const newSlowEmaValues: number[] = [];
-      let newOpenTrade = null;
-      let newTradeIdCounter = 1;
-      
-      const k12 = 2 / (12 + 1);
-      const k26 = 2 / (26 + 1);
-      
-      // Process each bar from 0 to targetBarIndex
-      for (let barIndex = 0; barIndex <= targetBarIndex; barIndex++) {
-        const currentBar = mainTimeframeBars[barIndex];
-        
-        // Calculate EMAs
-        if (barIndex === 0) {
-          newFastEmaValues[0] = currentBar.close;
-          newSlowEmaValues[0] = currentBar.close;
-        } else {
-          const prevFastEma = newFastEmaValues[barIndex - 1];
-          const prevSlowEma = newSlowEmaValues[barIndex - 1];
-          newFastEmaValues[barIndex] = currentBar.close * k12 + prevFastEma * (1 - k12);
-          newSlowEmaValues[barIndex] = currentBar.close * k26 + prevSlowEma * (1 - k26);
-        }
-        
-        // Check for crossovers if we have at least 2 bars
-        if (barIndex > 0) {
-          const prevFast = newFastEmaValues[barIndex - 1];
-          const prevSlow = newSlowEmaValues[barIndex - 1];
-          const currentFast = newFastEmaValues[barIndex];
-          const currentSlow = newSlowEmaValues[barIndex];
-          
-          // Bullish crossover (buy signal)
-          if (prevFast <= prevSlow && currentFast > currentSlow && !newOpenTrade) {
-            console.log(`[EMA Strategy] BULLISH CROSSOVER at bar ${barIndex}`);
-            
-            newOpenTrade = {
-              id: `LIVE_EMA_${newTradeIdCounter++}`,
-              entryTime: currentBar.time,
-              entryPrice: currentBar.close,
-              size: 1,
-              type: 'BUY',
-              status: 'OPEN',
-            };
-            
-            newMarkers.push({
-              time: currentBar.time,
-              position: 'belowBar',
-              color: '#26a69a',
-              shape: 'arrowUp',
-              text: 'BUY',
-              size: 1,
-            });
-          }
-          // Bearish crossover (sell signal)
-          else if (prevFast >= prevSlow && currentFast < currentSlow && newOpenTrade) {
-            console.log(`[EMA Strategy] BEARISH CROSSOVER at bar ${barIndex}`);
-            
-            const exitPrice = currentBar.close;
-            const pnl = (exitPrice - newOpenTrade.entryPrice) * newOpenTrade.size - 5.0;
-            
-            const completedTrade = {
-              ...newOpenTrade,
-              exitTime: currentBar.time,
-              exitPrice,
-              profitOrLoss: pnl,
-              status: 'CLOSED',
-            };
-            
-            newCompletedTrades.push(completedTrade);
-            newOpenTrade = null;
-            
-            const pnlText = pnl >= 0 ? `SELL +$${pnl.toFixed(0)}` : `SELL -$${Math.abs(pnl).toFixed(0)}`;
-            newMarkers.push({
-              time: currentBar.time,
-              position: 'aboveBar',
-              color: pnl >= 0 ? '#26a69a' : '#ef5350',
-              shape: 'arrowDown',
-              text: pnlText,
-              size: 1,
-            });
-          }
-        }
-      }
-      
-      stateUpdate = {
-        fastEmaValues: newFastEmaValues,
-        slowEmaValues: newSlowEmaValues,
-        openTrade: newOpenTrade,
-        tradeIdCounter: newTradeIdCounter,
-        completedTrades: newCompletedTrades,
-      };
-      
+      currentStrategy = emaStrategy;
     } else if (selectedStrategy === 'trendstart') {
-      // Trend Start Strategy Logic - Use persistent strategy instance instead of creating fresh one
-      console.log(`[TrendStart Strategy] Processing bars 0 to ${targetBarIndex}`);
-      
-      // Use the existing strategy instance to preserve cache
-      const strategy = trendStartStrategy;
-      
-      // Process each bar through the strategy (async)
-      const allSignals: any[] = [];
-      const allMarkers: any[] = [];
-      
-      for (let barIndex = 0; barIndex <= targetBarIndex; barIndex++) {
-        const currentBar = mainTimeframeBars[barIndex];
-        try {
-          const result = await strategy.processBar(
-            currentBar, 
-            barIndex, 
-            mainTimeframeBars,
-            currentContract, // Use actual contract instead of hardcoded
-            currentTimeframe // Use actual timeframe instead of hardcoded
-          );
-          
-          if (result.signal) {
-            console.log(`[TrendStart Strategy] Signal at bar ${barIndex}:`, result.signal);
-            
-            // Create trade marker
-            const marker = {
-              time: mainTimeframeBars[barIndex].time,
-              position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
-              color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
-              shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
-              text: result.signal.type === 'BUY' ? 'CUS' : 'CDS',
-              size: 1,
-            };
-            allMarkers.push(marker);
-            allSignals.push(result.signal);
-          }
-        } catch (error) {
-          console.error(`[TrendStart Strategy] Error processing bar ${barIndex}:`, error);
-        }
-      }
-      
-      // Get all trend start signals from strategy and create markers
-      const trendSignals = strategy.getTrendSignals();
-      console.log(`[TrendStart Strategy] Creating markers for ${trendSignals.length} trend start signals`);
-      
-      for (const trendSignal of trendSignals) {
-        // Only show signals up to current bar
-        if (trendSignal.barIndex <= targetBarIndex) {
-          const signalBar = mainTimeframeBars[trendSignal.barIndex];
-          if (signalBar) {
-            const trendMarker = {
-              time: signalBar.time,
-              position: trendSignal.type === 'CUS' ? 'belowBar' : 'aboveBar',
-              color: trendSignal.type === 'CUS' ? '#4CAF50' : '#F44336', // Different colors from trade signals
-              shape: trendSignal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
-              text: '', // Removed labels for cleaner display
-              size: 1.2, // Slightly smaller than trade arrows to distinguish
-            };
-            allMarkers.push(trendMarker);
-          }
-        }
-      }
-      
-      // Get completed trades from strategy
-      newCompletedTrades = strategy.getTrades();
-      
-      // Use accumulated markers instead of newMarkers
-      newMarkers.push(...allMarkers);
-      
-      console.log(`[TrendStart Strategy] Generated ${newMarkers.length} markers (${trendSignals.length} trend signals + trade signals), ${newCompletedTrades.length} completed trades`);
-      
-      stateUpdate = {
-        fastEmaValues: [], // Not used for trend start strategy
-        slowEmaValues: [], // Not used for trend start strategy
-        openTrade: strategy.getOpenTrade(), // Get actual open trade from strategy
-        tradeIdCounter: strategy.getTradeIdCounter(),
-        completedTrades: newCompletedTrades,
-      };
-      
-    } else {
-      // Fallback - return empty state
-      stateUpdate = {
-        fastEmaValues: [],
-        slowEmaValues: [],
-        openTrade: null,
-        tradeIdCounter: 1,
-        completedTrades: [],
-      };
+      currentStrategy = trendStartStrategy;
     }
+    
+    // Process bars up to target index
+    for (let barIndex = 0; barIndex <= targetBarIndex; barIndex++) {
+      const currentBar = mainTimeframeBars[barIndex];
+      
+      // Get strategy signal
+      const result = currentStrategy.processBar(currentBar, barIndex, mainTimeframeBars);
+      
+      // Process signal through BacktestEngine
+      if (result.signal) {
+        await backtestEngine.processSignal(result.signal);
+        
+        // Create visual marker
+        const marker = {
+          time: currentBar.time,
+          position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
+          color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
+          shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
+          text: result.signal.type === 'BUY' ? 'BUY' : 'SELL',
+          size: 1,
+        };
+        newMarkers.push(marker);
+      }
+      
+      // Advance the engine to process the bar
+      if (barIndex < targetBarIndex) {
+        await backtestEngine.advanceBar();
+      }
+    }
+    
+    // Get current state from engine
+    const engineState = backtestEngine.getCurrentState();
+    
+    // Update orders and positions
+    setCurrentOrders(engineState.orders);
+    setCurrentPositions(engineState.positions);
+    setEquityCurveData(engineState.equityCurve);
+    
+    // Update results
+    const portfolio = engineState.portfolio;
+    setResults({
+      profitOrLoss: portfolio.realizedPnL + portfolio.unrealizedPnL,
+      winRate: 0, // Will be calculated when trades complete
+      totalTrades: engineState.orders.filter(o => o.status === 'FILLED').length,
+    });
+    
+    // Update advanced metrics
+    const positionSummary = backtestEngine.getPositionManager().getPositionSummary();
+    setAdvancedMetrics(prev => ({
+      ...prev,
+      totalCommission: positionSummary.totalCommission,
+    }));
+    
+    // Update visual markers with P&L
+    const trades = backtestEngine.getPositionManager().getTradeHistory();
+    const closedTrades = trades.filter(t => !t.isOpen);
+    
+    // Add P&L text to sell markers
+    closedTrades.forEach((trade, idx) => {
+      if (trade.exitTime) {
+        const pnl = trade.realizedPnL || 0;
+        const pnlText = pnl >= 0 ? `SELL +$${pnl.toFixed(0)}` : `SELL -$${Math.abs(pnl).toFixed(0)}`;
+        
+        // Find the corresponding marker and update its text
+        const exitTime = (trade.exitTime.getTime() / 1000) as UTCTimestamp;
+        const markerIndex = newMarkers.findIndex(m => m.time === exitTime && m.text === 'SELL');
+        if (markerIndex >= 0) {
+          newMarkers[markerIndex].text = pnlText;
+          newMarkers[markerIndex].color = pnl >= 0 ? '#26a69a' : '#ef5350';
+        }
+      }
+    });
     
     // Update markers and state
     setLiveTradeMarkers(newMarkers);
-    setLiveStrategyState(stateUpdate);
-  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe]);
+    
+    // Update strategy-specific data (for indicators)
+    if (selectedStrategy === 'ema') {
+      const fastEmaValues: number[] = [];
+      const slowEmaValues: number[] = [];
+      
+      // Rebuild EMA arrays from strategy
+      for (let i = 0; i <= targetBarIndex; i++) {
+        const bar = mainTimeframeBars[i];
+        const res = emaStrategy.processBar(bar, i, mainTimeframeBars);
+        if (res.indicators) {
+          fastEmaValues.push(res.indicators.fastEma);
+          slowEmaValues.push(res.indicators.slowEma);
+        }
+      }
+      
+      setLiveStrategyState(prev => ({
+        ...prev,
+        fastEmaValues,
+        slowEmaValues,
+        completedTrades: closedTrades,
+      }));
+    }
+  }, [mainTimeframeBars, selectedStrategy, backtestEngine, emaStrategy, trendStartStrategy]);
 
   // Simple EMA calculation
   const calculateEMA = useCallback((prices: number[], period: number): number[] => {
@@ -723,6 +705,9 @@ const BacktesterPage = () => {
           onBarFormationModeChange={handleBarFormationModeChange}
           selectedStrategy={selectedStrategy}
           onStrategyChange={setSelectedStrategy}
+          // Trading parameters
+          tradingParams={tradingParams}
+          onTradingParamsChange={setTradingParams}
         />
         
         {/* Error display */}
@@ -768,6 +753,12 @@ const BacktesterPage = () => {
           totalPnL={liveTotalPnL}
           winRate={liveWinRate}
           totalTrades={liveTradesData.length}
+        />
+
+        {/* Orders Panel */}
+        <OrdersPanel 
+          orders={currentOrders}
+          positions={currentPositions}
         />
       </div>
     </Layout>

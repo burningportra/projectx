@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlaybackSpeed, BarFormationMode } from '@/lib/types/backtester';
+import { BacktestConfig } from '@/lib/trading/BacktestEngine';
 
 interface TopBarProps {
   onLoadData: (params: { contractId: string; timeframe: string; limit: number }) => void;
@@ -19,6 +20,9 @@ interface TopBarProps {
   onBarFormationModeChange: (mode: BarFormationMode) => void;
   selectedStrategy: string;
   onStrategyChange: (strategy: string) => void;
+  // Trading parameters
+  tradingParams: BacktestConfig;
+  onTradingParamsChange: (params: BacktestConfig) => void;
 }
 
 const availableTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
@@ -55,6 +59,8 @@ const TopBar: React.FC<TopBarProps> = ({
   onBarFormationModeChange,
   selectedStrategy,
   onStrategyChange,
+  tradingParams,
+  onTradingParamsChange,
 }) => {
   const [contractId, setContractId] = useState<string>('CON.F.US.MES.M25');
   const [timeframe, setTimeframe] = useState<string>(availableTimeframes[6]); // Default to 1d
@@ -225,6 +231,74 @@ const TopBar: React.FC<TopBarProps> = ({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Trading Parameters */}
+            <div className="flex items-center gap-4 bg-gray-50 px-3 py-2 rounded">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Capital:</label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                  <input
+                    type="number"
+                    value={tradingParams.initialCapital}
+                    onChange={(e) => onTradingParamsChange({
+                      ...tradingParams,
+                      initialCapital: parseFloat(e.target.value) || 0
+                    })}
+                    className="pl-6 pr-3 py-1 border border-gray-300 rounded text-sm w-20"
+                    min="0"
+                    step="1000"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Commission:</label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                  <input
+                    type="number"
+                    value={tradingParams.commission}
+                    onChange={(e) => onTradingParamsChange({
+                      ...tradingParams,
+                      commission: parseFloat(e.target.value) || 0
+                    })}
+                    className="pl-6 pr-3 py-1 border border-gray-300 rounded text-sm w-16"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Size:</label>
+                <input
+                  type="number"
+                  value={tradingParams.positionSize}
+                  onChange={(e) => onTradingParamsChange({
+                    ...tradingParams,
+                    positionSize: parseInt(e.target.value) || 1
+                  })}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm w-16"
+                  min="1"
+                  max={tradingParams.maxPositionSize}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Max:</label>
+                <input
+                  type="number"
+                  value={tradingParams.maxPositionSize}
+                  onChange={(e) => onTradingParamsChange({
+                    ...tradingParams,
+                    maxPositionSize: parseInt(e.target.value) || 1
+                  })}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm w-16"
+                  min={tradingParams.positionSize}
+                />
+              </div>
             </div>
 
             {/* Progress Info */}
