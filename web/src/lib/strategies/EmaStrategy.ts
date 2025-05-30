@@ -167,6 +167,7 @@ export class EmaStrategy {
         price: bar.close, // Market price
         submittedTime: bar.time,
         parentTradeId: tradeId,
+        contractId: 'DEFAULT_CONTRACT',
         message: 'EMA crossover entry',
       });
     } else {
@@ -179,6 +180,7 @@ export class EmaStrategy {
         price: limitPrice,
         submittedTime: bar.time,
         parentTradeId: tradeId,
+        contractId: 'DEFAULT_CONTRACT',
         message: 'EMA crossover limit entry',
       });
     }
@@ -192,7 +194,8 @@ export class EmaStrategy {
         bar.close,
         this.config.stopLossPercent,
         bar.time,
-        tradeId
+        tradeId,
+        'DEFAULT_CONTRACT'
       );
     }
 
@@ -205,7 +208,8 @@ export class EmaStrategy {
         bar.close,
         this.config.takeProfitPercent,
         bar.time,
-        tradeId
+        tradeId,
+        'DEFAULT_CONTRACT'
       );
     }
 
@@ -246,6 +250,7 @@ export class EmaStrategy {
         price: bar.close,
         submittedTime: bar.time,
         parentTradeId: trade.id,
+        contractId: 'DEFAULT_CONTRACT',
         message: `Exit: ${reason}`,
       });
     } else {
@@ -258,6 +263,7 @@ export class EmaStrategy {
         price: limitPrice,
         submittedTime: bar.time,
         parentTradeId: trade.id,
+        contractId: 'DEFAULT_CONTRACT',
         message: `Exit limit: ${reason}`,
       });
     }

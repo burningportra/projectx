@@ -437,4 +437,74 @@ export class OrderManager {
       positions
     };
   }
+
+  // Helper method to create stop loss orders
+  createStopLossOrder(
+    positionSide: OrderSide,
+    quantity: number,
+    entryPrice: number,
+    stopLossPercent: number,
+    submittedTime: UTCTimestamp,
+    parentTradeId: string,
+    contractId: string = 'DEFAULT_CONTRACT'
+  ): Order {
+    // Calculate stop price based on position side and stop loss percentage
+    let stopPrice: number;
+    if (positionSide === OrderSide.BUY) {
+      // For long positions, stop loss is below entry price
+      stopPrice = entryPrice * (1 - stopLossPercent / 100);
+    } else {
+      // For short positions, stop loss is above entry price  
+      stopPrice = entryPrice * (1 + stopLossPercent / 100);
+    }
+
+    const order = this.submitOrder({
+      type: OrderType.STOP,
+      side: positionSide === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY, // Opposite side to close position
+      quantity: quantity,
+      stopPrice: this.roundToTickSize(stopPrice),
+      submittedTime: submittedTime,
+      parentTradeId: parentTradeId,
+      contractId: contractId,
+      isStopLoss: true,
+      message: `Stop Loss @ ${stopPrice.toFixed(2)} (${stopLossPercent}%)`
+    });
+
+    return order;
+  }
+
+  // Helper method to create take profit orders
+  createTakeProfitOrder(
+    positionSide: OrderSide,
+    quantity: number,
+    entryPrice: number,
+    takeProfitPercent: number,
+    submittedTime: UTCTimestamp,
+    parentTradeId: string,
+    contractId: string = 'DEFAULT_CONTRACT'
+  ): Order {
+    // Calculate take profit price based on position side and take profit percentage
+    let takeProfitPrice: number;
+    if (positionSide === OrderSide.BUY) {
+      // For long positions, take profit is above entry price
+      takeProfitPrice = entryPrice * (1 + takeProfitPercent / 100);
+    } else {
+      // For short positions, take profit is below entry price
+      takeProfitPrice = entryPrice * (1 - takeProfitPercent / 100);
+    }
+
+    const order = this.submitOrder({
+      type: OrderType.LIMIT,
+      side: positionSide === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY, // Opposite side to close position
+      quantity: quantity,
+      price: this.roundToTickSize(takeProfitPrice),
+      submittedTime: submittedTime,
+      parentTradeId: parentTradeId,
+      contractId: contractId,
+      isTakeProfit: true,
+      message: `Take Profit @ ${takeProfitPrice.toFixed(2)} (${takeProfitPercent}%)`
+    });
+
+    return order;
+  }
 } 
