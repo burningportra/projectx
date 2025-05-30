@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   createChart,
   createSeriesMarkers,
@@ -13,8 +13,9 @@ import {
   LineSeries,
   SeriesMarker,
   Time,
+  IPriceLine,
 } from 'lightweight-charts';
-import { BacktestBarData, SubBarData, BarFormationMode, TimeframeConfig } from '@/lib/types/backtester';
+import { BacktestBarData, SubBarData, BarFormationMode, TimeframeConfig, Order, OrderType, OrderSide, OrderStatus } from '@/lib/types/backtester';
 
 interface TradeMarker {
   time: UTCTimestamp;
@@ -37,9 +38,15 @@ interface TradeChartProps {
     fastEma: number[];
     slowEma: number[];
   };
+  pendingOrders?: Order[];
+  filledOrders?: Order[];
+  openPositions?: {
+    stopLossPrice?: number;
+    takeProfitPrice?: number;
+  }[];
 }
 
-const TradeChart: React.FC<TradeChartProps> = ({ 
+const TradeChart: React.FC<TradeChartProps> = React.memo(({ 
   mainTimeframeBars, 
   subTimeframeBars, 
   currentBarIndex, 
@@ -47,7 +54,10 @@ const TradeChart: React.FC<TradeChartProps> = ({
   barFormationMode,
   timeframeConfig,
   tradeMarkers,
-  emaData
+  emaData,
+  pendingOrders = [],
+  filledOrders = [],
+  openPositions = []
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -58,7 +68,325 @@ const TradeChart: React.FC<TradeChartProps> = ({
   const lastViewportUpdateRef = useRef<number>(0);
   const userHasInteractedRef = useRef<boolean>(false); // Track if user has manually zoomed/scrolled
 
-  console.log('[TradeChart] Rendering. Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'currentBarIndex:', currentBarIndex, 'currentSubBarIndex:', currentSubBarIndex, 'mode:', barFormationMode, 'tradeMarkers:', tradeMarkers?.length || 0);
+  // console.log('[TradeChart] Rendering. Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'currentBarIndex:', currentBarIndex, 'currentSubBarIndex:', currentSubBarIndex, 'mode:', barFormationMode, 'tradeMarkers:', tradeMarkers?.length || 0, 'pendingOrders:', pendingOrders?.length || 0, 'filledOrders:', filledOrders?.length || 0);
+
+  // Memoized order data for efficient marker generation
+  const orderMarkers = useMemo(() => {
+    const hasOpenPositions = openPositions && openPositions.length > 0;
+    if (!hasOpenPositions) return [];
+
+    const markers: SeriesMarker<Time>[] = [];
+    
+    // Add pending order markers (small icons on the chart)
+    pendingOrders
+      .filter(order => order.status === OrderStatus.PENDING)
+      .forEach(order => {
+        const price = order.price || order.stopPrice;
+        if (!price) return;
+
+        // Find the closest time from main bars
+        const closestBar = mainTimeframeBars[Math.min(currentBarIndex, mainTimeframeBars.length - 1)];
+        if (!closestBar) return;
+
+        markers.push({
+          time: closestBar.time as Time,
+          position: 'aboveBar',
+          color: order.side === OrderSide.BUY ? '#2196F3' : '#FF9800',
+          shape: 'circle',
+          text: `${order.side === OrderSide.BUY ? '🔵' : '🟠'} ${order.type}`,
+          size: 0.8,
+        });
+      });
+
+    // Add position markers for stop loss and take profit
+    openPositions.forEach(position => {
+      const closestBar = mainTimeframeBars[Math.min(currentBarIndex, mainTimeframeBars.length - 1)];
+      if (!closestBar) return;
+
+      if (position.stopLossPrice) {
+        markers.push({
+          time: closestBar.time as Time,
+          position: 'belowBar',
+          color: '#F44336',
+          shape: 'circle',
+          text: `🛑 SL`,
+          size: 0.8,
+        });
+      }
+
+      if (position.takeProfitPrice) {
+        markers.push({
+          time: closestBar.time as Time,
+          position: 'aboveBar',
+          color: '#4CAF50',
+          shape: 'circle',
+          text: `🎯 TP`,
+          size: 0.8,
+        });
+      }
+    });
+
+    return markers;
+  }, [pendingOrders, openPositions, mainTimeframeBars, currentBarIndex]);
+
+  // Remove all the complex order line management code
+  const updateOrderLines = useCallback(() => {
+    // Orders are now handled as markers, no price lines needed
+    console.log(`[TradeChart] Order visualization updated - using markers instead of lines`);
+  }, []);
+
+  // Simplified effect - no complex order line management
+  useEffect(() => {
+    updateOrderLines();
+  }, [updateOrderLines]);
+
+  useEffect(() => {
+    console.log('[TradeChart] Data/playback useEffect triggered. Mode:', barFormationMode, 'Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'Current bar:', currentBarIndex, 'Current sub:', currentSubBarIndex);
+    if (!candlestickSeriesRef.current || !mainTimeframeBars || mainTimeframeBars.length === 0) {
+      console.log('[TradeChart] No series or main bars available.');
+      if (candlestickSeriesRef.current) {
+        candlestickSeriesRef.current.setData([]);
+      }
+      return;
+    }
+
+    if (barFormationMode === BarFormationMode.INSTANT) {
+      // Instant mode: show complete bars up to currentBarIndex
+      const barsToShow = mainTimeframeBars.slice(0, currentBarIndex + 1);
+      console.log('[TradeChart] Instant mode: Showing', barsToShow.length, 'complete bars');
+      
+      const chartReadyData: CandlestickData[] = barsToShow.map(bar => ({
+        time: bar.time as UTCTimestamp,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
+        close: bar.close,
+      }));
+      
+      candlestickSeriesRef.current.setData(chartReadyData);
+    } else if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
+      // Progressive mode: show completed bars + progressively forming current bar
+      const completedBars = mainTimeframeBars.slice(0, currentBarIndex);
+      console.log('[TradeChart] Progressive mode: Showing', completedBars.length, 'completed bars');
+      
+      // Get sub-bars for the current main bar
+      const subBarsForCurrentMain = subTimeframeBars.filter(
+        subBar => subBar.parentBarIndex === currentBarIndex
+      );
+      
+      console.log('[TradeChart] Found', subBarsForCurrentMain.length, 'sub-bars for main bar', currentBarIndex);
+      
+      if (subBarsForCurrentMain.length > 0) {
+        // Calculate the OHLC for the current forming bar using sub-bars up to currentSubBarIndex
+        const subBarsToInclude = subBarsForCurrentMain.slice(0, currentSubBarIndex + 1);
+        console.log('[TradeChart] Including', subBarsToInclude.length, 'sub-bars for current forming bar (up to index', currentSubBarIndex, ')');
+        
+        if (subBarsToInclude.length > 0) {
+          const currentMainBar = mainTimeframeBars[currentBarIndex];
+          const formingBar = {
+            time: currentMainBar.time,
+            open: subBarsToInclude[0].open, // Open from first sub-bar
+            high: Math.max(...subBarsToInclude.map(sb => sb.high)), // Highest high so far
+            low: Math.min(...subBarsToInclude.map(sb => sb.low)),   // Lowest low so far
+            close: subBarsToInclude[subBarsToInclude.length - 1].close, // Close from latest sub-bar
+          };
+          
+          const allBarsToShow = [
+            ...completedBars.map(bar => ({
+              time: bar.time as UTCTimestamp,
+              open: bar.open,
+              high: bar.high,
+              low: bar.low,
+              close: bar.close,
+            })),
+            formingBar
+          ];
+          
+          candlestickSeriesRef.current.setData(allBarsToShow);
+          console.log('[TradeChart] Progressive: Set data with', allBarsToShow.length, 'bars (forming bar OHLC:', formingBar.open, formingBar.high, formingBar.low, formingBar.close, ')');
+        }
+      } else {
+        // No sub-bars available, fall back to completed bars only
+        const chartReadyData: CandlestickData[] = completedBars.map(bar => ({
+          time: bar.time as UTCTimestamp,
+          open: bar.open,
+          high: bar.high,
+          low: bar.low,
+          close: bar.close,
+        }));
+        
+        candlestickSeriesRef.current.setData(chartReadyData);
+        console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars (no sub-bars found)');
+      }
+    }
+
+    // Update EMA lines if data is available
+    if (emaData && ema12SeriesRef.current && ema26SeriesRef.current) {
+      const { fastEma, slowEma } = emaData;
+      
+      // Show EMA data up to current bar index
+      const ema12Data: LineData[] = [];
+      const ema26Data: LineData[] = [];
+      
+      for (let i = 0; i <= Math.min(currentBarIndex, fastEma.length - 1, slowEma.length - 1); i++) {
+        if (fastEma[i] && slowEma[i] && mainTimeframeBars[i]) {
+          ema12Data.push({
+            time: mainTimeframeBars[i].time as UTCTimestamp,
+            value: fastEma[i],
+          });
+          ema26Data.push({
+            time: mainTimeframeBars[i].time as UTCTimestamp,
+            value: slowEma[i],
+          });
+        }
+      }
+      
+      ema12SeriesRef.current.setData(ema12Data);
+      ema26SeriesRef.current.setData(ema26Data);
+      // console.log(`[TradeChart] Updated EMA lines: EMA12 (${ema12Data.length} points), EMA26 (${ema26Data.length} points)`);
+    }
+
+    // Handle chart scaling and viewport
+    if (chartRef.current) {
+      // Only fit content on initial load, then maintain user's zoom/scroll
+      if (isInitialLoadRef.current && mainTimeframeBars.length > 0) {
+        // console.log('[TradeChart] Initial load: fitting content');
+        chartRef.current.timeScale().fitContent();
+        isInitialLoadRef.current = false;
+        lastViewportUpdateRef.current = Date.now();
+        userHasInteractedRef.current = false; // Reset on initial load
+      } else {
+        // Only adjust viewport if:
+        // 1. Current bar is completely outside visible range (not just near edge)
+        // 2. User hasn't manually interacted recently
+        // 3. Enough time has passed since last programmatic update
+        const currentTime = mainTimeframeBars[currentBarIndex]?.time;
+        const now = Date.now();
+        const timeSinceLastUpdate = now - lastViewportUpdateRef.current;
+        
+        if (currentTime && !userHasInteractedRef.current && timeSinceLastUpdate > 5000) { // Only update every 5+ seconds
+          const timeScale = chartRef.current.timeScale();
+          const visibleRange = timeScale.getVisibleRange();
+          
+          // Only adjust if current bar is completely outside the visible range
+          if (visibleRange) {
+            const rangeFrom = Number(visibleRange.from);
+            const rangeTo = Number(visibleRange.to);
+            
+            // Check if current bar is completely outside the visible range
+            if (currentTime > rangeTo || currentTime < rangeFrom) {
+              // console.log('[TradeChart] Current bar outside visible range, adjusting viewport');
+              // Show bars around the current position
+              const barsToShow = Math.min(100, mainTimeframeBars.length);
+              const startIndex = Math.max(0, currentBarIndex - Math.floor(barsToShow * 0.8)); // Current bar at ~80% from left
+              const endIndex = Math.min(mainTimeframeBars.length - 1, startIndex + barsToShow);
+              
+              if (startIndex < endIndex) {
+                const startTime = mainTimeframeBars[startIndex].time;
+                const endTime = mainTimeframeBars[endIndex].time;
+                
+                chartRef.current.timeScale().setVisibleRange({
+                  from: startTime as any,
+                  to: endTime as any,
+                });
+                lastViewportUpdateRef.current = now;
+                // Reset user interaction flag after a successful programmatic update
+                setTimeout(() => {
+                  userHasInteractedRef.current = false;
+                  // console.log('[TradeChart] Resetting user interaction flag');
+                }, 10000); // Reset after 10 seconds
+              }
+            }
+          }
+        }
+      }
+      
+      // Adjust time scale visibility based on timeframe
+      if (timeframeConfig && mainTimeframeBars.length > 1) {
+        const typicalInterval = mainTimeframeBars[1].time - mainTimeframeBars[0].time;
+        const oneMinuteInSeconds = 60;
+        chartRef.current.applyOptions({
+          timeScale: {
+            secondsVisible: typicalInterval < oneMinuteInSeconds * 2,
+          }
+        });
+      }
+
+      // Update trade markers based on current playback position
+      if (candlestickSeriesRef.current && (tradeMarkers || orderMarkers.length > 0) && chartRef.current) {
+        // console.log(`[TradeChart] Processing markers. Trade markers: ${tradeMarkers?.length || 0}, Order markers: ${orderMarkers.length}, mode: ${barFormationMode}`);
+        
+        let markersToShow: SeriesMarker<Time>[] = [];
+        
+        // Add trade markers
+        if (tradeMarkers) {
+          if (barFormationMode === BarFormationMode.INSTANT) {
+            // Instant mode: show markers for completed bars (up to and including current bar)
+            const currentTime = mainTimeframeBars[currentBarIndex]?.time;
+            const tradeMarkersFiltered = tradeMarkers
+              .filter(marker => marker.time <= (currentTime || 0))
+              .map(marker => ({
+                time: marker.time as Time,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+                size: marker.size || 1,
+              }));
+            markersToShow.push(...tradeMarkersFiltered);
+            // console.log(`[TradeChart] Instant mode: Filtered to ${tradeMarkersFiltered.length} trade markers`);
+          } else if (barFormationMode === BarFormationMode.PROGRESSIVE) {
+            // Progressive mode: show markers only for COMPLETED main bars
+            const tradeMarkersFiltered = tradeMarkers
+              .filter(marker => {
+                const markerMainBarIndex = mainTimeframeBars.findIndex(bar => bar.time === marker.time);
+                if (markerMainBarIndex < 0) return false;
+                
+                const isBarCompleted = markerMainBarIndex < currentBarIndex ||
+                  (markerMainBarIndex === currentBarIndex && 
+                   subTimeframeBars.length > 0 && 
+                   currentSubBarIndex >= subTimeframeBars.filter(sb => sb.parentBarIndex === currentBarIndex).length - 1);
+                
+                return isBarCompleted;
+              })
+              .map(marker => ({
+                time: marker.time as Time,
+                position: marker.position,
+                color: marker.color,
+                shape: marker.shape,
+                text: marker.text,
+                size: marker.size || 1,
+              }));
+            markersToShow.push(...tradeMarkersFiltered);
+            // console.log(`[TradeChart] Progressive mode: Filtered to ${tradeMarkersFiltered.length} trade markers`);
+          }
+        }
+        
+        // Add order markers (these are always shown if present)
+        markersToShow.push(...orderMarkers);
+
+        // console.log(`[TradeChart] Final visible markers: ${markersToShow.length} (${tradeMarkers?.length || 0} trade + ${orderMarkers.length} order)`);
+
+        // Set markers on the series
+        try {
+          createSeriesMarkers(candlestickSeriesRef.current, markersToShow);
+          // console.log(`[TradeChart] Successfully set ${markersToShow.length} markers`);
+        } catch (error) {
+          console.error('[TradeChart] Failed to set markers:', error);
+        }
+      } else {
+        // console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Trade Markers: ${!!tradeMarkers}, Order Markers: ${orderMarkers.length}, Chart: ${!!chartRef.current}`);
+      }
+    }
+  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, orderMarkers]);
+
+  // Reset initial load flag when new data is loaded
+  useEffect(() => {
+    if (mainTimeframeBars.length === 0) {
+      isInitialLoadRef.current = true;
+      userHasInteractedRef.current = false; // Reset user interaction tracking on new data load
+    }
+  }, [mainTimeframeBars.length]);
 
   useEffect(() => {
     if (!chartContainerRef.current || chartRef.current) return; 
@@ -136,7 +464,7 @@ const TradeChart: React.FC<TradeChartProps> = ({
           const now = Date.now();
           if (now - lastViewportUpdateRef.current > 1000) { // If it's been >1s since our last programmatic update
             userHasInteractedRef.current = true;
-            console.log('[TradeChart] User interaction detected - respecting manual zoom/scroll');
+            // console.log('[TradeChart] User interaction detected - respecting manual zoom/scroll');
           }
         });
     } else {
@@ -151,8 +479,9 @@ const TradeChart: React.FC<TradeChartProps> = ({
 
     window.addEventListener('resize', handleResize);
     return () => {
-      console.log('[TradeChart] Cleaning up chart.');
+      // console.log('[TradeChart] Cleaning up chart.');
       window.removeEventListener('resize', handleResize);
+      
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -163,253 +492,59 @@ const TradeChart: React.FC<TradeChartProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    console.log('[TradeChart] Data/playback useEffect triggered.');
-    if (!candlestickSeriesRef.current || !mainTimeframeBars || mainTimeframeBars.length === 0) {
-      console.log('[TradeChart] No series or main bars available.');
-      if (candlestickSeriesRef.current) {
-        candlestickSeriesRef.current.setData([]);
-      }
-      return;
-    }
-
-    if (barFormationMode === BarFormationMode.INSTANT) {
-      // Instant mode: show complete bars up to currentBarIndex
-      const barsToShow = mainTimeframeBars.slice(0, currentBarIndex + 1);
-      console.log('[TradeChart] Instant mode: Showing', barsToShow.length, 'complete bars');
-      
-      const chartReadyData: CandlestickData[] = barsToShow.map(bar => ({
-        time: bar.time as UTCTimestamp,
-        open: bar.open,
-        high: bar.high,
-        low: bar.low,
-        close: bar.close,
-      }));
-      
-      candlestickSeriesRef.current.setData(chartReadyData);
-    } else if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-      // Progressive mode: show completed bars + progressively forming current bar
-      const completedBars = mainTimeframeBars.slice(0, currentBarIndex);
-      console.log('[TradeChart] Progressive mode: Showing', completedBars.length, 'completed bars');
-      
-      // Get sub-bars for the current main bar
-      const subBarsForCurrentMain = subTimeframeBars.filter(
-        subBar => subBar.parentBarIndex === currentBarIndex
-      );
-      
-      if (subBarsForCurrentMain.length > 0) {
-        // Calculate the OHLC for the current forming bar using sub-bars up to currentSubBarIndex
-        const subBarsToInclude = subBarsForCurrentMain.slice(0, currentSubBarIndex + 1);
-        console.log('[TradeChart] Including', subBarsToInclude.length, 'sub-bars for current forming bar');
-        
-        if (subBarsToInclude.length > 0) {
-          const currentMainBar = mainTimeframeBars[currentBarIndex];
-          const formingBar = {
-            time: currentMainBar.time,
-            open: subBarsToInclude[0].open, // Open from first sub-bar
-            high: Math.max(...subBarsToInclude.map(sb => sb.high)), // Highest high so far
-            low: Math.min(...subBarsToInclude.map(sb => sb.low)),   // Lowest low so far
-            close: subBarsToInclude[subBarsToInclude.length - 1].close, // Close from latest sub-bar
-          };
-          
-          const allBarsToShow = [
-            ...completedBars.map(bar => ({
-              time: bar.time as UTCTimestamp,
-              open: bar.open,
-              high: bar.high,
-              low: bar.low,
-              close: bar.close,
-            })),
-            formingBar
-          ];
-          
-          candlestickSeriesRef.current.setData(allBarsToShow);
-          console.log('[TradeChart] Progressive: Set data with', allBarsToShow.length, 'bars (forming bar OHLC:', formingBar.open, formingBar.high, formingBar.low, formingBar.close, ')');
-        }
-      } else {
-        // No sub-bars available, fall back to completed bars only
-        const chartReadyData: CandlestickData[] = completedBars.map(bar => ({
-          time: bar.time as UTCTimestamp,
-          open: bar.open,
-          high: bar.high,
-          low: bar.low,
-          close: bar.close,
-        }));
-        
-        candlestickSeriesRef.current.setData(chartReadyData);
-        console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars');
-      }
-    }
-
-    // Update EMA lines if data is available
-    if (emaData && ema12SeriesRef.current && ema26SeriesRef.current) {
-      const { fastEma, slowEma } = emaData;
-      
-      // Show EMA data up to current bar index
-      const ema12Data: LineData[] = [];
-      const ema26Data: LineData[] = [];
-      
-      for (let i = 0; i <= Math.min(currentBarIndex, fastEma.length - 1, slowEma.length - 1); i++) {
-        if (fastEma[i] && slowEma[i] && mainTimeframeBars[i]) {
-          ema12Data.push({
-            time: mainTimeframeBars[i].time as UTCTimestamp,
-            value: fastEma[i],
-          });
-          ema26Data.push({
-            time: mainTimeframeBars[i].time as UTCTimestamp,
-            value: slowEma[i],
-          });
-        }
-      }
-      
-      ema12SeriesRef.current.setData(ema12Data);
-      ema26SeriesRef.current.setData(ema26Data);
-      console.log(`[TradeChart] Updated EMA lines: EMA12 (${ema12Data.length} points), EMA26 (${ema26Data.length} points)`);
-    }
-
-    // Handle chart scaling and viewport
-    if (chartRef.current) {
-      // Only fit content on initial load, then maintain user's zoom/scroll
-      if (isInitialLoadRef.current && mainTimeframeBars.length > 0) {
-        console.log('[TradeChart] Initial load: fitting content');
-        chartRef.current.timeScale().fitContent();
-        isInitialLoadRef.current = false;
-        lastViewportUpdateRef.current = Date.now();
-        userHasInteractedRef.current = false; // Reset on initial load
-      } else {
-        // Only adjust viewport if:
-        // 1. Current bar is completely outside visible range (not just near edge)
-        // 2. User hasn't manually interacted recently
-        // 3. Enough time has passed since last programmatic update
-        const currentTime = mainTimeframeBars[currentBarIndex]?.time;
-        const now = Date.now();
-        const timeSinceLastUpdate = now - lastViewportUpdateRef.current;
-        
-        if (currentTime && !userHasInteractedRef.current && timeSinceLastUpdate > 5000) { // Only update every 5+ seconds
-          const timeScale = chartRef.current.timeScale();
-          const visibleRange = timeScale.getVisibleRange();
-          
-          // Only adjust if current bar is completely outside the visible range
-          if (visibleRange) {
-            const rangeFrom = Number(visibleRange.from);
-            const rangeTo = Number(visibleRange.to);
-            
-            // Check if current bar is completely outside the visible range
-            if (currentTime > rangeTo || currentTime < rangeFrom) {
-              console.log('[TradeChart] Current bar outside visible range, adjusting viewport');
-              // Show bars around the current position
-              const barsToShow = Math.min(100, mainTimeframeBars.length);
-              const startIndex = Math.max(0, currentBarIndex - Math.floor(barsToShow * 0.8)); // Current bar at ~80% from left
-              const endIndex = Math.min(mainTimeframeBars.length - 1, startIndex + barsToShow);
-              
-              if (startIndex < endIndex) {
-                const startTime = mainTimeframeBars[startIndex].time;
-                const endTime = mainTimeframeBars[endIndex].time;
-                
-                chartRef.current.timeScale().setVisibleRange({
-                  from: startTime as any,
-                  to: endTime as any,
-                });
-                lastViewportUpdateRef.current = now;
-                // Reset user interaction flag after a successful programmatic update
-                setTimeout(() => {
-                  userHasInteractedRef.current = false;
-                  console.log('[TradeChart] Resetting user interaction flag');
-                }, 10000); // Reset after 10 seconds
-              }
-            }
-          }
-        }
-      }
-      
-      // Adjust time scale visibility based on timeframe
-      if (timeframeConfig && mainTimeframeBars.length > 1) {
-        const typicalInterval = mainTimeframeBars[1].time - mainTimeframeBars[0].time;
-        const oneMinuteInSeconds = 60;
-        chartRef.current.applyOptions({
-          timeScale: {
-            secondsVisible: typicalInterval < oneMinuteInSeconds * 2,
-          }
-        });
-      }
-
-      // Update trade markers based on current playback position
-      if (candlestickSeriesRef.current && tradeMarkers && chartRef.current) {
-        console.log(`[TradeChart] Processing markers. Total markers: ${tradeMarkers.length}, mode: ${barFormationMode}`);
-        
-        let markersToShow: SeriesMarker<Time>[] = [];
-        
-        if (barFormationMode === BarFormationMode.INSTANT) {
-          // Instant mode: show markers for completed bars (up to and including current bar)
-          const currentTime = mainTimeframeBars[currentBarIndex]?.time;
-          markersToShow = tradeMarkers
-            .filter(marker => marker.time <= (currentTime || 0))
-            .map(marker => ({
-              time: marker.time as Time,
-              position: marker.position,
-              color: marker.color,
-              shape: marker.shape,
-              text: marker.text,
-              size: marker.size || 1,
-            }));
-          console.log(`[TradeChart] Instant mode: Filtered to ${markersToShow.length} markers (currentBarIndex: ${currentBarIndex})`);
-        } else if (barFormationMode === BarFormationMode.PROGRESSIVE) {
-          // Progressive mode: show markers only for COMPLETED main bars
-          // A marker appears after its bar is fully formed (all sub-bars processed)
-          markersToShow = tradeMarkers
-            .filter(marker => {
-              // Find which main bar this marker belongs to
-              const markerMainBarIndex = mainTimeframeBars.findIndex(bar => bar.time === marker.time);
-              
-              if (markerMainBarIndex < 0) return false; // Invalid marker
-              
-              // Show marker only if its main bar is completed
-              // Bar is completed if we've moved past it OR if we're at the end of its sub-bars
-              const isBarCompleted = markerMainBarIndex < currentBarIndex ||
-                (markerMainBarIndex === currentBarIndex && 
-                 subTimeframeBars.length > 0 && 
-                 currentSubBarIndex >= subTimeframeBars.filter(sb => sb.parentBarIndex === currentBarIndex).length - 1);
-              
-              console.log(`[TradeChart] Marker at main bar ${markerMainBarIndex}: ${isBarCompleted ? 'SHOW' : 'HIDE'} (currentBarIndex: ${currentBarIndex}, currentSubBarIndex: ${currentSubBarIndex})`);
-              return isBarCompleted;
-            })
-            .map(marker => ({
-              time: marker.time as Time,
-              position: marker.position,
-              color: marker.color,
-              shape: marker.shape,
-              text: marker.text,
-              size: marker.size || 1,
-            }));
-          console.log(`[TradeChart] Progressive mode: Filtered to ${markersToShow.length} markers (showing after candle close)`);
-        }
-
-        console.log(`[TradeChart] Final visible markers:`, markersToShow);
-
-        // Set markers on the series
-        try {
-          createSeriesMarkers(candlestickSeriesRef.current, markersToShow);
-          console.log(`[TradeChart] Successfully set ${markersToShow.length} markers`);
-        } catch (error) {
-          console.error('[TradeChart] Failed to set markers:', error);
-        }
-      } else {
-        console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);
-      }
-    }
-  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData]);
-
-  // Reset initial load flag when new data is loaded
-  useEffect(() => {
-    if (mainTimeframeBars.length === 0) {
-      isInitialLoadRef.current = true;
-      userHasInteractedRef.current = false; // Reset user interaction tracking on new data load
-    }
-  }, [mainTimeframeBars.length]);
-
   return (
-    <div ref={chartContainerRef} className="w-full h-full bg-gray-800 text-white" />
+    <div className="relative w-full h-full">
+      <div ref={chartContainerRef} className="w-full h-full bg-gray-800 text-white" />
+      
+      {/* Order Status Overlay - Clean and efficient */}
+      {(pendingOrders.length > 0 || (openPositions && openPositions.length > 0)) && (
+        <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white p-3 rounded-lg text-xs z-10 max-w-xs">
+          <div className="font-semibold mb-2 text-green-400">📊 Position Status</div>
+          
+          {/* Open Positions */}
+          {openPositions && openPositions.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {openPositions.map((position, index) => (
+                <div key={index} className="border-l-2 border-blue-400 pl-2">
+                  <div className="text-blue-300 font-medium">Position #{index + 1}</div>
+                  {position.stopLossPrice && (
+                    <div className="text-red-300">🛑 SL: ${position.stopLossPrice.toFixed(2)}</div>
+                  )}
+                  {position.takeProfitPrice && (
+                    <div className="text-green-300">🎯 TP: ${position.takeProfitPrice.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Pending Orders Summary */}
+          {pendingOrders.length > 0 && (
+            <div className="border-t border-gray-600 pt-2">
+              <div className="text-yellow-300 font-medium mb-1">⏳ Pending Orders ({pendingOrders.length})</div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {pendingOrders.slice(0, 4).map((order) => {
+                  const price = order.price || order.stopPrice || 0;
+                  const sideColor = order.side === OrderSide.BUY ? 'text-green-300' : 'text-red-300';
+                  const sideIcon = order.side === OrderSide.BUY ? '🔵' : '🟠';
+  return (
+                    <div key={order.id} className={`${sideColor} truncate`}>
+                      {sideIcon} {order.type} ${price.toFixed(2)}
+                    </div>
+                  );
+                })}
+                {pendingOrders.length > 4 && (
+                  <div className="text-gray-400 col-span-2">+{pendingOrders.length - 4} more...</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
-};
+});
+
+TradeChart.displayName = 'TradeChart';
 
 export default TradeChart;

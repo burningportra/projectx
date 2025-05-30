@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import {
   createChart,
   createSeriesMarkers,
@@ -24,6 +24,201 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateRef = useRef<number>(0);
+  const lastTradesLengthRef = useRef<number>(0);
+
+  // Debounced update function to prevent excessive updates during rapid playback
+  const debouncedUpdateChart = useCallback((tradesToProcess: SimulatedTrade[]) => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateRef.current;
+    const minUpdateInterval = 100; // Minimum 100ms between updates
+
+    const doUpdate = () => {
+      if (!lineSeriesRef.current) return;
+
+      // console.log('[PnLChart] Processing trades for equity curve:', tradesToProcess.length);
+
+      if (tradesToProcess.length === 0) {
+        // Clear the chart when no trades
+        lineSeriesRef.current.setData([]);
+        try {
+          createSeriesMarkers(lineSeriesRef.current, []);
+        } catch (error) {
+          // console.log('[PnLChart] No markers to clear');
+        }
+        return;
+      }
+
+      // Filter and validate trades first
+      const validTrades = tradesToProcess
+        .filter(trade => {
+          // Only include trades with valid exit times and P&L
+          const isValid = trade.exitTime && 
+                         trade.profitOrLoss !== undefined && 
+                         trade.exitTime > 0 && 
+                         !isNaN(trade.exitTime) && 
+                         !isNaN(trade.profitOrLoss);
+          
+          if (!isValid) {
+            // console.warn('[PnLChart] Filtering out invalid trade:', trade);
+          }
+          return isValid;
+        })
+        .sort((a, b) => (a.exitTime || 0) - (b.exitTime || 0)); // Sort by exit time ascending
+
+      // Double-check sorting by validating order
+      for (let i = 1; i < validTrades.length; i++) {
+        if ((validTrades[i].exitTime || 0) < (validTrades[i - 1].exitTime || 0)) {
+          console.error('[PnLChart] Trade data is not properly sorted!', {
+            current: validTrades[i],
+            previous: validTrades[i - 1]
+          });
+          // Re-sort if we find ordering issues
+          validTrades.sort((a, b) => (a.exitTime || 0) - (b.exitTime || 0));
+          break;
+        }
+      }
+
+      if (validTrades.length === 0) {
+        // console.log('[PnLChart] No valid trades to display');
+        lineSeriesRef.current.setData([]);
+        try {
+          createSeriesMarkers(lineSeriesRef.current, []);
+        } catch (error) {
+          // console.log('[PnLChart] No markers to clear');
+        }
+        return;
+      }
+
+      // Calculate cumulative P&L data points
+      const equityData: LineData[] = [];
+      const tradeMarkers: SeriesMarker<Time>[] = [];
+      let cumulativePnL = 0;
+      const startingCapital = 10000; // Starting with $10k
+
+      // Add starting point
+      const firstTradeTime = validTrades[0].exitTime!;
+      equityData.push({
+        time: firstTradeTime as UTCTimestamp,
+        value: startingCapital,
+      });
+
+      // Process each valid trade
+      validTrades.forEach((trade, index) => {
+        const exitTime = trade.exitTime!;
+        const profitOrLoss = trade.profitOrLoss!;
+
+        cumulativePnL += profitOrLoss;
+        const equityValue = startingCapital + cumulativePnL;
+
+        // Validate time ordering before adding
+        if (equityData.length > 0) {
+          const lastTime = equityData[equityData.length - 1].time as number;
+          if (exitTime <= lastTime) {
+            // console.warn('[PnLChart] Skipping trade with invalid time ordering:', {
+            //   tradeTime: exitTime,
+            //   lastTime: lastTime,
+            //   trade: trade
+            // });
+            return; // Skip this trade to maintain time ordering
+          }
+        }
+
+        equityData.push({
+          time: exitTime as UTCTimestamp,
+          value: equityValue,
+        });
+
+        // Add trade marker
+        tradeMarkers.push({
+          time: exitTime as UTCTimestamp,
+          position: profitOrLoss >= 0 ? 'aboveBar' : 'belowBar',
+          color: profitOrLoss >= 0 ? '#16a34a' : '#dc2626',
+          shape: 'circle',
+          text: `${profitOrLoss >= 0 ? '+' : ''}$${profitOrLoss.toFixed(0)}`,
+          size: 1,
+        });
+      });
+
+      // Final validation of equity data ordering
+      for (let i = 1; i < equityData.length; i++) {
+        const currentTime = equityData[i].time as number;
+        const prevTime = equityData[i - 1].time as number;
+        if (currentTime <= prevTime) {
+          console.error('[PnLChart] Final data validation failed - data not in ascending order!', {
+            index: i,
+            currentTime,
+            prevTime,
+            current: equityData[i],
+            previous: equityData[i - 1]
+          });
+          // Don't set invalid data - just return
+          return;
+        }
+      }
+
+      // console.log('[PnLChart] Generated equity data points:', equityData.length);
+      // console.log('[PnLChart] Generated trade markers:', tradeMarkers.length);
+
+      try {
+        // Set data and markers with error handling
+        lineSeriesRef.current.setData(equityData);
+        
+        // Use createSeriesMarkers for setting markers
+        try {
+          createSeriesMarkers(lineSeriesRef.current, tradeMarkers);
+          // console.log(`[PnLChart] Successfully set ${tradeMarkers.length} markers`);
+        } catch (markerError) {
+          console.error('[PnLChart] Failed to set markers:', markerError);
+        }
+
+        // Fit chart to content if we have data
+        if (equityData.length > 0 && chartRef.current) {
+          chartRef.current.timeScale().fitContent();
+        }
+      } catch (error) {
+        console.error('[PnLChart] Failed to set chart data:', error);
+      }
+
+      lastUpdateRef.current = Date.now();
+    };
+
+    if (timeSinceLastUpdate >= minUpdateInterval) {
+      // Update immediately if enough time has passed
+      doUpdate();
+    } else {
+      // Schedule update for later
+      const delay = minUpdateInterval - timeSinceLastUpdate;
+      updateTimeoutRef.current = setTimeout(doUpdate, delay);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only update if trade count changed or significant time has passed
+    const currentLength = trades.length;
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateRef.current;
+    
+    // Skip update if trades haven't changed and recent update occurred
+    if (currentLength === lastTradesLengthRef.current && timeSinceLastUpdate < 50) {
+      return;
+    }
+    
+    lastTradesLengthRef.current = currentLength;
+    debouncedUpdateChart(trades);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, [trades, debouncedUpdateChart]);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -92,84 +287,6 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!lineSeriesRef.current) return;
-
-    console.log('[PnLChart] Processing trades for equity curve:', trades.length);
-
-    if (trades.length === 0) {
-      // Clear the chart when no trades
-      lineSeriesRef.current.setData([]);
-      try {
-        createSeriesMarkers(lineSeriesRef.current, []);
-      } catch (error) {
-        console.log('[PnLChart] No markers to clear');
-      }
-      return;
-    }
-
-    // Calculate cumulative P&L data points
-    const equityData: LineData[] = [];
-    const tradeMarkers: SeriesMarker<Time>[] = [];
-    let cumulativePnL = 0;
-    const startingCapital = 10000; // Starting with $10k
-
-    // Add starting point
-    if (trades.length > 0) {
-      const firstTradeTime = trades[0].entryTime;
-      equityData.push({
-        time: firstTradeTime as UTCTimestamp,
-        value: startingCapital,
-      });
-    }
-
-    // Process each completed trade
-    trades
-      .filter(trade => trade.exitTime && trade.profitOrLoss !== undefined)
-      .sort((a, b) => (a.exitTime || 0) - (b.exitTime || 0))
-      .forEach((trade, index) => {
-        if (!trade.exitTime || trade.profitOrLoss === undefined) return;
-
-        cumulativePnL += trade.profitOrLoss;
-        const equityValue = startingCapital + cumulativePnL;
-
-        equityData.push({
-          time: trade.exitTime as UTCTimestamp,
-          value: equityValue,
-        });
-
-        // Add trade marker
-        tradeMarkers.push({
-          time: trade.exitTime as UTCTimestamp,
-          position: trade.profitOrLoss >= 0 ? 'aboveBar' : 'belowBar',
-          color: trade.profitOrLoss >= 0 ? '#16a34a' : '#dc2626',
-          shape: 'circle',
-          text: `${trade.profitOrLoss >= 0 ? '+' : ''}$${trade.profitOrLoss.toFixed(0)}`,
-          size: 1,
-        });
-      });
-
-    console.log('[PnLChart] Generated equity data points:', equityData.length);
-    console.log('[PnLChart] Generated trade markers:', tradeMarkers.length);
-
-    // Set data and markers
-    lineSeriesRef.current.setData(equityData);
-    
-    // Use createSeriesMarkers for setting markers
-    try {
-      createSeriesMarkers(lineSeriesRef.current, tradeMarkers);
-      console.log(`[PnLChart] Successfully set ${tradeMarkers.length} markers`);
-    } catch (error) {
-      console.error('[PnLChart] Failed to set markers:', error);
-    }
-
-    // Fit chart to content if we have data
-    if (equityData.length > 0 && chartRef.current) {
-      chartRef.current.timeScale().fitContent();
-    }
-
-  }, [trades]);
 
   return (
     <div className={`w-full ${className}`}>

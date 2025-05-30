@@ -1,21 +1,51 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimulatedTrade } from '@/lib/types/backtester';
+import { SimulatedTrade, Order } from '@/lib/types/backtester';
 import PnLChart from './PnLChart';
+import OrdersPanel from './OrdersPanel';
+import StrategyConfigPanel from './StrategyConfigPanel';
+
+interface StrategyConfig {
+  // Risk Management
+  stopLossPercent: number;
+  takeProfitPercent: number;
+  commission: number;
+  positionSize: number;
+  
+  // Order Preferences
+  useMarketOrders: boolean;
+  limitOrderOffset: number;
+  
+  // Strategy Parameters
+  fastPeriod: number;
+  slowPeriod: number;
+}
 
 interface AnalysisPanelProps {
   trades: SimulatedTrade[];
   totalPnL: number;
   winRate: number;
   totalTrades: number;
+  pendingOrders?: Order[];
+  filledOrders?: Order[];
+  cancelledOrders?: Order[];
+  onCancelOrder?: (orderId: string) => void;
+  currentConfig?: StrategyConfig;
+  onConfigChange?: (config: StrategyConfig) => void;
 }
 
 const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   trades,
   totalPnL,
   winRate,
-  totalTrades
+  totalTrades,
+  pendingOrders = [],
+  filledOrders = [],
+  cancelledOrders = [],
+  onCancelOrder,
+  currentConfig,
+  onConfigChange
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -47,11 +77,13 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-50 rounded-t-lg rounded-b-none">
+        <TabsList className="grid w-full grid-cols-6 bg-gray-50 rounded-t-lg rounded-b-none">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="analysis">Trade Analysis</TabsTrigger>
           <TabsTrigger value="trades">List of Trades</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="config">Configuration</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -298,6 +330,37 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
                   </tbody>
                 </table>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Orders Tab */}
+        <TabsContent value="orders" className="p-6">
+          <OrdersPanel
+            pendingOrders={pendingOrders}
+            filledOrders={filledOrders}
+            cancelledOrders={cancelledOrders}
+            onCancelOrder={onCancelOrder}
+          />
+        </TabsContent>
+
+        {/* Configuration Tab */}
+        <TabsContent value="config" className="p-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <span className="mr-2">⚙️</span>
+                Strategy Configuration
+              </CardTitle>
+              <CardDescription>
+                Configure strategy parameters, risk management, and order preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StrategyConfigPanel
+                initialConfig={currentConfig}
+                onConfigChange={onConfigChange || (() => {})}
+              />
             </CardContent>
           </Card>
         </TabsContent>

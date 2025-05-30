@@ -6,10 +6,28 @@ import TradeChart from '@/components/backtester/TradeChart';
 import TopBar from '@/components/backtester/TopBar';
 import CompactResultsPanel from '@/components/backtester/CompactResultsPanel';
 import AnalysisPanel from '@/components/backtester/AnalysisPanel';
-import { BacktestBarData, SubBarData, PlaybackSpeed, BarFormationMode, TimeframeConfig } from '@/lib/types/backtester';
+import CompactOrderPanel from '@/components/backtester/CompactOrderPanel';
+import { BacktestBarData, SubBarData, PlaybackSpeed, BarFormationMode, TimeframeConfig, Order } from '@/lib/types/backtester';
 import { UTCTimestamp } from 'lightweight-charts';
 import { EmaStrategy } from '@/lib/strategies/EmaStrategy';
 import { TrendStartStrategy } from '@/lib/strategies/TrendStartStrategy';
+
+// Strategy configuration interface
+interface StrategyConfig {
+  // Risk Management
+  stopLossPercent: number;
+  takeProfitPercent: number;
+  commission: number;
+  positionSize: number;
+  
+  // Order Preferences
+  useMarketOrders: boolean;
+  limitOrderOffset: number;
+  
+  // Strategy Parameters
+  fastPeriod: number;
+  slowPeriod: number;
+}
 
 // Helper to parse timeframe string (e.g., "5m", "1h") into unit and value for API
 const parseTimeframeForApi = (timeframe: string): { unit: number; value: number } => {
@@ -103,16 +121,34 @@ const BacktesterPage = () => {
   // Current timeframe config
   const [timeframeConfig, setTimeframeConfig] = useState<TimeframeConfig | null>(null);
 
-  // EMA Strategy state
-  const [strategyTrades, setStrategyTrades] = useState<any[]>([]);
-  const [isRunningBacktest, setIsRunningBacktest] = useState(false);
-
-  // Strategy selection state
+  // Strategy instances with enhanced order management
   const [selectedStrategy, setSelectedStrategy] = useState<string>('ema');
-  const [emaStrategy] = useState(new EmaStrategy());
-  const [trendStartStrategy] = useState(new TrendStartStrategy());
+  const [emaStrategy] = useState(new EmaStrategy({
+    stopLossPercent: 2.0,
+    takeProfitPercent: 4.0,
+    useMarketOrders: true,
+  }));
+  const [trendStartStrategy] = useState(new TrendStartStrategy({
+    stopLossPercent: 2.0,
+    takeProfitPercent: 4.0,
+    useMarketOrders: true,
+    confidenceThreshold: 0.6, // Permissive threshold for debugging
+    useOpenCloseStrategy: false, // Keep simple for now
+  }));
 
-  // Live strategy execution state for bar-by-bar processing
+  // Strategy configuration state
+  const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
+    stopLossPercent: 2.0,
+    takeProfitPercent: 4.0,
+    commission: 2.50,
+    positionSize: 1,
+    useMarketOrders: true,
+    limitOrderOffset: 2,
+    fastPeriod: 12,
+    slowPeriod: 26,
+  });
+
+  // Enhanced strategy execution state with performance tracking
   const [liveTradeMarkers, setLiveTradeMarkers] = useState<any[]>([]);
   const [liveStrategyState, setLiveStrategyState] = useState<{
     fastEmaValues: number[];
@@ -120,12 +156,20 @@ const BacktesterPage = () => {
     openTrade: any | null;
     tradeIdCounter: number;
     completedTrades: any[];
+    pendingOrders: Order[];
+    filledOrders: Order[];
+    cancelledOrders: Order[];
+    lastProcessedBarIndex: number; // Track last processed bar for incremental updates
   }>({
     fastEmaValues: [],
     slowEmaValues: [],
     openTrade: null,
     tradeIdCounter: 1,
     completedTrades: [],
+    pendingOrders: [],
+    filledOrders: [],
+    cancelledOrders: [],
+    lastProcessedBarIndex: -1,
   });
 
   // Current data state - track timeframe and contract
@@ -134,152 +178,115 @@ const BacktesterPage = () => {
 
   // Reset live strategy when new data loads
   const resetLiveStrategy = useCallback(() => {
+    emaStrategy.reset();
+    trendStartStrategy.reset();
+    
     setLiveStrategyState({
       fastEmaValues: [],
       slowEmaValues: [],
       openTrade: null,
       tradeIdCounter: 1,
       completedTrades: [],
+      pendingOrders: [],
+      filledOrders: [],
+      cancelledOrders: [],
+      lastProcessedBarIndex: -1,
     });
     setLiveTradeMarkers([]);
-    
-    // Reset the TrendStartStrategy state and cache
-    trendStartStrategy.resetState();
-  }, [trendStartStrategy]);
+  }, [emaStrategy, trendStartStrategy]);
 
-  // Process all bars from 0 to currentBarIndex to build complete strategy state
+  // Enhanced strategy processing using the new OrderManager system with incremental updates
   const buildStrategyStateUpToBar = useCallback(async (targetBarIndex: number) => {
     if (mainTimeframeBars.length === 0 || targetBarIndex >= mainTimeframeBars.length) {
-      console.log(`[buildStrategyStateUpToBar] Skipping - no bars or invalid index. Bars: ${mainTimeframeBars.length}, Target: ${targetBarIndex}`);
+      // console.log(`[buildStrategyStateUpToBar] Skipping - no bars or invalid index. Bars: ${mainTimeframeBars.length}, Target: ${targetBarIndex}`);
       return;
     }
     
-    console.log(`[buildStrategyStateUpToBar] Building ${selectedStrategy} strategy state from bar 0 to ${targetBarIndex}`);
+    // Incremental processing optimization - only process new bars
+    const lastProcessedIndex = liveStrategyState.lastProcessedBarIndex;
+    const isGoingBackward = targetBarIndex < lastProcessedIndex;
+    const needsFullRebuild = isGoingBackward || lastProcessedIndex < 0;
     
-    // Prepare state data outside of setState
-    let newCompletedTrades: any[] = [];
-    const newMarkers: any[] = [];
+    if (needsFullRebuild) {
+      // Full rebuild needed (going backward or first time)
+      console.log(`[buildStrategyStateUpToBar] Full rebuild from 0 to ${targetBarIndex} (was at ${lastProcessedIndex})`);
+      
+      // Reset strategies for clean rebuild
+      if (selectedStrategy === 'ema') {
+        emaStrategy.reset();
+      } else if (selectedStrategy === 'trendstart') {
+        trendStartStrategy.reset();
+      }
+      
+      // Process all bars from 0 to target
+      await processStrategyBars(0, targetBarIndex);
+    } else if (targetBarIndex > lastProcessedIndex) {
+      // Incremental update - only process new bars
+      console.log(`[buildStrategyStateUpToBar] Incremental update from ${lastProcessedIndex + 1} to ${targetBarIndex}`);
+      await processStrategyBars(lastProcessedIndex + 1, targetBarIndex);
+    }
+    // If targetBarIndex === lastProcessedIndex, no processing needed
+  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe, emaStrategy, trendStartStrategy, liveStrategyState.lastProcessedBarIndex]);
+
+  // Extracted strategy processing logic for reuse
+  const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
+    const newMarkers: any[] = [...liveTradeMarkers]; // Start with existing markers
     let stateUpdate: any = {};
     
     if (selectedStrategy === 'ema') {
-      // EMA Strategy Logic
-      const newFastEmaValues: number[] = [];
-      const newSlowEmaValues: number[] = [];
-      let newOpenTrade = null;
-      let newTradeIdCounter = 1;
-      
-      const k12 = 2 / (12 + 1);
-      const k26 = 2 / (26 + 1);
-      
-      // Process each bar from 0 to targetBarIndex
-      for (let barIndex = 0; barIndex <= targetBarIndex; barIndex++) {
+      // Process EMA strategy incrementally
+      for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
         const currentBar = mainTimeframeBars[barIndex];
         
-        // Calculate EMAs
-        if (barIndex === 0) {
-          newFastEmaValues[0] = currentBar.close;
-          newSlowEmaValues[0] = currentBar.close;
-        } else {
-          const prevFastEma = newFastEmaValues[barIndex - 1];
-          const prevSlowEma = newSlowEmaValues[barIndex - 1];
-          newFastEmaValues[barIndex] = currentBar.close * k12 + prevFastEma * (1 - k12);
-          newSlowEmaValues[barIndex] = currentBar.close * k26 + prevSlowEma * (1 - k26);
-        }
+        const result = emaStrategy.processBar(currentBar, barIndex, mainTimeframeBars);
         
-        // Check for crossovers if we have at least 2 bars
-        if (barIndex > 0) {
-          const prevFast = newFastEmaValues[barIndex - 1];
-          const prevSlow = newSlowEmaValues[barIndex - 1];
-          const currentFast = newFastEmaValues[barIndex];
-          const currentSlow = newSlowEmaValues[barIndex];
-          
-          // Bullish crossover (buy signal)
-          if (prevFast <= prevSlow && currentFast > currentSlow && !newOpenTrade) {
-            console.log(`[EMA Strategy] BULLISH CROSSOVER at bar ${barIndex}`);
-            
-            newOpenTrade = {
-              id: `LIVE_EMA_${newTradeIdCounter++}`,
-              entryTime: currentBar.time,
-              entryPrice: currentBar.close,
-              size: 1,
-              type: 'BUY',
-              status: 'OPEN',
-            };
-            
-            newMarkers.push({
-              time: currentBar.time,
-              position: 'belowBar',
-              color: '#26a69a',
-              shape: 'arrowUp',
-              text: 'BUY',
-              size: 1,
-            });
-          }
-          // Bearish crossover (sell signal)
-          else if (prevFast >= prevSlow && currentFast < currentSlow && newOpenTrade) {
-            console.log(`[EMA Strategy] BEARISH CROSSOVER at bar ${barIndex}`);
-            
-            const exitPrice = currentBar.close;
-            const pnl = (exitPrice - newOpenTrade.entryPrice) * newOpenTrade.size - 5.0;
-            
-            const completedTrade = {
-              ...newOpenTrade,
-              exitTime: currentBar.time,
-              exitPrice,
-              profitOrLoss: pnl,
-              status: 'CLOSED',
-            };
-            
-            newCompletedTrades.push(completedTrade);
-            newOpenTrade = null;
-            
-            const pnlText = pnl >= 0 ? `SELL +$${pnl.toFixed(0)}` : `SELL -$${Math.abs(pnl).toFixed(0)}`;
-            newMarkers.push({
-              time: currentBar.time,
-              position: 'aboveBar',
-              color: pnl >= 0 ? '#26a69a' : '#ef5350',
-              shape: 'arrowDown',
-              text: pnlText,
-              size: 1,
-            });
-          }
+        // Handle signals and create markers
+        if (result.signal) {
+          const marker = {
+            time: currentBar.time,
+            position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
+            color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
+            shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
+            text: result.signal.type === 'BUY' ? 'BUY' : 'SELL',
+            size: 1,
+          };
+          newMarkers.push(marker);
         }
       }
       
+      // Get current strategy state
+      const indicators = emaStrategy.getCurrentIndicators();
+      const trades = emaStrategy.getTrades();
+      const orderManager = (emaStrategy as any).orderManager;
+      
       stateUpdate = {
-        fastEmaValues: newFastEmaValues,
-        slowEmaValues: newSlowEmaValues,
-        openTrade: newOpenTrade,
-        tradeIdCounter: newTradeIdCounter,
-        completedTrades: newCompletedTrades,
+        fastEmaValues: indicators ? [indicators.fastEma] : [],
+        slowEmaValues: indicators ? [indicators.slowEma] : [],
+        openTrade: null,
+        tradeIdCounter: trades.length + 1,
+        completedTrades: trades,
+        pendingOrders: orderManager?.getPendingOrders() || [],
+        filledOrders: orderManager?.getFilledOrders() || [],
+        cancelledOrders: orderManager?.getCancelledOrders() || [],
+        lastProcessedBarIndex: endIndex,
       };
       
     } else if (selectedStrategy === 'trendstart') {
-      // Trend Start Strategy Logic - Use persistent strategy instance instead of creating fresh one
-      console.log(`[TrendStart Strategy] Processing bars 0 to ${targetBarIndex}`);
-      
-      // Use the existing strategy instance to preserve cache
+      // Process trend start strategy incrementally
       const strategy = trendStartStrategy;
       
-      // Process each bar through the strategy (async)
-      const allSignals: any[] = [];
-      const allMarkers: any[] = [];
-      
-      for (let barIndex = 0; barIndex <= targetBarIndex; barIndex++) {
+      for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
         const currentBar = mainTimeframeBars[barIndex];
         try {
           const result = await strategy.processBar(
             currentBar, 
             barIndex, 
             mainTimeframeBars,
-            currentContract, // Use actual contract instead of hardcoded
-            currentTimeframe // Use actual timeframe instead of hardcoded
+            currentContract,
+            currentTimeframe
           );
           
           if (result.signal) {
-            console.log(`[TrendStart Strategy] Signal at bar ${barIndex}:`, result.signal);
-            
-            // Create trade marker
             const marker = {
               time: mainTimeframeBars[barIndex].time,
               position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
@@ -288,158 +295,79 @@ const BacktesterPage = () => {
               text: result.signal.type === 'BUY' ? 'CUS' : 'CDS',
               size: 1,
             };
-            allMarkers.push(marker);
-            allSignals.push(result.signal);
+            newMarkers.push(marker);
           }
         } catch (error) {
           console.error(`[TrendStart Strategy] Error processing bar ${barIndex}:`, error);
         }
       }
       
-      // Get all trend start signals from strategy and create markers
+      // Add trend signal markers (only for the processed range)
       const trendSignals = strategy.getTrendSignals();
-      console.log(`[TrendStart Strategy] Creating markers for ${trendSignals.length} trend start signals`);
-      
       for (const trendSignal of trendSignals) {
-        // Only show signals up to current bar
-        if (trendSignal.barIndex <= targetBarIndex) {
+        if (trendSignal.barIndex >= startIndex && trendSignal.barIndex <= endIndex) {
           const signalBar = mainTimeframeBars[trendSignal.barIndex];
           if (signalBar) {
             const trendMarker = {
               time: signalBar.time,
               position: trendSignal.type === 'CUS' ? 'belowBar' : 'aboveBar',
-              color: trendSignal.type === 'CUS' ? '#4CAF50' : '#F44336', // Different colors from trade signals
+              color: trendSignal.type === 'CUS' ? '#4CAF50' : '#F44336',
               shape: trendSignal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
-              text: '', // Removed labels for cleaner display
-              size: 1.2, // Slightly smaller than trade arrows to distinguish
+              text: `${trendSignal.rule}`,
+              size: 1.2,
             };
-            allMarkers.push(trendMarker);
+            newMarkers.push(trendMarker);
           }
         }
       }
       
-      // Get completed trades from strategy
-      newCompletedTrades = strategy.getTrades();
+      const currentOpenTrade = strategy.getOpenTrade();
+      const currentPendingOrders = strategy.getPendingOrders();
+      const currentFilledOrders = strategy.getFilledOrders();
       
-      // Use accumulated markers instead of newMarkers
-      newMarkers.push(...allMarkers);
+      // Log when trades close for debugging
+      if (!currentOpenTrade && currentPendingOrders.length === 0) {
+        console.log(`[TrendStart Strategy] No open trades or pending orders at bar ${endIndex} - all order lines should disappear`);
+      }
       
-      console.log(`[TrendStart Strategy] Generated ${newMarkers.length} markers (${trendSignals.length} trend signals + trade signals), ${newCompletedTrades.length} completed trades`);
-      
-      stateUpdate = {
-        fastEmaValues: [], // Not used for trend start strategy
-        slowEmaValues: [], // Not used for trend start strategy
-        openTrade: strategy.getOpenTrade(), // Get actual open trade from strategy
-        tradeIdCounter: strategy.getTradeIdCounter(),
-        completedTrades: newCompletedTrades,
-      };
-      
-    } else {
-      // Fallback - return empty state
       stateUpdate = {
         fastEmaValues: [],
         slowEmaValues: [],
-        openTrade: null,
-        tradeIdCounter: 1,
-        completedTrades: [],
+        openTrade: currentOpenTrade,
+        tradeIdCounter: strategy.getTradeIdCounter(),
+        completedTrades: strategy.getTrades(),
+        pendingOrders: currentPendingOrders,
+        filledOrders: currentFilledOrders,
+        cancelledOrders: strategy.getCancelledOrders(),
+        lastProcessedBarIndex: endIndex,
       };
     }
     
     // Update markers and state
     setLiveTradeMarkers(newMarkers);
     setLiveStrategyState(stateUpdate);
-  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe]);
+  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe, emaStrategy, trendStartStrategy, liveTradeMarkers]);
 
-  // Simple EMA calculation
-  const calculateEMA = useCallback((prices: number[], period: number): number[] => {
-    const k = 2 / (period + 1);
-    const emaValues: number[] = [];
-    
-    if (prices.length === 0) return emaValues;
-    emaValues[0] = prices[0];
-    
-    for (let i = 1; i < prices.length; i++) {
-      emaValues[i] = prices[i] * k + emaValues[i - 1] * (1 - k);
-    }
-    
-    return emaValues;
-  }, []);
-
-  // Run EMA backtest
-  const runEmaBacktest = useCallback((bars: BacktestBarData[]) => {
-    if (bars.length < 26) return; // Need enough data for EMAs
-    
-    setIsRunningBacktest(true);
-    console.log('Running EMA 12/26 crossover strategy...');
-    
-    const closePrices = bars.map(bar => bar.close);
-    const ema12 = calculateEMA(closePrices, 12);
-    const ema26 = calculateEMA(closePrices, 26);
-    
-    const trades: any[] = [];
-    let openTrade: any = null;
-    let tradeId = 1;
-    
-    for (let i = 1; i < bars.length; i++) {
-      const prevFast = ema12[i - 1];
-      const prevSlow = ema26[i - 1];
-      const currentFast = ema12[i];
-      const currentSlow = ema26[i];
-      
-      // Bullish crossover (buy signal)
-      if (prevFast <= prevSlow && currentFast > currentSlow && !openTrade) {
-        openTrade = {
-          id: `EMA_${tradeId++}`,
-          entryTime: bars[i].time as number,
-          entryPrice: bars[i].close,
-          size: 1,
-          type: 'BUY',
-        };
-      }
-      // Bearish crossover (sell signal)
-      else if (prevFast >= prevSlow && currentFast < currentSlow && openTrade) {
-        const exitPrice = bars[i].close;
-        const pnl = (exitPrice - openTrade.entryPrice) * openTrade.size - 5.0; // $2.50 commission each way
-        
-        trades.push({
-          ...openTrade,
-          exitTime: bars[i].time as number,
-          exitPrice,
-          profitOrLoss: pnl,
-          status: 'CLOSED',
-        });
-        
-        openTrade = null;
+  // Order management functions
+  const handleCancelOrder = useCallback((orderId: string) => {
+    if (selectedStrategy === 'ema') {
+      const orderManager = (emaStrategy as any).orderManager;
+      if (orderManager?.cancelOrder(orderId)) {
+        console.log(`[BacktesterPage] Cancelled order ${orderId}`);
+        // Trigger state update
+        buildStrategyStateUpToBar(currentBarIndex);
       }
     }
-    
-    // Close any open trade at the end
-    if (openTrade && bars.length > 0) {
-      const lastBar = bars[bars.length - 1];
-      const pnl = (lastBar.close - openTrade.entryPrice) * openTrade.size - 5.0;
-      
-      trades.push({
-        ...openTrade,
-        exitTime: lastBar.time as number,
-        exitPrice: lastBar.close,
-        profitOrLoss: pnl,
-        status: 'CLOSED',
-      });
-    }
-    
-    setStrategyTrades(trades);
-    setIsRunningBacktest(false);
-    console.log(`EMA strategy completed. Generated ${trades.length} trades.`);
-  }, [calculateEMA]);
+  }, [selectedStrategy, emaStrategy, buildStrategyStateUpToBar, currentBarIndex]);
 
   // Auto-playback effect
   useEffect(() => {
-    console.log(`[Playback Effect] isPlaying: ${isPlaying}, mainTimeframeBars.length: ${mainTimeframeBars.length}, currentBarIndex: ${currentBarIndex}`);
+    console.log(`[Playback Effect] isPlaying: ${isPlaying}, mainTimeframeBars.length: ${mainTimeframeBars.length}, currentBarIndex: ${currentBarIndex}, barFormationMode: ${barFormationMode}`);
     
     if (isPlaying && mainTimeframeBars.length > 0) {
       console.log(`[Playback Effect] Starting playback interval with speed: ${playbackSpeed}ms`);
       playbackIntervalRef.current = setInterval(() => {
-        console.log(`[Playback Interval] Advancing from currentBarIndex: ${currentBarIndex}`);
+        console.log(`[Playback Interval] Advancing from currentBarIndex: ${currentBarIndex}, currentSubBarIndex: ${currentSubBarIndex}, mode: ${barFormationMode}`);
         
         if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
           // Progressive mode: advance through sub-bars
@@ -502,16 +430,27 @@ const BacktesterPage = () => {
     };
   }, [isPlaying, playbackSpeed, mainTimeframeBars.length, subTimeframeBars.length, currentBarIndex, barFormationMode]);
 
-  // Effect to process strategy when playback advances
+  // Throttled strategy processing to prevent excessive updates during rapid playback
+  const lastStrategyUpdateRef = useRef<number>(0);
+  const strategyUpdateThrottleMs = 50; // Minimum 50ms between strategy updates
+
+  // Effect to process strategy when playback advances (with throttling)
   useEffect(() => {
-    console.log(`[Strategy Effect] Triggered with currentBarIndex: ${currentBarIndex}, mainTimeframeBars.length: ${mainTimeframeBars.length}`);
+    // console.log(`[Strategy Effect] Triggered with currentBarIndex: ${currentBarIndex}, mainTimeframeBars.length: ${mainTimeframeBars.length}`);
     if (mainTimeframeBars.length > 0) {
-      console.log(`[Strategy Effect] Calling buildStrategyStateUpToBar(${currentBarIndex})`);
-      buildStrategyStateUpToBar(currentBarIndex).catch(error => {
-        console.error('[Strategy Effect] Error in buildStrategyStateUpToBar:', error);
-      });
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastStrategyUpdateRef.current;
+      
+      if (timeSinceLastUpdate >= strategyUpdateThrottleMs) {
+        // console.log(`[Strategy Effect] Calling buildStrategyStateUpToBar(${currentBarIndex})`);
+        lastStrategyUpdateRef.current = now;
+        buildStrategyStateUpToBar(currentBarIndex).catch(error => {
+          console.error('[Strategy Effect] Error in buildStrategyStateUpToBar:', error);
+        });
+      }
+      // If throttled, the update will be skipped but will be processed on the next effect trigger
     } else {
-      console.log(`[Strategy Effect] Skipping - no main timeframe bars`);
+      // console.log(`[Strategy Effect] Skipping - no main timeframe bars`);
     }
   }, [currentBarIndex, mainTimeframeBars, buildStrategyStateUpToBar]);
 
@@ -525,27 +464,40 @@ const BacktesterPage = () => {
   // Reset strategy when strategy selection changes
   useEffect(() => {
     if (selectedStrategy === 'trendstart') {
-      trendStartStrategy.resetState();
+      trendStartStrategy.reset();
     }
     resetLiveStrategy();
   }, [selectedStrategy, trendStartStrategy, resetLiveStrategy]);
 
   // Debug effect to monitor live strategy state changes
   useEffect(() => {
-    console.log(`[LiveStrategyState] Updated - EMA arrays: fast=${liveStrategyState.fastEmaValues.length}, slow=${liveStrategyState.slowEmaValues.length}`);
-    console.log(`[LiveStrategyState] Completed trades: ${liveStrategyState.completedTrades.length}, Open trade: ${!!liveStrategyState.openTrade}`);
+    // console.log(`[LiveStrategyState] Updated - EMA arrays: fast=${liveStrategyState.fastEmaValues.length}, slow=${liveStrategyState.slowEmaValues.length}`);
+    // console.log(`[LiveStrategyState] Completed trades: ${liveStrategyState.completedTrades.length}, Open trade: ${!!liveStrategyState.openTrade}`);
     if (liveStrategyState.completedTrades.length > 0) {
-      console.log(`[LiveStrategyState] Completed trades:`, liveStrategyState.completedTrades);
+      // console.log(`[LiveStrategyState] Completed trades:`, liveStrategyState.completedTrades);
     }
   }, [liveStrategyState]);
 
   // Debug effect to monitor marker changes
   useEffect(() => {
-    console.log(`[BacktesterPage] LiveTradeMarkers updated. Count: ${liveTradeMarkers.length}`);
+    // console.log(`[BacktesterPage] LiveTradeMarkers updated. Count: ${liveTradeMarkers.length}`);
     if (liveTradeMarkers.length > 0) {
-      console.log(`[BacktesterPage] Latest markers:`, liveTradeMarkers);
+      // console.log(`[BacktesterPage] Latest markers:`, liveTradeMarkers);
     }
   }, [liveTradeMarkers]);
+
+  // Debug effect to monitor when open trades change (for tracking order line clearing)
+  useEffect(() => {
+    const hasOpenTrade = !!liveStrategyState.openTrade;
+    const pendingOrdersCount = liveStrategyState.pendingOrders.length;
+    const filledOrdersCount = liveStrategyState.filledOrders.length;
+    
+    if (!hasOpenTrade && pendingOrdersCount === 0) {
+      console.log(`[BacktesterPage] Trade closed - no open trades or pending orders. All order lines should disappear. Filled orders: ${filledOrdersCount}`);
+    } else if (hasOpenTrade) {
+      console.log(`[BacktesterPage] Open trade detected - showing order lines. Pending: ${pendingOrdersCount}, Filled: ${filledOrdersCount}`);
+    }
+  }, [liveStrategyState.openTrade, liveStrategyState.pendingOrders.length, liveStrategyState.filledOrders.length]);
 
   // Playback control functions
   const handleNextBar = useCallback(() => {
@@ -674,36 +626,113 @@ const BacktesterPage = () => {
             const mappedSubBars = mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config);
             setSubTimeframeBars(mappedSubBars);
             console.log(`Loaded ${mappedSubBars.length} sub-timeframe bars for ${formattedMainBars.length} main bars`);
+            
+            // Debug: Check first few mappings
+            if (mappedSubBars.length > 0) {
+              console.log('Sample sub-bar mappings:', mappedSubBars.slice(0, 10).map(sb => `Sub bar ${sb.time} -> Main bar ${sb.parentBarIndex}`));
+            }
           }
+        } else {
+          console.warn('Failed to fetch sub-timeframe data:', subResponse.status);
         }
+      } else {
+        console.log('Progressive mode disabled or main/sub timeframes are the same - no sub-timeframe data needed');
       }
 
       console.log('Main timeframe bars loaded:', formattedMainBars.length);
 
-      // Run EMA backtest
-      runEmaBacktest(formattedMainBars);
+      // Strategy will be processed automatically by buildStrategyStateUpToBar
     } catch (err: any) {
       console.error('Error fetching or processing data:', err);
       setError(err.message || 'Failed to load data.');
     } finally {
       setIsLoading(false);
     }
-  }, [barFormationMode, runEmaBacktest, resetLiveStrategy]);
+  }, [barFormationMode, resetLiveStrategy]);
 
-  // Calculate metrics from strategy trades - only show real data, no mock fallback
-  const liveTradesData = liveStrategyState.completedTrades.length > 0 ? liveStrategyState.completedTrades : 
-                         strategyTrades.length > 0 ? strategyTrades : [];
-  const liveTotalPnL = liveTradesData.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
-  const liveWinningTrades = liveTradesData.filter(t => (t.profitOrLoss || 0) > 0);
+  // Calculate metrics from enhanced strategy trades
+  const liveTradesData = liveStrategyState.completedTrades;
+  const liveTotalPnL = liveTradesData.reduce((sum: number, trade: any) => sum + (trade.profitOrLoss || 0), 0);
+  const liveWinningTrades = liveTradesData.filter((t: any) => (t.profitOrLoss || 0) > 0);
   const liveWinRate = liveTradesData.length > 0 ? (liveWinningTrades.length / liveTradesData.length) * 100 : 0;
 
-  // Debug the trade data being used
-  console.log(`[TradeData] Using data source: ${liveStrategyState.completedTrades.length > 0 ? 'liveStrategyState.completedTrades' : strategyTrades.length > 0 ? 'strategyTrades' : 'empty'}`);
-  console.log(`[TradeData] Live trades count: ${liveTradesData.length}, Total P&L: ${liveTotalPnL}, Win rate: ${liveWinRate.toFixed(1)}%`);
-  console.log(`[TradeData] Source counts - Live: ${liveStrategyState.completedTrades.length}, Strategy: ${strategyTrades.length}`);
+  // Handle strategy configuration changes
+  const handleConfigChange = useCallback(async (newConfig: StrategyConfig) => {
+    console.log('[BacktesterPage] Strategy configuration changed:', newConfig);
+    
+    // Update the strategy configuration state
+    setStrategyConfig(newConfig);
+    
+    // Update the EMA strategy with new configuration
+    if (selectedStrategy === 'ema') {
+      // Create new strategy instance with updated config
+      const updatedStrategy = new EmaStrategy({
+        fastPeriod: newConfig.fastPeriod,
+        slowPeriod: newConfig.slowPeriod,
+        stopLossPercent: newConfig.stopLossPercent,
+        takeProfitPercent: newConfig.takeProfitPercent,
+        commission: newConfig.commission,
+        positionSize: newConfig.positionSize,
+        useMarketOrders: newConfig.useMarketOrders,
+        limitOrderOffset: newConfig.limitOrderOffset,
+      });
+      
+      // Replace the strategy instance
+      Object.assign(emaStrategy, updatedStrategy);
+      
+      // Reset and re-run the strategy if we have data
+      if (mainTimeframeBars.length > 0) {
+        console.log('[BacktesterPage] Re-running EMA backtest with new configuration');
+        
+        // Reset playback to beginning
+        setCurrentBarIndex(0);
+        setCurrentSubBarIndex(0);
+        setIsPlaying(false);
+        
+        // Reset strategy state
+        resetLiveStrategy();
+        
+        // Re-process strategy up to current position (will be 0 initially)
+        await buildStrategyStateUpToBar(0);
+      }
+    } else if (selectedStrategy === 'trendstart') {
+      // Create new TrendStartStrategy instance with updated config
+      const updatedStrategy = new TrendStartStrategy({
+        stopLossPercent: newConfig.stopLossPercent,
+        takeProfitPercent: newConfig.takeProfitPercent,
+        commission: newConfig.commission,
+        positionSize: newConfig.positionSize,
+        useMarketOrders: newConfig.useMarketOrders,
+        limitOrderOffset: newConfig.limitOrderOffset,
+        confidenceThreshold: 0.6, // Keep permissive threshold for debugging
+        useOpenCloseStrategy: false, // Keep disabled for now
+        minConfirmationBars: 2,
+        limitOrderOffsetTicks: 1,
+      });
+      
+      // Replace the strategy instance
+      Object.assign(trendStartStrategy, updatedStrategy);
+      
+      // Reset and re-run the strategy if we have data
+      if (mainTimeframeBars.length > 0) {
+        console.log('[BacktesterPage] Re-running TrendStart backtest with new configuration');
+        
+        // Reset playback to beginning
+        setCurrentBarIndex(0);
+        setCurrentSubBarIndex(0);
+        setIsPlaying(false);
+        
+        // Reset strategy state
+        resetLiveStrategy();
+        
+        // Re-process strategy up to current position (will be 0 initially)
+        await buildStrategyStateUpToBar(0);
+      }
+    }
+  }, [selectedStrategy, emaStrategy, trendStartStrategy, mainTimeframeBars.length, resetLiveStrategy, buildStrategyStateUpToBar]);
 
   return (
-    <Layout>
+    <Layout fullWidth={true}>
       <div className="flex flex-col space-y-4">
         {/* Top Bar with controls */}
         <TopBar 
@@ -736,20 +765,44 @@ const BacktesterPage = () => {
         {/* Main chart area */}
         <div className="relative bg-white rounded-lg shadow-sm border">
           {/* Chart container with reduced height to accommodate bottom panel */}
-          <div className="h-[400px]">
-            <TradeChart 
-              mainTimeframeBars={mainTimeframeBars}
-              subTimeframeBars={subTimeframeBars}
-              currentBarIndex={currentBarIndex}
-              currentSubBarIndex={currentSubBarIndex}
-              barFormationMode={barFormationMode}
-              timeframeConfig={timeframeConfig}
-              tradeMarkers={liveTradeMarkers}
-              emaData={selectedStrategy === 'ema' ? {
-                fastEma: liveStrategyState.fastEmaValues,
-                slowEma: liveStrategyState.slowEmaValues,
-              } : undefined}
-            /> 
+          <div className="h-[700px] flex">
+            {/* Chart takes most of the space */}
+            <div className="flex-1">
+              <TradeChart 
+                mainTimeframeBars={mainTimeframeBars}
+                subTimeframeBars={subTimeframeBars}
+                currentBarIndex={currentBarIndex}
+                currentSubBarIndex={currentSubBarIndex}
+                barFormationMode={barFormationMode}
+                timeframeConfig={timeframeConfig}
+                tradeMarkers={liveTradeMarkers}
+                emaData={selectedStrategy === 'ema' ? {
+                  fastEma: liveStrategyState.fastEmaValues,
+                  slowEma: liveStrategyState.slowEmaValues,
+                } : undefined}
+                pendingOrders={liveStrategyState.pendingOrders}
+                filledOrders={liveStrategyState.filledOrders}
+                openPositions={liveStrategyState.openTrade ? [{
+                  stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                  takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                }] : []}
+              /> 
+            </div>
+            
+            {/* Compact Order Panel on the right */}
+            {(liveStrategyState.pendingOrders.length > 0 || liveStrategyState.filledOrders.length > 0 || liveStrategyState.openTrade) && (
+              <div className="w-80 bg-gray-800 border-l border-gray-700">
+                <CompactOrderPanel 
+                  pendingOrders={liveStrategyState.pendingOrders}
+                  filledOrders={liveStrategyState.filledOrders}
+                  openPositions={liveStrategyState.openTrade ? [{
+                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                  }] : []}
+                  onCancelOrder={handleCancelOrder}
+                />
+              </div>
+            )}
           </div>
           
           {/* Compact results panel overlay */}
@@ -768,6 +821,12 @@ const BacktesterPage = () => {
           totalPnL={liveTotalPnL}
           winRate={liveWinRate}
           totalTrades={liveTradesData.length}
+          pendingOrders={liveStrategyState.pendingOrders}
+          filledOrders={liveStrategyState.filledOrders}
+          cancelledOrders={liveStrategyState.cancelledOrders}
+          onCancelOrder={handleCancelOrder}
+          currentConfig={strategyConfig}
+          onConfigChange={handleConfigChange}
         />
       </div>
     </Layout>

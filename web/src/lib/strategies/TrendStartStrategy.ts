@@ -2,251 +2,87 @@ import {
   BacktestBarData, 
   StrategySignal, 
   StrategySignalType, 
-  SimulatedTrade, 
-  TradeType, 
-  BacktestResults 
+  SimulatedTrade,
+  TradeType,
+  BacktestResults,
+  Order,
+  OrderType,
+  OrderSide,
+  StrategyConfig,
+  UTCTimestamp,
+  OrderStatus,
+  OrderManagerState
 } from '@/lib/types/backtester';
+import { OrderManager } from '@/lib/OrderManager';
+import { TrendIdentifier, TrendStartSignal as TrendLibSignal, TrendIdentificationState } from '@/lib/trend-analysis/TrendIdentifier';
 
-export interface TrendStartStrategyConfig {
-  commission: number;
-  positionSize: number;
-  stopLossPercent?: number; // Optional stop loss as percentage
-  takeProfitPercent?: number; // Optional take profit as percentage
+// Strategy's internal representation of a trend signal it might act upon
+// This might be slightly different from TrendLibSignal if the strategy adds its own context
+interface StrategyTrendSignal extends TrendLibSignal {}
+
+// Represents the strategy's view of an open logical trade/position
+// This helps manage SL/TP orders related to a specific entry concept.
+interface StrategyManagedTrade {
+  id: string; // Corresponds to ManagedPosition.id in OrderManager
+  entrySignalBarIndex: number;
+  entrySignalPrice: number; // Price at which original signal occurred
+  entryOrder?: Order; // The primary entry order that opened/initiated this logical trade
+  stopLossOrder?: Order;
+  takeProfitOrder?: Order;
+  currentManagedPositionId?: string; // The ID of the actual position in OrderManager
+  initialQuantity: number; // Quantity for this logical trade segment
+  side: OrderSide; // Added side to StrategyManagedTrade
+}
+
+export interface TrendStartStrategyConfig extends StrategyConfig {
   minConfirmationBars?: number; // Minimum bars to confirm trend
+  confidenceThreshold?: number; // Minimum confidence for signals (0-1)
+  useOpenCloseStrategy?: boolean; // Use open/close limit order strategy
+  limitOrderOffsetTicks?: number; // Offset for limit orders in ticks
 }
 
-export interface TrendStartSignal {
-  type: 'CUS' | 'CDS'; // Change to Uptrend Start / Change to Downtrend Start
-  barIndex: number;
-  price: number;
-  confidence?: number;
-  rule?: string; // Rule type from Python analysis
-}
+// Re-export or alias TrendStartSignal from the library if the strategy uses it directly
+export type { TrendStartSignal } from '@/lib/trend-analysis/TrendIdentifier';
 
 export interface TrendIndicators {
   trendDirection: 'UP' | 'DOWN' | 'NONE';
   trendStrength?: number;
-  lastSignal?: TrendStartSignal;
+  lastSignal?: StrategyTrendSignal; // Use the strategy's version or the library's
 }
 
 export class TrendStartStrategy {
   private config: TrendStartStrategyConfig;
   private signals: StrategySignal[] = [];
-  private trades: SimulatedTrade[] = [];
-  private openTrade: SimulatedTrade | null = null;
-  private tradeIdCounter = 1;
-  private trendSignals: TrendStartSignal[] = [];
-  private currentTrend: 'UP' | 'DOWN' | 'NONE' = 'NONE';
+  private completedTradesLog: SimulatedTrade[] = []; // Now explicitly SimulatedTrade for compatibility
   
-  // Forward testing state - process bars one at a time
-  private processedBarCount: number = 0;
-  private forwardTestingCache: Map<string, TrendStartSignal[]> = new Map();
+  private activeStrategyTrade: StrategyManagedTrade | null = null;
+  private logicalTradeIdCounter = 1;
+
+  private trackedTrendSignals: StrategyTrendSignal[] = []; // Signals the strategy has noted
+  private currentTrendDirection: 'UP' | 'DOWN' | 'NONE' = 'NONE'; // Strategy's view of the trend
   
-  constructor(config: TrendStartStrategyConfig = {
-    commission: 2.50,
-    positionSize: 1,
-    stopLossPercent: 2.0, // 2% stop loss
-    takeProfitPercent: 4.0, // 4% take profit
-    minConfirmationBars: 2
-  }) {
-    this.config = config;
+  private orderManager: OrderManager;
+  private trendIdentifier: TrendIdentifier; // Instance of the new library
+  
+  constructor(config: Partial<TrendStartStrategyConfig> = {}, orderManagerInstance?: OrderManager, trendIdentifierInstance?: TrendIdentifier) {
+    this.config = {
+      commission: 2.50,
+      positionSize: 1,
+      stopLossPercent: 2.0, // 2% stop loss
+      takeProfitPercent: 4.0, // 4% take profit
+      useMarketOrders: true, // Use market orders by default for easier fills
+      limitOrderOffset: 2, // Standard offset
+      minConfirmationBars: 2,
+      confidenceThreshold: 0.6, // Lower threshold to 60% for more signals
+      useOpenCloseStrategy: false, // Disable complex strategy initially
+      limitOrderOffsetTicks: 1, // Conservative 1 tick offset
+      ...config
+    };
+    this.orderManager = orderManagerInstance || new OrderManager(0.25); // ES mini tick size
+    this.trendIdentifier = trendIdentifierInstance || new TrendIdentifier();
   }
 
-  // Call Python forward testing API for real-time trend detection
-  private async detectTrendStartsForwardTesting(
-    bars: BacktestBarData[], 
-    currentBarIndex: number, 
-    contractId: string, 
-    timeframe: string
-  ): Promise<TrendStartSignal[]> {
-    try {
-      // Create cache key based on current state
-      const cacheKey = `${contractId}-${timeframe}-${currentBarIndex}`;
-      
-      // Only process if we haven't processed this bar yet
-      if (currentBarIndex < this.processedBarCount) {
-        // Going backwards - use cached results up to this point
-        const cachedResults: TrendStartSignal[] = [];
-        for (let i = 0; i <= currentBarIndex; i++) {
-          const barKey = `${contractId}-${timeframe}-${i}`;
-          const barSignals = this.forwardTestingCache.get(barKey) || [];
-          cachedResults.push(...barSignals);
-        }
-        console.log(`[TrendStartStrategy] Using cached results for backward navigation to bar ${currentBarIndex}: ${cachedResults.length} signals`);
-        return cachedResults;
-      }
-
-      // Process bars sequentially up to currentBarIndex using forward testing
-      const allSignals: TrendStartSignal[] = [];
-      
-      // Get all signals up to and including current bar from cache first
-      for (let i = 0; i < currentBarIndex; i++) {
-        const barKey = `${contractId}-${timeframe}-${i}`;
-        const cachedBarSignals = this.forwardTestingCache.get(barKey);
-        if (cachedBarSignals) {
-          allSignals.push(...cachedBarSignals);
-        }
-      }
-      
-      // Process only the current bar if we haven't processed it yet
-      const currentBarKey = `${contractId}-${timeframe}-${currentBarIndex}`;
-      if (!this.forwardTestingCache.has(currentBarKey)) {
-        console.log(`[TrendStartStrategy] Processing new bar ${currentBarIndex} via forward testing API`);
-        
-        // Convert bars up to current index for Python API (forward testing approach)
-        const barsUpToCurrent = bars.slice(0, currentBarIndex + 1).map((bar, index) => ({
-          index: index + 1, // Python uses 1-based indexing
-          timestamp: new Date(bar.time * 1000).toISOString(),
-          date: new Date(bar.time * 1000).toISOString(),
-          open: bar.open,
-          high: bar.high,
-          low: bar.low,
-          close: bar.close,
-          volume: bar.volume || 0
-        }));
-
-        const response = await fetch('/api/trend-analysis/forward', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            bars: barsUpToCurrent,
-            contract_id: contractId,
-            timeframe: timeframe,
-            current_bar_index: currentBarIndex + 1, // Python uses 1-based indexing
-            debug: false
-          })
-        });
-
-        if (!response.ok) {
-          console.error('[TrendStartStrategy] Forward testing API call failed:', response.status, response.statusText);
-          // Cache empty result to avoid repeated failed calls
-          this.forwardTestingCache.set(currentBarKey, []);
-          return allSignals;
-        }
-
-        const result = await response.json();
-        console.log(`[TrendStartStrategy] Forward testing API returned ${result.signals?.length || 0} new signals for bar ${currentBarIndex}`);
-
-        // Convert new Python signals to our format
-        const newSignals: TrendStartSignal[] = (result.new_signals || []).map((pythonSignal: any) => {
-          let signalType: 'CUS' | 'CDS';
-          if (pythonSignal.signal_type === 'uptrend_start') {
-            signalType = 'CUS';
-          } else if (pythonSignal.signal_type === 'downtrend_start') {
-            signalType = 'CDS';
-          } else {
-            signalType = pythonSignal.signal_type === 'CUS' ? 'CUS' : 'CDS';
-          }
-
-          const barIndex = (pythonSignal.details?.confirmed_signal_bar_index || pythonSignal.bar_index || 1) - 1; // Convert to 0-based
-          const price = pythonSignal.signal_price || pythonSignal.price || 0;
-          const rule = pythonSignal.details?.rule_type || 'Unknown';
-
-          return {
-            type: signalType,
-            barIndex: barIndex,
-            price: price,
-            confidence: pythonSignal.confidence || 0.95, // High confidence for Python signals
-            rule: rule
-          };
-        });
-
-        // Cache the new signals for this specific bar
-        this.forwardTestingCache.set(currentBarKey, newSignals);
-        allSignals.push(...newSignals);
-        
-        console.log(`[TrendStartStrategy] Processed bar ${currentBarIndex}, found ${newSignals.length} new signals. Total signals: ${allSignals.length}`);
-      } else {
-        // Use cached signals for current bar
-        const cachedCurrentBarSignals = this.forwardTestingCache.get(currentBarKey) || [];
-        allSignals.push(...cachedCurrentBarSignals);
-        console.log(`[TrendStartStrategy] Using cached signals for bar ${currentBarIndex}: ${cachedCurrentBarSignals.length} signals`);
-      }
-
-      // Update processed bar count
-      this.processedBarCount = Math.max(this.processedBarCount, currentBarIndex + 1);
-      
-      return allSignals;
-
-    } catch (error) {
-      console.error('[TrendStartStrategy] Error calling forward testing API:', error);
-      // Fallback to simplified detection if API fails
-      return this.detectTrendStartSimplified(bars, currentBarIndex);
-    }
-  }
-
-  // Simplified fallback detection (original logic)
-  private detectTrendStartSimplified(bars: BacktestBarData[], currentIndex: number): TrendStartSignal[] {
-    if (currentIndex < 3) return [];
-    
-    const currentBar = bars[currentIndex];
-    const prevBar = bars[currentIndex - 1];
-    const prevBar2 = bars[currentIndex - 2];
-    
-    const signals: TrendStartSignal[] = [];
-    
-    // Simplified CUS detection
-    const isHigherLow = currentBar.low > prevBar.low && prevBar.low > prevBar2.low;
-    const breaksPrevHigh = currentBar.high > prevBar.high && currentBar.close > prevBar.high;
-    
-    if (isHigherLow && breaksPrevHigh && this.currentTrend !== 'UP') {
-      signals.push({
-        type: 'CUS',
-        barIndex: currentIndex,
-        price: currentBar.close,
-        confidence: 0.6, // Lower confidence for simplified detection
-        rule: 'SimplifiedCUS'
-      });
-    }
-    
-    // Simplified CDS detection
-    const isLowerHigh = currentBar.high < prevBar.high && prevBar.high < prevBar2.high;
-    const breaksPrevLow = currentBar.low < prevBar.low && currentBar.close < prevBar.low;
-    
-    if (isLowerHigh && breaksPrevLow && this.currentTrend !== 'DOWN') {
-      signals.push({
-        type: 'CDS',
-        barIndex: currentIndex,
-        price: currentBar.close,
-        confidence: 0.6,
-        rule: 'SimplifiedCDS'
-      });
-    }
-    
-    return signals;
-  }
-
-  // Check stop loss and take profit conditions
-  private checkExitConditions(bar: BacktestBarData): boolean {
-    if (!this.openTrade) return false;
-    
-    const entryPrice = this.openTrade.entryPrice;
-    const currentPrice = bar.close;
-    
-    if (this.openTrade.type === TradeType.BUY) {
-      // Check stop loss
-      if (this.config.stopLossPercent) {
-        const stopLossPrice = entryPrice * (1 - this.config.stopLossPercent / 100);
-        if (currentPrice <= stopLossPrice) {
-          return true;
-        }
-      }
-      
-      // Check take profit
-      if (this.config.takeProfitPercent) {
-        const takeProfitPrice = entryPrice * (1 + this.config.takeProfitPercent / 100);
-        if (currentPrice >= takeProfitPrice) {
-          return true;
-        }
-      }
-    }
-    
-    return false;
-  }
-
-  // Process a single bar and generate signals - now uses forward testing
+  // Process a single bar and generate signals - now uses forward testing with OrderManager
   public async processBar(
     bar: BacktestBarData, 
     barIndex: number, 
@@ -256,169 +92,355 @@ export class TrendStartStrategy {
   ): Promise<{
     signal: StrategySignal | null;
     indicators: TrendIndicators;
+    filledOrders: Order[];
   }> {
-    console.log(`[TrendStartStrategy] Processing bar ${barIndex} (${new Date(bar.time * 1000).toISOString()}) using forward testing`);
+    // Process any pending orders first
+    const filledOrders = this.orderManager.processBar(bar, barIndex);
     
-    // Get trend signals up to current bar using forward testing approach
-    const availableSignals = await this.detectTrendStartsForwardTesting(allBars, barIndex, contractId, timeframe);
+    // Handle filled orders
+    for (const order of filledOrders) {
+      this.handleOrderFill(order, bar);
+    }
+
+    // Step 1: Get trend signals from TrendIdentifier
+    const identifiedSignals = await this.trendIdentifier.getSignalsForRange(allBars, barIndex, contractId, timeframe);
+    const newSignalsForAction = this.processNewTrendSignals(identifiedSignals);
+    const latestSignalForAction = newSignalsForAction[newSignalsForAction.length - 1];
     
-    // Find new signals that we haven't processed yet (for trade decisions)
-    const existingSignalKeys = new Set(this.trendSignals.map(s => `${s.barIndex}-${s.type}`));
-    const newSignalsThisProcessing = availableSignals.filter(signal => 
-      !existingSignalKeys.has(`${signal.barIndex}-${signal.type}`)
-    );
+    let chartSignal: StrategySignal | null = null;
     
-    // Find specifically new signals for this bar (for logging)
-    const newSignalsForThisBar = newSignalsThisProcessing.filter(signal => signal.barIndex === barIndex);
+    // Step 2: Get current position from OrderManager
+    const currentPosition = this.orderManager.getOpenPosition(contractId);
     
-    console.log(`[TrendStartStrategy] Bar ${barIndex}: Found ${newSignalsForThisBar.length} new signals for this specific bar from forward testing:`, newSignalsForThisBar);
-    console.log(`[TrendStartStrategy] Bar ${barIndex}: Found ${newSignalsThisProcessing.length} total new signals (all bars) from forward testing:`, newSignalsThisProcessing);
-    
-    // Add ALL new signals to our tracking (not just for current bar)
-    this.trendSignals.push(...newSignalsThisProcessing);
-    
-    // Update current trend based on latest signal from any bar
-    const latestNewSignal = newSignalsThisProcessing[newSignalsThisProcessing.length - 1];
-    if (latestNewSignal) {
-      this.currentTrend = latestNewSignal.type === 'CUS' ? 'UP' : 'DOWN';
-      console.log(`[TrendStartStrategy] New ${latestNewSignal.type} signal at bar ${latestNewSignal.barIndex}, rule: ${latestNewSignal.rule}, confidence: ${latestNewSignal.confidence}`);
+    // Step 3: Process signals and make trading decisions
+    if (latestSignalForAction) {
+      const confidence = latestSignalForAction.confidence || 0;
+      
+      // Check if we should exit current position
+      if (this.shouldExitPosition(latestSignalForAction, currentPosition)) {
+        // Log the completed trade before closing
+        if (currentPosition) {
+          this.logCompletedTrade(currentPosition, bar.open, bar.time, `${latestSignalForAction.type} signal`, contractId);
+        }
+        
+        chartSignal = this.closePosition({
+          id: currentPosition!.id, 
+          size: currentPosition!.size, 
+          side: currentPosition!.side, 
+          contractId: currentPosition!.contractId
+        }, bar, `${latestSignalForAction.type} received`);
+      }
+      
+      // Check if we should enter new position
+      if (this.shouldEnterPosition(latestSignalForAction, currentPosition, confidence)) {
+        // If we have a contrary position, close it first
+        if (currentPosition && currentPosition.side !== OrderSide.BUY) {
+          this.logCompletedTrade(currentPosition, bar.open, bar.time, `${latestSignalForAction.type} signal - reversing`, contractId);
+          this.closePosition({
+            id: currentPosition.id, 
+            size: currentPosition.size, 
+            side: currentPosition.side, 
+            contractId: currentPosition.contractId
+          }, bar, `${latestSignalForAction.type} received - reversing`);
+        }
+        
+        // Open new position
+        const side = latestSignalForAction.type === 'CUS' ? OrderSide.BUY : OrderSide.SELL;
+        chartSignal = this.openNewPosition(latestSignalForAction, bar, contractId, allBars, side);
+      }
     }
     
     const indicators: TrendIndicators = {
-      trendDirection: this.currentTrend,
-      lastSignal: latestNewSignal
+      trendDirection: this.currentTrendDirection,
+      lastSignal: this.trackedTrendSignals[this.trackedTrendSignals.length - 1],
+      trendStrength: this.trackedTrendSignals[this.trackedTrendSignals.length - 1]?.confidence
     };
     
-    let signal: StrategySignal | null = null;
+    return { signal: chartSignal, indicators, filledOrders };
+  }
+
+  // Handle order fill events
+  private handleOrderFill(order: Order, bar: BacktestBarData): void {
+    // console.log(`[TrendStartStrategy] Order filled: ${order.id} at ${order.filledPrice}`);
     
-    // Check for exit conditions first
-    if (this.openTrade && this.checkExitConditions(bar)) {
-      signal = {
-        barIndex,
+    if (order.isStopLoss && this.activeStrategyTrade) {
+      // Stop loss was hit - close the position
+      // console.log(`[TrendStartStrategy] Stop loss order filled: ${order.id} at ${order.filledPrice} - closing position`);
+      const signal: StrategySignal = {
+        barIndex: 0, // Would need to track this properly
         time: bar.time,
         type: StrategySignalType.SELL,
-        price: bar.close,
-        message: 'Stop loss or take profit triggered',
+        price: order.filledPrice!,
+        message: 'Stop loss triggered',
       };
-      
-      console.log(`[TrendStartStrategy] Exit signal generated at bar ${barIndex}`);
-      this.closePosition(bar, signal);
-    }
-    // Process new trend signals (only for the current bar for trade timing)
-    else if (newSignalsForThisBar.length > 0) {
-      const currentBarSignal = newSignalsForThisBar[newSignalsForThisBar.length - 1];
-      if (currentBarSignal.type === 'CUS' && !this.openTrade) {
-        // Generate BUY signal for Change to Uptrend Start
-        signal = {
-          barIndex,
-          time: bar.time,
-          type: StrategySignalType.BUY,
-          price: bar.close,
-          message: `CUS detected: ${currentBarSignal.rule} (confidence: ${((currentBarSignal.confidence || 0) * 100).toFixed(1)}%)`,
-        };
-        
-        console.log(`[TrendStartStrategy] BUY signal generated at bar ${barIndex} for CUS with rule: ${currentBarSignal.rule}`);
-        this.openPosition(bar, signal, TradeType.BUY);
-      } 
-      else if (currentBarSignal.type === 'CDS' && this.openTrade) {
-        // Generate SELL signal for Change to Downtrend Start
-        signal = {
-          barIndex,
-          time: bar.time,
-          type: StrategySignalType.SELL,
-          price: bar.close,
-          message: `CDS detected: ${currentBarSignal.rule} (confidence: ${((currentBarSignal.confidence || 0) * 100).toFixed(1)}%)`,
-        };
-        
-        console.log(`[TrendStartStrategy] SELL signal generated at bar ${barIndex} for CDS with rule: ${currentBarSignal.rule}`);
-        this.closePosition(bar, signal);
-      } else {
-        console.log(`[TrendStartStrategy] Signal ${currentBarSignal.type} at bar ${barIndex} - no trade action (openTrade: ${!!this.openTrade}, rule: ${currentBarSignal.rule})`);
-      }
-    } else if (newSignalsThisProcessing.length > 0) {
-      // Handle signals from previous bars that were just detected
-      console.log(`[TrendStartStrategy] Found ${newSignalsThisProcessing.length} new signals from previous bars, but no trade action for bar ${barIndex}`);
+      this.closePosition({
+        id: this.activeStrategyTrade.id, 
+        size: this.activeStrategyTrade.initialQuantity, 
+        side: this.activeStrategyTrade.side, 
+        contractId: order.contractId || 'UNKNOWN'
+      }, bar, 'Stop loss triggered');
+    } else if (order.isTakeProfit && this.activeStrategyTrade) {
+      // Take profit was hit - close the position
+      // console.log(`[TrendStartStrategy] Take profit order filled: ${order.id} at ${order.filledPrice} - closing position`);
+      const signal: StrategySignal = {
+        barIndex: 0, // Would need to track this properly
+        time: bar.time,
+        type: StrategySignalType.SELL,
+        price: order.filledPrice!,
+        message: 'Take profit triggered',
+      };
+      this.closePosition({
+        id: this.activeStrategyTrade.id, 
+        size: this.activeStrategyTrade.initialQuantity, 
+        side: this.activeStrategyTrade.side, 
+        contractId: order.contractId || 'UNKNOWN'
+      }, bar, 'Take profit triggered');
     }
     
-    return { signal, indicators };
+    // Log the current state after handling the fill
+    const openTrade = this.getOpenTrade();
+    const pendingOrders = this.getPendingOrders();
+    // console.log(`[TrendStartStrategy] After order fill - Open trade: ${!!openTrade}, Pending orders: ${pendingOrders.length}`);
   }
 
-  private openPosition(bar: BacktestBarData, signal: StrategySignal, type: TradeType): void {
-    this.openTrade = {
-      id: `TREND_${this.tradeIdCounter++}`,
-      entryTime: bar.time,
-      entryPrice: bar.close,
-      type: type,
-      size: this.config.positionSize,
-      commission: this.config.commission,
-      status: 'OPEN',
-      signalEntry: signal,
+  // Processes signals from TrendIdentifier and updates strategy's internal view
+  private processNewTrendSignals(identifiedSignals: TrendLibSignal[]): StrategyTrendSignal[] {
+    const newStrategySignals: StrategyTrendSignal[] = [];
+    const existingSignalKeys = new Set(this.trackedTrendSignals.map(s => `${s.barIndex}-${s.type}-${s.rule}`));
+    
+    identifiedSignals.forEach(libSignal => {
+      const signalKey = `${libSignal.barIndex}-${libSignal.type}-${libSignal.rule}`;
+      if (!existingSignalKeys.has(signalKey)) {
+        const strategySignal: StrategyTrendSignal = { ...libSignal }; // Adapt if needed
+        this.trackedTrendSignals.push(strategySignal);
+        newStrategySignals.push(strategySignal);
+        this.currentTrendDirection = strategySignal.type === 'CUS' ? 'UP' : 'DOWN';
+      }
+    });
+    this.trackedTrendSignals.sort((a,b) => a.barIndex - b.barIndex); // Keep sorted by bar index
+    return newStrategySignals.sort((a,b) => a.barIndex - b.barIndex); // Return new ones sorted
+  }
+  
+  private openNewPosition(
+    trendSignal: StrategyTrendSignal, 
+    currentBar: BacktestBarData, 
+    contractId: string, 
+    allBars: BacktestBarData[], 
+    side: OrderSide
+  ): StrategySignal | null {
+    const signalBar = allBars[trendSignal.barIndex];
+    if (!signalBar) return null;
+    
+    const entryPrice = this.config.useMarketOrders ? currentBar.open : signalBar.close;
+    const orderType = this.config.useMarketOrders ? OrderType.MARKET : OrderType.LIMIT;
+    const logicalTradeId = `strat_trade_${this.logicalTradeIdCounter++}`;
+    
+    // Submit entry order via OrderManager
+    const entryOrder = this.orderManager.submitOrder({
+      contractId,
+      tradeId: logicalTradeId,
+      type: orderType,
+      side: side,
+      quantity: this.config.positionSize,
+      price: entryPrice,
+      submittedTime: currentBar.time,
+      message: `Entry ${side === OrderSide.BUY ? 'BUY' : 'SELL'} - Rule: ${trendSignal.rule}`,
+      parentTradeId: logicalTradeId
+    });
+    
+    // Track this trade in our strategy
+    this.activeStrategyTrade = {
+      id: logicalTradeId,
+      entrySignalBarIndex: trendSignal.barIndex,
+      entrySignalPrice: signalBar.close,
+      entryOrder: entryOrder,
+      currentManagedPositionId: contractId, // Will be updated when position is opened
+      initialQuantity: this.config.positionSize,
+      side: side
+    };
+    
+    // Generate chart signal for UI
+    const chartSignalType = side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL;
+    const signal: StrategySignal = {
+      barIndex: currentBar.time as any, // This is actually the timestamp, not index
+      time: currentBar.time,
+      type: chartSignalType,
+      price: entryPrice,
+      message: `${side === OrderSide.BUY ? 'Buy' : 'Sell'} signal: ${trendSignal.rule}`
     };
     
     this.signals.push(signal);
+    return signal;
   }
 
-  private closePosition(bar: BacktestBarData, signal: StrategySignal): void {
-    if (!this.openTrade) return;
+  private closePosition(
+    positionToClose: { id: string, size: number, side: OrderSide, contractId: string }, 
+    bar: BacktestBarData, 
+    reason: string
+  ): StrategySignal | null {
+    const exitSide = positionToClose.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY;
+    const exitPrice = bar.open; 
     
-    const trade = this.openTrade;
-    trade.exitTime = bar.time;
-    trade.exitPrice = bar.close;
-    trade.status = 'CLOSED';
-    trade.signalExit = signal;
+    this.orderManager.submitOrder({
+      contractId: positionToClose.contractId,
+      tradeId: positionToClose.id,
+      type: OrderType.MARKET,
+      side: exitSide,
+      quantity: positionToClose.size,
+      price: exitPrice,
+      submittedTime: bar.time,
+      message: `Closing pos ${positionToClose.id}: ${reason}`,
+      parentTradeId: positionToClose.id
+    });
     
-    // Calculate P&L
-    const priceDiff = trade.exitPrice! - trade.entryPrice;
-    trade.profitOrLoss = (priceDiff * trade.size) - (this.config.commission * 2);
+    if (this.activeStrategyTrade && this.activeStrategyTrade.currentManagedPositionId === positionToClose.id) {
+      this.activeStrategyTrade = null;
+    }
     
-    this.trades.push(trade);
-    this.openTrade = null;
+    const chartSignalType = exitSide === OrderSide.SELL ? StrategySignalType.SELL : StrategySignalType.BUY;
+    this.signals.push({
+      barIndex: bar.time as any,
+      time: bar.time,
+      type: chartSignalType,
+      price: exitPrice,
+      message: `Exiting pos ${positionToClose.id}: ${reason}`
+    });
     
-    this.signals.push(signal);
+    return this.signals[this.signals.length - 1];
   }
 
-  // Run backtest on all bars - now uses forward testing approach
+  private logCompletedTrade(
+    position: {
+      id: string;
+      averageEntryPrice: number;
+      size: number;
+      side: OrderSide;
+      realizedPnl?: number;
+    },
+    exitPrice: number,
+    exitTime: UTCTimestamp,
+    exitReason: string,
+    contractId: string
+  ): void {
+    // Find the corresponding strategy trade if it exists
+    const strategyTrade = this.activeStrategyTrade?.currentManagedPositionId === position.id 
+      ? this.activeStrategyTrade 
+      : null;
+    
+    // Use OrderManager's P&L calculation service
+    const pnlInfo = this.orderManager.getClosedPositionPnL(
+      position.averageEntryPrice,
+      exitPrice,
+      position.size,
+      position.side,
+      this.config.commission * position.size * 2  // Total commission for entry + exit
+    );
+    
+    // Use realized P&L from position if available, otherwise use calculated
+    const finalPnl = position.realizedPnl !== undefined ? position.realizedPnl : pnlInfo.netPnl;
+    
+    const simulatedTradeEntry: SimulatedTrade = {
+      id: position.id,
+      entryTime: strategyTrade?.entryOrder?.filledTime || strategyTrade?.entryOrder?.submittedTime || exitTime,
+      exitTime: exitTime,
+      entryPrice: position.averageEntryPrice,
+      exitPrice: exitPrice,
+      size: position.size,
+      type: position.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+      profitOrLoss: finalPnl,
+      commission: pnlInfo.commission,
+      status: 'CLOSED' as const,
+      signalEntry: strategyTrade ? {
+        barIndex: strategyTrade.entrySignalBarIndex,
+        time: strategyTrade.entryOrder?.submittedTime || exitTime,
+        price: strategyTrade.entrySignalPrice,
+        type: position.side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL,
+        message: 'Entry signal'
+      } : undefined,
+      signalExit: {
+        barIndex: 0, // We don't currently track exit bar index
+        time: exitTime,
+        price: exitPrice,
+        type: position.side === OrderSide.BUY ? StrategySignalType.SELL : StrategySignalType.BUY,
+        message: exitReason
+      }
+    };
+    
+    this.completedTradesLog.push(simulatedTradeEntry);
+  }
+
+  // Run backtest on all bars - now uses forward testing approach with OrderManager
   public async backtest(bars: BacktestBarData[], contractId: string = 'UNKNOWN', timeframe: string = '1h'): Promise<BacktestResults> {
-    // Reset state
-    this.signals = [];
-    this.trades = [];
-    this.openTrade = null;
-    this.tradeIdCounter = 1;
-    this.trendSignals = [];
-    this.currentTrend = 'NONE';
+    // Reset state using enhanced reset method
+    this.reset();
     
-    console.log(`[TrendStartStrategy] Starting forward testing backtest with ${bars.length} bars for ${contractId} ${timeframe}`);
+    // console.log(`[TrendStartStrategy] Starting forward testing backtest with ${bars.length} bars for ${contractId} ${timeframe}`);
     
     // Process each bar sequentially using forward testing
     for (let i = 0; i < bars.length; i++) {
-      await this.processBar(bars[i], i, bars, contractId, timeframe);
+      const result = await this.processBar(bars[i], i, bars, contractId, timeframe);
+      // Process any filled orders (already handled in processBar)
     }
     
     // Close any open trade at the end
-    if (this.openTrade && bars.length > 0) {
+    if (this.activeStrategyTrade && bars.length > 0) {
       const lastBar = bars[bars.length - 1];
-      const trade = this.openTrade as SimulatedTrade;
-      trade.exitTime = lastBar.time;
-      trade.exitPrice = lastBar.close;
+      const entryBar = bars[this.activeStrategyTrade.entrySignalBarIndex];
+      const entryPrice = this.activeStrategyTrade.entryOrder?.filledPrice || this.activeStrategyTrade.entrySignalPrice;
+      const exitPrice = lastBar.close;
       
-      const priceDiff = trade.exitPrice! - trade.entryPrice;
-      trade.profitOrLoss = (priceDiff * trade.size) - (this.config.commission * 2);
+      // Use OrderManager's P&L calculation service
+      const pnlInfo = this.orderManager.getClosedPositionPnL(
+        entryPrice,
+        exitPrice,
+        this.activeStrategyTrade.initialQuantity,
+        this.activeStrategyTrade.side,
+        this.config.commission * this.activeStrategyTrade.initialQuantity * 2
+      );
       
-      this.trades.push(trade);
-      this.openTrade = null;
+      // Create a proper SimulatedTrade object
+      const finalTrade: SimulatedTrade = {
+        id: this.activeStrategyTrade.id,
+        entryTime: this.activeStrategyTrade.entryOrder?.submittedTime || (entryBar ? entryBar.time : lastBar.time),
+        exitTime: lastBar.time,
+        entryPrice: entryPrice,
+        exitPrice: exitPrice,
+        size: this.activeStrategyTrade.initialQuantity,
+        type: this.activeStrategyTrade.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+        profitOrLoss: pnlInfo.netPnl,
+        commission: pnlInfo.commission,
+        status: 'CLOSED',
+        signalEntry: {
+          barIndex: this.activeStrategyTrade.entrySignalBarIndex,
+          time: entryBar ? entryBar.time : lastBar.time,
+          price: this.activeStrategyTrade.entrySignalPrice,
+          type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL,
+          message: 'Force closed at end of backtest'
+        },
+        signalExit: {
+          barIndex: bars.length - 1,
+          time: lastBar.time,
+          price: lastBar.close,
+          type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.SELL : StrategySignalType.BUY,
+          message: 'End of backtest'
+        }
+      };
+      
+      this.completedTradesLog.push(finalTrade);
+      this.activeStrategyTrade = null;
     }
     
     const results = this.calculateResults();
-    console.log(`[TrendStartStrategy] Forward testing backtest completed. ${results.totalTrades} trades, P&L: ${results.totalProfitOrLoss.toFixed(2)}`);
+    // console.log(`[TrendStartStrategy] Forward testing backtest completed. ${results.totalTrades} trades, P&L: ${results.totalProfitOrLoss.toFixed(2)}`);
     return results;
   }
 
   private calculateResults(): BacktestResults {
-    const totalProfitOrLoss = this.trades.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
-    const winningTrades = this.trades.filter(t => (t.profitOrLoss || 0) > 0);
-    const losingTrades = this.trades.filter(t => (t.profitOrLoss || 0) < 0);
+    const totalProfitOrLoss = this.completedTradesLog.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
+    const winningTrades = this.completedTradesLog.filter(t => (t.profitOrLoss || 0) > 0);
+    const losingTrades = this.completedTradesLog.filter(t => (t.profitOrLoss || 0) < 0);
     
-    const winRate = this.trades.length > 0 ? (winningTrades.length / this.trades.length) * 100 : 0;
+    const winRate = this.completedTradesLog.length > 0 ? (winningTrades.length / this.completedTradesLog.length) * 100 : 0;
     const averageWin = winningTrades.length > 0 
       ? winningTrades.reduce((sum, t) => sum + (t.profitOrLoss || 0), 0) / winningTrades.length 
       : 0;
@@ -431,19 +453,19 @@ export class TrendStartStrategy {
     return {
       totalProfitOrLoss,
       winRate,
-      totalTrades: this.trades.length,
+      totalTrades: this.completedTradesLog.length,
       maxDrawdown: 0, // TODO: Calculate actual drawdown
       profitFactor,
       sharpeRatio: 0, // TODO: Calculate if needed
-      trades: this.trades,
+      trades: this.completedTradesLog,
     };
   }
 
   // Get current indicators (for real-time display)
   public getCurrentIndicators(): TrendIndicators | null {
     return {
-      trendDirection: this.currentTrend,
-      lastSignal: this.trendSignals[this.trendSignals.length - 1]
+      trendDirection: this.currentTrendDirection,
+      lastSignal: this.trackedTrendSignals[this.trackedTrendSignals.length - 1]
     };
   }
 
@@ -454,34 +476,225 @@ export class TrendStartStrategy {
 
   // Get all trades
   public getTrades(): SimulatedTrade[] {
-    return this.trades;
+    return this.completedTradesLog;
   }
 
   // Get detected trend start signals
-  public getTrendSignals(): TrendStartSignal[] {
-    return this.trendSignals;
+  public getTrendSignals(): StrategyTrendSignal[] {
+    return this.trackedTrendSignals;
   }
 
   // Get current open trade
-  public getOpenTrade(): SimulatedTrade | null {
-    return this.openTrade;
+  public getOpenTrade(): StrategyManagedTrade | null {
+    return this.activeStrategyTrade;
   }
 
   // Get current trade ID counter
   public getTradeIdCounter(): number {
-    return this.tradeIdCounter;
+    return this.logicalTradeIdCounter;
+  }
+
+  // Get pending orders
+  public getPendingOrders(): Order[] {
+    return this.orderManager.getPendingOrders();
+  }
+
+  // Get filled orders
+  public getFilledOrders(): Order[] {
+    return this.orderManager.getFilledOrders();
+  }
+
+  // Get cancelled orders
+  public getCancelledOrders(): Order[] {
+    return this.orderManager.getCancelledOrders();
   }
 
   // Reset strategy state (useful when loading new data) - now clears forward testing cache
   public resetState(): void {
-    this.signals = [];
-    this.trades = [];
-    this.openTrade = null;
-    this.tradeIdCounter = 1;
-    this.trendSignals = [];
-    this.currentTrend = 'NONE';
-    this.processedBarCount = 0;
-    this.forwardTestingCache.clear(); // Clear the forward testing cache
-    console.log('[TrendStartStrategy] State reset - forward testing cache cleared');
+    this.reset(); // Use the enhanced reset method
   }
-} 
+
+  // Enhanced reset method with OrderManager integration
+  public reset(): void {
+    this.signals = [];
+    this.completedTradesLog = [];
+    this.activeStrategyTrade = null;
+    this.logicalTradeIdCounter = 1;
+    this.trackedTrendSignals = [];
+    this.currentTrendDirection = 'NONE';
+    this.orderManager.reset(); // Reset order manager
+    
+    this.trendIdentifier.resetState(); // Reset the TrendIdentifier's state
+  }
+
+  // Convert active trade to completed trade log entry
+  private convertActiveTradeToCompleted(exitBar: BacktestBarData, exitReason: string): SimulatedTrade | null {
+    if (!this.activeStrategyTrade) return null;
+    
+    const entryBar = exitBar; // Fallback if we can't find the actual entry bar
+    const entryPrice = this.activeStrategyTrade.entryOrder?.filledPrice || this.activeStrategyTrade.entrySignalPrice;
+    const exitPrice = exitBar.close;
+    
+    // Use OrderManager's P&L calculation service
+    const pnlInfo = this.orderManager.getClosedPositionPnL(
+      entryPrice,
+      exitPrice,
+      this.activeStrategyTrade.initialQuantity,
+      this.activeStrategyTrade.side,
+      this.config.commission * this.activeStrategyTrade.initialQuantity * 2
+    );
+    
+    const trade: SimulatedTrade = {
+      id: this.activeStrategyTrade.id,
+      entryTime: this.activeStrategyTrade.entryOrder?.filledTime || this.activeStrategyTrade.entryOrder?.submittedTime || entryBar.time,
+      exitTime: exitBar.time,
+      entryPrice: entryPrice,
+      exitPrice: exitPrice,
+      size: this.activeStrategyTrade.initialQuantity,
+      type: this.activeStrategyTrade.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+      profitOrLoss: pnlInfo.netPnl,
+      commission: pnlInfo.commission,
+      status: 'CLOSED',
+      signalEntry: {
+        barIndex: this.activeStrategyTrade.entrySignalBarIndex,
+        time: this.activeStrategyTrade.entryOrder?.submittedTime || entryBar.time,
+        price: this.activeStrategyTrade.entrySignalPrice,
+        type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL,
+        message: 'Entry signal'
+      },
+      signalExit: {
+        barIndex: 0, // We don't track this currently
+        time: exitBar.time,
+        price: exitPrice,
+        type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.SELL : StrategySignalType.BUY,
+        message: exitReason
+      }
+    };
+    
+    return trade;
+  }
+
+  // Check if we should enter a new position based on signals
+  private shouldEnterPosition(
+    signal: StrategyTrendSignal, 
+    currentPosition: any | undefined,
+    confidence: number
+  ): boolean {
+    // Don't enter if confidence is too low
+    if (confidence < this.config.confidenceThreshold!) return false;
+    
+    // Check signal type and current position
+    if (signal.type === 'CUS') {
+      // Enter long if no position or if short
+      return !currentPosition || currentPosition.side === OrderSide.SELL;
+    } else if (signal.type === 'CDS') {
+      // Don't enter short on CDS in this strategy - only use it to close longs
+      return false;
+    }
+    
+    return false;
+  }
+
+  // Check if we should exit current position
+  private shouldExitPosition(
+    signal: StrategyTrendSignal,
+    currentPosition: any | undefined
+  ): boolean {
+    if (!currentPosition) return false;
+    
+    // Exit long on CDS signal
+    if (signal.type === 'CDS' && currentPosition.side === OrderSide.BUY) {
+      return true;
+    }
+    
+    // Exit short on CUS signal (if we had shorts)
+    if (signal.type === 'CUS' && currentPosition.side === OrderSide.SELL) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Get current P&L for all positions
+  public getCurrentPnL(currentPrices: Map<string, number>): {
+    realizedPnl: number;
+    unrealizedPnl: number;
+    totalPnl: number;
+    positions: Array<{
+      contractId: string;
+      realizedPnl: number;
+      unrealizedPnl: number;
+      totalPnl: number;
+    }>;
+  } {
+    let totalRealizedPnl = 0;
+    let totalUnrealizedPnl = 0;
+    const positionsPnl: Array<{
+      contractId: string;
+      realizedPnl: number;
+      unrealizedPnl: number;
+      totalPnl: number;
+    }> = [];
+
+    // Get P&L for completed trades
+    for (const trade of this.completedTradesLog) {
+      totalRealizedPnl += trade.profitOrLoss || 0;
+    }
+
+    // Get P&L for open positions
+    const openPositions = this.orderManager.getAllOpenPositions();
+    for (const position of openPositions) {
+      const currentPrice = currentPrices.get(position.contractId) || position.averageEntryPrice;
+      const pnlData = this.orderManager.getPositionTotalPnL(position.contractId, currentPrice);
+      
+      if (pnlData) {
+        totalRealizedPnl += pnlData.realized;
+        totalUnrealizedPnl += pnlData.unrealized;
+        
+        positionsPnl.push({
+          contractId: position.contractId,
+          realizedPnl: pnlData.realized,
+          unrealizedPnl: pnlData.unrealized,
+          totalPnl: pnlData.total
+        });
+      }
+    }
+
+    return {
+      realizedPnl: totalRealizedPnl,
+      unrealizedPnl: totalUnrealizedPnl,
+      totalPnl: totalRealizedPnl + totalUnrealizedPnl,
+      positions: positionsPnl
+    };
+  }
+
+  // Get comprehensive strategy state including P&L
+  public getStrategyState(currentPrices: Map<string, number> = new Map()): {
+    indicators: TrendIndicators | null;
+    openTrade: StrategyManagedTrade | null;
+    completedTrades: SimulatedTrade[];
+    pnl: {
+      realizedPnl: number;
+      unrealizedPnl: number;
+      totalPnl: number;
+      positions: Array<{
+        contractId: string;
+        realizedPnl: number;
+        unrealizedPnl: number;
+        totalPnl: number;
+      }>;
+    };
+    orderManagerState: {
+      orders: OrderManagerState;
+      positions: Array<any>;  // Simplified since ManagedPosition is not exported
+    };
+  } {
+    return {
+      indicators: this.getCurrentIndicators(),
+      openTrade: this.getOpenTrade(),
+      completedTrades: this.getTrades(),
+      pnl: this.getCurrentPnL(currentPrices),
+      orderManagerState: this.orderManager.getCompleteState(currentPrices)
+    };
+  }
+}

@@ -1,5 +1,8 @@
 import { UTCTimestamp } from 'lightweight-charts';
 
+// Re-export UTCTimestamp for use in other modules
+export type { UTCTimestamp };
+
 // Interface for OHLCV bar data, compatible with Lightweight Charts and our Python Bar class
 export interface BacktestBarData {
   time: UTCTimestamp; // Epoch time in seconds
@@ -47,7 +50,67 @@ export enum TradeType {
   SELL = 'SELL',
 }
 
-// Interface for a simulated trade
+// NEW: Enum for order types
+export enum OrderType {
+  MARKET = 'MARKET',           // Execute immediately at market price
+  LIMIT = 'LIMIT',             // Execute only at specified price or better
+  STOP = 'STOP',               // Execute when price reaches stop level (becomes market order)
+  STOP_LIMIT = 'STOP_LIMIT',   // Execute when price reaches stop level (becomes limit order)
+}
+
+// NEW: Enum for order status
+export enum OrderStatus {
+  PENDING = 'PENDING',         // Order submitted but not filled
+  PARTIALLY_FILLED = 'PARTIALLY_FILLED', // Order partially executed
+  FILLED = 'FILLED',           // Order completely executed
+  CANCELLED = 'CANCELLED',     // Order cancelled
+  REJECTED = 'REJECTED',       // Order rejected
+  EXPIRED = 'EXPIRED',         // Order expired
+}
+
+// NEW: Enum for order side
+export enum OrderSide {
+  BUY = 'BUY',
+  SELL = 'SELL',
+}
+
+// NEW: Interface for an order
+export interface Order {
+  id: string;                  // Unique order ID
+  type: OrderType;             // Order type (MARKET, LIMIT, etc.)
+  side: OrderSide;             // BUY or SELL
+  quantity: number;            // Number of contracts/shares
+  price?: number;              // Limit price (for LIMIT orders)
+  stopPrice?: number;          // Stop price (for STOP orders)
+  status: OrderStatus;         // Current order status
+  submittedTime: UTCTimestamp; // When order was submitted
+  filledTime?: UTCTimestamp;   // When order was filled (if applicable)
+  filledPrice?: number;        // Price at which order was filled
+  filledQuantity?: number;     // Quantity filled (for partial fills)
+  commission?: number;         // Commission charged
+  message?: string;            // Status message or reason for rejection
+  parentTradeId?: string;      // Associated trade ID
+  isStopLoss?: boolean;        // True if this is a stop loss order
+  isTakeProfit?: boolean;      // True if this is a take profit order
+  tradeId?: string;           // Can be used by OrderManager to group related orders (e.g., entry, SL, TP for one trade)
+  contractId?: string;         // The contract this order is for
+}
+
+// NEW: Interface for position with stop loss and take profit
+export interface Position {
+  id: string;                  // Unique position ID
+  entryTime: UTCTimestamp;     // When position was opened
+  entryPrice: number;          // Average entry price
+  side: OrderSide;             // LONG (BUY) or SHORT (SELL)
+  quantity: number;            // Position size
+  unrealizedPnL?: number;      // Current unrealized P&L
+  stopLossOrder?: Order;       // Associated stop loss order
+  takeProfitOrder?: Order;     // Associated take profit order
+  entryOrders: Order[];        // Orders that created this position
+  status: 'OPEN' | 'CLOSED';   // Position status
+}
+
+// ENHANCED: Interface for a simulated trade with order support
 export interface SimulatedTrade {
   id: string; // Unique ID for the trade
   entryTime: UTCTimestamp;
@@ -61,6 +124,40 @@ export interface SimulatedTrade {
   status?: 'OPEN' | 'CLOSED';
   signalEntry?: StrategySignal; // Signal that triggered entry
   signalExit?: StrategySignal;  // Signal that triggered exit (if applicable)
+  
+  // NEW: Order management fields
+  entryOrder?: Order;          // Order that opened the trade
+  exitOrder?: Order;           // Order that closed the trade
+  stopLossOrder?: Order;       // Active stop loss order
+  takeProfitOrder?: Order;     // Active take profit order
+  exitReason?: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'MANUAL'; // Why trade was closed
+}
+
+// NEW: Interface for strategy configuration with risk management
+export interface StrategyConfig {
+  // Risk management
+  stopLossPercent?: number;     // Stop loss as percentage (e.g., 2.0 for 2%)
+  stopLossTicks?: number;       // Stop loss in ticks
+  takeProfitPercent?: number;   // Take profit as percentage
+  takeProfitTicks?: number;     // Take profit in ticks
+  commission: number;           // Commission per trade
+  positionSize: number;         // Default position size
+  
+  // Order preferences
+  useMarketOrders?: boolean;    // Use market orders vs limit orders
+  limitOrderOffset?: number;    // Offset for limit orders (ticks)
+  orderTimeoutBars?: number;    // Cancel limit orders after N bars
+  
+  // Strategy-specific parameters (can be extended by individual strategies)
+  [key: string]: any;
+}
+
+// NEW: Interface for order management state
+export interface OrderManagerState {
+  pendingOrders: Order[];       // Orders waiting to be filled
+  filledOrders: Order[];        // Completed orders
+  cancelledOrders: Order[];     // Cancelled orders
+  orderIdCounter: number;       // For generating unique order IDs
 }
 
 // Interface for the overall backtest results
