@@ -7,6 +7,7 @@ interface CompactOrderPanelProps {
   pendingOrders: Order[];
   filledOrders: Order[];
   openPositions?: {
+    entryPrice?: number;
     stopLossPrice?: number;
     takeProfitPrice?: number;
   }[];
@@ -59,7 +60,10 @@ const CompactOrderPanel: React.FC<CompactOrderPanelProps> = ({
           {openPositions.map((position, index) => (
             <div key={index} className="bg-blue-900/30 p-2 rounded border-l-2 border-blue-400">
               <div className="text-blue-300 font-medium text-sm">Position #{index + 1}</div>
-              <div className="grid grid-cols-2 gap-2 text-xs mt-1">
+              <div className="grid grid-cols-3 gap-2 text-xs mt-1">
+                {position.entryPrice && (
+                  <div className="text-blue-300">🔵 Entry: {formatPrice(position.entryPrice)}</div>
+                )}
                 {position.stopLossPrice && (
                   <div className="text-red-300">🛑 SL: {formatPrice(position.stopLossPrice)}</div>
                 )}

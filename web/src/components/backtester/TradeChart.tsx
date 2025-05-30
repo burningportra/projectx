@@ -41,6 +41,7 @@ interface TradeChartProps {
   pendingOrders?: Order[];
   filledOrders?: Order[];
   openPositions?: {
+    entryPrice?: number;
     stopLossPrice?: number;
     takeProfitPrice?: number;
   }[];
@@ -67,75 +68,97 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
   const isInitialLoadRef = useRef<boolean>(true);
   const lastViewportUpdateRef = useRef<number>(0);
   const userHasInteractedRef = useRef<boolean>(false); // Track if user has manually zoomed/scrolled
+  
+  // Price line references for dynamic order management
+  const priceLinesRef = useRef<Map<string, IPriceLine>>(new Map());
 
   // console.log('[TradeChart] Rendering. Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'currentBarIndex:', currentBarIndex, 'currentSubBarIndex:', currentSubBarIndex, 'mode:', barFormationMode, 'tradeMarkers:', tradeMarkers?.length || 0, 'pendingOrders:', pendingOrders?.length || 0, 'filledOrders:', filledOrders?.length || 0);
 
-  // Memoized order data for efficient marker generation
-  const orderMarkers = useMemo(() => {
-    const hasOpenPositions = openPositions && openPositions.length > 0;
-    if (!hasOpenPositions) return [];
+  // Enhanced order visualization using price lines instead of markers
+  const updateOrderLines = useCallback(() => {
+    if (!candlestickSeriesRef.current) return;
 
-    const markers: SeriesMarker<Time>[] = [];
-    
-    // Add pending order markers (small icons on the chart)
-    pendingOrders
-      .filter(order => order.status === OrderStatus.PENDING)
-      .forEach(order => {
-        const price = order.price || order.stopPrice;
-        if (!price) return;
+    const series = candlestickSeriesRef.current;
+    const currentLines = priceLinesRef.current;
 
-        // Find the closest time from main bars
-        const closestBar = mainTimeframeBars[Math.min(currentBarIndex, mainTimeframeBars.length - 1)];
-        if (!closestBar) return;
+    // Clear existing price lines
+    currentLines.forEach((line, key) => {
+      series.removePriceLine(line);
+    });
+    currentLines.clear();
 
-        markers.push({
-          time: closestBar.time as Time,
-          position: 'aboveBar',
-          color: order.side === OrderSide.BUY ? '#2196F3' : '#FF9800',
-          shape: 'circle',
-          text: `${order.side === OrderSide.BUY ? '🔵' : '🟠'} ${order.type}`,
-          size: 0.8,
+    // Add price lines for open positions
+    openPositions.forEach((position, index) => {
+      // Entry price line (blue, solid)
+      if (position.entryPrice) {
+        const entryLine = series.createPriceLine({
+          price: position.entryPrice,
+          color: '#2196F3',
+          lineWidth: 2,
+          lineStyle: 0, // solid
+          title: `Entry: $${position.entryPrice.toFixed(2)}`,
         });
-      });
-
-    // Add position markers for stop loss and take profit
-    openPositions.forEach(position => {
-      const closestBar = mainTimeframeBars[Math.min(currentBarIndex, mainTimeframeBars.length - 1)];
-      if (!closestBar) return;
-
-      if (position.stopLossPrice) {
-        markers.push({
-          time: closestBar.time as Time,
-          position: 'belowBar',
-          color: '#F44336',
-          shape: 'circle',
-          text: `🛑 SL`,
-          size: 0.8,
-        });
+        currentLines.set(`entry_${index}`, entryLine);
       }
 
-      if (position.takeProfitPrice) {
-        markers.push({
-          time: closestBar.time as Time,
-          position: 'aboveBar',
-          color: '#4CAF50',
-          shape: 'circle',
-          text: `🎯 TP`,
-          size: 0.8,
+      // Stop Loss line (red, dashed)
+      if (position.stopLossPrice) {
+        const stopLine = series.createPriceLine({
+          price: position.stopLossPrice,
+          color: '#F44336',
+          lineWidth: 2,
+          lineStyle: 1, // dashed
+          title: `Stop Loss: $${position.stopLossPrice.toFixed(2)}`,
         });
+        currentLines.set(`stop_${index}`, stopLine);
+      }
+
+      // Take Profit line (green, dashed)
+      if (position.takeProfitPrice) {
+        const tpLine = series.createPriceLine({
+          price: position.takeProfitPrice,
+          color: '#4CAF50',
+          lineWidth: 2,
+          lineStyle: 1, // dashed
+          title: `Take Profit: $${position.takeProfitPrice.toFixed(2)}`,
+        });
+        currentLines.set(`tp_${index}`, tpLine);
       }
     });
 
-    return markers;
-  }, [pendingOrders, openPositions, mainTimeframeBars, currentBarIndex]);
+    // Add price lines for pending orders
+    pendingOrders
+      .filter(order => order.status === OrderStatus.PENDING)
+      .forEach((order, index) => {
+        const price = order.price || order.stopPrice;
+        if (!price) return;
 
-  // Remove all the complex order line management code
-  const updateOrderLines = useCallback(() => {
-    // Orders are now handled as markers, no price lines needed
-    console.log(`[TradeChart] Order visualization updated - using markers instead of lines`);
-  }, []);
+        let color = '#FF9800'; // orange for pending orders
+        let lineStyle = 2; // dotted
+        let title = '';
 
-  // Simplified effect - no complex order line management
+        if (order.type === OrderType.LIMIT) {
+          color = order.side === OrderSide.BUY ? '#03A9F4' : '#FF5722';
+          title = `${order.side} Limit: $${price.toFixed(2)}`;
+        } else if (order.type === OrderType.STOP) {
+          color = '#9C27B0'; // purple for stop orders
+          title = `${order.side} Stop: $${price.toFixed(2)}`;
+        }
+
+        const orderLine = series.createPriceLine({
+          price: price,
+          color: color,
+          lineWidth: 1,
+          lineStyle: lineStyle,
+          title: title,
+        });
+        currentLines.set(`order_${order.id}`, orderLine);
+      });
+
+    console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
+  }, [candlestickSeriesRef, openPositions, pendingOrders, mainTimeframeBars, currentBarIndex]);
+
+  // Effect to update price lines when orders/positions change
   useEffect(() => {
     updateOrderLines();
   }, [updateOrderLines]);
@@ -313,8 +336,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
       }
 
       // Update trade markers based on current playback position
-      if (candlestickSeriesRef.current && (tradeMarkers || orderMarkers.length > 0) && chartRef.current) {
-        // console.log(`[TradeChart] Processing markers. Trade markers: ${tradeMarkers?.length || 0}, Order markers: ${orderMarkers.length}, mode: ${barFormationMode}`);
+      if (candlestickSeriesRef.current && tradeMarkers && chartRef.current) {
+        // console.log(`[TradeChart] Processing markers. Trade markers: ${tradeMarkers?.length || 0}, mode: ${barFormationMode}`);
         
         let markersToShow: SeriesMarker<Time>[] = [];
         
@@ -361,11 +384,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
             // console.log(`[TradeChart] Progressive mode: Filtered to ${tradeMarkersFiltered.length} trade markers`);
           }
         }
-        
-        // Add order markers (these are always shown if present)
-        markersToShow.push(...orderMarkers);
 
-        // console.log(`[TradeChart] Final visible markers: ${markersToShow.length} (${tradeMarkers?.length || 0} trade + ${orderMarkers.length} order)`);
+        // console.log(`[TradeChart] Final visible markers: ${markersToShow.length} trade markers`);
 
         // Set markers on the series
         try {
@@ -375,10 +395,10 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           console.error('[TradeChart] Failed to set markers:', error);
         }
       } else {
-        // console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Trade Markers: ${!!tradeMarkers}, Order Markers: ${orderMarkers.length}, Chart: ${!!chartRef.current}`);
+        // console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Trade Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);
       }
     }
-  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, orderMarkers]);
+  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, updateOrderLines]);
 
   // Reset initial load flag when new data is loaded
   useEffect(() => {
@@ -482,6 +502,14 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
       // console.log('[TradeChart] Cleaning up chart.');
       window.removeEventListener('resize', handleResize);
       
+      // Clean up price lines
+      if (candlestickSeriesRef.current && priceLinesRef.current) {
+        priceLinesRef.current.forEach((line) => {
+          candlestickSeriesRef.current!.removePriceLine(line);
+        });
+        priceLinesRef.current.clear();
+      }
+      
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -496,49 +524,26 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     <div className="relative w-full h-full">
       <div ref={chartContainerRef} className="w-full h-full bg-gray-800 text-white" />
       
-      {/* Order Status Overlay - Clean and efficient */}
+      {/* Simplified Position Status - Price lines now show the actual levels */}
       {(pendingOrders.length > 0 || (openPositions && openPositions.length > 0)) && (
-        <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white p-3 rounded-lg text-xs z-10 max-w-xs">
-          <div className="font-semibold mb-2 text-green-400">📊 Position Status</div>
+        <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white p-2 rounded-lg text-xs z-10">
+          <div className="font-semibold text-green-400">📊 Live Trading</div>
           
-          {/* Open Positions */}
           {openPositions && openPositions.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {openPositions.map((position, index) => (
-                <div key={index} className="border-l-2 border-blue-400 pl-2">
-                  <div className="text-blue-300 font-medium">Position #{index + 1}</div>
-                  {position.stopLossPrice && (
-                    <div className="text-red-300">🛑 SL: ${position.stopLossPrice.toFixed(2)}</div>
-                  )}
-                  {position.takeProfitPrice && (
-                    <div className="text-green-300">🎯 TP: ${position.takeProfitPrice.toFixed(2)}</div>
-                  )}
-                </div>
-              ))}
+            <div className="text-blue-300 mt-1">
+              🔵 {openPositions.length} Position{openPositions.length > 1 ? 's' : ''} Open
             </div>
           )}
           
-          {/* Pending Orders Summary */}
           {pendingOrders.length > 0 && (
-            <div className="border-t border-gray-600 pt-2">
-              <div className="text-yellow-300 font-medium mb-1">⏳ Pending Orders ({pendingOrders.length})</div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {pendingOrders.slice(0, 4).map((order) => {
-                  const price = order.price || order.stopPrice || 0;
-                  const sideColor = order.side === OrderSide.BUY ? 'text-green-300' : 'text-red-300';
-                  const sideIcon = order.side === OrderSide.BUY ? '🔵' : '🟠';
-  return (
-                    <div key={order.id} className={`${sideColor} truncate`}>
-                      {sideIcon} {order.type} ${price.toFixed(2)}
-                    </div>
-                  );
-                })}
-                {pendingOrders.length > 4 && (
-                  <div className="text-gray-400 col-span-2">+{pendingOrders.length - 4} more...</div>
-                )}
-              </div>
+            <div className="text-yellow-300 mt-1">
+              ⏳ {pendingOrders.length} Pending Order{pendingOrders.length > 1 ? 's' : ''}
             </div>
           )}
+          
+          <div className="text-gray-400 mt-1 text-xs">
+            Lines show entry, SL, TP levels
+          </div>
         </div>
       )}
     </div>

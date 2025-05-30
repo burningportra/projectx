@@ -853,6 +853,7 @@ const BacktesterPage = () => {
                 pendingOrders={liveStrategyState.pendingOrders}
                 filledOrders={liveStrategyState.filledOrders}
                 openPositions={liveStrategyState.openTrade ? [{
+                  entryPrice: liveStrategyState.openTrade.entryPrice,
                   stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
                   takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
                 }] : []}
@@ -866,6 +867,7 @@ const BacktesterPage = () => {
                   pendingOrders={liveStrategyState.pendingOrders}
                   filledOrders={liveStrategyState.filledOrders}
                   openPositions={liveStrategyState.openTrade ? [{
+                    entryPrice: liveStrategyState.openTrade.entryPrice,
                     stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
                     takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
                   }] : []}
