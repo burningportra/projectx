@@ -158,11 +158,6 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
   }, [candlestickSeriesRef, openPositions, pendingOrders, mainTimeframeBars, currentBarIndex]);
 
-  // Effect to update price lines when orders/positions change
-  useEffect(() => {
-    updateOrderLines();
-  }, [updateOrderLines]);
-
   useEffect(() => {
     console.log('[TradeChart] Data/playback useEffect triggered. Mode:', barFormationMode, 'Main bars:', mainTimeframeBars?.length, 'Sub bars:', subTimeframeBars?.length, 'Current bar:', currentBarIndex, 'Current sub:', currentSubBarIndex);
     if (!candlestickSeriesRef.current || !mainTimeframeBars || mainTimeframeBars.length === 0) {
@@ -187,6 +182,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
       }));
       
       candlestickSeriesRef.current.setData(chartReadyData);
+      // Update price lines immediately after setData to prevent clearing
+      updateOrderLines(); // eslint-disable-line react-hooks/exhaustive-deps
     } else if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
       // Progressive mode: show completed bars + progressively forming current bar
       const completedBars = mainTimeframeBars.slice(0, currentBarIndex);
@@ -226,6 +223,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           ];
           
           candlestickSeriesRef.current.setData(allBarsToShow);
+          // Update price lines immediately after setData to prevent clearing
+          updateOrderLines(); // eslint-disable-line react-hooks/exhaustive-deps
           console.log('[TradeChart] Progressive: Set data with', allBarsToShow.length, 'bars (forming bar OHLC:', formingBar.open, formingBar.high, formingBar.low, formingBar.close, ')');
         }
       } else {
@@ -239,6 +238,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         }));
         
         candlestickSeriesRef.current.setData(chartReadyData);
+        // Update price lines immediately after setData to prevent clearing
+        updateOrderLines(); // eslint-disable-line react-hooks/exhaustive-deps
         console.log('[TradeChart] Progressive fallback: Set data with', chartReadyData.length, 'completed bars (no sub-bars found)');
       }
     }
@@ -398,7 +399,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         // console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Trade Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);
       }
     }
-  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, updateOrderLines]);
+  }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, openPositions, pendingOrders]);
 
   // Reset initial load flag when new data is loaded
   useEffect(() => {
