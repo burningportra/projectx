@@ -12,7 +12,7 @@ import { UTCTimestamp } from 'lightweight-charts';
 import { EmaStrategy } from '@/lib/strategies/EmaStrategy';
 import { TrendStartStrategy } from '@/lib/strategies/TrendStartStrategy';
 import { BacktestEngine, BacktestConfig } from '@/lib/trading/BacktestEngine';
-import { Order, Position } from '@/lib/trading/orders/types';
+import { Order, Position, OrderStatus } from '@/lib/trading/orders/types';
 
 // Helper to parse timeframe string (e.g., "5m", "1h") into unit and value for API
 const parseTimeframeForApi = (timeframe: string): { unit: number; value: number } => {
@@ -141,18 +141,26 @@ const BacktesterPage = () => {
   const [currentPositions, setCurrentPositions] = useState<Position[]>([]);
   const [equityCurveData, setEquityCurveData] = useState<Array<{ time: number; value: number }>>([]);
   
-  // Trading parameters state
-  const [tradingParams, setTradingParams] = useState<BacktestConfig>({
+  // Trading parameters and BacktestEngine
+  const [tradingConfig, setTradingConfig] = useState<BacktestConfig>({
     contractId: 'CON.F.US.MES.M25',
-    commission: 5.0,        // $5 per contract
-    slippage: 0,           // No slippage for now
-    initialCapital: 10000,  // $10,000
-    positionSize: 1,       // 1 contract
-    maxPositionSize: 5,    // Max 5 contracts
-    useMarketOrders: true,
-    enableStopLoss: false,
-    enableTakeProfit: false,
+    initialCapital: 10000,
+    commission: 5,
+    slippage: 0,
+    positionSize: 1,
+    maxPositionSize: 5,
   });
+
+  // Trading config change handler
+  const handleTradingConfigChange = useCallback((partialConfig: Partial<BacktestConfig>) => {
+    setTradingConfig(prevConfig => ({
+      ...prevConfig,
+      ...partialConfig,
+    }));
+  }, []);
+
+  // Visual controls
+  const [showOrderLines, setShowOrderLines] = useState<boolean>(true);
 
   // Advanced metrics state
   const [advancedMetrics, setAdvancedMetrics] = useState({
@@ -167,7 +175,7 @@ const BacktesterPage = () => {
   // Initialize BacktestEngine when trading params change
   useEffect(() => {
     const engine = new BacktestEngine({
-      ...tradingParams,
+      ...tradingConfig,
       contractId: currentContract,
     });
 
@@ -194,7 +202,7 @@ const BacktesterPage = () => {
     });
 
     setBacktestEngine(engine);
-  }, [tradingParams, currentContract]);
+  }, [tradingConfig, currentContract]);
 
   // Reset live strategy when new data loads
   const resetLiveStrategy = useCallback(() => {
@@ -706,8 +714,10 @@ const BacktesterPage = () => {
           selectedStrategy={selectedStrategy}
           onStrategyChange={setSelectedStrategy}
           // Trading parameters
-          tradingParams={tradingParams}
-          onTradingParamsChange={setTradingParams}
+          tradingConfig={tradingConfig}
+          onTradingConfigChange={handleTradingConfigChange}
+          showOrderLines={showOrderLines}
+          onShowOrderLinesChange={setShowOrderLines}
         />
         
         {/* Error display */}
@@ -734,6 +744,12 @@ const BacktesterPage = () => {
                 fastEma: liveStrategyState.fastEmaValues,
                 slowEma: liveStrategyState.slowEmaValues,
               } : undefined}
+              orders={showOrderLines ? currentOrders.filter(order => 
+                order.status !== OrderStatus.FILLED && 
+                order.status !== OrderStatus.CANCELLED && 
+                order.status !== OrderStatus.REJECTED
+              ) : undefined}
+              positions={showOrderLines ? currentPositions : undefined}
             /> 
           </div>
           

@@ -15,6 +15,8 @@ import {
   Time,
 } from 'lightweight-charts';
 import { BacktestBarData, SubBarData, BarFormationMode, TimeframeConfig } from '@/lib/types/backtester';
+import { OrderLineManager } from '@/lib/trading/charts/OrderLineManager';
+import { Order, Position } from '@/lib/trading/orders/types';
 
 interface TradeMarker {
   time: UTCTimestamp;
@@ -37,6 +39,9 @@ interface TradeChartProps {
     fastEma: number[];
     slowEma: number[];
   };
+  // New props for order/position visualization
+  orders?: Order[];
+  positions?: Position[];
 }
 
 const TradeChart: React.FC<TradeChartProps> = ({ 
@@ -47,13 +52,16 @@ const TradeChart: React.FC<TradeChartProps> = ({
   barFormationMode,
   timeframeConfig,
   tradeMarkers,
-  emaData
+  emaData,
+  orders,
+  positions
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const ema12SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ema26SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const orderLineManagerRef = useRef<OrderLineManager | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
   const lastViewportUpdateRef = useRef<number>(0);
   const userHasInteractedRef = useRef<boolean>(false); // Track if user has manually zoomed/scrolled
@@ -129,6 +137,10 @@ const TradeChart: React.FC<TradeChartProps> = ({
         });
         console.log('[TradeChart] EMA 26 series added.');
 
+        // Initialize OrderLineManager with the candlestick series
+        orderLineManagerRef.current = new OrderLineManager(candlestickSeriesRef.current);
+        console.log('[TradeChart] OrderLineManager initialized.');
+
         // Track user interactions (zoom/scroll) to avoid overriding manual adjustments
         const timeScale = chart.timeScale();
         timeScale.subscribeVisibleTimeRangeChange(() => {
@@ -153,6 +165,10 @@ const TradeChart: React.FC<TradeChartProps> = ({
     return () => {
       console.log('[TradeChart] Cleaning up chart.');
       window.removeEventListener('resize', handleResize);
+      if (orderLineManagerRef.current) {
+        orderLineManagerRef.current.clearAllLines();
+        orderLineManagerRef.current = null;
+      }
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -398,6 +414,54 @@ const TradeChart: React.FC<TradeChartProps> = ({
       }
     }
   }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData]);
+
+  // Handle order and position line updates
+  useEffect(() => {
+    if (!orderLineManagerRef.current) return;
+
+    console.log('[TradeChart] Updating order and position lines. Orders:', orders?.length || 0, 'Positions:', positions?.length || 0);
+
+    // Update order lines
+    if (orders && orders.length > 0) {
+      // Get current order IDs
+      const currentOrderIds = orders.map(order => order.id);
+      
+      // Remove order lines that are no longer in the orders array
+      orderLineManagerRef.current.removeOrderLinesNotIn(currentOrderIds);
+      
+      // Add or update current orders
+      orders.forEach(order => {
+        if (orderLineManagerRef.current?.hasOrderLine(order.id)) {
+          orderLineManagerRef.current.updateOrderLine(order);
+        } else {
+          orderLineManagerRef.current?.addOrderLine(order);
+        }
+      });
+    } else {
+      // No orders provided, clear all order lines
+      orderLineManagerRef.current.removeOrderLinesNotIn([]);
+    }
+
+    // Update position lines
+    if (positions && positions.length > 0) {
+      // Get current position symbols
+      const currentSymbols = positions.map(position => position.symbol);
+      
+      // Remove position lines that are no longer in the positions array
+      orderLineManagerRef.current.removePositionLinesNotIn(currentSymbols);
+      
+      positions.forEach(position => {
+        if (orderLineManagerRef.current?.hasPositionLine(position.symbol)) {
+          orderLineManagerRef.current.updatePositionLine(position);
+        } else {
+          orderLineManagerRef.current?.addPositionLine(position);
+        }
+      });
+    } else {
+      // No positions provided, clear all position lines
+      orderLineManagerRef.current.removePositionLinesNotIn([]);
+    }
+  }, [orders, positions]);
 
   // Reset initial load flag when new data is loaded
   useEffect(() => {
