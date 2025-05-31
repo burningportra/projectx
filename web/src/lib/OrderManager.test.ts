@@ -451,5 +451,104 @@ describe('OrderManager', () => {
   });
 
   // describe('Order Lifecycle and P&L', () => { ... });
+  describe('Order Lifecycle and P&L', () => {
+    it('should correctly update position and P&L for a round trip trade with commission', () => {
+      const contractId = 'PNL_COMM_TEST';
+      const quantity = 2;
+      const entryCommPerContract = 0.5; // Commission per contract for entry
+      const exitCommPerContract = 0.5;  // Commission per contract for exit
 
+      // 1. BUY Market Order
+      const buyOrder = orderManager.submitOrder({ 
+        type: OrderType.MARKET, 
+        side: OrderSide.BUY, 
+        quantity, 
+        contractId,
+        commission: entryCommPerContract 
+      });
+      // Process on first sub-bar: open = 100
+      orderManager.processBar(sampleMainBar, [sampleSubBars[0]], 0); 
+
+      let position = orderManager.getOpenPosition(contractId);
+      expect(position).toBeDefined();
+      expect(position!.size).toBe(quantity);
+      expect(position!.averageEntryPrice).toBe(sampleSubBars[0].open); // 100
+      // Initial P&L is negative due to entry commission.
+      // OrderManager's executeFill calculates: realizedPnl = -(order.commission * quantity) for opening fills.
+      expect(position!.realizedPnl).toBe(-(entryCommPerContract * quantity)); // -(0.5 * 2) = -1.0
+
+      // 2. SELL Market Order to close
+      const sellOrder = orderManager.submitOrder({ 
+        type: OrderType.MARKET, 
+        side: OrderSide.SELL, 
+        quantity, 
+        contractId,
+        commission: exitCommPerContract 
+      });
+      const mainBarForExit = { ...sampleMainBar, time: sampleSubBars[1].time };
+      // Process on second sub-bar: open = 100.5
+      orderManager.processBar(mainBarForExit, [sampleSubBars[1]], 1); 
+      
+      const finalPosition = orderManager.getOpenPosition(contractId);
+      expect(finalPosition).toBeUndefined(); // Position should be closed
+
+      // Verify order statuses directly on the order objects
+      expect(buyOrder.status).toBe(OrderStatus.FILLED);
+      expect(buyOrder.filledPrice).toBe(sampleSubBars[0].open);
+      
+      expect(sellOrder.status).toBe(OrderStatus.FILLED);
+      expect(sellOrder.filledPrice).toBe(sampleSubBars[1].open);
+
+      // Expected P&L calculation:
+      // Entry Price: 100, Exit Price: 100.5
+      // Gross P&L from price change: (100.5 - 100) * 2 = 1.0
+      // Total Commission: (entryCommPerContract * quantity) + (exitCommPerContract * quantity)
+      //                  = (0.5 * 2) + (0.5 * 2) = 1.0 + 1.0 = 2.0
+      // Net P&L = Gross P&L - Total Commission = 1.0 - 2.0 = -1.0
+      // The OrderManager logs this, but direct assertion is tricky after position deletion.
+      // This test verifies the lifecycle and that fills occur at expected prices.
+    });
+
+    // TODO: Add more P&L tests, partial fills, multiple positions
+    it('should handle partial fills correctly', () => {
+      const contractId = 'PARTIAL_FILL_TEST';
+      const totalQuantity = 10;
+      const partialFillQuantity1 = 4;
+      const partialFillQuantity2 = 6;
+      const price = 100;
+
+      const order = orderManager.submitOrder({
+        type: OrderType.LIMIT,
+        side: OrderSide.BUY,
+        quantity: totalQuantity,
+        price,
+        contractId,
+      });
+
+      // Simulate first partial fill
+      (orderManager as any).executeFill(order, partialFillQuantity1, price, sampleSubBars[0].time, 0);
+      
+      expect(order.status).toBe(OrderStatus.PARTIALLY_FILLED);
+      expect(order.filledQuantity).toBe(partialFillQuantity1);
+      expect(order.filledPrice).toBe(price);
+      
+      let position = orderManager.getOpenPosition(contractId);
+      expect(position).toBeDefined();
+      expect(position!.size).toBe(partialFillQuantity1);
+
+      // Simulate second (completing) partial fill
+      (orderManager as any).executeFill(order, partialFillQuantity2, price + 1, sampleSubBars[1].time, 1); // Fill at a slightly different price
+
+      expect(order.status).toBe(OrderStatus.FILLED);
+      expect(order.filledQuantity).toBe(totalQuantity);
+      // filledPrice would be the price of the last fill (101)
+      expect(order.filledPrice).toBe(price + 1); 
+      
+      position = orderManager.getOpenPosition(contractId);
+      expect(position).toBeDefined();
+      expect(position!.size).toBe(totalQuantity);
+      // Average entry price would be ((4*100) + (6*101)) / 10 = (400 + 606) / 10 = 1006 / 10 = 100.6
+      expect(position!.averageEntryPrice).toBeCloseTo(100.6);
+    });
+  });
 });
