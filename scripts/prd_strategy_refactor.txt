@@ -1,0 +1,56 @@
+**PRD: Strategy Trade & P&L Handling Refactor**
+
+**1. Project Goal:**
+Refactor strategy classes (`EmaStrategy.ts`, `TrendStartStrategy.ts`) to ensure that all trade execution details (fill prices, fill times, P&L) are sourced directly from `OrderManager`. This will make `OrderManager` the single source of truth for trade outcomes and resolve current issues where P&L and trade statistics are not displaying correctly in the `BacktesterPage.tsx` UI.
+
+**2. Background:**
+Currently, strategies maintain their own `SimulatedTrade` objects and perform some P&L calculations independently. This can lead to discrepancies and makes it difficult to ensure that the UI reflects the true state as managed by `OrderManager`. The recent enhancements to `OrderManager` (sub-bar processing, detailed fill logic) make it the ideal source for all execution facts.
+
+**3. Key Requirements:**
+
+*   **R1: `OrderManager` as Source of Truth:**
+    *   R1.1: Strategies must rely on `OrderManager` for actual fill prices, fill times, and final P&L of trades.
+    *   R1.2: `OrderManager`'s internal position management and P&L calculation per position should be considered authoritative.
+
+*   **R2: Strategy Refactoring (`EmaStrategy.ts` and `TrendStartStrategy.ts`):**
+    *   **R2.1: `openPosition` Logic:**
+        *   When a strategy's entry signal occurs, it should submit the entry order(s) (including SL/TP if applicable) to `OrderManager`.
+        *   The strategy will create/update its internal representation of an open trade (e.g., `this.openTrade`), but critical fields like actual `entryPrice` and `entryTime` should be populated *only* upon confirmation of the fill from `OrderManager`.
+    *   **R2.2: `handleOrderFill` (or equivalent) Logic:**
+        *   This method will be the primary point for strategies to react to `OrderManager`'s fill confirmations.
+        *   **Entry Fill Confirmation:** When `OrderManager` confirms an entry order fill, the strategy updates its `openTrade` record with `order.filledPrice` and `order.filledTime`.
+        *   **Exit Fill Confirmation (SL, TP, or strategy-initiated exit order):** When `OrderManager` confirms a fill that closes the strategy's `openTrade`:
+            *   The strategy updates its `openTrade` record with `order.filledPrice` (exit price) and `order.filledTime` (exit time).
+            *   The strategy calculates the final P&L for its `openTrade` record *based on these `OrderManager`-provided entry and exit fill details* and associated commissions.
+            *   The strategy moves the finalized `openTrade` to its list of completed trades (e.g., `this.trades`).
+            *   The strategy sets its `openTrade = null`.
+            *   The strategy should **not** submit redundant closing orders if `OrderManager` has already processed the fill that closed the position (e.g., an SL or TP hit).
+    *   **R2.3: `closePosition` (or equivalent for signal-based exits) Logic:**
+        *   When a strategy signal (not an SL/TP hit) dictates closing an open trade, this method's sole responsibility regarding execution is to submit the appropriate closing order(s) to `OrderManager`.
+        *   It should **not** finalize the P&L or move the trade to completed trades at this point. That will be handled by `handleOrderFill` when `OrderManager` confirms the fill of this strategy-initiated exit order.
+    *   **R2.4: `getTrades()` Method:**
+        *   This method in each strategy must return a list of `SimulatedTrade` objects where all execution details (entry/exit prices, times, P&L) are consistent with `OrderManager`'s processed fills.
+
+*   **R3: `OrderManager` Enhancements (Consideration):**
+    *   R3.1: Evaluate if `OrderManager` needs a method to provide a log or history of its `ManagedPosition` objects after they are closed, including their final `realizedPnl`. This could simplify how strategies retrieve final P&L for their `SimulatedTrade` records. (If this is too complex, strategies can derive P&L from the sequence of fill events for their specific orders). *Initial approach: Strategies will calculate P&L based on fill data passed back from OrderManager for their specific orders.*
+
+*   **R4: UI Verification:**
+    *   R4.1: After refactoring, the `CompactResultsPanel` and `AnalysisPanel` in `BacktesterPage.tsx` must correctly display all P&L statistics (Total P&L, Win Rate, etc.) and trade details based on the refactored strategy logic.
+
+**4. Scope:**
+*   **In Scope:**
+    *   Refactoring `EmaStrategy.ts` as described.
+    *   Refactoring `TrendStartStrategy.ts` as described.
+    *   Ensuring `BacktesterPage.tsx` correctly consumes and displays data from the refactored strategies.
+    *   Updating any relevant unit tests for strategies if their public methods or return values change significantly.
+*   **Out of Scope (for this PRD):**
+    *   Adding new statistical metrics beyond what's currently intended for display.
+    *   Fundamental changes to `OrderManager`'s core fill execution algorithms (unless a minor change is needed to expose P&L data, see R3.1).
+    *   Implementing Phase 2 features (STOP_LIMIT orders, advanced slippage, etc.).
+
+**5. Success Criteria:**
+*   P&L, win rate, total trades, and individual trade details are accurately displayed in both `CompactResultsPanel` and `AnalysisPanel` in `BacktesterPage.tsx`.
+*   Strategies correctly record trade entry/exit prices and times based on `OrderManager`'s fills.
+*   Strategies correctly calculate P&L for each trade based on `OrderManager`'s fill data and associated commissions.
+*   Code is cleaner, with `OrderManager` as the clear source of truth for execution facts.
+*   Existing unit tests for `OrderManager` continue to pass. Any strategy unit tests are updated and pass.

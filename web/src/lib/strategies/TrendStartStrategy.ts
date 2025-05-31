@@ -11,7 +11,8 @@ import {
   StrategyConfig,
   UTCTimestamp,
   OrderStatus,
-  OrderManagerState
+  OrderManagerState,
+  SubBarData
 } from '@/lib/types/backtester';
 import { OrderManager } from '@/lib/OrderManager';
 import { TrendIdentifier, TrendStartSignal as TrendLibSignal, TrendIdentificationState } from '@/lib/trend-analysis/TrendIdentifier';
@@ -27,11 +28,14 @@ interface StrategyManagedTrade {
   entrySignalBarIndex: number;
   entrySignalPrice: number; // Price at which original signal occurred
   entryOrder?: Order; // The primary entry order that opened/initiated this logical trade
+  exitOrder?: Order; // The strategy-initiated exit order
   stopLossOrder?: Order;
   takeProfitOrder?: Order;
   currentManagedPositionId?: string; // The ID of the actual position in OrderManager
   initialQuantity: number; // Quantity for this logical trade segment
   side: OrderSide; // Added side to StrategyManagedTrade
+  signalExit?: StrategyTrendSignal; // Signal that triggered a pending exit
+  exitReason?: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'MANUAL' | 'REVERSAL_EXIT'; // Reason for pending/actual exit
 }
 
 export interface TrendStartStrategyConfig extends StrategyConfig {
@@ -84,10 +88,11 @@ export class TrendStartStrategy {
 
   // Process a single bar and generate signals - now uses forward testing with OrderManager
   public async processBar(
-    bar: BacktestBarData, 
-    barIndex: number, 
-    allBars: BacktestBarData[], 
-    contractId: string = 'UNKNOWN', 
+    mainBar: BacktestBarData,
+    subBarsForMainBar: SubBarData[] | undefined,
+    barIndex: number,
+    allMainBars: BacktestBarData[],
+    contractId: string = 'UNKNOWN',
     timeframe: string = '1h'
   ): Promise<{
     signal: StrategySignal | null;
@@ -95,15 +100,15 @@ export class TrendStartStrategy {
     filledOrders: Order[];
   }> {
     // Process any pending orders first
-    const filledOrders = this.orderManager.processBar(bar, barIndex);
+    const filledOrders = this.orderManager.processBar(mainBar, subBarsForMainBar, barIndex);
     
     // Handle filled orders
     for (const order of filledOrders) {
-      this.handleOrderFill(order, bar);
+      this.handleOrderFill(order, mainBar);
     }
 
     // Step 1: Get trend signals from TrendIdentifier
-    const identifiedSignals = await this.trendIdentifier.getSignalsForRange(allBars, barIndex, contractId, timeframe);
+    const identifiedSignals = await this.trendIdentifier.getSignalsForRange(allMainBars, barIndex, contractId, timeframe);
     const newSignalsForAction = this.processNewTrendSignals(identifiedSignals);
     const latestSignalForAction = newSignalsForAction[newSignalsForAction.length - 1];
     
@@ -117,36 +122,45 @@ export class TrendStartStrategy {
       const confidence = latestSignalForAction.confidence || 0;
       
       // Check if we should exit current position
-      if (this.shouldExitPosition(latestSignalForAction, currentPosition)) {
-        // Log the completed trade before closing
-        if (currentPosition) {
-          this.logCompletedTrade(currentPosition, bar.open, bar.time, `${latestSignalForAction.type} signal`, contractId);
+      if (this.activeStrategyTrade && this.shouldExitPosition(latestSignalForAction, currentPosition)) {
+        // If currentPosition matches activeStrategyTrade, then proceed to close.
+        // The actual P&L logging and moving to completedTradesLog happens in handleOrderFill.
+        if (currentPosition && this.activeStrategyTrade.currentManagedPositionId === currentPosition.id) {
+            chartSignal = this.closePosition(this.activeStrategyTrade, mainBar, latestSignalForAction, `${latestSignalForAction.type} signal to exit`);
         }
-        
-        chartSignal = this.closePosition({
-          id: currentPosition!.id, 
-          size: currentPosition!.size, 
-          side: currentPosition!.side, 
-          contractId: currentPosition!.contractId
-        }, bar, `${latestSignalForAction.type} received`);
       }
       
       // Check if we should enter new position
       if (this.shouldEnterPosition(latestSignalForAction, currentPosition, confidence)) {
-        // If we have a contrary position, close it first
-        if (currentPosition && currentPosition.side !== OrderSide.BUY) {
-          this.logCompletedTrade(currentPosition, bar.open, bar.time, `${latestSignalForAction.type} signal - reversing`, contractId);
-          this.closePosition({
-            id: currentPosition.id, 
-            size: currentPosition.size, 
-            side: currentPosition.side, 
-            contractId: currentPosition.contractId
-          }, bar, `${latestSignalForAction.type} received - reversing`);
+        // If we have a contrary position (managed by OrderManager), close it first.
+        // The closing of this OrderManager position will be handled, and its P&L logged by handleOrderFill if it matches an activeStrategyTrade.
+        // If it's just an OrderManager position without a corresponding activeStrategyTrade, its closure won't affect strategy P&L directly here.
+        if (currentPosition && 
+            ((latestSignalForAction.type === 'CUS' && currentPosition.side === OrderSide.SELL) ||
+             (latestSignalForAction.type === 'CDS' && currentPosition.side === OrderSide.BUY))) { // CDS is not used for entry in this strategy, but for completion
+          
+          console.log(`[TrendStartStrategy] Signal to reverse. Closing existing OrderManager position ${currentPosition.id}`);
+          // Submit order to close OrderManager's position.
+          // The P&L for this old position (if it was part of an activeStrategyTrade) will be handled by handleOrderFill.
+          this.orderManager.submitOrder({
+            contractId: currentPosition.contractId,
+            tradeId: currentPosition.id, // Use OrderManager's position ID as tradeId for this closing order
+            type: OrderType.MARKET,
+            side: currentPosition.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY,
+            quantity: currentPosition.size,
+            price: mainBar.open, // Or appropriate market price
+            submittedTime: mainBar.time,
+            message: `Closing position ${currentPosition.id} for reversal due to ${latestSignalForAction.type}`,
+            isExit: true
+          });
+          // If this closed position was this.activeStrategyTrade, handleOrderFill will finalize it.
+          // Then, the logic below will open a new activeStrategyTrade.
         }
         
-        // Open new position
+        // Open new position only if no current position or if current position is being reversed (and will be closed by above order)
+        // The actual check for !currentPosition before calling openNewPosition is inside shouldEnterPosition or implicitly by flow.
         const side = latestSignalForAction.type === 'CUS' ? OrderSide.BUY : OrderSide.SELL;
-        chartSignal = this.openNewPosition(latestSignalForAction, bar, contractId, allBars, side);
+        chartSignal = this.openNewPosition(latestSignalForAction, mainBar, contractId, allMainBars, side);
       }
     }
     
@@ -160,43 +174,81 @@ export class TrendStartStrategy {
   }
 
   // Handle order fill events
-  private handleOrderFill(order: Order, bar: BacktestBarData): void {
-    // console.log(`[TrendStartStrategy] Order filled: ${order.id} at ${order.filledPrice}`);
-    
-    if (order.isStopLoss && this.activeStrategyTrade) {
-      // Stop loss was hit - close the position
-      // console.log(`[TrendStartStrategy] Stop loss order filled: ${order.id} at ${order.filledPrice} - closing position`);
-      const signal: StrategySignal = {
-        barIndex: 0, // Would need to track this properly
-        time: bar.time,
-        type: StrategySignalType.SELL,
-        price: order.filledPrice!,
-        message: 'Stop loss triggered',
-      };
-      this.closePosition({
-        id: this.activeStrategyTrade.id, 
-        size: this.activeStrategyTrade.initialQuantity, 
-        side: this.activeStrategyTrade.side, 
-        contractId: order.contractId || 'UNKNOWN'
-      }, bar, 'Stop loss triggered');
-    } else if (order.isTakeProfit && this.activeStrategyTrade) {
-      // Take profit was hit - close the position
-      // console.log(`[TrendStartStrategy] Take profit order filled: ${order.id} at ${order.filledPrice} - closing position`);
-      const signal: StrategySignal = {
-        barIndex: 0, // Would need to track this properly
-        time: bar.time,
-        type: StrategySignalType.SELL,
-        price: order.filledPrice!,
-        message: 'Take profit triggered',
-      };
-      this.closePosition({
-        id: this.activeStrategyTrade.id, 
-        size: this.activeStrategyTrade.initialQuantity, 
-        side: this.activeStrategyTrade.side, 
-        contractId: order.contractId || 'UNKNOWN'
-      }, bar, 'Take profit triggered');
+  private handleOrderFill(order: Order, mainBar: BacktestBarData): void {
+    // console.log(`[TrendStartStrategy] Order filled: ${order.id} (${order.side} ${order.type}) at ${order.filledPrice} qty ${order.filledQuantity}`);
+
+    if (!this.activeStrategyTrade || order.parentTradeId !== this.activeStrategyTrade.id) {
+      // This fill is not for the current active strategy trade, or no active trade.
+      // Could be a lingering order from a previous trade or unmanaged.
+      // console.warn(`[TrendStartStrategy] Filled order ${order.id} does not match active strategy trade ${this.activeStrategyTrade?.id}. Ignoring for strategy trade state.`);
+      return;
     }
+
+    if (order.isEntry && order.id === this.activeStrategyTrade.entryOrder?.id && order.filledPrice && order.filledTime) {
+      // Entry order filled, update the activeStrategyTrade's entryOrder with fill details
+      this.activeStrategyTrade.entryOrder = { ...order }; // Capture all fill details
+      this.activeStrategyTrade.currentManagedPositionId = order.contractId; // Assuming position ID might be contract ID or derived
+      console.log(`[TrendStartStrategy] Confirmed entry for active trade ${this.activeStrategyTrade.id} at ${order.filledPrice}`);
     
+    } else if ((order.isStopLoss || order.isTakeProfit || order.isExit) && order.filledPrice && order.filledTime) {
+      // An exit order (SL, TP, or strategy-initiated) for the active trade has been filled.
+      // This fill closes the activeStrategyTrade.
+      
+      const entryOrder = this.activeStrategyTrade.entryOrder;
+      if (!entryOrder || entryOrder.filledPrice === undefined || entryOrder.filledTime === undefined) {
+        console.error(`[TrendStartStrategy] Cannot finalize trade ${this.activeStrategyTrade.id}: Entry order details are missing or not filled.`);
+        this.activeStrategyTrade = null; // Clear inconsistent trade
+        return;
+      }
+
+      const exitReason = order.isStopLoss ? 'STOP_LOSS' : (order.isTakeProfit ? 'TAKE_PROFIT' : (this.activeStrategyTrade.entryOrder?.message?.includes("reversing") ? 'REVERSAL_EXIT' : 'SIGNAL'));
+      
+      const entryCommRate = entryOrder.commission || 0; // Per contract
+      const exitCommRate = order.commission || 0;     // Per contract
+      const totalCommission = (entryCommRate + exitCommRate) * this.activeStrategyTrade.initialQuantity;
+      const sideMultiplier = this.activeStrategyTrade.side === OrderSide.BUY ? 1 : -1;
+
+      const pnl = (order.filledPrice - entryOrder.filledPrice) * this.activeStrategyTrade.initialQuantity * sideMultiplier - totalCommission;
+
+      const completedTrade: SimulatedTrade = {
+        id: this.activeStrategyTrade.id,
+        entryTime: entryOrder.filledTime,
+        entryPrice: entryOrder.filledPrice,
+        exitTime: order.filledTime,
+        exitPrice: order.filledPrice,
+        type: this.activeStrategyTrade.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+        size: this.activeStrategyTrade.initialQuantity,
+        profitOrLoss: pnl,
+        commission: totalCommission, // Store total commission for the trade
+        status: 'CLOSED',
+        signalEntry: this.activeStrategyTrade.entryOrder ? { // Assuming entryOrder message contains signal info
+            barIndex: this.activeStrategyTrade.entrySignalBarIndex,
+            time: entryOrder.submittedTime, // Signal time is submission time
+            price: this.activeStrategyTrade.entrySignalPrice, // Signal price
+            type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL,
+            message: this.activeStrategyTrade.entryOrder.message || 'Entry signal'
+        } : undefined,
+        exitOrder: { ...order },
+        stopLossOrder: this.activeStrategyTrade.stopLossOrder, // Keep record of original SL/TP orders
+        takeProfitOrder: this.activeStrategyTrade.takeProfitOrder,
+        exitReason: exitReason,
+      };
+      
+      this.completedTradesLog.push(completedTrade);
+      console.log(`[TrendStartStrategy] Closed trade ${completedTrade.id}. Entry: ${completedTrade.entryPrice}, Exit: ${completedTrade.exitPrice}, P&L: ${completedTrade.profitOrLoss?.toFixed(2)}`);
+      
+      // Generate a chart signal for the exit
+      const chartSignalType = completedTrade.type === TradeType.BUY ? StrategySignalType.SELL : StrategySignalType.BUY;
+      this.signals.push({
+        barIndex: mainBar.originalIndex !== undefined ? mainBar.originalIndex : 0, // Use originalIndex if available
+        time: order.filledTime,
+        type: chartSignalType,
+        price: order.filledPrice,
+        message: `Exit (${exitReason}) for trade ${completedTrade.id}`
+      });
+
+      this.activeStrategyTrade = null;
+    }
     // Log the current state after handling the fill
     const openTrade = this.getOpenTrade();
     const pendingOrders = this.getPendingOrders();
@@ -244,17 +296,18 @@ export class TrendStartStrategy {
   
   private openNewPosition(
     trendSignal: StrategyTrendSignal, 
-    currentBar: BacktestBarData, 
+    currentMainBar: BacktestBarData, // Changed currentBar to currentMainBar
     contractId: string, 
-    allBars: BacktestBarData[], 
+    allMainBars: BacktestBarData[], // Changed allBars to allMainBars
     side: OrderSide
   ): StrategySignal | null {
-    const signalBar = allBars[trendSignal.barIndex];
+    const signalBar = allMainBars[trendSignal.barIndex]; // Changed allBars to allMainBars
     if (!signalBar) return null;
     
-    const entryPrice = this.config.useMarketOrders ? currentBar.open : signalBar.close;
+    const entryPrice = this.config.useMarketOrders ? currentMainBar.open : signalBar.close; 
     const orderType = this.config.useMarketOrders ? OrderType.MARKET : OrderType.LIMIT;
     const logicalTradeId = `strat_trade_${this.logicalTradeIdCounter++}`;
+    const perContractCommission = this.config.positionSize > 0 ? (this.config.commission || 0) / this.config.positionSize : 0;
     
     // Submit entry order via OrderManager
     const entryOrder = this.orderManager.submitOrder({
@@ -264,9 +317,11 @@ export class TrendStartStrategy {
       side: side,
       quantity: this.config.positionSize,
       price: entryPrice,
-      submittedTime: currentBar.time,
+      submittedTime: currentMainBar.time,
       message: `Entry ${side === OrderSide.BUY ? 'BUY' : 'SELL'} - Rule: ${trendSignal.rule}`,
-      parentTradeId: logicalTradeId
+      parentTradeId: logicalTradeId,
+      commission: perContractCommission,
+      isEntry: true // Mark as entry order
     });
     
     // Track this trade in our strategy
@@ -283,8 +338,8 @@ export class TrendStartStrategy {
     // Generate chart signal for UI
     const chartSignalType = side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL;
     const signal: StrategySignal = {
-      barIndex: currentBar.time as any, // This is actually the timestamp, not index
-      time: currentBar.time,
+      barIndex: currentMainBar.time as any, // This is actually the timestamp, not index // Changed currentBar to currentMainBar
+      time: currentMainBar.time, // Changed currentBar to currentMainBar
       type: chartSignalType,
       price: entryPrice,
       message: `${side === OrderSide.BUY ? 'Buy' : 'Sell'} signal: ${trendSignal.rule}`
@@ -295,39 +350,56 @@ export class TrendStartStrategy {
   }
 
   private closePosition(
-    positionToClose: { id: string, size: number, side: OrderSide, contractId: string }, 
-    bar: BacktestBarData, 
+    strategyTradeToClose: StrategyManagedTrade, 
+    mainBar: BacktestBarData,
+    signal: StrategyTrendSignal, // The strategy signal causing the closure
     reason: string
   ): StrategySignal | null {
-    const exitSide = positionToClose.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY;
-    const exitPrice = bar.open; 
+    if (!this.activeStrategyTrade || this.activeStrategyTrade.id !== strategyTradeToClose.id) {
+      console.warn(`[TrendStartStrategy] closePosition called for a trade ${strategyTradeToClose.id} that is not the active one, or no active trade.`);
+      return null;
+    }
+
+    const exitSide = strategyTradeToClose.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY;
+    const exitPrice = mainBar.open; // For market order submission
+    const perContractCommission = this.config.positionSize > 0 ? (this.config.commission || 0) / this.config.positionSize : 0;
     
-    this.orderManager.submitOrder({
-      contractId: positionToClose.contractId,
-      tradeId: positionToClose.id,
-      type: OrderType.MARKET,
+    // Cancel any existing SL/TP for this activeStrategyTrade
+    if (this.activeStrategyTrade.stopLossOrder) this.orderManager.cancelOrder(this.activeStrategyTrade.stopLossOrder.id);
+    if (this.activeStrategyTrade.takeProfitOrder) this.orderManager.cancelOrder(this.activeStrategyTrade.takeProfitOrder.id);
+
+    const exitOrder = this.orderManager.submitOrder({
+      contractId: strategyTradeToClose.currentManagedPositionId || 'UNKNOWN', // Use contractId from active trade
+      tradeId: strategyTradeToClose.id, // Link to strategy's logical trade ID
+      type: OrderType.MARKET, // Assuming market orders for signal-based exits for now
       side: exitSide,
-      quantity: positionToClose.size,
+      quantity: strategyTradeToClose.initialQuantity, // Use initial quantity of the logical trade
       price: exitPrice,
-      submittedTime: bar.time,
-      message: `Closing pos ${positionToClose.id}: ${reason}`,
-      parentTradeId: positionToClose.id
+      submittedTime: mainBar.time,
+      message: `Closing trade ${strategyTradeToClose.id}: ${reason}`,
+      parentTradeId: strategyTradeToClose.id, // Link back to the strategy's logical trade
+      isExit: true,
+      commission: perContractCommission
     });
     
-    if (this.activeStrategyTrade && this.activeStrategyTrade.currentManagedPositionId === positionToClose.id) {
-      this.activeStrategyTrade = null;
-    }
+    // Store the submitted exit order in the activeStrategyTrade.
+    // The trade will be finalized by handleOrderFill when this exitOrder is confirmed filled.
+    this.activeStrategyTrade.exitOrder = exitOrder;
+    this.activeStrategyTrade.signalExit = signal; // Store the signal that initiated this exit attempt
+    this.activeStrategyTrade.exitReason = 'SIGNAL'; // Mark reason as SIGNAL
+    
+    console.log(`[TrendStartStrategy] Submitted signal-based exit order ${exitOrder.id} for trade ${strategyTradeToClose.id}`);
     
     const chartSignalType = exitSide === OrderSide.SELL ? StrategySignalType.SELL : StrategySignalType.BUY;
-    this.signals.push({
-      barIndex: bar.time as any,
-      time: bar.time,
+    const chartSignal: StrategySignal = {
+      barIndex: mainBar.originalIndex !== undefined ? mainBar.originalIndex : 0,
+      time: mainBar.time,
       type: chartSignalType,
       price: exitPrice,
-      message: `Exiting pos ${positionToClose.id}: ${reason}`
-    });
-    
-    return this.signals[this.signals.length - 1];
+      message: `Exiting pos ${strategyTradeToClose.id}: ${reason}`
+    };
+    this.signals.push(chartSignal);
+    return chartSignal;
   }
 
   private logCompletedTrade(
@@ -391,24 +463,26 @@ export class TrendStartStrategy {
   }
 
   // Run backtest on all bars - now uses forward testing approach with OrderManager
-  public async backtest(bars: BacktestBarData[], contractId: string = 'UNKNOWN', timeframe: string = '1h'): Promise<BacktestResults> {
+  public async backtest(mainBars: BacktestBarData[], allSubBars?: SubBarData[], contractId: string = 'UNKNOWN', timeframe: string = '1h'): Promise<BacktestResults> { // Added allSubBars and changed bars to mainBars
     // Reset state using enhanced reset method
     this.reset();
     
-    // console.log(`[TrendStartStrategy] Starting forward testing backtest with ${bars.length} bars for ${contractId} ${timeframe}`);
+    // console.log(`[TrendStartStrategy] Starting forward testing backtest with ${mainBars.length} bars for ${contractId} ${timeframe}`);
     
     // Process each bar sequentially using forward testing
-    for (let i = 0; i < bars.length; i++) {
-      const result = await this.processBar(bars[i], i, bars, contractId, timeframe);
+    for (let i = 0; i < mainBars.length; i++) {
+      const currentMainBar = mainBars[i];
+      const relevantSubBars = allSubBars?.filter(sb => sb.parentBarIndex === i);
+      const result = await this.processBar(currentMainBar, relevantSubBars, i, mainBars, contractId, timeframe);
       // Process any filled orders (already handled in processBar)
     }
     
     // Close any open trade at the end
-    if (this.activeStrategyTrade && bars.length > 0) {
-      const lastBar = bars[bars.length - 1];
-      const entryBar = bars[this.activeStrategyTrade.entrySignalBarIndex];
+    if (this.activeStrategyTrade && mainBars.length > 0) { // Changed bars to mainBars
+      const lastMainBar = mainBars[mainBars.length - 1]; // Changed lastBar to lastMainBar, bars to mainBars
+      const entryBar = mainBars[this.activeStrategyTrade.entrySignalBarIndex]; // Changed bars to mainBars
       const entryPrice = this.activeStrategyTrade.entryOrder?.filledPrice || this.activeStrategyTrade.entrySignalPrice;
-      const exitPrice = lastBar.close;
+      const exitPrice = lastMainBar.close; // Corrected lastBar to lastMainBar
       
       // Use OrderManager's P&L calculation service
       const pnlInfo = this.orderManager.getClosedPositionPnL(
@@ -422,10 +496,10 @@ export class TrendStartStrategy {
       // Create a proper SimulatedTrade object
       const finalTrade: SimulatedTrade = {
         id: this.activeStrategyTrade.id,
-        entryTime: this.activeStrategyTrade.entryOrder?.submittedTime || (entryBar ? entryBar.time : lastBar.time),
-        exitTime: lastBar.time,
+        entryTime: this.activeStrategyTrade.entryOrder?.submittedTime || (entryBar ? entryBar.time : lastMainBar.time),
+        exitTime: lastMainBar.time,
         entryPrice: entryPrice,
-        exitPrice: exitPrice,
+        exitPrice: exitPrice, 
         size: this.activeStrategyTrade.initialQuantity,
         type: this.activeStrategyTrade.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
         profitOrLoss: pnlInfo.netPnl,
@@ -433,15 +507,15 @@ export class TrendStartStrategy {
         status: 'CLOSED',
         signalEntry: {
           barIndex: this.activeStrategyTrade.entrySignalBarIndex,
-          time: entryBar ? entryBar.time : lastBar.time,
+          time: entryBar ? entryBar.time : lastMainBar.time, // Corrected lastBar.time
           price: this.activeStrategyTrade.entrySignalPrice,
           type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.BUY : StrategySignalType.SELL,
           message: 'Force closed at end of backtest'
         },
         signalExit: {
-          barIndex: bars.length - 1,
-          time: lastBar.time,
-          price: lastBar.close,
+          barIndex: mainBars.length - 1,
+          time: lastMainBar.time,
+          price: lastMainBar.close,
           type: this.activeStrategyTrade.side === OrderSide.BUY ? StrategySignalType.SELL : StrategySignalType.BUY,
           message: 'End of backtest'
         }

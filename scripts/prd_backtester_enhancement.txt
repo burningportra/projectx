@@ -1,0 +1,70 @@
+Project Goal:
+Enhance the backtesting framework to achieve professional-grade order and trade execution, providing more realistic simulation results.
+
+Key Area of Focus:
+The primary component for enhancement is the order execution logic within 'web/src/lib/OrderManager.ts', utilized by 'web/src/app/backtester/page.tsx'.
+
+Phase 1: Integration of Sub-Timeframe Bar Data for Realistic Fills
+
+Core Requirement:
+Modify 'OrderManager.processBar' to utilize sub-timeframe bar data ('SubBarData[]') for determining order fills, allowing for intra-bar fill precision.
+
+Specific Fill Logic Enhancements for 'OrderManager.processBar' (when processing sub-bars):
+
+1.  Market Orders:
+    *   Execution: Fill at the 'open' price of the first sub-bar corresponding to the main bar where the order becomes active.
+    *   Timestamp: Fill time should be the timestamp of this first sub-bar.
+
+2.  Limit Orders:
+    *   Trigger: A Buy Limit order triggers if any sub-bar's 'low' price is less than or equal to the 'order.price'. A Sell Limit order triggers if any sub-bar's 'high' price is greater than or equal to the 'order.price'.
+    *   Execution: Fill at 'order.price'.
+    *   Timestamp: Fill time should be the timestamp of the sub-bar that triggered the fill.
+
+3.  Standalone Stop Orders (Entry/Regular Exit, not SL/TP attached to positions):
+    *   Trigger: A Buy Stop order triggers if any sub-bar's 'high' price is greater than or equal to the 'order.stopPrice'. A Sell Stop order triggers if any sub-bar's 'low' price is less than or equal to the 'order.stopPrice'.
+    *   Execution: Fill at 'order.stopPrice'.
+    *   Timestamp: Fill time should be the timestamp of the sub-bar that triggered the fill.
+
+4.  Stop-Loss (SL) and Take-Profit (TP) Orders (OCO - One-Cancels-Other):
+    *   Context: These orders are attached to an open position.
+    *   Processing: Evaluate against each sub-bar sequentially.
+    *   Trigger (Long Position Example):
+        *   SL: If a sub-bar's 'low' <= SL 'stopPrice'.
+        *   TP: If a sub-bar's 'high' >= TP 'price'.
+    *   Trigger (Short Position Example):
+        *   SL: If a sub-bar's 'high' >= SL 'stopPrice'.
+        *   TP: If a sub-bar's 'low' <= TP 'price'.
+    *   OCO Execution Logic:
+        *   If only SL triggers on a sub-bar: Fill SL at its 'stopPrice'. Cancel the paired TP order.
+        *   If only TP triggers on a sub-bar: Fill TP at its 'price'. Cancel the paired SL order.
+        *   If a single sub-bar's range (between its 'low' and 'high') could theoretically trigger both SL and TP:
+            *   Determine which price level was "hit first" by analyzing the sub-bar's OHLC sequence (e.g., if sub-bar open is between SL and TP, did price move towards SL or TP first?).
+            *   If ambiguity remains (e.g., sub-bar opens outside SL/TP range and its range spans both), the SL order takes precedence.
+            *   The prioritized order fills, and the other is cancelled.
+    *   Timestamp: Fill time should be the timestamp of the sub-bar that triggered the fill.
+
+Technical Modifications:
+
+1.  'OrderManager.processBar' Signature Update:
+    *   Change from: 'processBar(mainBar: BacktestBarData, barIndex: number)'
+    *   Change to: 'processBar(mainBar: BacktestBarData, subBarsForMainBar: SubBarData[], barIndex: number)'
+
+2.  Fallback Mechanism:
+    *   If 'subBarsForMainBar' is empty or not provided, 'OrderManager.processBar' must gracefully fall back to using the 'mainBar' OHLC data for fills (maintaining current behavior as a baseline).
+
+3.  'BacktesterPage.tsx' Adjustments:
+    *   Modify the playback and data handling logic to correctly pass the relevant array of 'SubBarData' (sub-bars corresponding to the current main bar) to the updated 'OrderManager.processBar' method.
+
+Testing Requirements:
+*   Develop and execute comprehensive test cases for the new fill logic, covering:
+    *   Market, Limit, and Stop order fills using sub-bar data.
+    *   SL/TP OCO logic, including scenarios where both could trigger.
+    *   Correct timestamping of fills to sub-bar granularity.
+    *   Scenarios with price gaps between sub-bars and across main bars.
+    *   Correct functioning of the fallback mechanism when sub-bar data is unavailable.
+    *   Verification of P&L calculations with the new fill prices.
+
+Future Considerations (Phase 2 - to be detailed in subsequent PRDs/Tasks):
+*   Implementation of 'STOP_LIMIT' order type using sub-bar data.
+*   Advanced slippage modeling.
+*   Configurable "Trade on Close" vs. "Trade on Next Open" logic at the sub-bar level.

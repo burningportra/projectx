@@ -58,18 +58,26 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
       const validTrades = tradesToProcess
         .filter(trade => {
           // Only include trades with valid exit times and P&L
-          const isValid = trade.exitTime && 
-                         trade.profitOrLoss !== undefined && 
-                         trade.exitTime > 0 && 
-                         !isNaN(trade.exitTime) && 
-                         !isNaN(trade.profitOrLoss);
+          const exitTime = trade.exitTime || trade.entryTime; // Fallback to entry time if exit time is missing
+          const profitOrLoss = trade.profitOrLoss !== undefined ? trade.profitOrLoss : 0;
+          
+          const isValid = exitTime && 
+                         profitOrLoss !== undefined && 
+                         exitTime > 0 && 
+                         !isNaN(exitTime) && 
+                         !isNaN(profitOrLoss);
           
           if (!isValid) {
-            // console.warn('[PnLChart] Filtering out invalid trade:', trade);
+            console.warn('[PnLChart] Filtering out invalid trade:', trade);
           }
           return isValid;
         })
-        .sort((a, b) => (a.exitTime || 0) - (b.exitTime || 0)); // Sort by exit time ascending
+        .sort((a, b) => {
+          // Use exit time if available, otherwise fall back to entry time
+          const timeA = a.exitTime || a.entryTime || 0;
+          const timeB = b.exitTime || b.entryTime || 0;
+          return timeA - timeB;
+        }); // Sort by time ascending
 
       // Double-check sorting by validating order
       for (let i = 1; i < validTrades.length; i++) {
@@ -110,8 +118,9 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
 
       // Process each valid trade
       validTrades.forEach((trade, index) => {
-        const exitTime = trade.exitTime!;
-        const profitOrLoss = trade.profitOrLoss!;
+        // Use exit time if available, otherwise fall back to entry time
+        const exitTime = trade.exitTime || trade.entryTime!;
+        const profitOrLoss = trade.profitOrLoss !== undefined ? trade.profitOrLoss : 0;
 
         cumulativePnL += profitOrLoss;
         const equityValue = startingCapital + cumulativePnL;
@@ -309,13 +318,44 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
         )}
       </div>
       <div className="mt-2 text-sm text-gray-600 flex justify-between">
-        <span>Equity Curve: Starting Capital $10,000</span>
+        <span>Equity Curve: Starting Capital $10,000 | Trades: {trades.length}</span>
         <span className={`font-semibold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           Current: ${(10000 + totalPnL).toLocaleString()}
         </span>
       </div>
+      {trades.length > 0 && (
+        <div className="mt-1 text-xs text-gray-500 overflow-x-auto">
+          <details>
+            <summary className="cursor-pointer">Trade Data Debug Info ({trades.length} trades)</summary>
+            <div className="mt-2 p-2 bg-gray-50 rounded text-left overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="p-1 border text-left">ID</th>
+                    <th className="p-1 border text-left">Type</th>
+                    <th className="p-1 border text-left">Entry Time</th>
+                    <th className="p-1 border text-left">Exit Time</th>
+                    <th className="p-1 border text-left">P&L</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trades.map((trade, idx) => (
+                    <tr key={idx} className="border-b">
+                      <td className="p-1 border">{trade.id}</td>
+                      <td className="p-1 border">{trade.type}</td>
+                      <td className="p-1 border">{trade.entryTime ? new Date(trade.entryTime * 1000).toLocaleString() : 'N/A'}</td>
+                      <td className="p-1 border">{trade.exitTime ? new Date(trade.exitTime * 1000).toLocaleString() : 'N/A'}</td>
+                      <td className="p-1 border">${trade.profitOrLoss?.toFixed(2) || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 };
 
-export default PnLChart; 
+export default PnLChart;

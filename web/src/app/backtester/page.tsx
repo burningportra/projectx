@@ -255,14 +255,16 @@ const BacktesterPage = () => {
     if (selectedStrategy === 'ema') {
       // Process EMA strategy incrementally
       for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
-        const currentBar = mainTimeframeBars[barIndex];
+        const currentMainBar = mainTimeframeBars[barIndex];
+        // Find sub-bars for the current main bar
+        const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
         
-        const result = emaStrategy.processBar(currentBar, barIndex, mainTimeframeBars);
+        const result = emaStrategy.processBar(currentMainBar, relevantSubBars, barIndex, mainTimeframeBars);
         
         // Handle signals and create markers
         if (result.signal) {
           const marker = {
-            time: currentBar.time,
+            time: currentMainBar.time, // Changed currentBar to currentMainBar
             position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
             color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
             shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
@@ -296,10 +298,13 @@ const BacktesterPage = () => {
       const strategy = trendStartStrategy;
       
       for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
-        const currentBar = mainTimeframeBars[barIndex];
+        const currentMainBar = mainTimeframeBars[barIndex];
+        // Find sub-bars for the current main bar
+        const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
         try {
           const result = await strategy.processBar(
-            currentBar, 
+            currentMainBar,
+            relevantSubBars, // Pass the sub-bars
             barIndex, 
             mainTimeframeBars.slice(0, barIndex + 1),
             currentContract,

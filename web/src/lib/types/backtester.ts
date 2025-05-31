@@ -133,7 +133,7 @@ export interface SimulatedTrade {
   exitOrder?: Order;           // Order that closed the trade
   stopLossOrder?: Order;       // Active stop loss order
   takeProfitOrder?: Order;     // Active take profit order
-  exitReason?: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'MANUAL'; // Why trade was closed
+  exitReason?: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'MANUAL' | 'REVERSAL_EXIT'; // Why trade was closed
 }
 
 // NEW: Interface for strategy configuration with risk management

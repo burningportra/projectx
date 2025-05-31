@@ -9,7 +9,8 @@ import {
   OrderType,
   OrderSide,
   StrategyConfig,
-  UTCTimestamp
+  UTCTimestamp,
+  SubBarData
 } from '@/lib/types/backtester';
 import { OrderManager } from '@/lib/OrderManager';
 
@@ -89,7 +90,12 @@ export class EmaStrategy {
   }
 
   // Process a single bar and generate signals
-  public processBar(bar: BacktestBarData, barIndex: number, allBars: BacktestBarData[]): {
+  public processBar(
+    mainBar: BacktestBarData, 
+    subBarsForMainBar: SubBarData[] | undefined, 
+    barIndex: number, 
+    allMainBars: BacktestBarData[]
+  ): {
     signal: StrategySignal | null;
     indicators: EmaIndicators;
     filledOrders: Order[];
@@ -98,19 +104,19 @@ export class EmaStrategy {
     this.currentBarIndex = barIndex;
     
     // Process any pending orders first
-    const filledOrders = this.orderManager.processBar(bar, barIndex);
+    const filledOrders = this.orderManager.processBar(mainBar, subBarsForMainBar, barIndex); 
     
     // Handle filled orders and collect any signals they generate
     const orderFillSignals: StrategySignal[] = [];
     for (const order of filledOrders) {
-      const fillSignal = this.handleOrderFill(order, bar);
+      const fillSignal = this.handleOrderFill(order, mainBar); // Changed bar to mainBar
       if (fillSignal) {
         orderFillSignals.push(fillSignal);
       }
     }
 
     // Get closing prices up to current bar
-    const closePrices = allBars.slice(0, barIndex + 1).map(b => b.close);
+    const closePrices = allMainBars.slice(0, barIndex + 1).map(b => b.close);
     
     // Calculate current EMAs
     const fastEma = this.getCurrentEMA(closePrices, this.config.fastPeriod);
@@ -145,25 +151,25 @@ export class EmaStrategy {
         // Open new LONG position
         signal = {
           barIndex,
-          time: bar.time,
+          time: mainBar.time,
           type: StrategySignalType.BUY,
-          price: bar.close,
+          price: mainBar.close,
           message: `EMA ${this.config.fastPeriod} crossed above EMA ${this.config.slowPeriod}`,
         };
         
-        this.openPosition(bar, signal, OrderSide.BUY);
+        this.openPosition(mainBar, signal, OrderSide.BUY);
         this.signals.push(signal);
       } else if (hasOpenPosition && currentPosition.side === OrderSide.SELL) {
         // Close SHORT position and open LONG
         signal = {
           barIndex,
-          time: bar.time,
+          time: mainBar.time,
           type: StrategySignalType.BUY,
-          price: bar.close,
+          price: mainBar.close,
           message: `EMA ${this.config.fastPeriod} crossed above EMA ${this.config.slowPeriod} - Reverse to LONG`,
         };
         
-        this.openPosition(bar, signal, OrderSide.BUY); // This will handle the reversal
+        this.openPosition(mainBar, signal, OrderSide.BUY); // This will handle the reversal
         this.signals.push(signal);
       }
     } else if (bearishCrossover) {
@@ -171,25 +177,25 @@ export class EmaStrategy {
         // Open new SHORT position
         signal = {
           barIndex,
-          time: bar.time,
+          time: mainBar.time,
           type: StrategySignalType.SELL,
-          price: bar.close,
+          price: mainBar.close,
           message: `EMA ${this.config.fastPeriod} crossed below EMA ${this.config.slowPeriod}`,
         };
         
-        this.openPosition(bar, signal, OrderSide.SELL);
+        this.openPosition(mainBar, signal, OrderSide.SELL);
         this.signals.push(signal);
       } else if (hasOpenPosition && currentPosition.side === OrderSide.BUY) {
         // Close LONG position and open SHORT
         signal = {
           barIndex,
-          time: bar.time,
+          time: mainBar.time,
           type: StrategySignalType.SELL,
-          price: bar.close,
+          price: mainBar.close,
           message: `EMA ${this.config.fastPeriod} crossed below EMA ${this.config.slowPeriod} - Reverse to SHORT`,
         };
         
-        this.openPosition(bar, signal, OrderSide.SELL); // This will handle the reversal
+        this.openPosition(mainBar, signal, OrderSide.SELL); // This will handle the reversal
         this.signals.push(signal);
       }
     }
@@ -201,7 +207,7 @@ export class EmaStrategy {
   }
 
   // Open a position (long or short) with stop loss and take profit
-  private openPosition(bar: BacktestBarData, signal: StrategySignal, side: OrderSide): void {
+  private openPosition(mainBar: BacktestBarData, signal: StrategySignal, side: OrderSide): void { // Changed bar to mainBar
     // Check if there's an existing position that needs to be closed first
     const existingPosition = this.orderManager.getOpenPosition('DEFAULT_CONTRACT');
     
@@ -217,8 +223,8 @@ export class EmaStrategy {
         type: OrderType.MARKET,
         side: OrderSide.BUY,
         quantity: existingPosition.size,
-        price: bar.close,
-        submittedTime: bar.time,
+        price: mainBar.close, // Changed bar to mainBar
+        submittedTime: mainBar.time, // Changed bar to mainBar
         parentTradeId: existingPosition.id,
         contractId: 'DEFAULT_CONTRACT',
         message: 'Close short position for reversal',
@@ -226,7 +232,7 @@ export class EmaStrategy {
       
       // Mark that we're waiting for position reversal
       this.pendingReversalSignal = signal;
-      this.pendingReversalBar = bar;
+      this.pendingReversalBar = mainBar; // Changed bar to mainBar
       return; // Don't open new position yet
     }
     
@@ -234,33 +240,37 @@ export class EmaStrategy {
     
     // Create entry order
     let entryOrder: Order;
+    const perContractCommission = this.config.positionSize > 0 ? (this.config.commission || 0) / this.config.positionSize : 0;
+
     if (this.config.useMarketOrders) {
       entryOrder = this.orderManager.submitOrder({
         type: OrderType.MARKET,
         side: side,
         quantity: this.config.positionSize,
-        price: bar.close, // Market price
-        submittedTime: bar.time,
+        price: mainBar.close, // Market price
+        submittedTime: mainBar.time,
         parentTradeId: tradeId,
         contractId: 'DEFAULT_CONTRACT',
         isEntry: true,
         message: `EMA crossover ${side} entry`,
+        commission: perContractCommission,
       });
     } else {
       // Use limit order with offset based on side
       const limitPrice = side === OrderSide.BUY 
-        ? bar.close - (this.config.limitOrderOffset || 2) * 0.25
-        : bar.close + (this.config.limitOrderOffset || 2) * 0.25;
+        ? mainBar.close - (this.config.limitOrderOffset || 2) * 0.25
+        : mainBar.close + (this.config.limitOrderOffset || 2) * 0.25;
       entryOrder = this.orderManager.submitOrder({
         type: OrderType.LIMIT,
         side: side,
         quantity: this.config.positionSize,
         price: limitPrice,
-        submittedTime: bar.time,
+        submittedTime: mainBar.time,
         parentTradeId: tradeId,
         contractId: 'DEFAULT_CONTRACT',
         isEntry: true,
         message: `EMA crossover ${side} limit entry`,
+        commission: perContractCommission,
       });
     }
 
@@ -270,9 +280,9 @@ export class EmaStrategy {
       stopLossOrder = this.orderManager.createStopLossOrder(
         side,
         this.config.positionSize,
-        bar.close,
+        mainBar.close, // Changed bar to mainBar
         this.config.stopLossPercent,
-        bar.time,
+        mainBar.time, // Changed bar to mainBar
         tradeId,
         'DEFAULT_CONTRACT'
       );
@@ -284,9 +294,9 @@ export class EmaStrategy {
       takeProfitOrder = this.orderManager.createTakeProfitOrder(
         side,
         this.config.positionSize,
-        bar.close,
+        mainBar.close, // Changed bar to mainBar
         this.config.takeProfitPercent,
-        bar.time,
+        mainBar.time, // Changed bar to mainBar
         tradeId,
         'DEFAULT_CONTRACT'
       );
@@ -295,8 +305,8 @@ export class EmaStrategy {
     // Create trade record
     this.openTrade = {
       id: tradeId,
-      entryTime: bar.time,
-      entryPrice: bar.close,
+      entryTime: mainBar.time, // Changed bar to mainBar
+      entryPrice: mainBar.close, // Changed bar to mainBar
       type: side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
       size: this.config.positionSize,
       commission: this.config.commission,
@@ -307,7 +317,7 @@ export class EmaStrategy {
       takeProfitOrder,
     };
 
-    console.log(`[EmaStrategy] Opened long position ${tradeId} at ${bar.close}`);
+    console.log(`[EmaStrategy] Opened long position ${tradeId} at ${mainBar.close}`); // Changed bar to mainBar
     console.log('[EmaStrategy] Entry order:', entryOrder.id, 'Status:', entryOrder.status, 'parentTradeId:', entryOrder.parentTradeId);
     if (stopLossOrder) {
       console.log('[EmaStrategy] SL order:', stopLossOrder.id, 'parentTradeId:', stopLossOrder.parentTradeId, 'stopPrice:', stopLossOrder.stopPrice);
@@ -317,109 +327,150 @@ export class EmaStrategy {
     }
   }
 
-  // Close the current position
-  private closePosition(bar: BacktestBarData, signal: StrategySignal, reason: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT'): void {
+  // Close the current position based on a strategy signal (not SL/TP hit)
+  private closePosition(mainBar: BacktestBarData, signal: StrategySignal, reason: 'SIGNAL'): void {
     const currentPosition = this.orderManager.getOpenPosition('DEFAULT_CONTRACT');
-    if (!currentPosition || !this.openTrade) return;
+    if (!currentPosition || !this.openTrade || reason !== 'SIGNAL') {
+      // Only proceed if called for a 'SIGNAL' reason and there's an open trade/position
+      return;
+    }
 
     const trade = this.openTrade as SimulatedTrade;
     
-    // Cancel any pending stop loss and take profit orders
-    this.orderManager.cancelOrdersByTradeId(trade.id);
+    // Cancel any pending stop loss and take profit orders associated with this trade
+    // This is important because we are now initiating a new exit based on strategy signal
+    if (trade.stopLossOrder) this.orderManager.cancelOrder(trade.stopLossOrder.id);
+    if (trade.takeProfitOrder) this.orderManager.cancelOrder(trade.takeProfitOrder.id);
+    // Or, more broadly if OrderManager associates SL/TPs with parentTradeId:
+    // this.orderManager.cancelOrdersByTradeId(trade.id); // This might be too broad if trade.id is used for multiple things
 
-    // Determine exit side (opposite of position side)
     const exitSide = currentPosition.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY;
+    const perContractCommission = this.config.positionSize > 0 ? (this.config.commission || 0) / this.config.positionSize : 0;
 
-    // Create exit order
     let exitOrder: Order;
     if (this.config.useMarketOrders) {
       exitOrder = this.orderManager.submitOrder({
         type: OrderType.MARKET,
         side: exitSide,
-        quantity: this.config.positionSize,
-        price: bar.close,
-        submittedTime: bar.time,
+        quantity: currentPosition.size, // Use actual position size
+        price: mainBar.close,
+        submittedTime: mainBar.time,
         parentTradeId: trade.id,
         contractId: 'DEFAULT_CONTRACT',
-        isExit: true,
-        positionId: currentPosition.id,
-        message: `Exit: ${reason}`,
+        isExit: true, // Mark this as a strategy-initiated exit
+        message: `Exit signal: ${signal.message}`,
+        commission: perContractCommission,
       });
     } else {
-      // Use limit order with offset based on exit side
       const limitPrice = exitSide === OrderSide.SELL
-        ? bar.close + (this.config.limitOrderOffset || 2) * 0.25
-        : bar.close - (this.config.limitOrderOffset || 2) * 0.25;
+        ? mainBar.close + (this.config.limitOrderOffset || 2) * 0.25
+        : mainBar.close - (this.config.limitOrderOffset || 2) * 0.25;
       exitOrder = this.orderManager.submitOrder({
         type: OrderType.LIMIT,
         side: exitSide,
-        quantity: this.config.positionSize,
+        quantity: currentPosition.size, // Use actual position size
         price: limitPrice,
-        submittedTime: bar.time,
+        submittedTime: mainBar.time,
         parentTradeId: trade.id,
         contractId: 'DEFAULT_CONTRACT',
-        isExit: true,
-        positionId: currentPosition.id,
-        message: `Exit limit: ${reason}`,
+        isExit: true, // Mark this as a strategy-initiated exit
+        message: `Exit limit signal: ${signal.message}`,
+        commission: perContractCommission,
       });
     }
-
-    // Complete the trade
-    trade.exitTime = bar.time;
-    trade.exitPrice = bar.close;
-    trade.status = 'CLOSED';
-    trade.signalExit = signal;
-    trade.exitOrder = exitOrder;
-    trade.exitReason = reason;
     
-    // Calculate P&L
-    const priceDiff = bar.close - trade.entryPrice;
-    trade.profitOrLoss = (priceDiff * trade.size) - (this.config.commission * 2);
+    // Store the submitted exit order in the openTrade.
+    // The trade will be finalized (P&L, status, moved to this.trades) 
+    // by handleOrderFill when this exitOrder is confirmed filled.
+    this.openTrade.exitOrder = exitOrder;
+    this.openTrade.signalExit = signal; // Store the signal that initiated this exit attempt
+    this.openTrade.exitReason = 'SIGNAL'; // Mark reason
+    // DO NOT finalize trade here (P&L, status, push to this.trades, set this.openTrade = null)
     
-    this.trades.push(trade);
-    this.openTrade = null;
-    
-    console.log(`[EmaStrategy] Closed position ${trade.id} at ${bar.close}, P&L: ${trade.profitOrLoss.toFixed(2)}`);
+    console.log(`[EmaStrategy] Submitted exit order ${exitOrder.id} for trade ${trade.id} due to signal.`);
   }
 
   // Handle order fill events
-  private handleOrderFill(order: Order, bar: BacktestBarData): StrategySignal | null {
-    console.log(`[EmaStrategy] Order filled: ${order.id} at ${order.filledPrice}`);
-    
-    // Handle entry order fills
-    if (order.isEntry && this.openTrade && order.filledPrice) {
-      // Update the trade with the actual filled entry price
-      this.openTrade.entryPrice = order.filledPrice;
-      console.log(`[EmaStrategy] Updated entry price to ${order.filledPrice} for trade ${this.openTrade.id}`);
+  private handleOrderFill(order: Order, mainBar: BacktestBarData): StrategySignal | null {
+    console.log(`[EmaStrategy] Order filled: ${order.id} (${order.side} ${order.type}) at ${order.filledPrice} qty ${order.filledQuantity}`);
+
+    let generatedSignal: StrategySignal | null = null;
+
+    if (this.openTrade && order.parentTradeId === this.openTrade.id) {
+      // This fill belongs to the current openTrade
+      if (order.isEntry && order.filledPrice && order.filledTime) {
+        this.openTrade.entryPrice = order.filledPrice;
+        this.openTrade.entryTime = order.filledTime;
+        this.openTrade.entryOrder = { ...order }; // Store a copy of the filled entry order
+        console.log(`[EmaStrategy] Confirmed entry for trade ${this.openTrade.id} at ${order.filledPrice}`);
+      } else if ((order.isStopLoss || order.isTakeProfit || order.isExit) && order.filledPrice && order.filledTime) {
+        // This is an exit fill (SL, TP, or strategy-initiated exit order from closePosition)
+        
+        // Ensure this fill corresponds to an expected exit mechanism for the open trade
+        const isValidExitFill = 
+            (order.isStopLoss && this.openTrade.stopLossOrder?.id === order.id) ||
+            (order.isTakeProfit && this.openTrade.takeProfitOrder?.id === order.id) ||
+            (order.isExit && this.openTrade.exitOrder?.id === order.id);
+
+        if (!isValidExitFill && order.isExit) {
+             // This might be a fill for a reversal's closing leg, not for this.openTrade.
+             // Or an exit order not properly linked. For now, we assume if isExit, it's for openTrade.
+             console.warn(`[EmaStrategy] Exit order ${order.id} filled for trade ${this.openTrade.id}, but was not the explicitly stored exitOrder. Proceeding with closure.`);
+        } else if (!isValidExitFill && (order.isStopLoss || order.isTakeProfit)) {
+            console.warn(`[EmaStrategy] SL/TP order ${order.id} filled for trade ${this.openTrade.id}, but was not the one stored in openTrade. Proceeding with closure.`);
+        }
+
+
+        this.openTrade.exitPrice = order.filledPrice;
+        this.openTrade.exitTime = order.filledTime;
+        // If it's an SL/TP fill, order is already the SL/TP order.
+        // If it's a strategy exit, this.openTrade.exitOrder was set by closePosition.
+        // We should store the actual filled order here.
+        this.openTrade.exitOrder = { ...order }; 
+        this.openTrade.status = 'CLOSED';
+        this.openTrade.exitReason = order.isStopLoss ? 'STOP_LOSS' : (order.isTakeProfit ? 'TAKE_PROFIT' : (this.openTrade.exitReason || 'SIGNAL')); // Preserve 'SIGNAL' if set by closePosition
+
+        // Calculate P&L based on actual fills and order commissions
+        const entryOrderCommissionRate = this.openTrade.entryOrder?.commission || 0; // Per contract
+        const exitOrderCommissionRate = this.openTrade.exitOrder?.commission || 0;   // Per contract
+        const totalCommission = (entryOrderCommissionRate + exitOrderCommissionRate) * this.openTrade.size;
+        
+        const sideMultiplier = this.openTrade.type === TradeType.BUY ? 1 : -1;
+        if (this.openTrade.entryPrice === undefined) { // Should have been set by entry fill
+            console.error("[EmaStrategy] Cannot calculate P&L: entryPrice is undefined for trade", this.openTrade.id);
+            this.openTrade.profitOrLoss = 0; 
+        } else {
+            this.openTrade.profitOrLoss = 
+                (this.openTrade.exitPrice - this.openTrade.entryPrice) * this.openTrade.size * sideMultiplier - totalCommission;
+        }
+        
+        console.log(`[EmaStrategy] Closed trade ${this.openTrade.id}. Entry: ${this.openTrade.entryPrice}, Exit: ${this.openTrade.exitPrice}, P&L: ${this.openTrade.profitOrLoss?.toFixed(2)}`);
+        
+        this.trades.push({ ...this.openTrade });
+        
+        generatedSignal = {
+          barIndex: this.currentBarIndex,
+          time: order.filledTime,
+          type: this.openTrade.type === TradeType.BUY ? StrategySignalType.SELL : StrategySignalType.BUY,
+          price: order.filledPrice,
+          message: `${this.openTrade.exitReason} triggered for ${this.openTrade.type} trade ${this.openTrade.id}`,
+        };
+        this.signals.push(generatedSignal);
+        
+        this.openTrade = null; // Clear the open trade
+      }
+    } else if (order.isEntry && !this.openTrade) {
+        // This case might occur if an entry order for a new trade (e.g. reversal) is filled.
+        // The openPosition method should have already created this.openTrade.
+        // If this.openTrade is null here, it implies a logic gap or a fill for an unmanaged/unexpected entry.
+        console.warn(`[EmaStrategy] Entry order ${order.id} filled, but no corresponding this.openTrade found. This might be part of a reversal not yet fully set up.`);
+        // Potentially, if pendingReversalSignal exists, this fill could be for the closing leg of the reversal.
+        // The logic for setting up the new leg of the reversal after the close is confirmed needs to be robust.
     }
-    
-    let exitSignal: StrategySignal | null = null;
-    
-    if (order.isStopLoss && this.openTrade) {
-      // Stop loss was hit - create sell signal
-      exitSignal = {
-        barIndex: this.currentBarIndex,
-        time: bar.time,
-        type: StrategySignalType.SELL,
-        price: order.filledPrice!,
-        message: 'Stop loss triggered',
-      };
-      this.signals.push(exitSignal);
-      this.closePosition(bar, exitSignal, 'STOP_LOSS');
-    } else if (order.isTakeProfit && this.openTrade) {
-      // Take profit was hit - create sell signal  
-      exitSignal = {
-        barIndex: this.currentBarIndex,
-        time: bar.time,
-        type: StrategySignalType.SELL,
-        price: order.filledPrice!,
-        message: 'Take profit triggered',
-      };
-      this.signals.push(exitSignal);
-      this.closePosition(bar, exitSignal, 'TAKE_PROFIT');
-    }
-    
-    // Check if this was a position closing order and we have a pending reversal
+
+
+    // Check if this was a position closing order (from OrderManager's perspective)
+    // and we have a pending reversal signal.
     const currentPosition = this.orderManager.getOpenPosition('DEFAULT_CONTRACT');
     if (!currentPosition && this.pendingReversalSignal && this.pendingReversalBar) {
       console.log('[EmaStrategy] Position closed, executing pending reversal');
@@ -434,11 +485,11 @@ export class EmaStrategy {
       this.openPosition(reversalBar, signal, OrderSide.BUY);
     }
     
-    return exitSignal;
+    return generatedSignal;
   }
 
   // Run backtest on all bars
-  public backtest(bars: BacktestBarData[]): BacktestResults {
+  public backtest(mainBars: BacktestBarData[], allSubBars?: SubBarData[]): BacktestResults { // Added allSubBars
     // Reset state
     this.fastEmaValues = [];
     this.slowEmaValues = [];
@@ -449,17 +500,19 @@ export class EmaStrategy {
     this.orderManager.reset();
     
     // Process each bar
-    for (let i = 0; i < bars.length; i++) {
-      this.processBar(bars[i], i, bars);
+    for (let i = 0; i < mainBars.length; i++) {
+      const currentMainBar = mainBars[i];
+      const relevantSubBars = allSubBars?.filter(sb => sb.parentBarIndex === i);
+      this.processBar(currentMainBar, relevantSubBars, i, mainBars);
     }
     
     // Close any open trade at the end
-    if (this.openTrade !== null && bars.length > 0) {
-      const lastBar = bars[bars.length - 1];
+    if (this.openTrade !== null && mainBars.length > 0) {
+      const lastMainBar = mainBars[mainBars.length - 1];
       const trade: SimulatedTrade = this.openTrade; // Explicit type annotation
       
-      trade.exitTime = lastBar.time;
-      trade.exitPrice = lastBar.close;
+      trade.exitTime = lastMainBar.time;
+      trade.exitPrice = lastMainBar.close;
       trade.status = 'CLOSED';
       
       const priceDiff = trade.exitPrice - trade.entryPrice;
@@ -516,9 +569,9 @@ export class EmaStrategy {
     return this.signals;
   }
 
-  // Get all trades
+  // Get all trades from OrderManager
   public getTrades(): SimulatedTrade[] {
-    return this.trades;
+    return this.orderManager.getCompletedTrades();
   }
 
   // Get current open trade

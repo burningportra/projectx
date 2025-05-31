@@ -6,7 +6,9 @@ import {
   OrderSide, 
   OrderManagerState,
   UTCTimestamp,
-  SubBarData
+  SubBarData,
+  SimulatedTrade,
+  TradeType
 } from '@/lib/types/backtester';
 
 interface ManagedPosition {
@@ -26,6 +28,7 @@ interface ManagedPosition {
 export class OrderManager {
   private orders: Order[] = [];
   private openPositions: Map<string, ManagedPosition> = new Map(); // Key: contractId
+  private completedTrades: SimulatedTrade[] = []; // Track completed trades for P&L chart
   private orderIdCounter = 1;
   private tradeIdCounter = 1; // For linking orders to trades/positions
   private tickSize: number;
@@ -338,6 +341,10 @@ export class OrderManager {
 
             if (position.size <= 0) {
                 console.log(`[OrderManager] Position ${position.id} fully closed. Total Realized PnL: ${position.realizedPnl.toFixed(2)}`);
+                
+                // Create completed trade record for P&L chart
+                this.createCompletedTrade(position, order, time);
+                
                 this.openPositions.delete(contractId);
                 console.log(`[OrderManager] Total open positions after deletion: ${this.openPositions.size}`);
                 // Cancel any remaining SL/TP orders for this fully closed position
@@ -412,9 +419,54 @@ export class OrderManager {
   reset(): void {
     this.orders = [];
     this.openPositions.clear();
+    this.completedTrades = [];
     this.orderIdCounter = 1;
     this.tradeIdCounter = 1;
     // console.log("[OrderManager] State reset.");
+  }
+
+  // Create a completed trade record when a position is fully closed
+  private createCompletedTrade(position: ManagedPosition, exitOrder: Order, exitTime: UTCTimestamp): void {
+    // Find the entry order(s) for this position
+    const entryOrders = this.getFilledOrders(position.contractId).filter(o => 
+      o.parentTradeId === position.id && (o.isEntry || (!o.isStopLoss && !o.isTakeProfit && !o.isExit))
+    );
+    
+    // Use the first entry order for timing, or fallback to position data
+    const entryOrder = entryOrders[0];
+    const entryTime = entryOrder?.filledTime || position.lastUpdateTime;
+    const entryPrice = position.averageEntryPrice; // Use the calculated average entry price
+    const exitPrice = exitOrder.filledPrice || exitOrder.price || position.averageEntryPrice;
+    
+    // Determine exit reason
+    let exitReason: 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'MANUAL' | 'REVERSAL_EXIT' = 'SIGNAL';
+    if (exitOrder.isStopLoss) {
+      exitReason = 'STOP_LOSS';
+    } else if (exitOrder.isTakeProfit) {
+      exitReason = 'TAKE_PROFIT';
+    }
+    
+    const completedTrade: SimulatedTrade = {
+      id: position.id,
+      entryTime: entryTime,
+      exitTime: exitTime,
+      entryPrice: entryPrice,
+      exitPrice: exitPrice,
+      type: position.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+      size: position.size + (exitOrder.filledQuantity || exitOrder.quantity), // Original position size
+      commission: Math.abs(position.realizedPnl + ((exitPrice - entryPrice) * position.size * (position.side === OrderSide.BUY ? 1 : -1))), // Derive commission from difference
+      profitOrLoss: position.realizedPnl, // This includes commission already
+      status: 'CLOSED',
+      exitReason: exitReason,
+    };
+    
+    this.completedTrades.push(completedTrade);
+    console.log(`[OrderManager] Created completed trade record: ${completedTrade.id}, P&L: ${completedTrade.profitOrLoss?.toFixed(2)}`);
+  }
+  
+  // Get completed trades for P&L chart
+  getCompletedTrades(): SimulatedTrade[] {
+    return [...this.completedTrades]; // Return a copy
   }
 
   // P&L Calculation Methods
