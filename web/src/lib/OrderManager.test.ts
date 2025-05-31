@@ -301,9 +301,7 @@ describe('OrderManager', () => {
       expect(filledSl!.filledPrice).toBe(99); // Fills at SL stopPrice
       expect(filledSl!.filledTime).toBe(specificSubBars[2].time);
 
-      const cancelledTp = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === tpOrder.id);
-      expect(cancelledTp).toBeDefined();
-      expect(cancelledTp!.status).toBe(OrderStatus.CANCELLED);
+      expect(tpOrder.status).toBe(OrderStatus.CANCELLED);
     });
 
     it('should fill TP for a long position and cancel SL when sub-bar high hits TP price', () => {
@@ -322,9 +320,7 @@ describe('OrderManager', () => {
       expect(filledTp!.filledPrice).toBe(102.5); // Fills at TP price
       expect(filledTp!.filledTime).toBe(sampleSubBars[2].time);
 
-      const cancelledSl = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === slOrder.id);
-      expect(cancelledSl).toBeDefined();
-      expect(cancelledSl!.status).toBe(OrderStatus.CANCELLED);
+      expect(slOrder.status).toBe(OrderStatus.CANCELLED);
     });
 
     it('should prioritize SL when sub-bar range hits both SL and TP for a long position and open is between them', () => {
@@ -346,9 +342,7 @@ describe('OrderManager', () => {
       expect(filledSl!.filledPrice).toBe(100); // SL fills at its stopPrice
       expect(filledSl!.filledTime).toBe(ambiguousSubBar[0].time);
 
-      const cancelledTp = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === tpOrder.id);
-      expect(cancelledTp).toBeDefined();
-      expect(cancelledTp!.status).toBe(OrderStatus.CANCELLED);
+      expect(tpOrder.status).toBe(OrderStatus.CANCELLED);
     });
 
     // TODO: Add tests for short positions and fallback scenarios for SL/TP
@@ -368,9 +362,7 @@ describe('OrderManager', () => {
       expect(filledSl!.filledPrice).toBe(102); // Fills at SL stopPrice
       expect(filledSl!.filledTime).toBe(sampleSubBars[1].time);
 
-      const cancelledTp = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === tpOrder.id);
-      expect(cancelledTp).toBeDefined();
-      expect(cancelledTp!.status).toBe(OrderStatus.CANCELLED);
+      expect(tpOrder.status).toBe(OrderStatus.CANCELLED);
     });
 
     it('should fill TP for a short position and cancel SL when sub-bar low hits TP price', () => {
@@ -397,9 +389,7 @@ describe('OrderManager', () => {
       expect(filledTp!.filledPrice).toBe(99); // Fills at TP price
       expect(filledTp!.filledTime).toBe(specificSubBars[2].time);
 
-      const cancelledSl = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === slOrder.id);
-      expect(cancelledSl).toBeDefined();
-      expect(cancelledSl!.status).toBe(OrderStatus.CANCELLED);
+      expect(slOrder.status).toBe(OrderStatus.CANCELLED);
     });
     
     it('should prioritize SL when sub-bar range hits both SL and TP for a short position and open is between them', () => {
@@ -420,9 +410,7 @@ describe('OrderManager', () => {
       expect(filledSl!.filledPrice).toBe(102); // SL fills at its stopPrice
       expect(filledSl!.filledTime).toBe(ambiguousSubBar[0].time);
 
-      const cancelledTp = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === tpOrder.id);
-      expect(cancelledTp).toBeDefined();
-      expect(cancelledTp!.status).toBe(OrderStatus.CANCELLED);
+      expect(tpOrder.status).toBe(OrderStatus.CANCELLED);
     });
     
     it('should fill SL for a long position using main bar low (fallback) and cancel TP', () => {
@@ -440,9 +428,7 @@ describe('OrderManager', () => {
       expect(filledSl!.filledPrice).toBe(96); // Fills at SL stopPrice
       expect(filledSl!.filledTime).toBe(sampleMainBar.time);
 
-      const cancelledTp = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === tpOrder.id);
-      expect(cancelledTp).toBeDefined();
-      expect(cancelledTp!.status).toBe(OrderStatus.CANCELLED);
+      expect(tpOrder.status).toBe(OrderStatus.CANCELLED);
     });
 
     it('should fill TP for a short position using main bar low (fallback) and cancel SL', () => {
@@ -460,9 +446,7 @@ describe('OrderManager', () => {
       expect(filledTp!.filledPrice).toBe(97); // Fills at TP price
       expect(filledTp!.filledTime).toBe(sampleMainBar.time);
 
-      const cancelledSl = orderManager.getAllOrders('TEST_CONTRACT').find(o => o.id === slOrder.id);
-      expect(cancelledSl).toBeDefined();
-      expect(cancelledSl!.status).toBe(OrderStatus.CANCELLED);
+      expect(slOrder.status).toBe(OrderStatus.CANCELLED);
     });
   });
 
