@@ -5,7 +5,8 @@ import {
   OrderStatus, 
   OrderSide, 
   OrderManagerState,
-  UTCTimestamp 
+  UTCTimestamp,
+  SubBarData
 } from '@/lib/types/backtester';
 
 interface ManagedPosition {
@@ -111,127 +112,185 @@ export class OrderManager {
     });
   }
 
-  processBar(bar: BacktestBarData, barIndex: number): Order[] {
+  processBar(mainBar: BacktestBarData, subBarsForMainBar: SubBarData[] | undefined, barIndex: number): Order[] {
     const filledThisBar: Order[] = [];
-    const now = bar.time;
+    const useSubBars = subBarsForMainBar && subBarsForMainBar.length > 0;
+    const barsToProcess = useSubBars ? subBarsForMainBar : [mainBar as SubBarData]; // Treat mainBar as a SubBarData for uniform processing
 
-    // Trigger Stop Orders first as they can become Market/Limit orders
-    for (const order of this.orders) {
-      if (order.status === OrderStatus.PENDING && order.type === OrderType.STOP && order.stopPrice) {
-        let triggered = false;
-        if (order.side === OrderSide.BUY && bar.high >= order.stopPrice) triggered = true;
-        if (order.side === OrderSide.SELL && bar.low <= order.stopPrice) triggered = true;
+    for (const currentProcessingBar of barsToProcess) {
+      const currentBarTime = currentProcessingBar.time;
 
-        if (triggered) {
-          console.log(`[OrderManager] Stop order ${order.id} triggered at bar ${barIndex}, price ${order.stopPrice}`);
-          order.type = OrderType.MARKET; // Convert to market order upon trigger
-          order.message = `${order.message} (Stop Triggered -> Market)`;
-          
-          // Fill the triggered stop order immediately as a market order
-          const fillPrice = bar.open; // Market orders fill at bar open
-          console.log(`[OrderManager] Immediately filling triggered stop order ${order.id} at ${fillPrice}`);
-          this.executeFill(order, order.quantity, fillPrice, now, barIndex, true); // isClosingTrade = true for SL/TP
+      // Process pending orders against the currentProcessingBar (which is either a sub-bar or the mainBar)
+      // Note: The order of processing (Stops, then Market/Limit, then SL/TP against positions) is important.
+      // We might need to iterate multiple times or refine this order for sub-bar precision.
+      // For now, this structure attempts to adapt the existing flow.
+
+      // 1. Trigger Standalone Stop Orders (fill directly at stopPrice)
+      // These should ideally be checked first within each sub-bar.
+      // Iterate over a copy for safe modification/removal if an order fills
+      for (const order of [...this.orders]) { 
+        if (order.status === OrderStatus.PENDING && order.type === OrderType.STOP && order.stopPrice && !order.isStopLoss && !order.isTakeProfit) {
+          let triggered = false;
+          let fillPriceAtStop: number | undefined = undefined;
+
+          if (order.side === OrderSide.BUY && currentProcessingBar.high >= order.stopPrice) {
+            triggered = true;
+            fillPriceAtStop = order.stopPrice; // Fill at stop price
+          } else if (order.side === OrderSide.SELL && currentProcessingBar.low <= order.stopPrice) {
+            triggered = true;
+            fillPriceAtStop = order.stopPrice; // Fill at stop price
+          }
+
+          if (triggered && fillPriceAtStop !== undefined) {
+            console.log(`[OrderManager] Standalone Stop order ${order.id} triggered & filled at sub/bar ${barIndex} (time: ${currentBarTime}), price ${fillPriceAtStop}`);
+            this.executeFill(order, order.quantity, fillPriceAtStop, currentBarTime, barIndex);
+            filledThisBar.push(order);
+            // No longer need to convert to market, it's filled directly.
+          }
+        }
+      }
+
+      // 2. Process Market and Limit Orders (non-SL/TP)
+      // Ensure already filled stop orders are not re-processed here
+      for (const order of [...this.orders]) { 
+        if (order.status !== OrderStatus.PENDING) continue; // Skip if not pending (e.g. filled by stop logic above)
+        if (order.isStopLoss || order.isTakeProfit) continue; 
+        // If it was a STOP order that got filled above, its status is now FILLED.
+        // If it was a STOP order that converted to MARKET (old logic, now removed for standalone stops), it would be handled below.
+        // We only care about original MARKET or LIMIT orders here, or STOP orders that were NOT standalone entry/exit stops.
+        if (order.type === OrderType.STOP) continue; // Standalone stops are handled above.
+
+        let fillPrice: number | undefined = undefined;
+
+        if (order.type === OrderType.MARKET) {
+          // Market orders fill at the open of the current processing bar (sub-bar or first main bar)
+          // This assumes market orders are placed based on previous bar's close and execute at next open.
+          // If it's a converted stop, it should fill based on that trigger.
+          fillPrice = currentProcessingBar.open;
+        } else if (order.type === OrderType.LIMIT && order.price) {
+          if (order.side === OrderSide.BUY && currentProcessingBar.low <= order.price) {
+            fillPrice = order.price; // Fill at limit price as per PRD
+          } else if (order.side === OrderSide.SELL && currentProcessingBar.high >= order.price) {
+            fillPrice = order.price; // Fill at limit price as per PRD
+          }
+        }
+
+        if (fillPrice !== undefined) {
+          console.log(`[OrderManager] Filling order ${order.id} (${order.type} ${order.side}) at ${fillPrice} (time: ${currentBarTime})`);
+          this.executeFill(order, order.quantity, fillPrice, currentBarTime, barIndex);
           filledThisBar.push(order);
         }
       }
-    }
-    
-    // Process non-SL/TP Market and Limit orders for entries or regular exits
-    // FIFO processing: Iterate over a mutable copy if orders can be removed or status changed mid-loop
-    // For now, we assume orders array is stable during this loop pass, or modifications are handled carefully.
-    for (const order of [...this.orders]) { // Iterate over a copy
-      if (order.status !== OrderStatus.PENDING) continue;
-      if (order.isStopLoss || order.isTakeProfit) continue; // SL/TP orders handled separately against position
 
-      let fillPrice: number | undefined = undefined;
-
-      if (order.type === OrderType.MARKET) {
-        fillPrice = bar.open; // Simulate market order fill at bar open
-      } else if (order.type === OrderType.LIMIT && order.price) {
-        if (order.side === OrderSide.BUY && bar.low <= order.price) {
-          fillPrice = Math.min(bar.open, order.price); // Fill at order price or better (bar open if gapped down)
-        } else if (order.side === OrderSide.SELL && bar.high >= order.price) {
-          fillPrice = Math.max(bar.open, order.price); // Fill at order price or better (bar open if gapped up)
-        }
-      }
-
-      if (fillPrice !== undefined) {
-        console.log(`[OrderManager] Filling order ${order.id} (${order.type} ${order.side}) at ${fillPrice}`);
-        this.executeFill(order, order.quantity, fillPrice, now, barIndex);
-        filledThisBar.push(order);
-      }
-    }
-
-    // Process SL/TP orders against open positions
-    console.log(`[OrderManager] Processing bar ${barIndex} - High: ${bar.high}, Low: ${bar.low}, Open: ${bar.open}, Close: ${bar.close}`);
-    console.log(`[OrderManager] Open positions: ${this.openPositions.size}`);
-    
-    this.openPositions.forEach((position, contractId) => {
-        console.log(`[OrderManager] Checking position ${position.id} - Entry: ${position.averageEntryPrice}, Side: ${position.side}`);
-        
-        const ordersForPosition = this.orders.filter(o => 
-            o.contractId === contractId && 
-            o.status === OrderStatus.PENDING &&
-            (o.isStopLoss || o.isTakeProfit) &&
-            o.parentTradeId === position.id // Ensure SL/TP is for this specific position instance
+      // 3. Process SL/TP orders against open positions
+      // This needs to be done for each sub-bar as well.
+      this.openPositions.forEach((position, contractId) => {
+        const ordersForPosition = this.orders.filter(o =>
+          o.contractId === contractId &&
+          o.status === OrderStatus.PENDING &&
+          (o.isStopLoss || o.isTakeProfit) &&
+          o.parentTradeId === position.id
         );
-        
-        console.log(`[OrderManager] Found ${ordersForPosition.length} SL/TP orders for position ${position.id}`);
 
-        for (const order of ordersForPosition) {
-            console.log(`[OrderManager] Checking order ${order.id} - Type: ${order.isTakeProfit ? 'TP' : 'SL'}, Price: ${order.price || order.stopPrice}, parentTradeId: ${order.parentTradeId}`);
-            
-            let slTpFillPrice: number | undefined = undefined;
-            if (order.isStopLoss && order.stopPrice) {
-                if (position.side === OrderSide.BUY && bar.low <= order.stopPrice) { // SL for Long
-                    slTpFillPrice = Math.min(bar.open, order.stopPrice); // Fill at stop or worse if gapped
-                } else if (position.side === OrderSide.SELL && bar.high >= order.stopPrice) { // SL for Short
-                    slTpFillPrice = Math.max(bar.open, order.stopPrice); // Fill at stop or worse if gapped
-                }
-            } else if (order.isTakeProfit && order.price) {
-                console.log(`[OrderManager] Checking TP: Position side=${position.side}, TP price=${order.price}, Bar high=${bar.high}`);
-                if (position.side === OrderSide.BUY && bar.high >= order.price) { // TP for Long
-                    console.log(`[OrderManager] TP SHOULD TRIGGER: ${bar.high} >= ${order.price}`);
-                    slTpFillPrice = order.price; // Fill at limit price for take profit
-                } else if (position.side === OrderSide.SELL && bar.low <= order.price) { // TP for Short
-                    slTpFillPrice = order.price; // Fill at limit price for take profit
-                }
-            }
+        const slOrder = ordersForPosition.find(o => o.isStopLoss && o.status === OrderStatus.PENDING);
+        const tpOrder = ordersForPosition.find(o => o.isTakeProfit && o.status === OrderStatus.PENDING);
 
-            if (slTpFillPrice !== undefined) {
-                console.log(`[OrderManager] ${order.isStopLoss ? 'SL' : 'TP'} order ${order.id} hit for position ${position.id} at ${slTpFillPrice}`);
-                // Close the portion of the position related to this SL/TP order
-                // This assumes SL/TP orders are for the full size of the position segment they protect
-                const fillQty = Math.min(order.quantity, position.size); // Cannot fill more than open position size
-                if (fillQty > 0) {
-                    this.executeFill(order, fillQty, slTpFillPrice, now, barIndex, true); // isClosingTrade = true
-                    filledThisBar.push(order);
+        let slTriggered = false;
+        let tpTriggered = false;
 
-                    // If SL/TP filled for less than its quantity (due to position size), cancel remainder
-                    if (order.quantity > fillQty && order.status === OrderStatus.PENDING) {
-                        console.warn(`[OrderManager] SL/TP ${order.id} for ${order.quantity} partially filled for ${fillQty} due to smaller position size. Remainder cancelled.`);
-                        this.cancelOrder(order.id); // Cancel if partially filled against a smaller position
-                    } else if (order.quantity > fillQty && order.status === OrderStatus.PARTIALLY_FILLED) {
-                        // This case should ideally be handled by executeFill reducing order.quantity
-                         order.message += ' Remainder cancelled due to smaller position size.';
-                         order.status = OrderStatus.CANCELLED; // Effectively
-                    }
-                }
-            }
+        if (slOrder && slOrder.stopPrice) {
+          if (position.side === OrderSide.BUY && currentProcessingBar.low <= slOrder.stopPrice) {
+            slTriggered = true;
+          } else if (position.side === OrderSide.SELL && currentProcessingBar.high >= slOrder.stopPrice) {
+            slTriggered = true;
+          }
         }
-    });
+
+        if (tpOrder && tpOrder.price) {
+          if (position.side === OrderSide.BUY && currentProcessingBar.high >= tpOrder.price) {
+            tpTriggered = true;
+          } else if (position.side === OrderSide.SELL && currentProcessingBar.low <= tpOrder.price) {
+            tpTriggered = true;
+          }
+        }
+
+        let orderToFill: Order | undefined;
+        let fillPriceForOco: number | undefined;
+        let cancelledOrder: Order | undefined;
+
+        if (slTriggered && tpTriggered) {
+          console.log(`[OrderManager] Ambiguous SL/TP trigger for position ${position.id} on sub-bar time ${currentBarTime}`);
+          if (position.side === OrderSide.BUY) {
+            if (currentProcessingBar.open <= slOrder!.stopPrice!) {
+              orderToFill = slOrder;
+              cancelledOrder = tpOrder;
+              console.log(`[OrderManager] -> SL gapped at open for long. Filling SL.`);
+            } else if (currentProcessingBar.open >= tpOrder!.price!) {
+              orderToFill = tpOrder;
+              cancelledOrder = slOrder;
+              console.log(`[OrderManager] -> TP gapped at open for long. Filling TP.`);
+            } else { // Open is between SL and TP. PRD: SL takes precedence.
+              orderToFill = slOrder;
+              cancelledOrder = tpOrder;
+              console.log(`[OrderManager] -> Open between SL & TP for long. Prioritizing SL.`);
+            }
+          } else { // Short Position
+            if (currentProcessingBar.open >= slOrder!.stopPrice!) {
+              orderToFill = slOrder;
+              cancelledOrder = tpOrder;
+              console.log(`[OrderManager] -> SL gapped at open for short. Filling SL.`);
+            } else if (currentProcessingBar.open <= tpOrder!.price!) {
+              orderToFill = tpOrder;
+              cancelledOrder = slOrder;
+              console.log(`[OrderManager] -> TP gapped at open for short. Filling TP.`);
+            } else { // Open is between SL and TP. PRD: SL takes precedence.
+              orderToFill = slOrder;
+              cancelledOrder = tpOrder;
+              console.log(`[OrderManager] -> Open between SL & TP for short. Prioritizing SL.`);
+            }
+          }
+        } else if (slTriggered) {
+          orderToFill = slOrder;
+          cancelledOrder = tpOrder;
+        } else if (tpTriggered) {
+          orderToFill = tpOrder;
+          cancelledOrder = slOrder;
+        }
+
+        if (orderToFill) {
+          if (orderToFill.isStopLoss && orderToFill.stopPrice !== undefined) {
+            fillPriceForOco = orderToFill.stopPrice;
+          } else if (orderToFill.isTakeProfit && orderToFill.price !== undefined) {
+            fillPriceForOco = orderToFill.price;
+          }
+
+          if (fillPriceForOco !== undefined) {
+            console.log(`[OrderManager] ${orderToFill.isStopLoss ? 'SL' : 'TP'} order ${orderToFill.id} hit for pos ${position.id} at ${fillPriceForOco} (time: ${currentBarTime})`);
+            const fillQty = Math.min(orderToFill.quantity, position.size);
+            if (fillQty > 0) {
+              this.executeFill(orderToFill, fillQty, fillPriceForOco, currentBarTime, barIndex, true);
+              filledThisBar.push(orderToFill);
+              if (cancelledOrder && cancelledOrder.status === OrderStatus.PENDING) {
+                this.cancelOrder(cancelledOrder.id);
+                console.log(`[OrderManager] OCO: Cancelled ${cancelledOrder.isStopLoss ? 'SL' : 'TP'} order ${cancelledOrder.id} for trade ${orderToFill.parentTradeId}`);
+              }
+            }
+          }
+        }
+      });
+    } // End of loop over barsToProcess (sub-bars or mainBar)
     
     // Cleanup fully filled or cancelled orders from the main queue
     this.orders = this.orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.PARTIALLY_FILLED);
 
-    // Update unrealized P&L for open positions
+    // Update unrealized P&L for open positions using the mainBar's close at the end of all processing for this mainBar
     this.openPositions.forEach(pos => {
         if (pos.side === OrderSide.BUY) {
-            pos.unrealizedPnl = (bar.close - pos.averageEntryPrice) * pos.size;
+            pos.unrealizedPnl = (mainBar.close - pos.averageEntryPrice) * pos.size;
         } else {
-            pos.unrealizedPnl = (pos.averageEntryPrice - bar.close) * pos.size;
+            pos.unrealizedPnl = (pos.averageEntryPrice - mainBar.close) * pos.size;
         }
-        pos.lastUpdateTime = now;
+        pos.lastUpdateTime = mainBar.time; // Use mainBar's time for the EOD unrealized PnL
     });
 
     return filledThisBar;
