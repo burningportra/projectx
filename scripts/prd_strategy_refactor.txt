@@ -10,7 +10,7 @@ Currently, strategies maintain their own `SimulatedTrade` objects and perform so
 
 *   **R1: `OrderManager` as Source of Truth:**
     *   R1.1: Strategies must rely on `OrderManager` for actual fill prices, fill times, and final P&L of trades.
-    *   R1.2: `OrderManager`'s internal position management and P&L calculation per position should be considered authoritative.
+    *   R1.2: `OrderManager`'s internal position managemesnt and P&L calculation per position should be considered authoritative.
 
 *   **R2: Strategy Refactoring (`EmaStrategy.ts` and `TrendStartStrategy.ts`):**
     *   **R2.1: `openPosition` Logic:**
