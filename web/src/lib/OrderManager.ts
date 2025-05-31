@@ -38,6 +38,14 @@ export class OrderManager {
   }
 
   submitOrder(orderInput: Partial<Order>): Order {
+    console.log('[OrderManager] submitOrder called with:', {
+      type: orderInput.type,
+      side: orderInput.side,
+      quantity: orderInput.quantity,
+      parentTradeId: orderInput.parentTradeId,
+      isStopLoss: orderInput.isStopLoss,
+      isTakeProfit: orderInput.isTakeProfit
+    });
     const now = (Date.now() / 1000) as UTCTimestamp;
     const order: Order = {
       id: orderInput.id || `ord_${this.orderIdCounter++}`,
@@ -88,7 +96,8 @@ export class OrderManager {
 
   cancelOrdersByTradeId(tradeId: string): void {
     this.orders.forEach(order => {
-      if (order.tradeId === tradeId && order.status === OrderStatus.PENDING) {
+      // Cancel orders that match either tradeId or parentTradeId
+      if ((order.tradeId === tradeId || order.parentTradeId === tradeId) && order.status === OrderStatus.PENDING) {
         this.cancelOrder(order.id);
       }
     });
@@ -114,10 +123,15 @@ export class OrderManager {
         if (order.side === OrderSide.SELL && bar.low <= order.stopPrice) triggered = true;
 
         if (triggered) {
-          // console.log(`[OrderManager] Stop order ${order.id} triggered at bar ${barIndex}, price ${order.stopPrice}`);
+          console.log(`[OrderManager] Stop order ${order.id} triggered at bar ${barIndex}, price ${order.stopPrice}`);
           order.type = OrderType.MARKET; // Convert to market order upon trigger
           order.message = `${order.message} (Stop Triggered -> Market)`;
-          // No price for market order after trigger; it will fill at bar's open/close or simulated price
+          
+          // Fill the triggered stop order immediately as a market order
+          const fillPrice = bar.open; // Market orders fill at bar open
+          console.log(`[OrderManager] Immediately filling triggered stop order ${order.id} at ${fillPrice}`);
+          this.executeFill(order, order.quantity, fillPrice, now, barIndex, true); // isClosingTrade = true for SL/TP
+          filledThisBar.push(order);
         }
       }
     }
@@ -142,21 +156,31 @@ export class OrderManager {
       }
 
       if (fillPrice !== undefined) {
+        console.log(`[OrderManager] Filling order ${order.id} (${order.type} ${order.side}) at ${fillPrice}`);
         this.executeFill(order, order.quantity, fillPrice, now, barIndex);
         filledThisBar.push(order);
       }
     }
 
     // Process SL/TP orders against open positions
+    console.log(`[OrderManager] Processing bar ${barIndex} - High: ${bar.high}, Low: ${bar.low}, Open: ${bar.open}, Close: ${bar.close}`);
+    console.log(`[OrderManager] Open positions: ${this.openPositions.size}`);
+    
     this.openPositions.forEach((position, contractId) => {
+        console.log(`[OrderManager] Checking position ${position.id} - Entry: ${position.averageEntryPrice}, Side: ${position.side}`);
+        
         const ordersForPosition = this.orders.filter(o => 
             o.contractId === contractId && 
             o.status === OrderStatus.PENDING &&
             (o.isStopLoss || o.isTakeProfit) &&
             o.parentTradeId === position.id // Ensure SL/TP is for this specific position instance
         );
+        
+        console.log(`[OrderManager] Found ${ordersForPosition.length} SL/TP orders for position ${position.id}`);
 
         for (const order of ordersForPosition) {
+            console.log(`[OrderManager] Checking order ${order.id} - Type: ${order.isTakeProfit ? 'TP' : 'SL'}, Price: ${order.price || order.stopPrice}, parentTradeId: ${order.parentTradeId}`);
+            
             let slTpFillPrice: number | undefined = undefined;
             if (order.isStopLoss && order.stopPrice) {
                 if (position.side === OrderSide.BUY && bar.low <= order.stopPrice) { // SL for Long
@@ -165,15 +189,17 @@ export class OrderManager {
                     slTpFillPrice = Math.max(bar.open, order.stopPrice); // Fill at stop or worse if gapped
                 }
             } else if (order.isTakeProfit && order.price) {
-                 if (position.side === OrderSide.BUY && bar.high >= order.price) { // TP for Long
-                    slTpFillPrice = Math.max(bar.open, order.price); 
+                console.log(`[OrderManager] Checking TP: Position side=${position.side}, TP price=${order.price}, Bar high=${bar.high}`);
+                if (position.side === OrderSide.BUY && bar.high >= order.price) { // TP for Long
+                    console.log(`[OrderManager] TP SHOULD TRIGGER: ${bar.high} >= ${order.price}`);
+                    slTpFillPrice = order.price; // Fill at limit price for take profit
                 } else if (position.side === OrderSide.SELL && bar.low <= order.price) { // TP for Short
-                    slTpFillPrice = Math.min(bar.open, order.price);
+                    slTpFillPrice = order.price; // Fill at limit price for take profit
                 }
             }
 
             if (slTpFillPrice !== undefined) {
-                // console.log(`[OrderManager] ${order.isStopLoss ? 'SL' : 'TP'} order ${order.id} hit for position ${position.id} at ${slTpFillPrice}`);
+                console.log(`[OrderManager] ${order.isStopLoss ? 'SL' : 'TP'} order ${order.id} hit for position ${position.id} at ${slTpFillPrice}`);
                 // Close the portion of the position related to this SL/TP order
                 // This assumes SL/TP orders are for the full size of the position segment they protect
                 const fillQty = Math.min(order.quantity, position.size); // Cannot fill more than open position size
@@ -236,7 +262,11 @@ export class OrderManager {
     const contractId = order.contractId || 'DEFAULT_CONTRACT';
     let position = this.openPositions.get(contractId);
 
-    if (isClosingTrade || (position && position.side !== order.side)) {
+    // Determine if this order should close a position
+    const shouldClosePosition = isClosingTrade || order.isExit || order.isStopLoss || order.isTakeProfit || 
+                               (position && position.side !== order.side);
+
+    if (shouldClosePosition) {
         // This fill is closing or reducing an existing position
         if (position) {
             const pnlPerShare = (order.side === OrderSide.SELL) ? (price - position.averageEntryPrice) : (position.averageEntryPrice - price);
@@ -248,8 +278,9 @@ export class OrderManager {
             // console.log(`[OrderManager] Closing/Reducing position ${position.id}. Filled: ${quantity}. New Size: ${position.size}. Realized PnL for fill: ${realizedPnlForFill.toFixed(2)}`);
 
             if (position.size <= 0) {
-                // console.log(`[OrderManager] Position ${position.id} fully closed. Total Realized PnL: ${position.realizedPnl.toFixed(2)}`);
+                console.log(`[OrderManager] Position ${position.id} fully closed. Total Realized PnL: ${position.realizedPnl.toFixed(2)}`);
                 this.openPositions.delete(contractId);
+                console.log(`[OrderManager] Total open positions after deletion: ${this.openPositions.size}`);
                 // Cancel any remaining SL/TP orders for this fully closed position
                 this.orders.forEach(o => {
                     if (o.parentTradeId === position!.id && (o.isStopLoss || o.isTakeProfit) && o.status === OrderStatus.PENDING) {
@@ -285,7 +316,8 @@ export class OrderManager {
                 lastUpdateTime: time,
             };
             this.openPositions.set(contractId, position);
-            // console.log(`[OrderManager] Opened new position ${position.id}. Size: ${position.size}, Avg Entry: ${position.averageEntryPrice.toFixed(2)}`);
+            console.log(`[OrderManager] Opened new position ${position.id}. Size: ${position.size}, Avg Entry: ${position.averageEntryPrice.toFixed(2)}, ContractId: ${contractId}`);
+            console.log(`[OrderManager] Total open positions after creation: ${this.openPositions.size}`);
         }
          // Strategy is responsible for placing SL/TP for new/modified positions.
          // If order.isStopLoss or isTakeProfit were true here, it implies they were *entry* orders that also act as SL/TP,
@@ -507,4 +539,4 @@ export class OrderManager {
 
     return order;
   }
-} 
+}

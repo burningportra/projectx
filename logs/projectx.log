@@ -5384,3 +5384,15 @@ src.core.exceptions.ApiError: Login failed: Login failed: None
 2025-05-29 19:41:19,651 - projectx - INFO - download_historical.py:270 - Reached likely beginning of available data for CON.F.US.MES.M25 1mo
 2025-05-29 19:41:19,652 - projectx - INFO - download_historical.py:301 - Completed CON.F.US.MES.M25 1mo: 2 new bars with 0 requests
 2025-05-29 19:41:21,654 - projectx - INFO - download_historical.py:306 - Historical data download complete - 78791 total new bars stored in TimescaleDB
+2025-05-30 20:56:33,793 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-30 20:56:33,794 - projectx - INFO - download_historical.py:105 - Starting enhanced historical data download (with duplicate prevention)...
+2025-05-30 20:56:33,794 - projectx - INFO - download_historical.py:106 - Will attempt to download as far back as possible for each timeframe
+2025-05-30 20:56:33,803 - projectx - INFO - download_historical.py:117 - Using TimescaleDB for data storage
+2025-05-30 20:57:10,848 - projectx - ERROR - download_historical.py:78 - Failed to check/start TimescaleDB: Command '['docker', 'ps', '--format', '{{.Names}}', '--filter', 'name=projectx_timescaledb']' returned non-zero exit status 130.
+2025-05-30 20:57:10,849 - projectx - ERROR - download_historical.py:122 - Failed to start TimescaleDB. Please check Docker installation and try again.
+2025-05-30 20:57:26,769 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-05-30 20:57:26,769 - projectx - INFO - download_historical.py:105 - Starting enhanced historical data download (with duplicate prevention)...
+2025-05-30 20:57:26,769 - projectx - INFO - download_historical.py:106 - Will attempt to download as far back as possible for each timeframe
+2025-05-30 20:57:26,778 - projectx - INFO - download_historical.py:117 - Using TimescaleDB for data storage
+2025-05-30 20:57:44,157 - projectx - ERROR - download_historical.py:78 - Failed to check/start TimescaleDB: Command '['docker', 'ps', '--format', '{{.Names}}', '--filter', 'name=projectx_timescaledb']' returned non-zero exit status 130.
+2025-05-30 20:57:44,158 - projectx - ERROR - download_historical.py:122 - Failed to start TimescaleDB. Please check Docker installation and try again.

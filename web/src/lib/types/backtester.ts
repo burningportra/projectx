@@ -92,6 +92,9 @@ export interface Order {
   parentTradeId?: string;      // Associated trade ID
   isStopLoss?: boolean;        // True if this is a stop loss order
   isTakeProfit?: boolean;      // True if this is a take profit order
+  isEntry?: boolean;           // True if this order opens a new position
+  isExit?: boolean;            // True if this order closes an existing position
+  positionId?: string;         // ID of position to close (for exit orders)
   tradeId?: string;           // Can be used by OrderManager to group related orders (e.g., entry, SL, TP for one trade)
   contractId?: string;         // The contract this order is for
 }
@@ -212,4 +215,4 @@ export interface TimeframeConfig {
   main: string;        // e.g., '1h'
   sub: string;         // e.g., '1m' or '5m'
   subBarsPerMain: number; // How many sub-bars make up one main bar (e.g., 60 for 1h/1m)
-} 
+}

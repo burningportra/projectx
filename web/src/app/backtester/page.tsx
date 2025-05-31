@@ -276,12 +276,13 @@ const BacktesterPage = () => {
       // Get current strategy state
       const indicators = emaStrategy.getCurrentIndicators();
       const trades = emaStrategy.getTrades();
+      const openTrade = emaStrategy.getOpenTrade();
       const orderManager = (emaStrategy as any).orderManager;
       
       stateUpdate = {
         fastEmaValues: indicators ? [indicators.fastEma] : [],
         slowEmaValues: indicators ? [indicators.slowEma] : [],
-        openTrade: null,
+        openTrade: openTrade,
         tradeIdCounter: trades.length + 1,
         completedTrades: trades,
         pendingOrders: orderManager?.getPendingOrders() || [],
@@ -848,20 +849,60 @@ const BacktesterPage = () => {
                 pendingOrders={liveStrategyState.pendingOrders}
                 filledOrders={liveStrategyState.filledOrders}
                 openPositions={(() => {
-                  const positions = liveStrategyState.openTrade ? [{
-                    entryPrice: liveStrategyState.openTrade.entryPrice,
-                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
-                  }] : [];
-                  
-                  if (liveStrategyState.openTrade) {
-                    // console.log('[BacktesterPage] Passing openTrade to TradeChart:', {
-                    //   openTrade: liveStrategyState.openTrade,
-                    //   positions: positions
-                    // });
+                  // Get actual position from OrderManager for EMA strategy, which has the real filled entry price
+                  if (selectedStrategy === 'ema') {
+                    const orderManager = (emaStrategy as any).orderManager;
+                    const actualPosition = orderManager?.getOpenPosition('DEFAULT_CONTRACT');
+                    
+                    if (actualPosition) {
+                      // Find pending SL/TP orders for this position
+                      const slOrder = liveStrategyState.pendingOrders.find(o => 
+                        o.isStopLoss && o.parentTradeId === actualPosition.id
+                      );
+                      const tpOrder = liveStrategyState.pendingOrders.find(o => 
+                        o.isTakeProfit && o.parentTradeId === actualPosition.id
+                      );
+                      
+                      const positions = [{
+                        entryPrice: actualPosition.averageEntryPrice,
+                        stopLossPrice: slOrder?.stopPrice,
+                        takeProfitPrice: tpOrder?.price,
+                      }];
+                      
+                      console.log('[BacktesterPage] EMA Position for chart:', {
+                        entryPrice: actualPosition.averageEntryPrice,
+                        stopLossPrice: slOrder?.stopPrice,
+                        takeProfitPrice: tpOrder?.price,
+                        positionId: actualPosition.id
+                      });
+                      
+                      return positions;
+                    }
+                    return [];
+                  } else {
+                    // For other strategies, use the existing logic
+                    if (!liveStrategyState.openTrade) return [];
+                    
+                    const openTrade = liveStrategyState.openTrade;
+                    
+                    // Handle different strategy structures
+                    let entryPrice;
+                    if ('entryPrice' in openTrade) {
+                      // EmaStrategy structure
+                      entryPrice = openTrade.entryPrice;
+                    } else if ('entrySignalPrice' in openTrade) {
+                      // TrendStartStrategy structure - prefer filled price if available
+                      entryPrice = openTrade.entryOrder?.filledPrice || 
+                                   openTrade.entryOrder?.price || 
+                                   openTrade.entrySignalPrice;
+                    }
+                    
+                    return [{
+                      entryPrice: entryPrice,
+                      stopLossPrice: openTrade.stopLossOrder?.stopPrice,
+                      takeProfitPrice: openTrade.takeProfitOrder?.price,
+                    }];
                   }
-                  
-                  return positions;
                 })()}
               /> 
             </div>
@@ -872,11 +913,53 @@ const BacktesterPage = () => {
                 <CompactOrderPanel 
                   pendingOrders={liveStrategyState.pendingOrders}
                   filledOrders={liveStrategyState.filledOrders}
-                  openPositions={liveStrategyState.openTrade ? [{
-                    entryPrice: liveStrategyState.openTrade.entryPrice,
-                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
-                  }] : []}
+                  openPositions={(() => {
+                    // Get actual position from OrderManager for EMA strategy
+                    if (selectedStrategy === 'ema') {
+                      const orderManager = (emaStrategy as any).orderManager;
+                      const actualPosition = orderManager?.getOpenPosition('DEFAULT_CONTRACT');
+                      
+                      if (actualPosition) {
+                        // Find pending SL/TP orders for this position
+                        const slOrder = liveStrategyState.pendingOrders.find(o => 
+                          o.isStopLoss && o.parentTradeId === actualPosition.id
+                        );
+                        const tpOrder = liveStrategyState.pendingOrders.find(o => 
+                          o.isTakeProfit && o.parentTradeId === actualPosition.id
+                        );
+                        
+                        return [{
+                          entryPrice: actualPosition.averageEntryPrice,
+                          stopLossPrice: slOrder?.stopPrice,
+                          takeProfitPrice: tpOrder?.price,
+                        }];
+                      }
+                      return [];
+                    } else {
+                      // For other strategies, use the existing logic
+                      if (!liveStrategyState.openTrade) return [];
+                      
+                      const openTrade = liveStrategyState.openTrade;
+                      
+                      // Handle different strategy structures
+                      let entryPrice;
+                      if ('entryPrice' in openTrade) {
+                        // EmaStrategy structure
+                        entryPrice = openTrade.entryPrice;
+                      } else if ('entrySignalPrice' in openTrade) {
+                        // TrendStartStrategy structure - prefer filled price if available
+                        entryPrice = openTrade.entryOrder?.filledPrice || 
+                                     openTrade.entryOrder?.price || 
+                                     openTrade.entrySignalPrice;
+                      }
+                      
+                      return [{
+                        entryPrice: entryPrice,
+                        stopLossPrice: openTrade.stopLossOrder?.stopPrice,
+                        takeProfitPrice: openTrade.takeProfitOrder?.price,
+                      }];
+                    }
+                  })()}
                   onCancelOrder={handleCancelOrder}
                 />
               </div>
@@ -911,4 +994,4 @@ const BacktesterPage = () => {
   );
 };
 
-export default BacktesterPage; 
+export default BacktesterPage;

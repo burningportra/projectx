@@ -87,9 +87,21 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     });
     currentLines.clear();
 
-    // console.log(`[updateOrderLines] Processing ${openPositions.length} open positions and ${pendingOrders.length} pending orders`);
+    console.log(`[updateOrderLines] Processing ${openPositions.length} open positions and ${pendingOrders.length} pending orders`);
+    if (pendingOrders.length > 0) {
+      console.log(`[updateOrderLines] Pending orders:`, pendingOrders.map(o => `${o.id} (${o.type} ${o.side} @ ${o.price || o.stopPrice})`));
+    }
 
-    // Add price lines for open positions
+    // Create a set of prices that are already shown as pending orders
+    const pendingOrderPrices = new Set<number>();
+    pendingOrders
+      .filter(order => order.status === OrderStatus.PENDING)
+      .forEach(order => {
+        const price = order.price || order.stopPrice;
+        if (price) pendingOrderPrices.add(price);
+      });
+
+    // Add price lines for open positions (only entry line if SL/TP are in pending orders)
     openPositions.forEach((position, index) => {
       // console.log(`[updateOrderLines] Position ${index}:`, {
       //   entryPrice: position.entryPrice,
@@ -97,14 +109,14 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
       //   takeProfitPrice: position.takeProfitPrice
       // });
 
-      // Entry price line (blue, solid)
+      // Entry price line (blue, solid) - always show
       if (position.entryPrice) {
         const entryLine = series.createPriceLine({
           price: position.entryPrice,
           color: '#2196F3',
           lineWidth: 2,
           lineStyle: 0, // solid
-          title: `Entry: $${position.entryPrice.toFixed(2)}`,
+          title: `Entry: ${position.entryPrice.toFixed(2)}`,
         });
         currentLines.set(`entry_${index}`, entryLine);
         // console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
@@ -112,26 +124,26 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         // console.log(`[updateOrderLines] No entry price for position ${index}`);
       }
 
-      // Stop Loss line (red, dashed)
-      if (position.stopLossPrice) {
+      // Stop Loss line - only show if not already in pending orders
+      if (position.stopLossPrice && !pendingOrderPrices.has(position.stopLossPrice)) {
         const stopLine = series.createPriceLine({
           price: position.stopLossPrice,
           color: '#F44336',
           lineWidth: 2,
           lineStyle: 1, // dashed
-          title: `Stop Loss: $${position.stopLossPrice.toFixed(2)}`,
+          title: `Stop Loss: ${position.stopLossPrice.toFixed(2)}`,
         });
         currentLines.set(`stop_${index}`, stopLine);
       }
 
-      // Take Profit line (green, dashed)
-      if (position.takeProfitPrice) {
+      // Take Profit line - only show if not already in pending orders
+      if (position.takeProfitPrice && !pendingOrderPrices.has(position.takeProfitPrice)) {
         const tpLine = series.createPriceLine({
           price: position.takeProfitPrice,
           color: '#4CAF50',
           lineWidth: 2,
           lineStyle: 1, // dashed
-          title: `Take Profit: $${position.takeProfitPrice.toFixed(2)}`,
+          title: `Take Profit: ${position.takeProfitPrice.toFixed(2)}`,
         });
         currentLines.set(`tp_${index}`, tpLine);
       }
@@ -166,7 +178,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         currentLines.set(`order_${order.id}`, orderLine);
       });
 
-    // console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
+    console.log(`[TradeChart] Updated price lines: ${currentLines.size} total lines`);
+    console.log(`[TradeChart] Lines created:`, Array.from(currentLines.keys()));
   }, [candlestickSeriesRef, openPositions, pendingOrders, mainTimeframeBars, currentBarIndex]);
 
   useEffect(() => {
@@ -411,6 +424,11 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
       }
     }
   }, [mainTimeframeBars, subTimeframeBars, currentBarIndex, currentSubBarIndex, barFormationMode, timeframeConfig, tradeMarkers, emaData, openPositions, pendingOrders]);
+
+  // Update order lines when orders change
+  useEffect(() => {
+    updateOrderLines();
+  }, [pendingOrders, openPositions, updateOrderLines]);
 
   // Reset initial load flag when new data is loaded
   useEffect(() => {
