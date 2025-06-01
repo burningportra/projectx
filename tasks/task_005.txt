@@ -1,0 +1,55 @@
+# Task ID: 5
+# Title: Update BacktesterPage.tsx UI Components
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: high
+# Description: Modify BacktesterPage.tsx to correctly consume and display data from the refactored strategies.
+# Details:
+1. Update CompactResultsPanel to fetch and display P&L statistics from refactored strategies.
+2. Modify AnalysisPanel to correctly show trade details based on the new strategy logic.
+3. Ensure that Total P&L, Win Rate, and other statistics are accurately calculated and displayed.
+4. Implement error handling for potential data inconsistencies.
+
+# Test Strategy:
+1. Write unit tests for updated UI components.
+2. Perform integration tests with mock strategy data.
+3. Conduct manual UI testing to verify correct display of P&L statistics and trade details.
+4. Test edge cases and error scenarios.
+
+# Subtasks:
+## 1. Update CompactResultsPanel UI Components [pending]
+### Dependencies: None
+### Description: Modify the CompactResultsPanel to accommodate new data structures and display requirements
+### Details:
+Identify all UI components that need updating, refactor the panel layout, implement new visual elements, and ensure responsive design across different screen sizes
+
+## 2. Modify AnalysisPanel Structure and Functionality [pending]
+### Dependencies: None
+### Description: Restructure the AnalysisPanel to handle updated data formats and implement new analysis features
+### Details:
+Update component hierarchy, implement new data visualization elements, ensure proper state management, and optimize rendering performance
+
+## 3. Update Statistics Calculation Logic [pending]
+### Dependencies: None
+### Description: Refactor the backend statistics calculation methods to improve accuracy and performance
+### Details:
+Review existing algorithms, implement optimized calculation methods, ensure real-time data processing capabilities, and validate results against expected outcomes
+
+## 4. Implement Comprehensive Error Handling [pending]
+### Dependencies: 5.1, 5.2, 5.3
+### Description: Develop robust error handling mechanisms for both UI components and backend operations
+### Details:
+Create error boundary components, implement graceful degradation, add user-friendly error messages, and establish logging for debugging purposes
+
+## 5. Write and Expand Unit Tests [pending]
+### Dependencies: 5.1, 5.2, 5.3, 5.4
+### Description: Create comprehensive unit tests for all new and modified components and functions
+### Details:
+Develop test cases for UI components, statistics calculations, error handling scenarios, and edge cases to ensure code quality and reliability
+
+## 6. Perform Integration and Manual UI Testing [pending]
+### Dependencies: 5.1, 5.2, 5.3, 5.4, 5.5
+### Description: Conduct thorough integration testing and manual UI verification
+### Details:
+Test component interactions, verify data flow through the system, check UI rendering across browsers/devices, and validate user experience against requirements
+

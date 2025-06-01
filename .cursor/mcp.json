@@ -8,12 +8,12 @@
                 "task-master-ai"
             ],
             "env": {
-                "ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY_HERE",
-                "PERPLEXITY_API_KEY": "PERPLEXITY_API_KEY_HERE",
-                "OPENAI_API_KEY": "OPENAI_API_KEY_HERE",
-                "GOOGLE_API_KEY": "GOOGLE_API_KEY_HERE",
-                "XAI_API_KEY": "XAI_API_KEY_HERE",
-                "OPENROUTER_API_KEY": "OPENROUTER_API_KEY_HERE",
+                "ANTHROPIC_API_KEY": "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",
+                "PERPLEXITY_API_KEY": "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",
+                "GOOGLE_API_KEY": "AIzaSyCK_1Jv8OEEQbca0OhkWkU4Hp1_yab_1pA",
+                "OPENAI_API_KEY": "sk-proj-1234567890",
+                "XAI_API_KEY": "xai-api-key-1234567890",
+                "OPENROUTER_API_KEY": "openrouter-api-key-1234567890",
                 "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
                 "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
                 "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"

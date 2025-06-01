@@ -1,0 +1,43 @@
+# Task ID: 8
+# Title: Update Existing Unit Tests
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 6, 7
+# Priority: medium
+# Description: Modify existing unit tests for strategies and OrderManager to align with the refactored implementation.
+# Details:
+1. Review all existing unit tests for strategies and OrderManager.
+2. Update tests to reflect new method signatures and logic flow.
+3. Add new tests to cover refactored functionality, especially around P&L calculation and trade finalization.
+4. Ensure all tests pass with the refactored implementation.
+
+# Test Strategy:
+1. Run existing test suite and identify failing tests.
+2. Systematically update each failing test to align with new implementation.
+3. Add new tests for added or significantly changed functionality.
+4. Verify full test coverage of refactored code.
+
+# Subtasks:
+## 1. Review Existing Tests [pending]
+### Dependencies: None
+### Description: Analyze the current test suite to understand coverage and identify tests affected by recent code changes or refactoring.
+### Details:
+Catalog all existing tests, note which areas of the codebase they cover, and flag any tests that may be impacted by new logic or methods.
+
+## 2. Update Tests for New Logic and Methods [pending]
+### Dependencies: 8.1
+### Description: Modify existing tests to align with updated or newly introduced logic and methods resulting from the refactor.
+### Details:
+Ensure that all tests accurately reflect the current behavior of the codebase, updating assertions and test data as needed.
+
+## 3. Add New Tests for Refactored Features [pending]
+### Dependencies: 8.2
+### Description: Develop additional tests to cover new or significantly changed features introduced during the refactor.
+### Details:
+Identify gaps in test coverage created by the refactor and write new unit, integration, or end-to-end tests as appropriate.
+
+## 4. Verify Full Test Coverage [pending]
+### Dependencies: 8.3
+### Description: Run the complete test suite and use coverage tools to confirm that all new and updated logic is thoroughly tested.
+### Details:
+Analyze coverage reports, address any uncovered code, and ensure all tests pass to prevent regression errors.
+

@@ -1,0 +1,56 @@
+# Task ID: 6
+# Title: Implement P&L Calculation in Strategies
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: high
+# Description: Ensure strategies correctly calculate P&L for each trade based on OrderManager's fill data and associated commissions.
+# Details:
+1. Implement a method in strategies to calculate P&L based on entry and exit fill details from OrderManager.
+2. Include commission calculation in the P&L computation.
+3. Ensure P&L is calculated only when a trade is fully closed.
+4. Store calculated P&L in the SimulatedTrade object.
+5. Update getTrades method to include accurate P&L information.
+
+# Test Strategy:
+1. Write unit tests for P&L calculation method.
+2. Test various scenarios including long/short positions, different commission structures.
+3. Verify P&L calculation accuracy against manual calculations.
+4. Integrate P&L tests with OrderManager fill confirmation tests.
+
+# Subtasks:
+## 1. Implement P&L calculation method [pending]
+### Dependencies: None
+### Description: Create a robust method to calculate profit and loss for different trade types
+### Details:
+Develop a calculatePL function that handles both long and short positions using the formulas: Long Trade = Size × (Exit Price − Entry Price) and Short Trade = Size × (Entry Price − Exit Price). Include support for different financial instruments (stocks, forex, futures) with their specific calculation requirements. Ensure the method can calculate both realized P&L (closed trades) and unrealized P&L (open positions).
+
+## 2. Integrate commission logic into P&L calculations [pending]
+### Dependencies: 6.1
+### Description: Add support for transaction fees and commissions in the P&L calculation
+### Details:
+Extend the P&L calculation to subtract commissions and fees from the gross profit. Update the formula to: P&L = Basic Calculation - Fees. Implement different fee structures based on trade type, size, and broker requirements. Create a flexible commission model that can be configured per trade or globally for the trading system.
+
+## 3. Ensure P&L calculation on trade closure [pending]
+### Dependencies: 6.1, 6.2
+### Description: Implement event-driven P&L calculation that triggers when trades are closed
+### Details:
+Create an event handler that calculates and finalizes P&L when a trade is closed. Implement a mechanism to distinguish between realized P&L (closed trades) and unrealized P&L (open positions). Ensure the calculation is performed at the exact moment of trade closure to capture the correct exit price and market conditions.
+
+## 4. Update SimulatedTrade class with P&L functionality [pending]
+### Dependencies: 6.1, 6.2, 6.3
+### Description: Enhance the SimulatedTrade class to store and calculate P&L information
+### Details:
+Add P&L-related properties to the SimulatedTrade class including realizedPL, unrealizedPL, and totalPL. Implement methods to update these values in real-time as market conditions change. Add helper methods for P&L analysis such as calculating percentage returns and comparing performance against benchmarks.
+
+## 5. Update getTrades method to include P&L information [pending]
+### Dependencies: 6.4
+### Description: Modify the getTrades method to return comprehensive P&L data with trade information
+### Details:
+Enhance the getTrades method to include detailed P&L information in its return value. Add filtering and sorting capabilities based on P&L metrics (e.g., most profitable trades, losing trades). Implement aggregation functions to calculate summary statistics like total P&L, average P&L per trade, and win/loss ratio.
+
+## 6. Write and expand unit/integration tests for P&L functionality [pending]
+### Dependencies: 6.1, 6.2, 6.3, 6.4, 6.5
+### Description: Develop comprehensive test suite to verify P&L calculation accuracy
+### Details:
+Create unit tests for the P&L calculation method with various scenarios (long/short positions, different asset types, edge cases). Develop integration tests to verify P&L calculations through the entire trade lifecycle. Implement stress tests with large numbers of trades and extreme market conditions. Create regression tests to ensure P&L calculations remain accurate after code changes.
+

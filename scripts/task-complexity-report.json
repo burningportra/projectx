@@ -1,133 +1,197 @@
 {
   "meta": {
-    "generatedAt": "2025-05-31T05:11:01.807Z",
+    "generatedAt": "2025-06-01T05:23:14.831Z",
     "tasksAnalyzed": 15,
     "totalTasks": 15,
-    "analysisCount": 15,
+    "analysisCount": 23,
     "thresholdScore": 5,
     "projectName": "Taskmaster",
     "usedResearch": true
   },
   "complexityAnalysis": [
     {
+      "taskId": 16,
+      "taskTitle": "Implement Simple Moving Average Crossover Strategy",
+      "complexityScore": 5,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Divide into: class implementation, SMA calculation logic, signal generation, integration with BaseStrategy, and unit testing.",
+      "reasoning": "Implementing a concrete strategy with clear logic and integration points is moderately complex, with most effort in correct signal logic and robust testing."
+    },
+    {
+      "taskId": 17,
+      "taskTitle": "Implement Strategy Factory for Dynamic Instantiation",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Expand into: factory class design, registry integration, instantiation logic, error handling, and integration/unit testing.",
+      "reasoning": "A factory pattern with dynamic instantiation and error handling is moderately complex, especially to ensure extensibility and robust error management."
+    },
+    {
+      "taskId": 18,
+      "taskTitle": "Enhance Backtesting Results with Performance Metrics and Visualizations",
+      "complexityScore": 8,
+      "recommendedSubtasks": 9,
+      "expansionPrompt": "Break down into: metrics calculation, equity curve logic, drawdown charting, visualizer implementation, test harness integration, UI updates, data export, performance optimization, and customization options.",
+      "reasoning": "Adding advanced analytics, visualizations, and export features to backtesting results is highly complex, requiring both backend and frontend enhancements and performance considerations."
+    },
+    {
+      "taskId": 19,
+      "taskTitle": "Integrate Strategies with Real-Time Market Data for Live Execution",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Expand into: data ingestion layer, strategy adaptation for live data, order execution integration, error/reconnection handling, concurrency/latency management, configuration/security, and monitoring/logging.",
+      "reasoning": "Live integration with real-time data and execution introduces high complexity due to concurrency, error handling, and the need for robust, low-latency architecture."
+    },
+    {
+      "taskId": 20,
+      "taskTitle": "Implement OCO, Bracket, and Complex Order Types Support",
+      "complexityScore": 7,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Divide into: order type data structures, OCO/bracket logic, BaseStrategy integration, API method design, edge case handling, documentation, and comprehensive testing.",
+      "reasoning": "Supporting advanced order types with correct linkage, cancellation, and edge case handling is complex, requiring careful design and robust testing."
+    },
+    {
+      "taskId": 21,
+      "taskTitle": "Develop Automated Strategy Parameter Optimization System",
+      "complexityScore": 9,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Expand into: optimization engine design, parameter range definition, algorithm implementation (grid/genetic), walk-forward analysis, performance tracking/reporting, extensibility hooks, integration with testing framework, and reporting/visualization.",
+      "reasoning": "Automated parameter optimization with advanced algorithms, walk-forward analysis, and extensibility is highly complex, involving significant architectural and algorithmic work."
+    },
+    {
+      "taskId": 22,
+      "taskTitle": "Implement Strategy Fluent Builder Pattern for Trader-Friendly Syntax",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Break down into: builder class/interface design, method chaining implementation, validation logic, TypeScript typings, error handling, integration with BaseStrategy, and comprehensive testing.",
+      "reasoning": "Designing a fluent builder pattern with type safety, validation, and integration is architecturally and technically complex, especially to ensure usability for non-developers."
+    },
+    {
+      "taskId": 23,
+      "taskTitle": "Implement Enhanced TrendAnalyzer Class",
+      "complexityScore": 8,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Expand into: class design, method implementation (trend starts, strength, metrics, extremes), interface/type definition, documentation, performance optimization, error handling, integration with builder, and comprehensive testing.",
+      "reasoning": "Developing an advanced analytics class with multiple derived signals, performance optimizations, and integration with a fluent builder is highly complex and requires careful design and validation."
+    },
+    {
       "taskId": 1,
-      "taskTitle": "Define IStrategy Interface",
-      "complexityScore": 3,
-      "recommendedSubtasks": 3,
-      "expansionPrompt": "Break down the definition of the IStrategy interface into subtasks: (1) Draft the initial TypeScript interface with all required methods and types, (2) Review and refine method signatures for consistency and extensibility, (3) Create unit tests to validate the interface definition and TypeScript typings.",
-      "reasoning": "Defining an interface is a straightforward task with low cyclomatic and structural complexity, but ensuring completeness and type safety warrants a few focused subtasks."
+      "taskTitle": "Refactor OrderManager for P&L Exposure",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Break down the refactoring of OrderManager into subtasks such as: reviewing current implementation, designing new P&L exposure interfaces, implementing closed position history, exposing trade execution details, updating position management logic, adding error/edge case handling, and writing/expanding unit and integration tests.",
+      "reasoning": "This task involves significant changes to a core component, requiring careful design, interface changes, data management, and robust testing. The need to be the authoritative source for P&L and handle edge cases increases both cyclomatic and structural complexity."
     },
     {
       "taskId": 2,
-      "taskTitle": "Implement BaseStrategy Abstract Class",
-      "complexityScore": 6,
-      "recommendedSubtasks": 5,
-      "expansionPrompt": "Expand the implementation of BaseStrategy into subtasks: (1) Set up the class structure and inherit from IStrategy, (2) Implement common order management logic, (3) Add configuration handling and validation, (4) Implement standard lifecycle and error handling methods, (5) Write unit tests for all shared functionality.",
-      "reasoning": "This task involves abstract class design, shared logic, and error handling, increasing both code and architectural complexity. Multiple subtasks are needed to ensure modularity and test coverage."
+      "taskTitle": "Refactor EmaStrategy.ts",
+      "complexityScore": 7,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Expand the refactor into subtasks: update openPosition logic, implement handleOrderFill, refactor closePosition, update getTrades, remove redundant P&L logic, and write/expand unit and integration tests.",
+      "reasoning": "This task requires deep integration with OrderManager, significant changes to trade flow, and careful removal of legacy logic. Multiple methods and their interactions must be updated and tested, raising complexity."
     },
     {
       "taskId": 3,
-      "taskTitle": "Refactor Existing Strategies",
+      "taskTitle": "Refactor TrendStartStrategy.ts",
       "complexityScore": 7,
       "recommendedSubtasks": 6,
-      "expansionPrompt": "Decompose the refactoring of strategies into subtasks: (1) Analyze current implementations, (2) Update each strategy to extend BaseStrategy, (3) Refactor processBar and constructors, (4) Ensure all interface methods are implemented, (5) Migrate and adapt strategy-specific logic, (6) Develop comprehensive unit tests for each strategy.",
-      "reasoning": "Refactoring multiple strategies to a new architecture is moderately complex, requiring careful migration, adaptation, and thorough testing to avoid regressions."
+      "expansionPrompt": "Decompose the refactor into subtasks: update openPosition, implement handleOrderFill, refactor closePosition, update getTrades, remove redundant P&L logic, and write/expand unit and integration tests.",
+      "reasoning": "Similar to EmaStrategy, this task requires coordinated changes across several methods and their interactions with OrderManager, increasing both code and integration complexity."
     },
     {
       "taskId": 4,
-      "taskTitle": "Develop Strategy Registration System",
-      "complexityScore": 5,
-      "recommendedSubtasks": 4,
-      "expansionPrompt": "Expand the registration system into subtasks: (1) Design the StrategyRegistry class structure, (2) Implement registration and retrieval methods, (3) Add metadata management and validation logic, (4) Write unit tests for all registry operations.",
-      "reasoning": "While the system introduces dynamic loading and validation, the scope is contained and can be modularized into a few clear subtasks."
+      "taskTitle": "Update Strategy Base Class",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Expand into subtasks: identify shared logic, extract to base class, implement abstract methods, update inheritance in strategies, and write/expand unit tests for the base class.",
+      "reasoning": "Extracting and refactoring shared logic into a base class requires careful analysis and design, but is less complex than refactoring the core OrderManager or full strategies."
     },
     {
       "taskId": 5,
-      "taskTitle": "Design Unified Configuration Schema",
-      "complexityScore": 6,
-      "recommendedSubtasks": 5,
-      "expansionPrompt": "Break down the configuration schema design into subtasks: (1) Define TypeScript interfaces for base and strategy-specific configs, (2) Implement the ConfigurationSchema class, (3) Add JSON Schema validation, (4) Develop type-safe configuration builders, (5) Write unit tests for validation and merging logic.",
-      "reasoning": "Designing a unified, type-safe, and extensible configuration system with validation and merging logic is moderately complex and benefits from clear separation of concerns."
+      "taskTitle": "Update BacktesterPage.tsx UI Components",
+      "complexityScore": 7,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down into subtasks: update CompactResultsPanel, modify AnalysisPanel, update statistics calculations, implement error handling, write/expand unit tests, and perform integration/manual UI testing.",
+      "reasoning": "UI changes that depend on backend refactors and require accurate, real-time data display and error handling are moderately complex, especially with integration and edge case testing."
     },
     {
       "taskId": 6,
-      "taskTitle": "Implement Configuration Persistence",
-      "complexityScore": 6,
-      "recommendedSubtasks": 5,
-      "expansionPrompt": "Expand configuration persistence into subtasks: (1) Implement save/load to localStorage, (2) Add import/export as JSON, (3) Develop versioning and backward compatibility logic, (4) Implement configuration presets, (5) Add history and rollback features with tests.",
-      "reasoning": "Persistence, versioning, and history management introduce moderate complexity, especially with backward compatibility and user-facing features."
+      "taskTitle": "Implement P&L Calculation in Strategies",
+      "complexityScore": 7,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Expand into subtasks: implement P&L calculation method, integrate commission logic, ensure calculation on trade closure, update SimulatedTrade, update getTrades, and write/expand unit/integration tests.",
+      "reasoning": "Accurate P&L calculation with commissions and correct event timing is critical and error-prone, requiring careful implementation and thorough testing."
     },
     {
       "taskId": 7,
-      "taskTitle": "Create Configuration UI Components",
-      "complexityScore": 7,
-      "recommendedSubtasks": 6,
-      "expansionPrompt": "Decompose UI component development into subtasks: (1) Build the ConfigurationForm component, (2) Implement real-time validation and error feedback, (3) Add parameter descriptions and tooltips, (4) Develop configuration diff visualization, (5) Create preview mode, (6) Write unit and integration tests for all components.",
-      "reasoning": "Developing interactive, validated UI components with visualization and preview features is moderately complex, requiring both frontend engineering and integration with the configuration system."
+      "taskTitle": "Implement Trade Finalization Logic",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Decompose into subtasks: implement trade closure detection, finalize trade data, calculate/store final P&L, move trade to completed list, and write/expand unit tests for finalization logic.",
+      "reasoning": "While important, the logic is relatively contained and follows clear event-driven patterns, making it moderately complex."
     },
     {
       "taskId": 8,
-      "taskTitle": "Enhance Jest Configuration for TypeScript/React",
-      "complexityScore": 4,
+      "taskTitle": "Update Existing Unit Tests",
+      "complexityScore": 5,
       "recommendedSubtasks": 4,
-      "expansionPrompt": "Expand Jest configuration into subtasks: (1) Set up TypeScript support, (2) Integrate React Testing Library, (3) Configure code coverage and snapshot testing, (4) Add mock data generators and verify with sample tests.",
-      "reasoning": "Setting up and verifying a comprehensive test environment is a well-bounded task with moderate complexity, mainly involving configuration and validation."
+      "expansionPrompt": "Expand into subtasks: review existing tests, update for new logic/methods, add new tests for refactored features, and verify full test coverage.",
+      "reasoning": "Updating and expanding tests is essential but generally less complex than implementing new features or major refactors, though it requires attention to detail."
     },
     {
       "taskId": 9,
-      "taskTitle": "Develop Strategy Testing Framework",
+      "taskTitle": "Implement Integration Tests",
       "complexityScore": 8,
       "recommendedSubtasks": 7,
-      "expansionPrompt": "Break down the testing framework into subtasks: (1) Design the StrategyTestHarness class, (2) Implement backtest execution, (3) Add trade validation utilities, (4) Develop performance testing methods, (5) Create scenario generators for different market conditions, (6) Integrate with strategy registry, (7) Write unit and integration tests.",
-      "reasoning": "Building a comprehensive testing framework with scenario generation, performance testing, and integration is complex and requires careful design and extensive testing."
+      "expansionPrompt": "Break down into subtasks: design test scenarios, implement integration tests for strategy-OrderManager-UI flow, mock market data, test multiple trading scenarios, verify data consistency, run performance benchmarks, and document test results.",
+      "reasoning": "Integration testing across multiple layers (backend, strategies, UI) with various scenarios and performance requirements is highly complex and critical for system reliability."
     },
     {
       "taskId": 10,
-      "taskTitle": "Implement Integration Testing Suite",
-      "complexityScore": 7,
-      "recommendedSubtasks": 6,
-      "expansionPrompt": "Expand integration testing into subtasks: (1) Develop end-to-end backtesting scenario tests, (2) Implement UI integration tests, (3) Test OrderManager with strategies, (4) Add API integration tests, (5) Test cross-component interactions, (6) Write documentation for test coverage.",
-      "reasoning": "Comprehensive integration testing across multiple components and scenarios is moderately complex, requiring coordination and coverage of many system aspects."
+      "taskTitle": "Final Code Review and Documentation",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Expand into subtasks: organize code review session, update inline documentation, update external docs/README, create/update architecture diagrams, and verify documentation accuracy through peer review.",
+      "reasoning": "Comprehensive review and documentation require coordination and thoroughness but are less technically complex than core refactoring or integration work."
     },
     {
       "taskId": 11,
-      "taskTitle": "Develop Performance Testing Infrastructure",
-      "complexityScore": 7,
-      "recommendedSubtasks": 6,
-      "expansionPrompt": "Break down performance testing into subtasks: (1) Implement strategy execution benchmarks, (2) Add memory profiling tools, (3) Develop large dataset tests, (4) Test UI responsiveness under load, (5) Create regression detection system, (6) Integrate with CI/CD pipeline.",
-      "reasoning": "Performance testing and benchmarking across backend and frontend, with CI/CD integration and regression detection, is a complex, multi-faceted task."
+      "taskTitle": "Implement Strategy Fluent Builder Pattern for Trader-Friendly API",
+      "complexityScore": 9,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Decompose into subtasks: design builder class/interfaces, implement method chaining, enforce build order/validation, integrate with EmaStrategy and OrderManager, support indicators/entry/exit/risk, write documentation/examples, ensure extensibility, and write comprehensive tests.",
+      "reasoning": "Designing a robust, extensible fluent builder pattern with compile-time safety, integration with existing systems, and trader usability is architecturally and technically complex."
     },
     {
       "taskId": 12,
-      "taskTitle": "Establish Documentation Standards",
-      "complexityScore": 4,
-      "recommendedSubtasks": 4,
-      "expansionPrompt": "Expand documentation standards into subtasks: (1) Define TSDoc and inline comment standards, (2) Create README and ADR templates, (3) Establish code example documentation guidelines, (4) Implement documentation linter and review checklist.",
-      "reasoning": "Defining and enforcing documentation standards is a bounded process task with moderate complexity, mainly involving policy creation and tooling."
+      "taskTitle": "Implement Enhanced TrendAnalyzer Class",
+      "complexityScore": 8,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Expand into subtasks: design EnhancedTrendAnalyzer, implement constructor/wrapping logic, develop public methods (recent trends, strengthening, duration, magnitude, extremes), implement private helpers, add error handling/validation, optimize performance, and write documentation/examples/tests.",
+      "reasoning": "This class requires advanced data analysis, multiple public and private methods, integration with other components, and performance optimization, making it highly complex."
     },
     {
       "taskId": 13,
-      "taskTitle": "Create User Documentation",
-      "complexityScore": 5,
-      "recommendedSubtasks": 5,
-      "expansionPrompt": "Break down user documentation into subtasks: (1) Write user guide, (2) Develop strategy development guide, (3) Create configuration reference, (4) Compile FAQ, (5) Produce video tutorials and gather user feedback.",
-      "reasoning": "Comprehensive user documentation spans multiple formats and requires both technical writing and user validation, but is less technically complex than core system tasks."
+      "taskTitle": "Implement Strategy Fluent Builder Pattern",
+      "complexityScore": 9,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Break down into subtasks: design builder class/interfaces, implement method chaining, enforce build sequence, integrate with EmaStrategy and OrderManager, support indicators/entry/exit/risk, write documentation/examples, ensure extensibility, and write comprehensive tests.",
+      "reasoning": "Similar to Task 11, this involves architecting a fluent API with strict sequencing, integration, extensibility, and usability, which is highly complex."
     },
     {
       "taskId": 14,
-      "taskTitle": "Implement Automated Documentation Generation",
-      "complexityScore": 5,
-      "recommendedSubtasks": 5,
-      "expansionPrompt": "Expand automated documentation into subtasks: (1) Configure TypeDoc, (2) Set up build process for documentation updates, (3) Implement documentation versioning, (4) Create searchable documentation website, (5) Integrate with CI/CD and add validation tests.",
-      "reasoning": "Automating documentation generation and integration with CI/CD is moderately complex, involving tooling, build processes, and validation."
+      "taskTitle": "Implement Enhanced TrendAnalyzer Class",
+      "complexityScore": 8,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Decompose into subtasks: design EnhancedTrendAnalyzer, implement constructor, develop methods for recent trends, strengthening, duration, magnitude, extremes, signals, utilities, add error handling, optimize performance, and write documentation/tests.",
+      "reasoning": "This task mirrors Task 12, requiring advanced analytics, multiple methods, integration, and performance considerations, resulting in high complexity."
     },
     {
       "taskId": 15,
-      "taskTitle": "Conduct System-wide Testing and Quality Assurance",
-      "complexityScore": 9,
+      "taskTitle": "Implement Simple Moving Average Crossover Strategy",
+      "complexityScore": 8,
       "recommendedSubtasks": 8,
-      "expansionPrompt": "Decompose system-wide QA into subtasks: (1) Plan and execute end-to-end testing, (2) Perform user acceptance testing, (3) Run all unit, integration, and performance tests, (4) Verify documentation, (5) Conduct security assessments, (6) Perform code review, (7) Track and resolve issues, (8) Prepare final approval report.",
-      "reasoning": "System-wide QA is highly complex, requiring coordination of all testing types, stakeholder involvement, security review, and final sign-off across the entire project."
+      "expansionPrompt": "Expand into subtasks: implement SmaCrossoverStrategy class, integrate fast/slow SMA, integrate EnhancedTrendAnalyzer, implement onTick logic, implement entry/exit methods, implement position sizing/risk management, handle order fills, support configuration via builder, and write comprehensive tests/backtests.",
+      "reasoning": "Developing a full-featured, configurable strategy with analytics, risk management, builder integration, and robust testing is architecturally and technically demanding."
     }
   ]
 }

@@ -1,0 +1,48 @@
+# Task ID: 4
+# Title: Update Strategy Base Class
+# Status: pending
+# Dependencies: 2, 3
+# Priority: medium
+# Description: If a base strategy class exists, update it to reflect the new OrderManager-dependent logic.
+# Details:
+1. Identify common logic between refactored EmaStrategy and TrendStartStrategy.
+2. Extract this common logic into the base strategy class.
+3. Implement abstract methods for strategy-specific logic.
+4. Ensure that the base class properly interacts with OrderManager for trade execution and P&L calculation.
+
+# Test Strategy:
+1. Write unit tests for the updated base strategy class.
+2. Verify that common logic is correctly implemented and works with OrderManager.
+3. Test inheritance and proper use of abstract methods with mock strategy implementations.
+
+# Subtasks:
+## 1. Identify Shared Logic Across Strategies [pending]
+### Dependencies: None
+### Description: Analyze the existing strategy classes to find duplicated or similar logic that can be centralized.
+### Details:
+Review all strategy implementations, document common methods or code blocks, and determine which logic is suitable for extraction.
+
+## 2. Extract Shared Logic to Base Class [pending]
+### Dependencies: 4.1
+### Description: Create a new abstract base class and move the identified shared logic into it.
+### Details:
+Define an abstract or concrete base class, encapsulate the shared methods or properties, and ensure the base class provides a clear contract for derived strategies.
+
+## 3. Implement Abstract Methods in Derived Strategies [pending]
+### Dependencies: 4.2
+### Description: For any abstract methods defined in the base class, implement the required logic in each derived strategy class.
+### Details:
+Update each strategy to provide concrete implementations for abstract methods, ensuring they fulfill the intended behavior.
+
+## 4. Update Inheritance in Strategy Classes [pending]
+### Dependencies: 4.2, 4.3
+### Description: Modify all relevant strategy classes to inherit from the new base class instead of their previous parent (if any).
+### Details:
+Change class declarations to extend the new base class and remove any now-redundant code that has been centralized.
+
+## 5. Write or Expand Unit Tests for the Base Class [pending]
+### Dependencies: 4.2, 4.3, 4.4
+### Description: Develop or update unit tests to cover the shared logic in the base class and ensure correct behavior in derived strategies.
+### Details:
+Create tests for the base class methods, mock or stub abstract methods as needed, and verify that derived classes function as expected with the new inheritance structure.
+

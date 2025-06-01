@@ -1,0 +1,56 @@
+# Task ID: 3
+# Title: Refactor TrendStartStrategy.ts
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Refactor TrendStartStrategy to use OrderManager as the source of truth for trade outcomes and P&L calculations.
+# Details:
+1. Update openPosition method to submit entry orders to OrderManager and only populate critical fields upon fill confirmation.
+2. Implement handleOrderFill method to react to OrderManager's fill confirmations.
+3. Update closePosition method to only submit closing orders to OrderManager.
+4. Refactor getTrades method to return SimulatedTrade objects consistent with OrderManager's processed fills.
+5. Remove any redundant P&L calculations within the strategy.
+
+# Test Strategy:
+1. Write unit tests for refactored methods in TrendStartStrategy.
+2. Test various scenarios of trade execution, including entry, exit, and P&L calculation.
+3. Verify that strategy correctly reacts to OrderManager fill confirmations.
+4. Ensure getTrades method returns accurate trade information.
+
+# Subtasks:
+## 1. Update openPosition Method [pending]
+### Dependencies: None
+### Description: Refactor the openPosition method to align with the new logic and ensure compatibility with the updated order and position management flow.
+### Details:
+Analyze the current openPosition implementation, identify areas for improvement, and update the method to support the new refactored structure. Ensure it interacts correctly with OrderManager and other related components.
+
+## 2. Implement handleOrderFill Method [pending]
+### Dependencies: 3.1
+### Description: Create or refactor the handleOrderFill method to process order fill events and update positions and trades accordingly.
+### Details:
+Design and implement handleOrderFill to handle order fill callbacks, update position state, and trigger any necessary downstream logic. Ensure it integrates seamlessly with openPosition and OrderManager.
+
+## 3. Refactor closePosition Method [pending]
+### Dependencies: 3.2
+### Description: Refactor the closePosition method to utilize the new order handling and position management logic.
+### Details:
+Update closePosition to work with the refactored openPosition and handleOrderFill methods. Remove any legacy logic that is now redundant and ensure proper closure of positions.
+
+## 4. Update getTrades Method [pending]
+### Dependencies: 3.3
+### Description: Modify the getTrades method to reflect changes in trade and position tracking introduced by the refactor.
+### Details:
+Review and update getTrades to ensure it accurately retrieves trade data based on the new data structures and logic. Ensure consistency and correctness of trade reporting.
+
+## 5. Remove Redundant P&L Logic [pending]
+### Dependencies: 3.4
+### Description: Identify and eliminate any redundant profit and loss (P&L) calculation logic that is no longer necessary after the refactor.
+### Details:
+Audit the codebase for duplicate or obsolete P&L logic, consolidate calculations where appropriate, and ensure all P&L reporting is accurate and streamlined.
+
+## 6. Write and Expand Unit and Integration Tests [pending]
+### Dependencies: 3.5
+### Description: Develop comprehensive unit and integration tests to cover the refactored methods and ensure system reliability.
+### Details:
+Write new tests and expand existing ones to validate the behavior of openPosition, handleOrderFill, closePosition, getTrades, and P&L logic. Ensure high test coverage and robustness against regressions.
+

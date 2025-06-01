@@ -1,0 +1,61 @@
+# Task ID: 11
+# Title: Implement Strategy Fluent Builder Pattern for Trader-Friendly API
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Develop a fluent builder pattern to enable intuitive, chainable strategy creation syntax for traders, supporting indicators, entry/exit conditions, and risk management.
+# Details:
+Design and implement a StrategyFluentBuilder class (or similar) that exposes a chainable API for constructing trading strategies. The builder should allow users to fluently define indicators (e.g., moving averages), entry and exit conditions, and risk management parameters in a readable, sequential manner. Use method chaining by returning 'this' or appropriate interface types from each method to enforce correct build order and prevent incomplete configurations. Ensure the builder integrates with the refactored EmaStrategy and OrderManager, leveraging OrderManager as the source of truth for trade execution and P&L. Provide clear documentation and usage examples demonstrating how traders can compose strategies using the fluent API. Consider extensibility for future strategy types and validation to prevent incomplete or invalid strategies. Reference fluent builder best practices, such as interface chaining for required steps and optional parameters, to maximize safety and usability[1][4][5].
+
+# Test Strategy:
+1. Write unit tests that construct strategies using the fluent builder, verifying that all required steps (indicators, entry/exit, risk) are enforced and optional parameters are handled gracefully. 2. Test that the resulting strategies integrate correctly with EmaStrategy and OrderManager, submitting trades and calculating P&L as expected. 3. Validate that incomplete or invalid builder chains are caught at compile-time or throw meaningful runtime errors. 4. Review API documentation and usage examples for clarity and trader-friendliness. 5. Conduct code reviews to ensure extensibility and adherence to fluent builder best practices.
+
+# Subtasks:
+## 1. Design Builder Class and Interfaces [pending]
+### Dependencies: None
+### Description: Define the core builder class and associated interfaces to represent the construction steps for trading strategies, ensuring clear separation of concerns and extensibility.
+### Details:
+Identify required and optional components (e.g., indicators, entry/exit, risk) and design interfaces to enforce their configuration. Use interface chaining to guide build order and prevent incomplete construction.
+
+## 2. Implement Fluent Method Chaining [pending]
+### Dependencies: 11.1
+### Description: Develop the builder methods to support fluent chaining, returning the appropriate interface at each step to guide the user through the correct build sequence.
+### Details:
+Ensure each method returns the next interface in the chain, enforcing the correct order of method calls and improving usability.
+
+## 3. Enforce Build Order and Validation [pending]
+### Dependencies: 11.2
+### Description: Implement compile-time and runtime checks to ensure required steps are completed in the correct order and that the final object is valid.
+### Details:
+Use interface chaining for compile-time safety and add runtime validation in the build method to catch any remaining configuration errors.
+
+## 4. Integrate with EmaStrategy and OrderManager [pending]
+### Dependencies: 11.3
+### Description: Connect the builder to existing EmaStrategy and OrderManager components, ensuring seamless creation and management of trading strategies.
+### Details:
+Adapt the builder to produce objects compatible with EmaStrategy and OrderManager, and ensure integration points are well-defined.
+
+## 5. Support Indicators, Entry, Exit, and Risk Configuration [pending]
+### Dependencies: 11.4
+### Description: Extend the builder to allow configuration of indicators, entry/exit logic, and risk management parameters as part of the fluent API.
+### Details:
+Provide methods for adding and configuring various strategy components, ensuring each is validated and integrated into the final strategy object.
+
+## 6. Write Documentation and Usage Examples [pending]
+### Dependencies: None
+### Description: Create comprehensive documentation and code examples demonstrating how to use the builder to construct strategies, highlighting method chaining and build order enforcement.
+### Details:
+Include both inline documentation and standalone usage guides to assist developers in adopting the builder pattern.
+
+## 7. Ensure Extensibility for Future Features [pending]
+### Dependencies: None
+### Description: Design the builder and interfaces to be easily extensible, allowing for future additions such as new indicators or risk modules without breaking existing code.
+### Details:
+Use design patterns and interface segregation to facilitate extension, and document extension points for future developers.
+
+## 8. Write Comprehensive Tests [pending]
+### Dependencies: None
+### Description: Develop unit and integration tests to verify builder correctness, method chaining, build order enforcement, integration with EmaStrategy/OrderManager, and extensibility.
+### Details:
+Test both valid and invalid usage scenarios, ensuring compile-time and runtime safety, and maintain high code coverage.
+

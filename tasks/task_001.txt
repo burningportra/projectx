@@ -1,0 +1,62 @@
+# Task ID: 1
+# Title: Refactor OrderManager for P&L Exposure
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Enhance OrderManager to expose necessary P&L and trade execution details for strategies.
+# Details:
+1. Review current OrderManager implementation.
+2. Implement method to provide a log or history of closed ManagedPosition objects, including their final realizedPnl.
+3. Ensure all necessary trade execution details (fill prices, fill times) are accessible.
+4. Update OrderManager's internal position management to be the authoritative source for P&L calculations.
+5. Implement proper error handling and edge case management.
+
+# Test Strategy:
+1. Write unit tests for new methods in OrderManager.
+2. Test various scenarios of trade execution and P&L calculation.
+3. Verify that closed position history is correctly maintained and accessible.
+4. Perform integration tests with mock strategy implementations.
+
+# Subtasks:
+## 1. Review Current OrderManager Implementation [done]
+### Dependencies: None
+### Description: Analyze the existing OrderManager codebase to understand current responsibilities, data flows, and pain points, with a focus on P&L exposure, position management, and trade execution details.
+### Details:
+Document current class structure, method responsibilities, and identify areas of high complexity or technical debt.
+
+## 2. Design New P&L Exposure Interfaces [done]
+### Dependencies: 1.1
+### Description: Define clear interfaces and data contracts for exposing real-time and historical P&L, ensuring they can serve as the authoritative source for downstream consumers.
+### Details:
+Work with stakeholders to specify required P&L metrics, update interface definitions, and plan for integration points.
+
+## 3. Implement Closed Position History Management [done]
+### Dependencies: 1.2
+### Description: Develop mechanisms to track, store, and retrieve closed position data, ensuring accurate historical P&L and auditability.
+### Details:
+Refactor or extend data models and storage logic to persist closed positions and their associated P&L snapshots.
+
+## 4. Expose Trade Execution Details [done]
+### Dependencies: 1.3
+### Description: Refactor or extend OrderManager to provide detailed trade execution information, including timestamps, prices, and order IDs, via new or updated interfaces.
+### Details:
+Ensure trade execution data is accessible for both real-time monitoring and historical analysis.
+
+## 5. Update Position Management Logic [done]
+### Dependencies: 1.4
+### Description: Refactor position management to align with new P&L and trade execution interfaces, ensuring consistency and correctness across open and closed positions.
+### Details:
+Simplify or modularize position update logic, and ensure all edge cases (e.g., partial fills, cancellations) are handled.
+
+## 6. Add Error and Edge Case Handling [done]
+### Dependencies: None
+### Description: Identify and implement robust error handling and edge case management throughout the refactored OrderManager, especially for data inconsistencies and unexpected execution scenarios.
+### Details:
+Document all handled cases and ensure graceful degradation or alerting for unhandled scenarios.
+
+## 7. Write and Expand Unit and Integration Tests [done]
+### Dependencies: None
+### Description: Develop comprehensive unit and integration tests to validate all new and refactored functionality, with a focus on P&L accuracy, position transitions, and error handling.
+### Details:
+Ensure high test coverage and automate test execution as part of the CI/CD pipeline.
+

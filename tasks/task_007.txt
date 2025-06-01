@@ -1,0 +1,50 @@
+# Task ID: 7
+# Title: Implement Trade Finalization Logic
+# Status: pending
+# Dependencies: 2, 3, 4, 6
+# Priority: medium
+# Description: Develop logic to finalize trades and move them to completed trades list upon exit fill confirmation.
+# Details:
+1. In handleOrderFill method, implement logic to detect when a fill closes an open position.
+2. Upon position closure, finalize the trade by setting exit price and time.
+3. Calculate final P&L for the trade.
+4. Move the finalized trade from openTrade to the list of completed trades.
+5. Reset openTrade to null after finalization.
+
+# Test Strategy:
+1. Write unit tests for trade finalization logic.
+2. Test various exit scenarios (stop loss, take profit, strategy signal).
+3. Verify that trades are correctly moved to completed trades list.
+4. Ensure openTrade is properly reset after trade finalization.
+
+# Subtasks:
+## 1. Implement Trade Closure Detection [pending]
+### Dependencies: None
+### Description: Develop logic to detect when a trade should be closed, based on event-driven triggers such as order fills, stop-loss, or take-profit conditions.
+### Details:
+This involves monitoring trade status and market events to determine when a trade has reached its completion criteria.
+
+## 2. Finalize Trade Data [pending]
+### Dependencies: 7.1
+### Description: Create routines to finalize and lock in all relevant trade data once closure is detected, ensuring no further modifications.
+### Details:
+This includes capturing final prices, timestamps, and any other relevant trade metadata at the moment of closure.
+
+## 3. Calculate and Store Final P&L [pending]
+### Dependencies: 7.2
+### Description: Implement logic to compute the final profit and loss for the trade and persist this information in the appropriate data store.
+### Details:
+This step requires accurate calculation based on finalized trade data and updating the trade record with the computed P&L.
+
+## 4. Move Trade to Completed List [pending]
+### Dependencies: 7.3
+### Description: Transfer the finalized trade record from the active trades list to the completed trades list or archive.
+### Details:
+Ensure the trade is no longer considered active and is available for historical analysis or reporting.
+
+## 5. Write and Expand Unit Tests for Finalization Logic [pending]
+### Dependencies: 7.4
+### Description: Develop and enhance unit tests to cover all aspects of the trade finalization process, including edge cases and error handling.
+### Details:
+Tests should validate correct detection, data finalization, P&L calculation, and proper movement to the completed list.
+
