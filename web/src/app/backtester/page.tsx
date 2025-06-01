@@ -207,32 +207,15 @@ const BacktesterPage = () => {
           position: sig.type === StrategySignalType.BUY ? 'belowBar' : 'aboveBar',
           color: sig.type === StrategySignalType.BUY ? '#26a69a' : '#ef5350',
           shape: sig.type === StrategySignalType.BUY ? 'arrowUp' : 'arrowDown',
-          text: sig.type.toString(),
+          text: '', // Hide labels for trend start signals
           size: 1,
         });
       }
     });
 
-    // 2. Collect specific CUS/CDS trend signals if TrendStartStrategy is active
-    if (selectedStrategy === 'trendstart' && currentStrategyInstance instanceof TrendStartStrategy) {
-      const allTrackedTrendSignals = (currentStrategyInstance as TrendStartStrategy).getTrendSignals();
-      allTrackedTrendSignals.forEach(tsSignal => {
-        // Only include signals up to the endIndex
-        if (tsSignal.barIndex <= endIndex && mainTimeframeBars[tsSignal.barIndex]) {
-          allMarkersForChart.push({
-            time: mainTimeframeBars[tsSignal.barIndex].time,
-            position: tsSignal.type === 'CUS' ? 'belowBar' : 'aboveBar',
-            color: tsSignal.type === 'CUS' ? '#00dd00' : '#dd0000', 
-            shape: tsSignal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
-            text: `${tsSignal.type} (${tsSignal.rule || ''})`,
-            size: 1.5 
-          });
-          // The console log for marker addition is removed from here, 
-          // as we are now setting all markers at once.
-          // We rely on the TrendStartStrategy logs to see if signals are generated.
-        }
-      });
-    }
+    // 2. Trend start signals (CUS/CDS) are now hidden to avoid duplicate markers
+    // The trade action signals (BUY/SELL) above are sufficient to show strategy actions
+    // Trend start signals are still processed internally by the strategy but not displayed
         
     const finalResults = currentStrategyInstance.getCurrentBacktestResults ? currentStrategyInstance.getCurrentBacktestResults() : null;
     
