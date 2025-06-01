@@ -73,13 +73,20 @@ export abstract class BaseStrategy implements IStrategy {
   constructor(orderManagerInstance: OrderManager, config?: Partial<BaseStrategyConfig>) {
     this.orderManager = orderManagerInstance;
     // Set default configuration values
+    // Use name, description, version from the passed config object directly,
+    // or fallback to calling the abstract methods if not provided in config.
+    // The abstract methods should ideally return static default values.
+    const initialName = config?.name ?? this.getName();
+    const initialDescription = config?.description ?? this.getDescription();
+    const initialVersion = config?.version ?? this.getVersion();
+
     this.config = {
-      name: this.getName(),
-      description: this.getDescription(),
-      version: this.getVersion(),
       commission: 0,
       positionSize: 1,
-      ...config
+      ...config, // Spread the incoming config first
+      name: initialName, // Then ensure these are set, possibly overriding from ...config if they were there
+      description: initialDescription,
+      version: initialVersion,
     };
     
     // Validate the initial configuration
@@ -398,6 +405,15 @@ export abstract class BaseStrategy implements IStrategy {
   }
 
   /**
+   * Gets the current backtest results based on the trades processed so far
+   * by the associated OrderManager, without re-running the backtest.
+   * @returns A `BacktestResults` object.
+   */
+  public getCurrentBacktestResults(): BacktestResults {
+    return this.calculateBacktestResults();
+  }
+
+  /**
    * Calculate backtest performance metrics based on trades from OrderManager.
    * Metrics include total P&L, win rate, total trades, max drawdown, and profit factor.
    * @returns A `BacktestResults` object.
@@ -480,7 +496,7 @@ export abstract class BaseStrategy implements IStrategy {
       quantity,
       status: OrderStatus.PENDING,
       submittedTime: bar.time,
-      tradeId,
+      parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
       message: "Market order created"
     };
@@ -515,7 +531,7 @@ export abstract class BaseStrategy implements IStrategy {
       price,
       status: OrderStatus.PENDING,
       submittedTime: bar.time,
-      tradeId,
+      parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
       message: "Limit order created"
     };
@@ -552,7 +568,7 @@ export abstract class BaseStrategy implements IStrategy {
       stopPrice,
       status: OrderStatus.PENDING,
       submittedTime: bar.time,
-      tradeId,
+      parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
       isStopLoss,
       message: isStopLoss ? "Stop loss order created" : "Stop order created"
@@ -588,7 +604,7 @@ export abstract class BaseStrategy implements IStrategy {
       price,
       status: OrderStatus.PENDING,
       submittedTime: bar.time,
-      tradeId,
+      parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
       isTakeProfit: true,
       message: "Take profit order created"
@@ -672,16 +688,24 @@ export abstract class BaseStrategy implements IStrategy {
    */
   protected createTrade(
     type: TradeType,
-    entryPrice: number,
+    initialEntryPriceGuess: number, // e.g., bar.close for market, or order.price for limit
     size: number,
     entryTime: UTCTimestamp,
-    entryOrder?: Order,
+    entryOrder?: Order, // The order that, when filled, will open this trade
     entrySignal?: StrategySignal
   ): SimulatedTrade {
+    let actualEntryPrice = initialEntryPriceGuess;
+    // If an entryOrder is provided and it's a LIMIT order with a price,
+    // that's a better initial guess for the conceptual trade's entry price.
+    // The final entry price will be set by the fill.
+    if (entryOrder && entryOrder.type === OrderType.LIMIT && typeof entryOrder.price === 'number') {
+      actualEntryPrice = entryOrder.price;
+    }
+
     const trade: SimulatedTrade = {
       id: this.generateTradeId(),
       entryTime,
-      entryPrice,
+      entryPrice: actualEntryPrice,
       type,
       size,
       status: 'OPEN',
@@ -755,14 +779,50 @@ export abstract class BaseStrategy implements IStrategy {
    * immediately after an entry order is filled, such as placing stop-loss or
    * take-profit orders.
    * @param filledOrder - The order that was filled.
-   * @param trade - The trade that was opened or added to by this fill, if applicable.
+   * @param currentConceptualTrade - The strategy's current conceptual open trade, if any.
    */
-  protected onOrderFilled(filledOrder: Order, trade?: SimulatedTrade): void {
-    // Default implementation: if a trade was opened and SL/TP is configured, place protective orders.
-    if (trade && trade.status === 'OPEN' && trade.entryOrder?.id === filledOrder.id) {
-      // Check if this fill opened the trade 'trade'
-      this.placeProtectiveOrders(trade, filledOrder);
+  protected onOrderFilled(filledOrder: Order, currentConceptualTrade?: SimulatedTrade): void {
+    // Scenario 1: The filled order is the designated entry for the current conceptual trade.
+    // Place protective orders.
+    if (currentConceptualTrade && currentConceptualTrade.status === 'OPEN' &&
+        currentConceptualTrade.entryOrder?.id === filledOrder.id &&
+        filledOrder.isEntry === true) { // Explicitly check the isEntry flag
+
+        console.log(`[BaseStrategy.onOrderFilled] Entry fill for conceptual trade ${currentConceptualTrade.id}. Placing protective orders.`);
+        this.placeProtectiveOrders(currentConceptualTrade, filledOrder);
     }
+    // Scenario 2: The filled order is an exit for the current conceptual trade.
+    // Close the conceptual trade.
+    else if (currentConceptualTrade && currentConceptualTrade.status === 'OPEN' &&
+             (filledOrder.isExit === true || filledOrder.isStopLoss === true || filledOrder.isTakeProfit === true) && // Order flags indicate it's an exit
+             filledOrder.parentTradeId === currentConceptualTrade.id) { // And it belongs to this conceptual trade
+
+        console.log(`[BaseStrategy.onOrderFilled] Exit fill for conceptual trade ${currentConceptualTrade.id}. Closing conceptual trade.`);
+        let exitReason: 'STOP_LOSS' | 'TAKE_PROFIT' | 'SIGNAL' | 'MANUAL' | 'REVERSAL_EXIT' = 'SIGNAL'; // Default
+        if (filledOrder.isStopLoss) {
+            exitReason = 'STOP_LOSS';
+        } else if (filledOrder.isTakeProfit) {
+            exitReason = 'TAKE_PROFIT';
+        } else if (filledOrder.message?.toLowerCase().includes('reversal: closing')) { // Heuristic for reversal's explicit close
+            exitReason = 'REVERSAL_EXIT';
+        }
+        // If isExit is true but not SL/TP/Reversal, it's likely a strategy-signaled exit.
+        // The original signal that led to this exit order might be in the strategy,
+        // but the filledOrder itself is the direct cause of closing the trade here.
+
+        this.closeTrade(
+            currentConceptualTrade,
+            filledOrder.filledPrice!, // Assume filledPrice is present on a filled order
+            filledOrder.filledTime!,   // Assume filledTime is present on a filled order
+            filledOrder,
+            undefined, // No new strategy signal directly caused this SL/TP/ReversalClose fill
+            exitReason
+        );
+    }
+    // Other scenarios:
+    // - Fill is for an order not related to currentConceptualTrade (e.g., orphaned, or OrderManager internal).
+    // - currentConceptualTrade is null (no open conceptual trade from strategy's POV).
+    // These are ignored by this default onOrderFilled. Derived strategies could add more logic if needed.
   }
 
   /**

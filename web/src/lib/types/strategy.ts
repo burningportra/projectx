@@ -130,6 +130,13 @@ export interface IStrategy {
    * @returns Backtest results with performance metrics
    */
   backtest?(mainBars: BacktestBarData[], subBars?: SubBarData[]): BacktestResults;
+
+  /**
+   * Gets the current backtest results based on trades processed so far.
+   * Does not re-run the backtest.
+   * @returns A `BacktestResults` object.
+   */
+  getCurrentBacktestResults?(): BacktestResults;
 }
 
 /**

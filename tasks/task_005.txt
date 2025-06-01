@@ -17,13 +17,13 @@
 4. Test edge cases and error scenarios.
 
 # Subtasks:
-## 1. Update CompactResultsPanel UI Components [pending]
+## 1. Update CompactResultsPanel UI Components [done]
 ### Dependencies: None
 ### Description: Modify the CompactResultsPanel to accommodate new data structures and display requirements
 ### Details:
 Identify all UI components that need updating, refactor the panel layout, implement new visual elements, and ensure responsive design across different screen sizes
 
-## 2. Modify AnalysisPanel Structure and Functionality [pending]
+## 2. Modify AnalysisPanel Structure and Functionality [done]
 ### Dependencies: None
 ### Description: Restructure the AnalysisPanel to handle updated data formats and implement new analysis features
 ### Details:

@@ -7,46 +7,45 @@ import TopBar from '@/components/backtester/TopBar';
 import CompactResultsPanel from '@/components/backtester/CompactResultsPanel';
 import AnalysisPanel from '@/components/backtester/AnalysisPanel';
 import CompactOrderPanel from '@/components/backtester/CompactOrderPanel';
-import { BacktestBarData, SubBarData, PlaybackSpeed, BarFormationMode, TimeframeConfig, Order } from '@/lib/types/backtester';
+import { 
+  BacktestBarData, 
+  SubBarData, 
+  PlaybackSpeed, 
+  BarFormationMode, 
+  TimeframeConfig, 
+  Order,
+  BacktestResults,
+  SimulatedTrade,
+  StrategySignalType,
+  TradeType,
+  OrderSide,
+  StrategySignal,
+  OrderStatus,
+  StrategyConfig
+} from '@/lib/types/backtester';
+import { IStrategy, StrategyResult, BaseStrategyConfig as GenericStrategyConfig } from '@/lib/types/strategy';
 import { UTCTimestamp } from 'lightweight-charts';
-import { EmaStrategy } from '@/lib/strategies/EmaStrategy';
-import { TrendStartStrategy } from '@/lib/strategies/TrendStartStrategy';
+import { EmaStrategy, EmaStrategyConfig } from '@/lib/strategies/EmaStrategy';
+import { TrendStartStrategy, TrendStartStrategyConfig } from '@/lib/strategies/TrendStartStrategy';
+import { OrderManager } from '@/lib/OrderManager';
+import { TrendIdentifier } from '@/lib/trend-analysis/TrendIdentifier';
 
-// Strategy configuration interface
-interface StrategyConfig {
-  // Risk Management
-  stopLossPercent: number;
-  takeProfitPercent: number;
-  commission: number;
-  positionSize: number;
-  
-  // Order Preferences
-  useMarketOrders: boolean;
-  limitOrderOffset: number;
-  
-  // Strategy Parameters
-  fastPeriod: number;
-  slowPeriod: number;
-}
+type UIPanelStrategyConfig = Partial<EmaStrategyConfig & TrendStartStrategyConfig & GenericStrategyConfig>;
 
-// Helper to parse timeframe string (e.g., "5m", "1h") into unit and value for API
 const parseTimeframeForApi = (timeframe: string): { unit: number; value: number } => {
   const unitChar = timeframe.slice(-1);
   const value = parseInt(timeframe.slice(0, -1), 10);
-  let unit = 2; // Default to minutes
-
+  let unit = 2; 
   switch (unitChar) {
-    case 's': unit = 1; break; // seconds
-    case 'm': unit = 2; break; // minutes
-    case 'h': unit = 3; break; // hours
-    case 'd': unit = 4; break; // days
-    case 'w': unit = 5; break; // weeks
-    // case 'M': unit = 6; break; // months - if your API supports it
+    case 's': unit = 1; break; 
+    case 'm': unit = 2; break; 
+    case 'h': unit = 3; break; 
+    case 'd': unit = 4; break; 
+    case 'w': unit = 5; break; 
   }
   return { unit, value };
 };
 
-// Helper to determine appropriate sub-timeframe for bar formation
 const getTimeframeConfig = (mainTimeframe: string): TimeframeConfig => {
   const configs: Record<string, TimeframeConfig> = {
     '5m': { main: '5m', sub: '1m', subBarsPerMain: 5 },
@@ -56,756 +55,444 @@ const getTimeframeConfig = (mainTimeframe: string): TimeframeConfig => {
     '4h': { main: '4h', sub: '15m', subBarsPerMain: 16 },
     '1d': { main: '1d', sub: '1h', subBarsPerMain: 24 },
   };
-  
   return configs[mainTimeframe] || { main: mainTimeframe, sub: '1m', subBarsPerMain: 1 };
 };
 
-// Helper to determine which sub-bars belong to which main bar
 const mapSubBarsToMainBars = (mainBars: BacktestBarData[], subBars: BacktestBarData[], config: TimeframeConfig): SubBarData[] => {
   const mappedSubBars: SubBarData[] = [];
-  
-  // console.log(`[mapSubBarsToMainBars] Starting mapping for ${config.main}/${config.sub}. Main bars: ${mainBars.length}, Sub bars: ${subBars.length}`);
-  
-  // Debug timestamp ranges to understand data alignment
-  // if (mainBars.length > 0 && subBars.length > 0) {
-  //   console.log(`[mapSubBarsToMainBars] Main bars: ${new Date(mainBars[0].time * 1000).toISOString()} to ${new Date(mainBars[mainBars.length - 1].time * 1000).toISOString()}`);
-  //   console.log(`[mapSubBarsToMainBars] Sub bars: ${new Date(subBars[0].time * 1000).toISOString()} to ${new Date(subBars[subBars.length - 1].time * 1000).toISOString()}`);
-  // }
-  
   mainBars.forEach((mainBar, mainBarIndex) => {
-    // Find sub-bars that fall within this main bar's timeframe
     const mainBarStart = mainBar.time;
     const mainBarEnd = mainBarStart + (config.subBarsPerMain * getTimeframeSeconds(config.sub));
-    
     const relatedSubBars = subBars.filter(subBar => 
       subBar.time >= mainBarStart && subBar.time < mainBarEnd
     );
-    
     relatedSubBars.forEach(subBar => {
-      mappedSubBars.push({
-        ...subBar,
-        parentBarIndex: mainBarIndex
-      });
+      mappedSubBars.push({ ...subBar, parentBarIndex: mainBarIndex });
     });
   });
-  
-  // console.log(`[mapSubBarsToMainBars] Mapping complete. Mapped ${mappedSubBars.length} sub-bars total.`);
-  return mappedSubBars.sort((a, b) => a.time - b.time);
+  return mappedSubBars.sort((a: SubBarData, b: SubBarData) => a.time - b.time);
 };
 
-// Helper to get timeframe duration in seconds
 const getTimeframeSeconds = (timeframe: string): number => {
   const unitChar = timeframe.slice(-1);
   const value = parseInt(timeframe.slice(0, -1), 10);
-  
   switch (unitChar) {
     case 's': return value;
     case 'm': return value * 60;
     case 'h': return value * 60 * 60;
     case 'd': return value * 60 * 60 * 24;
     case 'w': return value * 60 * 60 * 24 * 7;
-    default: return 60; // Default to 1 minute
+    default: return 60; 
   }
 };
 
-// Helper to find the first main bar that has sub-bars
 const findFirstValidMainBarIndex = (subTimeframeBars: SubBarData[]): number => {
   if (subTimeframeBars.length === 0) return 0;
-  
-  // Find the minimum parentBarIndex among all sub-bars
   const minParentIndex = Math.min(...subTimeframeBars.map(sb => sb.parentBarIndex));
-  // console.log(`[findFirstValidMainBarIndex] First main bar with sub-bars: ${minParentIndex}`);
-  return Math.max(0, minParentIndex); // Ensure non-negative
+  return Math.max(0, minParentIndex); 
 };
 
 const BacktesterPage = () => {
-  const [results, setResults] = useState({
-    profitOrLoss: 0,
-    winRate: 0,
-    totalTrades: 0,
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [mainTimeframeBars, setMainTimeframeBars] = useState<BacktestBarData[]>([]);
   const [subTimeframeBars, setSubTimeframeBars] = useState<SubBarData[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Playback state
   const [currentBarIndex, setCurrentBarIndex] = useState(0);
   const [currentSubBarIndex, setCurrentSubBarIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(PlaybackSpeed.NORMAL);
   const [barFormationMode, setBarFormationMode] = useState<BarFormationMode>(BarFormationMode.PROGRESSIVE);
   const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Current timeframe config
   const [timeframeConfig, setTimeframeConfig] = useState<TimeframeConfig | null>(null);
 
-  // Strategy instances with enhanced order management
+  const orderManagerRef = useRef(new OrderManager(0.25));
+
   const [selectedStrategy, setSelectedStrategy] = useState<string>('ema');
-  const [emaStrategy] = useState(new EmaStrategy({
-    stopLossPercent: 2.0,
-    takeProfitPercent: 4.0,
-    useMarketOrders: true,
-  }));
-  const [trendStartStrategy] = useState(new TrendStartStrategy({
-    stopLossPercent: 2.0,
-    takeProfitPercent: 4.0,
-    useMarketOrders: true,
-    confidenceThreshold: 0.6, // Permissive threshold for debugging
-    useOpenCloseStrategy: false, // Keep simple for now
+  
+  const [emaStrategy] = useState(() => new EmaStrategy(orderManagerRef.current, {
+    name: 'EMA Crossover', description: 'A simple EMA crossover strategy.', version: '1.0.0',
+    fastPeriod: 12, slowPeriod: 26, commission: 2.5, positionSize: 1,
+    stopLossPercent: 2.0, takeProfitPercent: 4.0, useMarketOrders: true,
   }));
 
-  // Strategy configuration state
-  const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
-    stopLossPercent: 2.0,
-    takeProfitPercent: 4.0,
-    commission: 2.50,
-    positionSize: 1,
-    useMarketOrders: true,
-    limitOrderOffset: 2,
-    fastPeriod: 12,
-    slowPeriod: 26,
+  const trendIdentifierRef = useRef(new TrendIdentifier());
+  const [trendStartStrategy] = useState(() => new TrendStartStrategy(
+    orderManagerRef.current,
+    trendIdentifierRef.current,
+    {
+      name: 'Trend Start Strategy', description: 'Trades on CUS/CDS signals.', version: '1.0.0',
+      stopLossPercent: 2.0, takeProfitPercent: 4.0, useMarketOrders: true, commission: 2.5, positionSize: 1,
+      confidenceThreshold: 0.6, minConfirmationBars: 2, contractId: 'DEFAULT_CONTRACT', timeframe: '1h'
+    }
+  ));
+  
+  const [currentStrategyInstance, setCurrentStrategyInstance] = useState<IStrategy>(emaStrategy);
+
+  useEffect(() => {
+    setCurrentStrategyInstance(selectedStrategy === 'ema' ? emaStrategy : trendStartStrategy);
+  }, [selectedStrategy, emaStrategy, trendStartStrategy]);
+
+  const [strategyConfig, setStrategyConfig] = useState<UIPanelStrategyConfig>({
+    stopLossPercent: 2.0, takeProfitPercent: 4.0, commission: 2.50, positionSize: 1,
+    useMarketOrders: true, limitOrderOffsetTicks: 2, fastPeriod: 12, slowPeriod: 26,
+    minConfirmationBars: 2, confidenceThreshold: 0.6, contractId: 'CON.F.US.MES.M25', timeframe: '1d'
   });
 
-  // Enhanced strategy execution state with performance tracking
   const [liveTradeMarkers, setLiveTradeMarkers] = useState<any[]>([]);
   const [liveStrategyState, setLiveStrategyState] = useState<{
-    fastEmaValues: number[];
-    slowEmaValues: number[];
-    openTrade: any | null;
-    tradeIdCounter: number;
-    completedTrades: any[];
+    openTrade: SimulatedTrade | null; 
     pendingOrders: Order[];
     filledOrders: Order[];
     cancelledOrders: Order[];
-    lastProcessedBarIndex: number; // Track last processed bar for incremental updates
+    lastProcessedBarIndex: number;
+    backtestResults: BacktestResults | null; 
+    currentIndicators: Record<string, number | Record<string, number>>; 
   }>({
-    fastEmaValues: [],
-    slowEmaValues: [],
     openTrade: null,
-    tradeIdCounter: 1,
-    completedTrades: [],
     pendingOrders: [],
     filledOrders: [],
     cancelledOrders: [],
     lastProcessedBarIndex: -1,
+    backtestResults: null,
+    currentIndicators: {},
   });
 
-  // Current data state - track timeframe and contract
   const [currentContract, setCurrentContract] = useState<string>('CON.F.US.MES.M25');
   const [currentTimeframe, setCurrentTimeframe] = useState<string>('1d');
 
-  // Reset live strategy when new data loads
   const resetLiveStrategy = useCallback(() => {
-    emaStrategy.reset();
-    trendStartStrategy.reset();
-    
+    currentStrategyInstance.reset(); 
+    orderManagerRef.current.reset(); 
     setLiveStrategyState({
-      fastEmaValues: [],
-      slowEmaValues: [],
-      openTrade: null,
-      tradeIdCounter: 1,
-      completedTrades: [],
-      pendingOrders: [],
-      filledOrders: [],
-      cancelledOrders: [],
-      lastProcessedBarIndex: -1,
+      openTrade: null, pendingOrders: [], filledOrders: [], cancelledOrders: [],
+      lastProcessedBarIndex: -1, backtestResults: null, currentIndicators: {},
     });
     setLiveTradeMarkers([]);
-  }, [emaStrategy, trendStartStrategy]);
+  }, [currentStrategyInstance]);
 
-  // Enhanced strategy processing using the new OrderManager system with incremental updates
+  const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
+    // Removed: const newTrendMarkers: any[] = []; 
+    let currentIndicatorsForUpdate: Record<string, number | Record<string, number>> = {};
+    let currentOpenTradeForUpdate: SimulatedTrade | null = null;
+
+    // Process bars first to update strategy state
+    for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
+      const currentMainBar = mainTimeframeBars[barIndex];
+      if (!currentMainBar) continue;
+      const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
+      
+      // This call updates currentStrategyInstance's internal state (signals, trades, etc.)
+      const result: StrategyResult = await currentStrategyInstance.processBar(
+          currentMainBar, relevantSubBars, barIndex, mainTimeframeBars
+      );
+      
+      // Store indicators and open trade from the very last bar processed in this segment
+      if (barIndex === endIndex) {
+        currentIndicatorsForUpdate = result.indicators || {};
+        currentOpenTradeForUpdate = currentStrategyInstance.getOpenTrade();
+      }
+    }
+    
+    // After processing all bars in the segment, collect all markers
+    const allMarkersForChart: any[] = [];
+
+    // 1. Collect general trade signals (BUY/SELL arrows for entries/exits)
+    const tradeActionSignals = currentStrategyInstance.getSignals(); // From BaseStrategy
+    tradeActionSignals.forEach(sig => {
+      // Only include signals up to the endIndex of the current processing segment
+      if (sig.barIndex <= endIndex && mainTimeframeBars[sig.barIndex]) {
+        allMarkersForChart.push({
+          time: mainTimeframeBars[sig.barIndex].time,
+          position: sig.type === StrategySignalType.BUY ? 'belowBar' : 'aboveBar',
+          color: sig.type === StrategySignalType.BUY ? '#26a69a' : '#ef5350',
+          shape: sig.type === StrategySignalType.BUY ? 'arrowUp' : 'arrowDown',
+          text: sig.type.toString(),
+          size: 1,
+        });
+      }
+    });
+
+    // 2. Collect specific CUS/CDS trend signals if TrendStartStrategy is active
+    if (selectedStrategy === 'trendstart' && currentStrategyInstance instanceof TrendStartStrategy) {
+      const allTrackedTrendSignals = (currentStrategyInstance as TrendStartStrategy).getTrendSignals();
+      allTrackedTrendSignals.forEach(tsSignal => {
+        // Only include signals up to the endIndex
+        if (tsSignal.barIndex <= endIndex && mainTimeframeBars[tsSignal.barIndex]) {
+          allMarkersForChart.push({
+            time: mainTimeframeBars[tsSignal.barIndex].time,
+            position: tsSignal.type === 'CUS' ? 'belowBar' : 'aboveBar',
+            color: tsSignal.type === 'CUS' ? '#00dd00' : '#dd0000', 
+            shape: tsSignal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
+            text: `${tsSignal.type} (${tsSignal.rule || ''})`,
+            size: 1.5 
+          });
+          // The console log for marker addition is removed from here, 
+          // as we are now setting all markers at once.
+          // We rely on the TrendStartStrategy logs to see if signals are generated.
+        }
+      });
+    }
+        
+    const finalResults = currentStrategyInstance.getCurrentBacktestResults ? currentStrategyInstance.getCurrentBacktestResults() : null;
+    
+    // Deduplicate and sort all markers before setting state
+    const uniqueMarkers = Array.from(new Map(allMarkersForChart.map(m => [`${m.time}-${m.text}-${m.shape}-${m.position}`, m])).values());
+    uniqueMarkers.sort((a, b) => a.time - b.time);
+    setLiveTradeMarkers(uniqueMarkers);
+
+    setLiveStrategyState(prevState => ({ 
+      ...prevState,
+      pendingOrders: currentStrategyInstance.getPendingOrders(),
+      filledOrders: currentStrategyInstance.getFilledOrders(),
+      cancelledOrders: currentStrategyInstance.getCancelledOrders(),
+      lastProcessedBarIndex: endIndex,
+      backtestResults: finalResults, 
+      currentIndicators: currentIndicatorsForUpdate,
+      openTrade: currentOpenTradeForUpdate,
+    }));
+  }, [mainTimeframeBars, subTimeframeBars, selectedStrategy, currentStrategyInstance, liveTradeMarkers]);
+
   const buildStrategyStateUpToBar = useCallback(async (targetBarIndex: number) => {
-    if (mainTimeframeBars.length === 0 || targetBarIndex >= mainTimeframeBars.length) {
-      // console.log(`[buildStrategyStateUpToBar] Skipping - no bars or invalid index. Bars: ${mainTimeframeBars.length}, Target: ${targetBarIndex}`);
+    if (mainTimeframeBars.length === 0 || targetBarIndex < 0 || targetBarIndex >= mainTimeframeBars.length) {
       return;
     }
-    
-    // Incremental processing optimization - only process new bars
     const lastProcessedIndex = liveStrategyState.lastProcessedBarIndex;
-    const isGoingBackward = targetBarIndex < lastProcessedIndex;
-    const needsFullRebuild = isGoingBackward || lastProcessedIndex < 0;
+    const needsFullRebuild = targetBarIndex < lastProcessedIndex || lastProcessedIndex < 0;
     
     if (needsFullRebuild) {
-      // Full rebuild needed (going backward or first time)
-      // console.log(`[buildStrategyStateUpToBar] Full rebuild from 0 to ${targetBarIndex} (was at ${lastProcessedIndex})`);
-      
-      // Reset strategies for clean rebuild
-      if (selectedStrategy === 'ema') {
-        emaStrategy.reset();
-      } else if (selectedStrategy === 'trendstart') {
-        trendStartStrategy.reset();
-      }
-      
-      // Process all bars from 0 to target
+      currentStrategyInstance.reset();
+      orderManagerRef.current.reset(); 
+      setLiveTradeMarkers([]); 
       await processStrategyBars(0, targetBarIndex);
     } else if (targetBarIndex > lastProcessedIndex) {
-      // Incremental update - only process new bars
-      // console.log(`[buildStrategyStateUpToBar] Incremental update from ${lastProcessedIndex + 1} to ${targetBarIndex}`);
       await processStrategyBars(lastProcessedIndex + 1, targetBarIndex);
     }
-    // If targetBarIndex === lastProcessedIndex, no processing needed
-  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe, emaStrategy, trendStartStrategy, liveStrategyState.lastProcessedBarIndex]);
+  }, [mainTimeframeBars, currentStrategyInstance, liveStrategyState.lastProcessedBarIndex, processStrategyBars]);
 
-  // Extracted strategy processing logic for reuse
-  const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
-    const trendMarkers: any[] = [...liveTradeMarkers]; // Start with existing markers
-    let stateUpdate: any = {};
-    
-    if (selectedStrategy === 'ema') {
-      // Process EMA strategy incrementally
-      for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
-        const currentMainBar = mainTimeframeBars[barIndex];
-        // Find sub-bars for the current main bar
-        const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
-        
-        const result = emaStrategy.processBar(currentMainBar, relevantSubBars, barIndex, mainTimeframeBars);
-        
-        // Handle signals and create markers
-        if (result.signal) {
-          const marker = {
-            time: currentMainBar.time, // Changed currentBar to currentMainBar
-            position: result.signal.type === 'BUY' ? 'belowBar' : 'aboveBar',
-            color: result.signal.type === 'BUY' ? '#26a69a' : '#ef5350',
-            shape: result.signal.type === 'BUY' ? 'arrowUp' : 'arrowDown',
-            text: result.signal.type === 'BUY' ? 'BUY' : 'SELL',
-            size: 1,
-          };
-          trendMarkers.push(marker);
-        }
-      }
-      
-      // Get current strategy state
-      const indicators = emaStrategy.getCurrentIndicators();
-      const trades = emaStrategy.getTrades();
-      const openTrade = emaStrategy.getOpenTrade();
-      const orderManager = (emaStrategy as any).orderManager;
-      
-      stateUpdate = {
-        fastEmaValues: indicators ? [indicators.fastEma] : [],
-        slowEmaValues: indicators ? [indicators.slowEma] : [],
-        openTrade: openTrade,
-        tradeIdCounter: trades.length + 1,
-        completedTrades: trades,
-        pendingOrders: orderManager?.getPendingOrders() || [],
-        filledOrders: orderManager?.getFilledOrders() || [],
-        cancelledOrders: orderManager?.getCancelledOrders() || [],
-        lastProcessedBarIndex: endIndex,
-      };
-      
-    } else if (selectedStrategy === 'trendstart') {
-      // Process trend start strategy incrementally
-      const strategy = trendStartStrategy;
-      
-      for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
-        const currentMainBar = mainTimeframeBars[barIndex];
-        // Find sub-bars for the current main bar
-        const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
-        try {
-          const result = await strategy.processBar(
-            currentMainBar,
-            relevantSubBars, // Pass the sub-bars
-            barIndex, 
-            mainTimeframeBars.slice(0, barIndex + 1),
-            currentContract,
-            currentTimeframe
-          );
-          
-          // Note: Trading signals (BUY/SELL) are different from trend start signals (CUS/CDS)
-          // Trend start signals are handled separately below via strategy.getTrendSignals()
-          
-        } catch (error) {
-          // console.error(`[TrendStart Strategy] Error processing bar ${barIndex}:`, error);
-        }
-      }
-      
-      // Add trend signal markers (show ALL signals, not just current range)
-      const trendSignals = strategy.getTrendSignals();
-      // console.log(`[BacktesterPage][Chart] Processing ${trendSignals.length} trend signals for chart markers`);
-      
-      for (const trendSignal of trendSignals) {
-        // console.log(`[BacktesterPage][Chart] Checking signal: ${trendSignal.type} at bar ${trendSignal.barIndex} (${trendSignal.rule})`);
-        
-        // Show ALL signals that have valid bar data, regardless of current processing range
-        if (trendSignal.barIndex >= 0 && trendSignal.barIndex < mainTimeframeBars.length) {
-          const signalBar = mainTimeframeBars[trendSignal.barIndex];
-          if (signalBar) {
-            const trendMarker = {
-              time: signalBar.time,
-              position: trendSignal.type === 'CUS' ? 'belowBar' as const : 'aboveBar' as const,
-              color: trendSignal.type === 'CUS' ? '#00ff00' : '#ff0000',
-              shape: trendSignal.type === 'CUS' ? 'arrowUp' as const : 'arrowDown' as const,
-              size: 2
-            };
-            trendMarkers.push(trendMarker);
-            // console.log(`[BacktesterPage][Chart] ✓ Added ${trendSignal.type} marker at bar ${trendSignal.barIndex} (${signalBar.time})`);
-          } else {
-            // console.log(`[BacktesterPage][Chart] ⚠ No bar data found for signal at index ${trendSignal.barIndex}`);
-          }
-        } else {
-          // console.log(`[BacktesterPage][Chart] ⚠ Signal at bar ${trendSignal.barIndex} outside valid bar range 0-${mainTimeframeBars.length - 1}`);
-        }
-      }
-      
-      const currentOpenTrade = strategy.getOpenTrade();
-      const currentPendingOrders = strategy.getPendingOrders();
-      const currentFilledOrders = strategy.getFilledOrders();
-      
-      // Log when trades close for debugging
-      if (!currentOpenTrade && currentPendingOrders.length === 0) {
-        // console.log(`[TrendStart Strategy] No open trades or pending orders at bar ${endIndex} - all order lines should disappear`);
-      }
-      
-      stateUpdate = {
-        fastEmaValues: [],
-        slowEmaValues: [],
-        openTrade: currentOpenTrade,
-        tradeIdCounter: strategy.getTradeIdCounter(),
-        completedTrades: strategy.getTrades(),
-        pendingOrders: currentPendingOrders,
-        filledOrders: currentFilledOrders,
-        cancelledOrders: strategy.getCancelledOrders(),
-        lastProcessedBarIndex: endIndex,
-      };
-    }
-    
-    // Update markers and state
-    setLiveTradeMarkers(trendMarkers);
-    setLiveStrategyState(stateUpdate);
-  }, [mainTimeframeBars, selectedStrategy, currentContract, currentTimeframe, emaStrategy, trendStartStrategy, liveTradeMarkers]);
-
-  // Order management functions
   const handleCancelOrder = useCallback((orderId: string) => {
-    if (selectedStrategy === 'ema') {
-      const orderManager = (emaStrategy as any).orderManager;
-      if (orderManager?.cancelOrder(orderId)) {
-        // console.log(`[BacktesterPage] Cancelled order ${orderId}`);
-        // Trigger state update
-        buildStrategyStateUpToBar(currentBarIndex);
-      }
-    }
-  }, [selectedStrategy, emaStrategy, buildStrategyStateUpToBar, currentBarIndex]);
+      orderManagerRef.current.cancelOrder(orderId);
+      buildStrategyStateUpToBar(currentBarIndex); 
+  }, [buildStrategyStateUpToBar, currentBarIndex]);
 
-  // Auto-playback effect
   useEffect(() => {
-    // console.log(`[Playback Effect] isPlaying: ${isPlaying}, mainTimeframeBars.length: ${mainTimeframeBars.length}, currentBarIndex: ${currentBarIndex}, barFormationMode: ${barFormationMode}`);
-    
     if (isPlaying && mainTimeframeBars.length > 0) {
-      // console.log(`[Playback Effect] Starting playback interval with speed: ${playbackSpeed}ms`);
       playbackIntervalRef.current = setInterval(() => {
-        
         if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-          // Progressive mode: advance through sub-bars
           setCurrentSubBarIndex(prevSubIndex => {
-            const currentMainBar = mainTimeframeBars[currentBarIndex];
-            if (!currentMainBar) return prevSubIndex;
-            
-            const subBarsForCurrentMain = subTimeframeBars.filter(
-              subBar => subBar.parentBarIndex === currentBarIndex
-            );
-            
-            
+            const subBarsForCurrentMain = subTimeframeBars.filter(sb => sb.parentBarIndex === currentBarIndex);
             if (prevSubIndex >= subBarsForCurrentMain.length - 1) {
-              // Finished current main bar, move to next main bar
               setCurrentBarIndex(prevBarIndex => {
                 if (prevBarIndex >= mainTimeframeBars.length - 1) {
-             //     console.log(`[Playback Interval] Reached end of data, stopping playback`);
-                  setIsPlaying(false); // Stop when we reach the end
-                  return prevBarIndex;
+                  setIsPlaying(false); return prevBarIndex;
                 }
-                const newBarIndex = prevBarIndex + 1;
-                return newBarIndex;
+                return prevBarIndex + 1;
               });
-              return 0; // Reset sub-bar index for new main bar
+              return 0; 
             }
-            const newSubIndex = prevSubIndex + 1;
-            return newSubIndex;
+            return prevSubIndex + 1;
           });
         } else {
-          // Instant mode: advance through main bars directly
-        //  console.log(`[Playback Interval] Instant mode - advancing main bar`);
           setCurrentBarIndex(prevIndex => {
             if (prevIndex >= mainTimeframeBars.length - 1) {
-            //  console.log(`[Playback Interval] Reached end of data, stopping playback`);
-              setIsPlaying(false); // Stop when we reach the end
-              return prevIndex;
+              setIsPlaying(false); return prevIndex;
             }
-            const newIndex = prevIndex + 1;
-        //    console.log(`[Playback Interval] Advanced to bar index: ${newIndex}`);
-            return newIndex;
+            return prevIndex + 1;
           });
         }
       }, playbackSpeed);
     } else {
-      //console.log(`[Playback Effect] Clearing playback interval - isPlaying: ${isPlaying}, bars: ${mainTimeframeBars.length}`);
-      if (playbackIntervalRef.current) {
-        clearInterval(playbackIntervalRef.current);
-        playbackIntervalRef.current = null;
-      }
+      if (playbackIntervalRef.current) clearInterval(playbackIntervalRef.current);
     }
-
-    return () => {
-      if (playbackIntervalRef.current) {
-        clearInterval(playbackIntervalRef.current);
-      }
-    };
+    return () => { if (playbackIntervalRef.current) clearInterval(playbackIntervalRef.current); };
   }, [isPlaying, playbackSpeed, mainTimeframeBars.length, subTimeframeBars.length, currentBarIndex, barFormationMode]);
 
-  // Throttled strategy processing to prevent excessive updates during rapid playback
   const lastStrategyUpdateRef = useRef<number>(0);
-  const strategyUpdateThrottleMs = 50; // Minimum 50ms between strategy updates
+  const strategyUpdateThrottleMs = 50; 
 
-  // Effect to process strategy when playback advances (with throttling)
   useEffect(() => {
-    // console.log(`[Strategy Effect] Triggered with currentBarIndex: ${currentBarIndex}, mainTimeframeBars.length: ${mainTimeframeBars.length}`);
-    if (mainTimeframeBars.length > 0) {
+    if (mainTimeframeBars.length > 0 && currentBarIndex >= 0 && currentBarIndex < mainTimeframeBars.length) { 
       const now = Date.now();
-      const timeSinceLastUpdate = now - lastStrategyUpdateRef.current;
-      
-      if (timeSinceLastUpdate >= strategyUpdateThrottleMs) {
-        // console.log(`[Strategy Effect] Calling buildStrategyStateUpToBar(${currentBarIndex})`);
+      if (now - lastStrategyUpdateRef.current >= strategyUpdateThrottleMs) {
         lastStrategyUpdateRef.current = now;
-        buildStrategyStateUpToBar(currentBarIndex).catch(error => {
-          // console.error('[Strategy Effect] Error in buildStrategyStateUpToBar:', error);
-        });
+        buildStrategyStateUpToBar(currentBarIndex).catch(console.error);
       }
-      // If throttled, the update will be skipped but will be processed on the next effect trigger
-    } else {
-      // console.log(`[Strategy Effect] Skipping - no main timeframe bars`);
     }
   }, [currentBarIndex, mainTimeframeBars, buildStrategyStateUpToBar]);
 
-  // Reset strategy when new data loads
   useEffect(() => {
-    if (mainTimeframeBars.length > 0) {
-      resetLiveStrategy();
-    }
+    if (mainTimeframeBars.length > 0) resetLiveStrategy();
   }, [mainTimeframeBars.length, resetLiveStrategy]);
 
-  // Reset strategy when strategy selection changes
   useEffect(() => {
-    if (selectedStrategy === 'trendstart') {
-      trendStartStrategy.reset();
-    }
-    resetLiveStrategy();
-  }, [selectedStrategy, trendStartStrategy, resetLiveStrategy]);
-
-  // Debug effect to monitor live strategy state changes
-  useEffect(() => {
-    // console.log(`[LiveStrategyState] Updated - EMA arrays: fast=${liveStrategyState.fastEmaValues.length}, slow=${liveStrategyState.slowEmaValues.length}`);
-    // console.log(`[LiveStrategyState] Completed trades: ${liveStrategyState.completedTrades.length}, Open trade: ${!!liveStrategyState.openTrade}`);
-    if (liveStrategyState.completedTrades.length > 0) {
-      // console.log(`[LiveStrategyState] Completed trades:`, liveStrategyState.completedTrades);
-    }
-  }, [liveStrategyState]);
-
-  // Debug effect to monitor marker changes
-  useEffect(() => {
-    // console.log(`[BacktesterPage] LiveTradeMarkers updated. Count: ${liveTradeMarkers.length}`);
-    if (liveTradeMarkers.length > 0) {
-      // console.log(`[BacktesterPage] Latest markers:`, liveTradeMarkers);
-    }
-  }, [liveTradeMarkers]);
-
-  // Debug effect to monitor when open trades change (for tracking order line clearing)
-  useEffect(() => {
-    const hasOpenTrade = !!liveStrategyState.openTrade;
-    const pendingOrdersCount = liveStrategyState.pendingOrders.length;
-    const filledOrdersCount = liveStrategyState.filledOrders.length;
-    
-    if (!hasOpenTrade && pendingOrdersCount === 0) {
-      // console.log(`[BacktesterPage] Trade closed - no open trades or pending orders. All order lines should disappear. Filled orders: ${filledOrdersCount}`);
-    } else if (hasOpenTrade) {
-      // console.log(`[BacktesterPage] Open trade detected - showing order lines. Pending: ${pendingOrdersCount}, Filled: ${filledOrdersCount}`);
-    }
-  }, [liveStrategyState.openTrade, liveStrategyState.pendingOrders.length, liveStrategyState.filledOrders.length]);
-
-  // Playback control functions
-  const handleNextBar = useCallback(() => {
-    if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-      const subBarsForCurrentMain = subTimeframeBars.filter(
-        subBar => subBar.parentBarIndex === currentBarIndex
-      );
-      
-      if (currentSubBarIndex >= subBarsForCurrentMain.length - 1) {
-        // Move to next main bar
-        setCurrentBarIndex(prevIndex => Math.min(prevIndex + 1, mainTimeframeBars.length - 1));
-        setCurrentSubBarIndex(0);
-      } else {
-        // Move to next sub-bar
-        setCurrentSubBarIndex(prevIndex => prevIndex + 1);
-      }
-    } else {
-      setCurrentBarIndex(prevIndex => Math.min(prevIndex + 1, mainTimeframeBars.length - 1));
-    }
-  }, [currentBarIndex, currentSubBarIndex, mainTimeframeBars.length, subTimeframeBars, barFormationMode]);
-
-  const handlePreviousBar = useCallback(() => {
-    if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-      if (currentSubBarIndex > 0) {
-        // Move to previous sub-bar
-        setCurrentSubBarIndex(prevIndex => prevIndex - 1);
-      } else if (currentBarIndex > 0) {
-        // Move to previous main bar's last sub-bar
-        setCurrentBarIndex(prevIndex => prevIndex - 1);
-        const prevMainBarIndex = currentBarIndex - 1;
-        const subBarsForPrevMain = subTimeframeBars.filter(
-          subBar => subBar.parentBarIndex === prevMainBarIndex
-        );
-        setCurrentSubBarIndex(Math.max(0, subBarsForPrevMain.length - 1));
-      }
-    } else {
-      setCurrentBarIndex(prevIndex => Math.max(prevIndex - 1, 0));
-    }
-  }, [currentBarIndex, currentSubBarIndex, subTimeframeBars, barFormationMode]);
-
-  const handlePlayPause = useCallback(() => {
-    setIsPlaying(prev => !prev);
-  }, []);
-
-  const handleSpeedChange = useCallback((speed: PlaybackSpeed) => {
-    setPlaybackSpeed(speed);
-  }, []);
-
+    resetLiveStrategy(); 
+  }, [selectedStrategy, resetLiveStrategy]);
+  
+  const handlePlayPause = useCallback(() => setIsPlaying(prev => !prev), []);
+  const handleSpeedChange = useCallback((speed: PlaybackSpeed) => setPlaybackSpeed(speed), []);
   const handleReset = useCallback(() => {
     setIsPlaying(false);
-    
-    // In progressive mode, start from first valid main bar if sub-bars are available
-    if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-      const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
-      // console.log(`[handleReset] Progressive mode: resetting to first valid bar index ${firstValidBarIndex}`);
-      setCurrentBarIndex(firstValidBarIndex);
-    } else {
-      setCurrentBarIndex(0);
-    }
-    
+    const firstValidIdx = barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0 ? findFirstValidMainBarIndex(subTimeframeBars) : 0;
+    setCurrentBarIndex(firstValidIdx);
     setCurrentSubBarIndex(0);
     resetLiveStrategy();
-  }, [resetLiveStrategy, barFormationMode, subTimeframeBars]);
+    if (mainTimeframeBars.length > 0 && firstValidIdx < mainTimeframeBars.length) {
+        buildStrategyStateUpToBar(firstValidIdx); 
+    }
+  }, [resetLiveStrategy, barFormationMode, subTimeframeBars, buildStrategyStateUpToBar, mainTimeframeBars]);
 
   const handleBarFormationModeChange = useCallback((mode: BarFormationMode) => {
     setBarFormationMode(mode);
     setIsPlaying(false);
     setCurrentSubBarIndex(0);
-    
-    // When switching to progressive mode, auto-start from first valid main bar
     if (mode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
-      const firstValidBarIndex = findFirstValidMainBarIndex(subTimeframeBars);
-      // console.log(`[handleBarFormationModeChange] Switching to progressive mode: auto-starting from bar ${firstValidBarIndex}`);
-      setCurrentBarIndex(firstValidBarIndex);
+      setCurrentBarIndex(findFirstValidMainBarIndex(subTimeframeBars));
     }
   }, [subTimeframeBars]);
 
   const handleLoadData = useCallback(async (params: { contractId: string; timeframe: string; limit: number }) => {
-    setIsLoading(true);
-    setError(null);
-    setMainTimeframeBars([]);
-    setSubTimeframeBars([]);
-    setCurrentBarIndex(0);
-    setCurrentSubBarIndex(0);
-    setIsPlaying(false);
-    resetLiveStrategy();
-
-    // Capture current contract and timeframe
-    setCurrentContract(params.contractId);
+    setIsLoading(true); setError(null); setMainTimeframeBars([]); setSubTimeframeBars([]);
+    setCurrentBarIndex(0); setCurrentSubBarIndex(0); setIsPlaying(false);
+    
+    setCurrentContract(params.contractId); 
     setCurrentTimeframe(params.timeframe);
+    
+    const newStrategyConfigBase = { contractId: params.contractId, timeframe: params.timeframe };
+    emaStrategy.updateConfig(newStrategyConfigBase);
+    trendStartStrategy.updateConfig(newStrategyConfigBase);
+
+    resetLiveStrategy(); 
 
     const config = getTimeframeConfig(params.timeframe);
     setTimeframeConfig(config);
 
     try {
-      // Fetch main timeframe data
       const mainApiUrl = `/api/market-data/bars?contractId=${encodeURIComponent(params.contractId)}&timeframeUnit=${parseTimeframeForApi(config.main).unit}&timeframeValue=${parseTimeframeForApi(config.main).value}&limit=${params.limit}&all=false`;
-      
-      // console.log(`Fetching main timeframe data from: ${mainApiUrl}`);
       const mainResponse = await fetch(mainApiUrl);
-      if (!mainResponse.ok) {
-        const errorData = await mainResponse.json();
-        throw new Error(errorData.error || `Main timeframe API request failed with status ${mainResponse.status}`);
-      }
+      if (!mainResponse.ok) { const errText = await mainResponse.text(); throw new Error(errText || `Main API Error: ${mainResponse.status}`);}
       const mainData = await mainResponse.json();
-
-      if (!mainData.bars || !Array.isArray(mainData.bars)) {
-        throw new Error('Invalid main timeframe data structure received from API');
-      }
-
+      if (!mainData.bars || !Array.isArray(mainData.bars)) throw new Error('Invalid main data');
       const formattedMainBars: BacktestBarData[] = mainData.bars.map((bar: any) => ({
         time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
-        open: parseFloat(bar.open),
-        high: parseFloat(bar.high),
-        low: parseFloat(bar.low),
-        close: parseFloat(bar.close),
-        volume: bar.volume !== null && bar.volume !== undefined ? parseFloat(bar.volume) : undefined,
+        open: parseFloat(bar.open), high: parseFloat(bar.high), low: parseFloat(bar.low), close: parseFloat(bar.close),
+        volume: bar.volume != null ? parseFloat(bar.volume) : undefined,
       })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
-
       setMainTimeframeBars(formattedMainBars);
 
-      // Fetch sub-timeframe data if progressive mode is enabled
       if (barFormationMode === BarFormationMode.PROGRESSIVE && config.main !== config.sub) {
-        // Calculate the time range we need for sub-timeframe data
-        const subLimit = params.limit * config.subBarsPerMain * 2; // Extra buffer
+        const subLimit = params.limit * config.subBarsPerMain * 2;
         const subApiUrl = `/api/market-data/bars?contractId=${encodeURIComponent(params.contractId)}&timeframeUnit=${parseTimeframeForApi(config.sub).unit}&timeframeValue=${parseTimeframeForApi(config.sub).value}&limit=${subLimit}&all=false`;
-        
-        // console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetching sub-timeframe data from: ${subApiUrl}`);
-        try {
-          const subResponse = await fetch(subApiUrl);
-          if (subResponse.ok) {
-            const subData = await subResponse.json();
-            if (subData.bars && Array.isArray(subData.bars)) {
-              const formattedSubBars: BacktestBarData[] = subData.bars.map((bar: any) => ({
-                time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
-                open: parseFloat(bar.open),
-                high: parseFloat(bar.high),
-                low: parseFloat(bar.low),
-                close: parseFloat(bar.close),
-                volume: bar.volume !== null && bar.volume !== undefined ? parseFloat(bar.volume) : undefined,
-              })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
-
-              // console.log(`[handleLoadData - ${config.main}/${config.sub}] Fetched ${formattedSubBars.length} raw sub-bars.`);
-              // if (formattedSubBars.length > 0) {
-              //   console.log(`[handleLoadData - ${config.main}/${config.sub}] Raw sub-bars range: ${new Date(formattedSubBars[0].time * 1000).toISOString()} to ${new Date(formattedSubBars[formattedSubBars.length - 1].time * 1000).toISOString()}`);
-              // }
-              // if (formattedMainBars.length > 0) {
-              //     console.log(`[handleLoadData - ${config.main}/${config.sub}] Main bars range: ${new Date(formattedMainBars[0].time * 1000).toISOString()} to ${new Date(formattedMainBars[formattedMainBars.length-1].time * 1000).toISOString()}`);
-              // }
-
-              const mappedSubBars = mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config);
-              setSubTimeframeBars(mappedSubBars);
-              // console.log(`[handleLoadData - ${config.main}/${config.sub}] Mapped ${mappedSubBars.length} sub-bars to ${formattedMainBars.length} main bars.`);
-              
-              // Debug: Check first few mappings
-              // if (mappedSubBars.length > 0) {
-              //   console.log(`[handleLoadData - ${config.main}/${config.sub}] Sample sub-bar mappings:`, mappedSubBars.slice(0, Math.min(10, mappedSubBars.length)).map(sb => `Sub bar @ ${new Date(sb.time * 1000).toISOString()} -> Main bar index ${sb.parentBarIndex}`));
-              // } else if (formattedSubBars.length > 0 && formattedMainBars.length > 0) {
-              //   console.warn(`[handleLoadData - ${config.main}/${config.sub}] No sub-bars were mapped despite having raw sub-bar and main-bar data. Check timestamp alignments and mapSubBarsToMainBars logic for this timeframe pair.`);
-              // }
-              
-              // Auto-start from first valid main bar in progressive mode
-              if (barFormationMode === BarFormationMode.PROGRESSIVE && mappedSubBars.length > 0) {
-                const firstValidBarIndex = findFirstValidMainBarIndex(mappedSubBars);
-                if (firstValidBarIndex > 0) {
-                  // console.log(`[handleLoadData - ${config.main}/${config.sub}] Auto-starting from main bar ${firstValidBarIndex} (first bar with sub-bars) instead of 0`);
-                  // setCurrentBarIndex(firstValidBarIndex);
-                  // setCurrentSubBarIndex(0);
-                }
-              }
-            } else {
-              // console.warn(`[handleLoadData - ${config.main}/${config.sub}] Sub-timeframe API call for ${config.sub} was OK, but subData.bars is missing or not an array. SubData:`, subData);
-              setSubTimeframeBars([]); // Ensure empty
-            }
-          } else {
-            // console.warn(`[handleLoadData - ${config.main}/${config.sub}] Failed to fetch sub-timeframe data for ${config.sub}. Status: ${subResponse.status}. Response: ${errorText}`);
-            setSubTimeframeBars([]); // Ensure empty
+        const subResponse = await fetch(subApiUrl);
+        if (subResponse.ok) {
+          const subData = await subResponse.json();
+          if (subData.bars && Array.isArray(subData.bars)) {
+            const formattedSubBars: BacktestBarData[] = subData.bars.map((bar: any) => ({
+              time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
+              open: parseFloat(bar.open), high: parseFloat(bar.high), low: parseFloat(bar.low), close: parseFloat(bar.close),
+              volume: bar.volume != null ? parseFloat(bar.volume) : undefined,
+            })).sort((a: BacktestBarData, b: BacktestBarData) => a.time - b.time);
+            setSubTimeframeBars(mapSubBarsToMainBars(formattedMainBars, formattedSubBars, config));
           }
-        } catch (subFetchError: any) {
-            // console.error(`[handleLoadData - ${config.main}/${config.sub}] Error fetching sub-timeframe data for ${config.sub}:`, subFetchError.message, subFetchError);
-            setSubTimeframeBars([]); // Ensure empty
         }
       } else {
-        if (barFormationMode !== BarFormationMode.PROGRESSIVE) {
-          // console.log(`[handleLoadData - ${config.main}/${config.sub}] Progressive mode not enabled. No sub-timeframe data fetched.`);
-        } else { // config.main === config.sub
-          // console.log(`[handleLoadData - ${config.main}/${config.sub}] Main and sub timeframes are the same (${config.main}). No separate sub-timeframe data fetched.`);
+        setSubTimeframeBars([]);
+      }
+      if (formattedMainBars.length > 0) {
+        const firstIdx = barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0 ? findFirstValidMainBarIndex(subTimeframeBars) : 0;
+        if (firstIdx < formattedMainBars.length) {
+            setCurrentBarIndex(firstIdx); 
+            await buildStrategyStateUpToBar(firstIdx);
+        } else if (formattedMainBars.length > 0) {
+            setCurrentBarIndex(0);
+            await buildStrategyStateUpToBar(0);
         }
-        setSubTimeframeBars([]); // Ensure empty if not fetching
       }
+    } catch (err: any) { setError(err.message || 'Failed to load data.');
+    } finally { setIsLoading(false); }
+  }, [barFormationMode, resetLiveStrategy, buildStrategyStateUpToBar, emaStrategy, trendStartStrategy]);
 
-      // console.log('Main timeframe bars loaded:', formattedMainBars.length);
+  const liveResults = liveStrategyState.backtestResults;
+  const liveTradesData = liveResults?.trades || [];
+  const liveTotalPnL = liveResults?.totalProfitOrLoss || 0;
+  const liveWinRate = liveResults?.winRate || 0;
+  const liveTotalTrades = liveResults?.totalTrades || 0;
 
-      // Strategy will be processed automatically by buildStrategyStateUpToBar
-    } catch (err: any) {
-      // console.error('Error fetching or processing data:', err);
-      setError(err.message || 'Failed to load data.');
-    } finally {
-      setIsLoading(false);
+  const handleConfigChange = useCallback(async (newConfigFromPanel: UIPanelStrategyConfig) => {
+    setStrategyConfig(newConfigFromPanel); 
+    
+    const currentStrat = selectedStrategy === 'ema' ? emaStrategy : trendStartStrategy;
+    
+    const newBaseConfig: Partial<GenericStrategyConfig> = {
+        commission: newConfigFromPanel.commission,
+        positionSize: newConfigFromPanel.positionSize,
+        stopLossPercent: newConfigFromPanel.stopLossPercent,
+        takeProfitPercent: newConfigFromPanel.takeProfitPercent,
+        useMarketOrders: newConfigFromPanel.useMarketOrders,
+        limitOrderOffsetTicks: newConfigFromPanel.limitOrderOffsetTicks || newConfigFromPanel.limitOrderOffset,
+        contractId: newConfigFromPanel.contractId || currentContract,
+        timeframe: newConfigFromPanel.timeframe || currentTimeframe,
+    };
+
+    if (selectedStrategy === 'ema' && currentStrat instanceof EmaStrategy) {
+        const emaConf: Partial<EmaStrategyConfig> = {
+            ...newBaseConfig,
+            fastPeriod: newConfigFromPanel.fastPeriod || 12,
+            slowPeriod: newConfigFromPanel.slowPeriod || 26,
+        };
+        currentStrat.updateConfig(emaConf);
+    } else if (selectedStrategy === 'trendstart' && currentStrat instanceof TrendStartStrategy) {
+        const trendConf: Partial<TrendStartStrategyConfig> = {
+            ...newBaseConfig,
+            minConfirmationBars: newConfigFromPanel.minConfirmationBars || 2,
+            confidenceThreshold: newConfigFromPanel.confidenceThreshold || 0.6,
+        };
+        currentStrat.updateConfig(trendConf);
     }
-  }, [barFormationMode, resetLiveStrategy]);
-
-  // Calculate metrics from enhanced strategy trades
-  const liveTradesData = liveStrategyState.completedTrades;
-  const liveTotalPnL = liveTradesData.reduce((sum: number, trade: any) => sum + (trade.profitOrLoss || 0), 0);
-  const liveWinningTrades = liveTradesData.filter((t: any) => (t.profitOrLoss || 0) > 0);
-  const liveWinRate = liveTradesData.length > 0 ? (liveWinningTrades.length / liveTradesData.length) * 100 : 0;
-
-  // Handle strategy configuration changes
-  const handleConfigChange = useCallback(async (newConfig: StrategyConfig) => {
-    // console.log('[BacktesterPage] Strategy configuration changed:', newConfig);
     
-    // Update the strategy configuration state
-    setStrategyConfig(newConfig);
-    
-    // Update the EMA strategy with new configuration
-    if (selectedStrategy === 'ema') {
-      // Create new strategy instance with updated config
-      const updatedStrategy = new EmaStrategy({
-        fastPeriod: newConfig.fastPeriod,
-        slowPeriod: newConfig.slowPeriod,
-        stopLossPercent: newConfig.stopLossPercent,
-        takeProfitPercent: newConfig.takeProfitPercent,
-        commission: newConfig.commission,
-        positionSize: newConfig.positionSize,
-        useMarketOrders: newConfig.useMarketOrders,
-        limitOrderOffset: newConfig.limitOrderOffset,
-      });
-      
-      // Replace the strategy instance
-      Object.assign(emaStrategy, updatedStrategy);
-      
-      // Reset and re-run the strategy if we have data
-      if (mainTimeframeBars.length > 0) {
-        // console.log('[BacktesterPage] Re-running EMA backtest with new configuration');
-        
-        // Reset playback to beginning
-        setCurrentBarIndex(0);
-        setCurrentSubBarIndex(0);
-        setIsPlaying(false);
-        
-        // Reset strategy state
-        resetLiveStrategy();
-        
-        // Re-process strategy up to current position (will be 0 initially)
-        await buildStrategyStateUpToBar(0);
+    if (mainTimeframeBars.length > 0) {
+      setCurrentBarIndex(0); setCurrentSubBarIndex(0); setIsPlaying(false);
+      resetLiveStrategy(); 
+      await buildStrategyStateUpToBar(0);
+    }
+  }, [selectedStrategy, emaStrategy, trendStartStrategy, mainTimeframeBars.length, resetLiveStrategy, buildStrategyStateUpToBar, currentContract, currentTimeframe]);
+  
+  const handleNextBar = useCallback(() => {
+    if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
+      const subBarsForCurrentMain = subTimeframeBars.filter(sb => sb.parentBarIndex === currentBarIndex);
+      if (currentSubBarIndex >= subBarsForCurrentMain.length - 1) {
+        if (currentBarIndex < mainTimeframeBars.length - 1) {
+          setCurrentBarIndex(prev => prev + 1);
+          setCurrentSubBarIndex(0);
+        }
+      } else {
+        setCurrentSubBarIndex(prev => prev + 1);
       }
-    } else if (selectedStrategy === 'trendstart') {
-      // Create new TrendStartStrategy instance with updated config
-      const updatedStrategy = new TrendStartStrategy({
-        stopLossPercent: newConfig.stopLossPercent,
-        takeProfitPercent: newConfig.takeProfitPercent,
-        commission: newConfig.commission,
-        positionSize: newConfig.positionSize,
-        useMarketOrders: newConfig.useMarketOrders,
-        limitOrderOffset: newConfig.limitOrderOffset,
-        confidenceThreshold: 0.6, // Keep permissive threshold for debugging
-        useOpenCloseStrategy: false, // Keep disabled for now
-        minConfirmationBars: 2,
-        limitOrderOffsetTicks: 1,
-      });
-      
-      // Replace the strategy instance
-      Object.assign(trendStartStrategy, updatedStrategy);
-      
-      // Reset and re-run the strategy if we have data
-      if (mainTimeframeBars.length > 0) {
-        // console.log('[BacktesterPage] Re-running TrendStart backtest with new configuration');
-        
-        // Reset playback to beginning
-        setCurrentBarIndex(0);
-        setCurrentSubBarIndex(0);
-        setIsPlaying(false);
-        
-        // Reset strategy state
-        resetLiveStrategy();
-        
-        // Re-process strategy up to current position (will be 0 initially)
-        await buildStrategyStateUpToBar(0);
+    } else {
+      if (currentBarIndex < mainTimeframeBars.length - 1) {
+        setCurrentBarIndex(prev => prev + 1);
       }
     }
-  }, [selectedStrategy, emaStrategy, trendStartStrategy, mainTimeframeBars.length, resetLiveStrategy, buildStrategyStateUpToBar]);
+  }, [currentBarIndex, currentSubBarIndex, mainTimeframeBars.length, subTimeframeBars, barFormationMode]);
+
+  const handlePreviousBar = useCallback(() => {
+     if (barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0) {
+      if (currentSubBarIndex > 0) {
+        setCurrentSubBarIndex(prev => prev - 1);
+      } else if (currentBarIndex > 0) {
+        const prevMainIdx = currentBarIndex - 1;
+        setCurrentBarIndex(prevMainIdx);
+        const subBarsForPrevMain = subTimeframeBars.filter(sb => sb.parentBarIndex === prevMainIdx);
+        setCurrentSubBarIndex(Math.max(0, subBarsForPrevMain.length - 1));
+      }
+    } else {
+      setCurrentBarIndex(prev => Math.max(0, prev - 1));
+    }
+  }, [currentBarIndex, currentSubBarIndex, subTimeframeBars, barFormationMode]);
+
 
   return (
     <Layout fullWidth={true}>
       <div className="flex flex-col space-y-4">
-        {/* Top Bar with controls */}
         <TopBar 
           onLoadData={handleLoadData} 
           isLoading={isLoading}
@@ -825,7 +512,6 @@ const BacktesterPage = () => {
           onStrategyChange={setSelectedStrategy}
         />
         
-        {/* Error display */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <strong className="font-bold">Error: </strong>
@@ -833,11 +519,8 @@ const BacktesterPage = () => {
           </div>
         )}
 
-        {/* Main chart area */}
         <div className="relative bg-white rounded-lg shadow-sm border">
-          {/* Chart container with reduced height to accommodate bottom panel */}
           <div className="h-[700px] flex">
-            {/* Chart takes most of the space */}
             <div className="flex-1">
               <TradeChart 
                 mainTimeframeBars={mainTimeframeBars}
@@ -847,152 +530,80 @@ const BacktesterPage = () => {
                 barFormationMode={barFormationMode}
                 timeframeConfig={timeframeConfig}
                 tradeMarkers={liveTradeMarkers}
-                emaData={selectedStrategy === 'ema' ? {
-                  fastEma: liveStrategyState.fastEmaValues,
-                  slowEma: liveStrategyState.slowEmaValues,
-                } : undefined}
+                emaData={selectedStrategy === 'ema' ? undefined : undefined}
                 pendingOrders={liveStrategyState.pendingOrders}
                 filledOrders={liveStrategyState.filledOrders}
-                openPositions={(() => {
-                  // Get actual position from OrderManager for EMA strategy, which has the real filled entry price
-                  if (selectedStrategy === 'ema') {
-                    const orderManager = (emaStrategy as any).orderManager;
-                    const actualPosition = orderManager?.getOpenPosition('DEFAULT_CONTRACT');
-                    
-                    if (actualPosition) {
-                      // Find pending SL/TP orders for this position
-                      const slOrder = liveStrategyState.pendingOrders.find(o => 
-                        o.isStopLoss && o.parentTradeId === actualPosition.id
-                      );
-                      const tpOrder = liveStrategyState.pendingOrders.find(o => 
-                        o.isTakeProfit && o.parentTradeId === actualPosition.id
-                      );
-                      
-                      const positions = [{
-                        entryPrice: actualPosition.averageEntryPrice,
-                        stopLossPrice: slOrder?.stopPrice,
-                        takeProfitPrice: tpOrder?.price,
-                      }];
-                      
-                      console.log('[BacktesterPage] EMA Position for chart:', {
-                        entryPrice: actualPosition.averageEntryPrice,
-                        stopLossPrice: slOrder?.stopPrice,
-                        takeProfitPrice: tpOrder?.price,
-                        positionId: actualPosition.id
-                      });
-                      
-                      return positions;
-                    }
-                    return [];
-                  } else {
-                    // For other strategies, use the existing logic
-                    if (!liveStrategyState.openTrade) return [];
-                    
-                    const openTrade = liveStrategyState.openTrade;
-                    
-                    // Handle different strategy structures
-                    let entryPrice;
-                    if ('entryPrice' in openTrade) {
-                      // EmaStrategy structure
-                      entryPrice = openTrade.entryPrice;
-                    } else if ('entrySignalPrice' in openTrade) {
-                      // TrendStartStrategy structure - prefer filled price if available
-                      entryPrice = openTrade.entryOrder?.filledPrice || 
-                                   openTrade.entryOrder?.price || 
-                                   openTrade.entrySignalPrice;
-                    }
-                    
-                    return [{
-                      entryPrice: entryPrice,
-                      stopLossPrice: openTrade.stopLossOrder?.stopPrice,
-                      takeProfitPrice: openTrade.takeProfitOrder?.price,
-                    }];
-                  }
-                })()}
+                openPositions={liveStrategyState.openTrade ? [{
+                    entryPrice: liveStrategyState.openTrade.entryPrice,
+                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                }] : []}
               /> 
             </div>
             
-            {/* Compact Order Panel on the right */}
             {(liveStrategyState.pendingOrders.length > 0 || liveStrategyState.filledOrders.length > 0 || liveStrategyState.openTrade) && (
               <div className="w-80 bg-gray-800 border-l border-gray-700">
                 <CompactOrderPanel 
                   pendingOrders={liveStrategyState.pendingOrders}
                   filledOrders={liveStrategyState.filledOrders}
-                  openPositions={(() => {
-                    // Get actual position from OrderManager for EMA strategy
-                    if (selectedStrategy === 'ema') {
-                      const orderManager = (emaStrategy as any).orderManager;
-                      const actualPosition = orderManager?.getOpenPosition('DEFAULT_CONTRACT');
-                      
-                      if (actualPosition) {
-                        // Find pending SL/TP orders for this position
-                        const slOrder = liveStrategyState.pendingOrders.find(o => 
-                          o.isStopLoss && o.parentTradeId === actualPosition.id
-                        );
-                        const tpOrder = liveStrategyState.pendingOrders.find(o => 
-                          o.isTakeProfit && o.parentTradeId === actualPosition.id
-                        );
-                        
-                        return [{
-                          entryPrice: actualPosition.averageEntryPrice,
-                          stopLossPrice: slOrder?.stopPrice,
-                          takeProfitPrice: tpOrder?.price,
-                        }];
-                      }
-                      return [];
-                    } else {
-                      // For other strategies, use the existing logic
-                      if (!liveStrategyState.openTrade) return [];
-                      
-                      const openTrade = liveStrategyState.openTrade;
-                      
-                      // Handle different strategy structures
-                      let entryPrice;
-                      if ('entryPrice' in openTrade) {
-                        // EmaStrategy structure
-                        entryPrice = openTrade.entryPrice;
-                      } else if ('entrySignalPrice' in openTrade) {
-                        // TrendStartStrategy structure - prefer filled price if available
-                        entryPrice = openTrade.entryOrder?.filledPrice || 
-                                     openTrade.entryOrder?.price || 
-                                     openTrade.entrySignalPrice;
-                      }
-                      
-                      return [{
-                        entryPrice: entryPrice,
-                        stopLossPrice: openTrade.stopLossOrder?.stopPrice,
-                        takeProfitPrice: openTrade.takeProfitOrder?.price,
-                      }];
-                    }
-                  })()}
+                  openPositions={liveStrategyState.openTrade ? [{
+                    entryPrice: liveStrategyState.openTrade.entryPrice,
+                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                  }] : []}
                   onCancelOrder={handleCancelOrder}
                 />
               </div>
             )}
           </div>
           
-          {/* Compact results panel overlay */}
           <div className="absolute top-4 right-4 w-48 z-10">
             <CompactResultsPanel 
               profitOrLoss={liveTotalPnL}
               winRate={liveWinRate}
-              totalTrades={liveTradesData.length}
+              totalTrades={liveTotalTrades}
             />
           </div>
         </div>
 
-        {/* Analysis Panel */}
         <AnalysisPanel 
-          trades={liveTradesData}
+          trades={liveTradesData} 
           totalPnL={liveTotalPnL}
           winRate={liveWinRate}
-          totalTrades={liveTradesData.length}
+          totalTrades={liveTotalTrades}
           pendingOrders={liveStrategyState.pendingOrders}
           filledOrders={liveStrategyState.filledOrders}
           cancelledOrders={liveStrategyState.cancelledOrders}
           onCancelOrder={handleCancelOrder}
-          currentConfig={strategyConfig}
-          onConfigChange={handleConfigChange}
+          currentConfig={
+            {
+              // Core fields from backtester.ts#StrategyConfig
+              commission: strategyConfig.commission ?? 0,
+              positionSize: strategyConfig.positionSize ?? 1,
+              stopLossPercent: strategyConfig.stopLossPercent ?? 0,
+              stopLossTicks: strategyConfig.stopLossTicks ?? 0,
+              takeProfitPercent: strategyConfig.takeProfitPercent ?? 0,
+              takeProfitTicks: strategyConfig.takeProfitTicks ?? 0,
+              useMarketOrders: strategyConfig.useMarketOrders ?? true,
+              limitOrderOffset: strategyConfig.limitOrderOffsetTicks ?? strategyConfig.limitOrderOffset ?? 0,
+              orderTimeoutBars: strategyConfig.orderTimeoutBars ?? 0,
+              
+              // Explicitly include all fields from UIPanelStrategyConfig with defaults
+              // to ensure the object is as complete as possible before any cast.
+              name: strategyConfig.name ?? 'N/A',
+              description: strategyConfig.description ?? 'N/A',
+              version: strategyConfig.version ?? 'N/A',
+              contractId: strategyConfig.contractId, // Optional in Base, might be needed
+              timeframe: strategyConfig.timeframe,   // Optional in Base, might be needed
+              
+              fastPeriod: strategyConfig.fastPeriod ?? 12,
+              slowPeriod: strategyConfig.slowPeriod ?? 26,
+              minConfirmationBars: strategyConfig.minConfirmationBars ?? 2,
+              confidenceThreshold: strategyConfig.confidenceThreshold ?? 0.6,
+              limitOrderOffsetTicks: strategyConfig.limitOrderOffsetTicks // Already handled by limitOrderOffset
+            } as any // Last resort: cast to any to bypass persistent specific type error
+          }
+          onConfigChange={handleConfigChange as (config: UIPanelStrategyConfig) => void}
         />
       </div>
     </Layout>

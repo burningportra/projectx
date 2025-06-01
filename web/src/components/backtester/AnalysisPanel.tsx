@@ -280,6 +280,8 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
                       <th className="text-left py-2 px-4 font-medium text-gray-600">Exit Price</th>
                       <th className="text-left py-2 px-4 font-medium text-gray-600">Quantity</th>
                       <th className="text-left py-2 px-4 font-medium text-gray-600">P&L</th>
+                      <th className="text-left py-2 px-4 font-medium text-gray-600">Commission</th>
+                      <th className="text-left py-2 px-4 font-medium text-gray-600">Exit Reason</th>
                       <th className="text-left py-2 px-4 font-medium text-gray-600">Status</th>
                     </tr>
                   </thead>
@@ -311,18 +313,20 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
                               {formatCurrency(trade.profitOrLoss || 0)}
                             </span>
                           </td>
+                          <td className="py-2 px-4 text-sm">{formatCurrency(trade.commission || 0)}</td>
+                          <td className="py-2 px-4 text-sm">{trade.exitReason || '-'}</td>
                           <td className="py-2 px-4 text-sm">
                             <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              (trade.exitTime ? 'CLOSED' : 'OPEN') === 'OPEN' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                              (trade.status === 'OPEN') ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                             }`}>
-                              {trade.exitTime ? 'CLOSED' : 'OPEN'}
+                              {trade.status || (trade.exitTime ? 'CLOSED' : 'OPEN')}
                             </span>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={9} className="py-8 text-center text-gray-500">
+                        <td colSpan={11} className="py-8 text-center text-gray-500">
                           No trades executed yet. Run a backtest to see results.
                         </td>
                       </tr>
@@ -369,4 +373,4 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   );
 };
 
-export default AnalysisPanel; 
+export default AnalysisPanel;
