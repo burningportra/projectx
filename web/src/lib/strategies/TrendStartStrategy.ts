@@ -130,6 +130,9 @@ export class TrendStartStrategy extends BaseStrategy {
   ): Promise<StrategyResult> {
     
     const filledOrders = this.orderManager.processBar(mainBar, subBarsForMainBar, barIndex);
+
+    // Generate signals for any stop loss/take profit orders that were filled
+    this.generateStopOrderSignals(filledOrders, barIndex);
     
     for (const filledOrder of filledOrders) {
       this._handleFilledOrder(filledOrder, mainBar);
@@ -284,7 +287,7 @@ export class TrendStartStrategy extends BaseStrategy {
     let entryOrder: Order;
     if (orderType === OrderType.MARKET) {
       // Pass conceptualTradeId as the tradeId argument, which BaseStrategy helpers will use as parentTradeId
-      entryOrder = this.createMarketOrder(side, quantity, currentMainBar, conceptualTradeId, contractId);
+      entryOrder = this.createMarketOrder(side, quantity, currentMainBar, conceptualTradeId, contractId, true, false); // isEntry: true, isExit: false
     } else { 
       let limitPrice = conceptualEntryPrice;
       if (currentConfig.limitOrderOffsetTicks) {
@@ -293,7 +296,7 @@ export class TrendStartStrategy extends BaseStrategy {
           ? conceptualEntryPrice - (currentConfig.limitOrderOffsetTicks * tickSize)
           : conceptualEntryPrice + (currentConfig.limitOrderOffsetTicks * tickSize);
       }
-      entryOrder = this.createLimitOrder(side, quantity, limitPrice, currentMainBar, conceptualTradeId, contractId);
+      entryOrder = this.createLimitOrder(side, quantity, limitPrice, currentMainBar, conceptualTradeId, contractId, true, false); // isEntry: true, isExit: false
     }
     entryOrder.message = `Entry ${side === OrderSide.BUY ? 'BUY' : 'SELL'} - Rule: ${trendSignal.rule}`;
         
@@ -339,7 +342,9 @@ export class TrendStartStrategy extends BaseStrategy {
       tradeToClose.size, 
       mainBar,
       tradeToClose.id, // Link this exit order to the conceptual trade ID
-      contractId
+      contractId,
+      false, // isEntry: false
+      true   // isExit: true
     );
     exitOrder.message = `Closing trade ${tradeToClose.id}: ${reason}`;
     // The actual closing (P&L calculation, etc.) will happen in _handleFilledOrder 

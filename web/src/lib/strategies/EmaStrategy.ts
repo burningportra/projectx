@@ -6,6 +6,7 @@ import {
   Order,
   OrderType,
   OrderSide,
+  OrderStatus,
   SubBarData
   // StrategyResult was here, moved to strategy.ts import
 } from '@/lib/types/backtester';
@@ -38,6 +39,7 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
   private pendingReversalSignal: StrategySignal | null = null;
   private pendingReversalBar: BacktestBarData | null = null;
   private currentBarIndex: number = 0; // Still useful for EMA strategy's own logic
+  private processedOrphanedPositions: Set<string> = new Set(); // Track positions we've already fixed
 
   constructor(orderManagerInstance: OrderManager, config: Partial<EmaStrategyConfig> = {}) {
     const defaultConfig: Partial<EmaStrategyConfig> = {
@@ -78,6 +80,7 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
     this.pendingReversalSignal = null;
     this.pendingReversalBar = null;
     this.currentBarIndex = 0;
+    this.processedOrphanedPositions.clear(); // Reset tracking
     // orderManager.reset() is called by super.reset() if BaseStrategy's reset calls its onReset hook,
     // or if OrderManager is reset directly by BaseStrategy.
     // For now, assuming BaseStrategy handles OrderManager reset.
@@ -117,14 +120,111 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
   ): Promise<StrategyResult> {
     this.currentBarIndex = barIndex;
 
+    const contractId = this.emaConfig.contractId || 'DEFAULT_CONTRACT';
+    
     // OrderManager processes the bar for SL/TP hits, etc.
     // This returns orders that were filled *during this bar's processing by OrderManager*.
     const filledOrdersThisBar = this.orderManager.processBar(mainBar, subBarsForMainBar, barIndex);
 
+    // Generate signals for any stop loss/take profit orders that were filled
+    this.generateStopOrderSignals(filledOrdersThisBar, barIndex);
+
+    // DEBUG: Log current state
+    const openPosition = this.orderManager.getOpenPosition(contractId);
+    const pendingOrders = this.orderManager.getPendingOrders(contractId);
+    console.log(`[EmaStrategy] Bar ${barIndex} - OM State:`, {
+      openPosition: openPosition ? { id: openPosition.id, side: openPosition.side, size: openPosition.size } : null,
+      pendingOrdersCount: pendingOrders.length,
+      filledThisBarCount: filledOrdersThisBar.length,
+      conceptualTrade: this.openTrade ? { id: this.openTrade.id, status: this.openTrade.status } : null
+    });
+
     // Process these fills using BaseStrategy's hook, which might update this.openTrade
     // and place protective orders if an entry was filled.
     for (const filledOrder of filledOrdersThisBar) {
+      console.log(`[EmaStrategy] Processing filled order ${filledOrder.id} with isEntry: ${filledOrder.isEntry}`);
       super.onOrderFilled(filledOrder, this.openTrade || undefined);
+    }
+    
+    // CRITICAL FIX: Check for positions without protective orders
+    // Case 1: Position exists but no conceptual trade (orphaned position)
+    // Case 2: Position AND conceptual trade exist but no protective orders (entry filled but protection not placed)
+    // Only trigger if NO SL/TP orders exist for this specific position
+    const slOrders = pendingOrders.filter(o => o.isStopLoss && o.parentTradeId === openPosition?.id);
+    const tpOrders = pendingOrders.filter(o => o.isTakeProfit && o.parentTradeId === openPosition?.id);
+    const hasProtectiveOrders = slOrders.length > 0 || tpOrders.length > 0;
+    
+    // DEBUG: Log the protective order detection
+    if (openPosition) {
+      console.log(`[EmaStrategy] Protective order detection for ${openPosition.id}:`, {
+        totalPendingOrders: pendingOrders.length,
+        pendingOrdersForPosition: pendingOrders.filter(o => o.parentTradeId === openPosition.id).length,
+        slOrdersFound: slOrders.length,
+        tpOrdersFound: tpOrders.length,
+        hasProtectiveOrders,
+        orderFlags: pendingOrders.map(o => ({
+          id: o.id,
+          parentTradeId: o.parentTradeId,
+          isStopLoss: o.isStopLoss,
+          isTakeProfit: o.isTakeProfit,
+          type: o.type,
+          message: o.message
+        }))
+      });
+    }
+    
+    if (openPosition && !hasProtectiveOrders && !this.processedOrphanedPositions.has(openPosition.id)) {
+      console.log(`[EmaStrategy] 🚨 DETECTED POSITION WITHOUT PROTECTIVE ORDERS!`);
+      console.log(`[EmaStrategy] Position details:`, {
+        id: openPosition.id,
+        side: openPosition.side,
+        size: openPosition.size,
+        averageEntryPrice: openPosition.averageEntryPrice
+      });
+      console.log(`[EmaStrategy] Conceptual trade exists:`, !!this.openTrade);
+      
+      // Mark this position as processed to prevent repeated executions
+      this.processedOrphanedPositions.add(openPosition.id);
+      
+      // Get or create conceptual trade
+      let conceptualTrade = this.openTrade;
+      if (!conceptualTrade) {
+        // Case 1: Create missing conceptual trade
+        console.log(`[EmaStrategy] Creating missing conceptual trade for orphaned position`);
+        conceptualTrade = this.createTrade(
+          openPosition.side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+          openPosition.averageEntryPrice,
+          openPosition.size,
+          mainBar.time, // Use current time as approximation
+          undefined, // No entry order reference since it's already filled
+          undefined  // No entry signal reference
+        );
+      } else {
+        // Case 2: Conceptual trade exists but no protective orders
+        console.log(`[EmaStrategy] Conceptual trade exists but missing protective orders`);
+      }
+      
+      // Create a mock filled entry order to trigger protective order placement
+      const mockEntryOrder: Order = {
+        id: `mock-entry-${openPosition.id}`,
+        tradeId: conceptualTrade.id,
+        contractId: contractId,
+        type: OrderType.MARKET,
+        side: openPosition.side,
+        quantity: openPosition.size,
+        status: OrderStatus.FILLED,
+        submittedTime: mainBar.time,
+        filledPrice: openPosition.averageEntryPrice,
+        filledQuantity: openPosition.size,
+        filledTime: mainBar.time,
+        commission: 0,
+        message: 'Reconstructed entry order for position missing protective orders',
+        isEntry: true,
+        parentTradeId: conceptualTrade.id
+      };
+      
+      console.log(`[EmaStrategy] Placing protective orders for position using mock entry order`);
+      this.placeProtectiveOrders(conceptualTrade, mockEntryOrder);
     }
     
     // EMA Calculation
@@ -132,22 +232,41 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
     const fastEma = this.getCurrentEMA(closePrices, this.emaConfig.fastPeriod);
     const slowEma = this.getCurrentEMA(closePrices, this.emaConfig.slowPeriod);
 
-    this.fastEmaValues.push(fastEma); // Keep local history for crossover detection
+    // CRITICAL FIX: Get previous EMA values BEFORE pushing current ones
+    // The old logic used barIndex which doesn't match the incremental EMA arrays
+    const prevFastEma = this.fastEmaValues.length > 0 ? 
+        this.fastEmaValues[this.fastEmaValues.length - 1] : fastEma;
+    const prevSlowEma = this.slowEmaValues.length > 0 ? 
+        this.slowEmaValues[this.slowEmaValues.length - 1] : slowEma;
+
+    // Now push current values to arrays for next iteration
+    this.fastEmaValues.push(fastEma);
     this.slowEmaValues.push(slowEma);
 
     this.updateIndicatorValue('fastEma', fastEma); // Store in BaseStrategy's indicators
     this.updateIndicatorValue('slowEma', slowEma);
 
-    if (barIndex < 1) { // Need previous EMAs for crossover
+    // Debug logging to verify EMA calculations and crossover detection
+    console.log(`[EmaStrategy] Bar ${barIndex}: FastEMA=${fastEma.toFixed(4)}, SlowEMA=${slowEma.toFixed(4)}, PrevFast=${prevFastEma.toFixed(4)}, PrevSlow=${prevSlowEma.toFixed(4)}`);
+
+    if (this.fastEmaValues.length < 2) { // Need at least 2 EMA values for crossover
+      console.log(`[EmaStrategy] Bar ${barIndex}: Not enough EMA history for crossover detection (${this.fastEmaValues.length} values)`);
       return { signal: null, indicators: this.indicators, filledOrders: filledOrdersThisBar };
     }
-
-    const prevFastEma = this.fastEmaValues[barIndex - 1];
-    const prevSlowEma = this.slowEmaValues[barIndex - 1];
     const bullishCrossover = prevFastEma <= prevSlowEma && fastEma > slowEma;
     const bearishCrossover = prevFastEma >= prevSlowEma && fastEma < slowEma;
 
-    const contractId = this.emaConfig.contractId || 'DEFAULT_CONTRACT';
+    // Debug crossover detection
+    if (bullishCrossover) {
+      console.log(`[EmaStrategy] Bar ${barIndex}: 🟢 BULLISH CROSSOVER detected! Fast crossed above Slow`);
+    }
+    if (bearishCrossover) {
+      console.log(`[EmaStrategy] Bar ${barIndex}: 🔴 BEARISH CROSSOVER detected! Fast crossed below Slow`);
+    }
+    if (!bullishCrossover && !bearishCrossover) {
+      console.log(`[EmaStrategy] Bar ${barIndex}: No crossover detected`);
+    }
+
     const currentManagedPosition = this.orderManager.getOpenPosition(contractId); // This is ManagedPosition | undefined
     const hasOpenPosition = currentManagedPosition !== undefined;
     let strategyGeneratedSignal: StrategySignal | null = null;
@@ -231,15 +350,21 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
     );
     const conceptualTradeId = conceptualTrade.id; // This is the ID generated by BaseStrategy.generateTradeId()
 
-    let entryOrderParams: Partial<Order>;
+    let entryOrder: Order;
     if (this.emaConfig.useMarketOrders) {
-      entryOrderParams = { type: OrderType.MARKET, side, quantity: positionSize, price: bar.close, submittedTime: bar.time, parentTradeId: conceptualTradeId, contractId, isEntry: true, message: signal.message, commission: perContractCommission };
+      entryOrder = this.createMarketOrder(side, positionSize, bar, conceptualTradeId, contractId);
     } else {
       const offset = (this.emaConfig.limitOrderOffset || 2) * this.orderManager.getTickSize();
       const limitPrice = side === OrderSide.BUY ? bar.close - offset : bar.close + offset;
-      entryOrderParams = { type: OrderType.LIMIT, side, quantity: positionSize, price: limitPrice, submittedTime: bar.time, parentTradeId: conceptualTradeId, contractId, isEntry: true, message: signal.message, commission: perContractCommission };
+      entryOrder = this.createLimitOrder(side, positionSize, limitPrice, bar, conceptualTradeId, contractId);
     }
-    const entryOrder = this.orderManager.submitOrder(entryOrderParams);
+    
+    // CRITICAL: Ensure entry order is properly flagged
+    entryOrder.isEntry = true;
+    entryOrder.isExit = false;
+    entryOrder.message = signal.message;
+    
+    console.log(`[EmaStrategy] Created entry order ${entryOrder.id} with isEntry: ${entryOrder.isEntry}`);
 
     // Now link the actual submitted order to the conceptual trade
     if (this.openTrade && this.openTrade.id === conceptualTradeId) {
@@ -273,19 +398,16 @@ export class EmaStrategy extends BaseStrategy implements IStrategy { // Implemen
     const positionSize = existingManagedPosition.size; 
     const perContractCommission = positionSize > 0 ? (this.emaConfig.commission || 0) / positionSize : 0;
 
-    const closeOrderParams: Partial<Order> = {
-      type: OrderType.MARKET,
-      side: closeSide,
-      quantity: positionSize,
-      price: bar.close, 
-      submittedTime: bar.time,
-      parentTradeId: existingManagedPosition.id, // This is crucial: links the close order to the ManagedPosition
+    const closeOrder = this.createMarketOrder(
+      closeSide,
+      positionSize,
+      bar,
+      existingManagedPosition.id, // This is crucial: links the close order to the ManagedPosition
       contractId,
-      message: `Reversal: Closing ${existingManagedPosition.side} leg. Signal: ${signalForNewTrade.message}`,
-      commission: perContractCommission,
-      isExit: true,
-    };
-    const closeOrder = this.orderManager.submitOrder(closeOrderParams);
+      false, // isEntry: false
+      true   // isExit: true
+    );
+    closeOrder.message = `Reversal: Closing ${existingManagedPosition.side} leg. Signal: ${signalForNewTrade.message}`;
     console.log(`[EmaStrategy] Submitted market order ${closeOrder.id} to close existing ${existingManagedPosition.side} position ${existingManagedPosition.id}`);
 
     // 3. Set up pending reversal: The new position will be opened AFTER the close order is confirmed filled

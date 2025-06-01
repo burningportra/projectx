@@ -8,6 +8,7 @@ import {
   BacktestBarData,
   SubBarData,
   StrategySignal,
+  StrategySignalType,
   SimulatedTrade,
   Order,
   StrategyConfig,
@@ -480,6 +481,8 @@ export abstract class BaseStrategy implements IStrategy {
    * @param bar - Current price bar
    * @param tradeId - Optional trade ID to associate with this order
    * @param contractId - Optional contract ID
+   * @param isEntry - Whether this is an entry order (triggers protective orders when filled)
+   * @param isExit - Whether this is an exit order
    * @returns The created order
    */
   protected createMarketOrder(
@@ -487,18 +490,23 @@ export abstract class BaseStrategy implements IStrategy {
     quantity: number,
     bar: BacktestBarData,
     tradeId?: string,
-    contractId?: string
+    contractId?: string,
+    isEntry: boolean = false,
+    isExit: boolean = false
   ): Order {
     const order: Partial<Order> = { // Use Partial<Order> as submitOrder in OM takes Partial
       id: this.generateOrderId(), // BaseStrategy still generates ID for its conceptual order
       type: OrderType.MARKET,
       side,
       quantity,
+      price: bar.close, // Set expected market price for display and OrderManager logic
       status: OrderStatus.PENDING,
       submittedTime: bar.time,
       parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
-      message: "Market order created"
+      isEntry,
+      isExit,
+      message: isEntry ? "Market entry order created" : isExit ? "Market exit order created" : "Market order created"
     };
     
     // this.pendingOrders.push(order); // OrderManager now handles this
@@ -513,6 +521,8 @@ export abstract class BaseStrategy implements IStrategy {
    * @param bar - Current price bar
    * @param tradeId - Optional trade ID to associate with this order
    * @param contractId - Optional contract ID
+   * @param isEntry - Whether this is an entry order (triggers protective orders when filled)
+   * @param isExit - Whether this is an exit order
    * @returns The created order
    */
   protected createLimitOrder(
@@ -521,7 +531,9 @@ export abstract class BaseStrategy implements IStrategy {
     price: number,
     bar: BacktestBarData,
     tradeId?: string,
-    contractId?: string
+    contractId?: string,
+    isEntry: boolean = false,
+    isExit: boolean = false
   ): Order {
     const order: Partial<Order> = {
       id: this.generateOrderId(),
@@ -533,7 +545,9 @@ export abstract class BaseStrategy implements IStrategy {
       submittedTime: bar.time,
       parentTradeId: tradeId, // Changed from tradeId to parentTradeId
       contractId,
-      message: "Limit order created"
+      isEntry,
+      isExit,
+      message: isEntry ? "Limit entry order created" : isExit ? "Limit exit order created" : "Limit order created"
     };
     
     // this.pendingOrders.push(order); // OrderManager now handles this
@@ -782,13 +796,27 @@ export abstract class BaseStrategy implements IStrategy {
    * @param currentConceptualTrade - The strategy's current conceptual open trade, if any.
    */
   protected onOrderFilled(filledOrder: Order, currentConceptualTrade?: SimulatedTrade): void {
+    console.log(`[BaseStrategy.onOrderFilled] Processing filled order:`, {
+      orderId: filledOrder.id,
+      isEntry: filledOrder.isEntry,
+      isExit: filledOrder.isExit,
+      isStopLoss: filledOrder.isStopLoss,
+      isTakeProfit: filledOrder.isTakeProfit,
+      side: filledOrder.side,
+      quantity: filledOrder.quantity,
+      filledPrice: filledOrder.filledPrice,
+      currentTradeId: currentConceptualTrade?.id,
+      currentTradeStatus: currentConceptualTrade?.status,
+      entryOrderId: currentConceptualTrade?.entryOrder?.id
+    });
+
     // Scenario 1: The filled order is the designated entry for the current conceptual trade.
     // Place protective orders.
     if (currentConceptualTrade && currentConceptualTrade.status === 'OPEN' &&
         currentConceptualTrade.entryOrder?.id === filledOrder.id &&
         filledOrder.isEntry === true) { // Explicitly check the isEntry flag
 
-        console.log(`[BaseStrategy.onOrderFilled] Entry fill for conceptual trade ${currentConceptualTrade.id}. Placing protective orders.`);
+        console.log(`[BaseStrategy.onOrderFilled] ✅ Entry fill detected for conceptual trade ${currentConceptualTrade.id}. Placing protective orders.`);
         this.placeProtectiveOrders(currentConceptualTrade, filledOrder);
     }
     // Scenario 2: The filled order is an exit for the current conceptual trade.
@@ -844,6 +872,44 @@ export abstract class BaseStrategy implements IStrategy {
    * @param entryFill - The order fill that opened the trade.
    */
   protected placeProtectiveOrders(trade: SimulatedTrade, entryFill: Order): void {
+    console.log(`[BaseStrategy.placeProtectiveOrders] 🚨 CALLED for trade ${trade.id}:`, {
+      config: {
+        stopLossPercent: this.config.stopLossPercent,
+        stopLossTicks: this.config.stopLossTicks,
+        takeProfitPercent: this.config.takeProfitPercent,
+        takeProfitTicks: this.config.takeProfitTicks
+      },
+      trade: {
+        id: trade.id,
+        type: trade.type,
+        size: trade.size,
+        entryPrice: trade.entryPrice
+      },
+      entryFill: {
+        id: entryFill.id,
+        filledPrice: entryFill.filledPrice,
+        filledQuantity: entryFill.filledQuantity,
+        contractId: entryFill.contractId,
+        isEntry: entryFill.isEntry
+      },
+      callStack: new Error().stack
+    });
+    
+    // Check if protective orders already exist for this trade
+    const existingPendingOrders = this.getPendingOrders(entryFill.contractId);
+    const existingSL = existingPendingOrders.filter(o => o.isStopLoss && o.parentTradeId === trade.id);
+    const existingTP = existingPendingOrders.filter(o => o.isTakeProfit && o.parentTradeId === trade.id);
+    
+    if (existingSL.length > 0 || existingTP.length > 0) {
+      console.log(`[BaseStrategy.placeProtectiveOrders] ⚠️ DUPLICATE DETECTED! Protective orders already exist for trade ${trade.id}:`, {
+        existingSL: existingSL.length,
+        existingTP: existingTP.length,
+        existingSlIds: existingSL.map(o => o.id),
+        existingTpIds: existingTP.map(o => o.id)
+      });
+      return; // Don't create duplicates
+    }
+
     const { stopLossPercent, stopLossTicks, takeProfitPercent, takeProfitTicks } = this.config;
     const entryPrice = entryFill.filledPrice;
 
@@ -928,5 +994,25 @@ export abstract class BaseStrategy implements IStrategy {
    */
   private generateTradeId(): string {
     return `trade-${this.getName().toLowerCase()}-${this.nextTradeId++}`;
+  }
+
+  protected generateStopOrderSignals(filledOrders: Order[], barIndex: number): void {
+    // Generate SELL signals for stop loss and take profit orders that were filled
+    const stopOrderFills = filledOrders.filter(order => 
+      order.isStopLoss || order.isTakeProfit
+    );
+    
+    stopOrderFills.forEach(order => {
+      const signalType = StrategySignalType.SELL; // Always SELL for stop/take profit
+      const signal: StrategySignal = {
+        type: signalType,
+        barIndex: barIndex,
+        time: order.filledTime || order.submittedTime || 0 as UTCTimestamp,
+        price: order.filledPrice || order.price || 0
+      };
+      
+      this.signals.push(signal);
+      console.log(`[BaseStrategy] Generated ${order.isStopLoss ? 'stop loss' : 'take profit'} SELL signal at bar ${barIndex}, price ${signal.price}`);
+    });
   }
 }
