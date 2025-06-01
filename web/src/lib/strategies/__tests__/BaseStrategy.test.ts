@@ -1,4 +1,5 @@
 import { BaseStrategy } from '../BaseStrategy';
+import { OrderManager } from '../../OrderManager'; // Assuming OrderManager is in ../../lib/OrderManager
 import {
   BacktestBarData,
   SubBarData,
@@ -9,7 +10,7 @@ import {
   StrategySignalType,
   UTCTimestamp
 } from '../../types/backtester';
-import { StrategyResult } from '../../types/strategy';
+import { StrategyResult, BaseStrategyConfig } from '../../types/strategy';
 
 // Helper function to create a test bar
 const createBar = (time: number, open: number, high: number, low: number, close: number): BacktestBarData => ({
@@ -22,13 +23,14 @@ const createBar = (time: number, open: number, high: number, low: number, close:
 
 // Concrete implementation of BaseStrategy for testing
 class TestStrategy extends BaseStrategy {
-  constructor() {
-    super({
+  constructor(orderManager: OrderManager, config?: Partial<BaseStrategyConfig>) {
+    super(orderManager, {
       name: 'Test Strategy',
       description: 'A strategy for testing BaseStrategy',
       version: '1.0.0',
       commission: 0.1,
-      positionSize: 1
+      positionSize: 1,
+      ...config
     });
   }
 
@@ -174,12 +176,54 @@ class TestStrategy extends BaseStrategy {
   }
 }
 
+// Enhanced TestStrategy to expose protected methods for testing
+class EnhancedTestStrategy extends TestStrategy {
+  constructor(orderManager: OrderManager, config?: Partial<BaseStrategyConfig>) {
+    super(orderManager, config);
+  }
+
+  // Expose protected methods for testing
+  public testValidateConfig(config: BaseStrategyConfig): void {
+    this.validateConfig(config);
+  }
+  
+  public testValidateStrategySpecificConfig(config: BaseStrategyConfig): void {
+    this.validateStrategySpecificConfig(config);
+  }
+  
+  // Override to track calls and add custom validation
+  protected override validateStrategySpecificConfig(config: BaseStrategyConfig): void {
+    this.specificValidationCalled = true;
+    
+    // Add specific validation for testing
+    if (config.customParam !== undefined && typeof config.customParam !== 'string') {
+      throw new Error('Strategy configuration error: customParam must be a string');
+    }
+  }
+  
+  // Track if specific validation was called
+  public specificValidationCalled = false;
+  
+  // Track config update calls
+  public lastChangedKeys: string[] = [];
+  public lastPreviousConfig: BaseStrategyConfig | null = null;
+  
+  protected onConfigUpdated(changedKeys: string[] = [], previousConfig: BaseStrategyConfig = {} as BaseStrategyConfig): void {
+    this.lastChangedKeys = changedKeys;
+    this.lastPreviousConfig = previousConfig;
+  }
+}
+
 describe('BaseStrategy', () => {
   let strategy: TestStrategy;
+  let enhancedStrategy: EnhancedTestStrategy;
   let testBars: BacktestBarData[];
+  let orderManager: OrderManager;
 
   beforeEach(() => {
-    strategy = new TestStrategy();
+    orderManager = new OrderManager(0.25); // Default tick size
+    strategy = new TestStrategy(orderManager);
+    enhancedStrategy = new EnhancedTestStrategy(orderManager);
     
     // Create a series of test bars
     testBars = Array.from({ length: 20 }, (_, i) => 
@@ -222,12 +266,160 @@ describe('BaseStrategy', () => {
     expect(strategy.getCancelledOrders().length).toBe(0);
   });
 
-  test('updateConfig updates configuration', () => {
-    strategy.updateConfig({ commission: 0.2, positionSize: 2 });
-    const config = strategy.getConfig();
+  describe('Configuration Validation', () => {
+    test('constructor validates initial configuration', () => {
+      const om = new OrderManager(0.25);
+      // Should not throw with valid config
+      expect(() => new TestStrategy(om, {
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1
+      })).not.toThrow();
+      
+      // Should throw with invalid commission
+      expect(() => new TestStrategy(om, {
+        commission: -1  // Negative commission
+      })).toThrow(/commission must be >= 0/);
+      
+      // Should throw with invalid positionSize
+      expect(() => new TestStrategy(om, {
+        positionSize: 0  // Zero position size
+      })).toThrow(/positionSize must be > 0/);
+    });
+    
+    test('validateConfig checks required fields', () => {
+      const baseConfig = {
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1
+      };
+      
+      // Valid config should not throw
+      expect(() => enhancedStrategy.testValidateConfig(baseConfig)).not.toThrow();
+      
+      // Missing name should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        name: ''
+      })).toThrow(/name is required/);
+      
+      // Missing description should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        description: ''
+      })).toThrow(/description is required/);
+      
+      // Missing version should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        version: ''
+      })).toThrow(/version is required/);
+    });
+    
+    test('validateConfig checks optional fields when present', () => {
+      const baseConfig = {
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1
+      };
+      
+      // Valid optional fields should not throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        stopLossPercent: 2,
+        takeProfitPercent: 5,
+        useMarketOrders: true
+      })).not.toThrow();
+      
+      // Invalid stopLossPercent should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        stopLossPercent: 0
+      })).toThrow(/stopLossPercent must be > 0/);
+      
+      // Invalid takeProfitPercent should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        takeProfitPercent: -1
+      })).toThrow(/takeProfitPercent must be > 0/);
+      
+      // Invalid useMarketOrders should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        ...baseConfig,
+        useMarketOrders: 'yes' as any
+      })).toThrow(/useMarketOrders must be a boolean/);
+    });
+    
+    test('validateStrategySpecificConfig is called by validateConfig', () => {
+      // Reset tracking
+      enhancedStrategy.specificValidationCalled = false;
+      
+      // Call validateConfig
+      enhancedStrategy.testValidateConfig({
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1
+      });
+      
+      // Verify specific validation was called
+      expect(enhancedStrategy.specificValidationCalled).toBe(true);
+    });
+    
+    test('validateStrategySpecificConfig handles custom parameters', () => {
+      // Valid custom param should not throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1,
+        customParam: 'string value'
+      })).not.toThrow();
+      
+      // Invalid custom param should throw
+      expect(() => enhancedStrategy.testValidateConfig({
+        name: 'Test',
+        description: 'Test description',
+        version: '1.0.0',
+        commission: 0.1,
+        positionSize: 1,
+        customParam: 123 as any
+      })).toThrow(/customParam must be a string/);
+    });
+  });
+
+  test('updateConfig updates configuration and tracks changes', () => {
+    // Update configuration
+    enhancedStrategy.updateConfig({ commission: 0.2, positionSize: 2 });
+    
+    // Check config was updated
+    const config = enhancedStrategy.getConfig();
     expect(config.commission).toBe(0.2);
     expect(config.positionSize).toBe(2);
     expect(config.name).toBe('Test Strategy'); // Other properties unchanged
+    
+    // Check that changedKeys and previousConfig were tracked
+    expect(enhancedStrategy.lastChangedKeys).toContain('commission');
+    expect(enhancedStrategy.lastChangedKeys).toContain('positionSize');
+    expect(enhancedStrategy.lastChangedKeys.length).toBe(2);
+    
+    // Previous config should have original values
+    expect(enhancedStrategy.lastPreviousConfig).not.toBeNull();
+    if (enhancedStrategy.lastPreviousConfig) {
+      expect(enhancedStrategy.lastPreviousConfig.commission).toBe(0.1);
+      expect(enhancedStrategy.lastPreviousConfig.positionSize).toBe(1);
+    }
+    
+    // Invalid updates should throw
+    expect(() => enhancedStrategy.updateConfig({ positionSize: -1 })).toThrow(/positionSize must be > 0/);
   });
 
   test('getters return correct collections', () => {
@@ -289,10 +481,13 @@ describe('BaseStrategy', () => {
     expect(filledOrder.status).toBe('FILLED');
     
     // Cancel an order
-    const cancelledOrder = strategy.testCancelOrder(limitOrder, 'Testing cancellation');
-    expect(strategy.getPendingOrders().length).toBe(2);
-    expect(strategy.getCancelledOrders().length).toBe(1);
-    expect(cancelledOrder.status).toBe('CANCELLED');
+    const cancelSuccess = strategy.testCancelOrder(limitOrder.id, 'Testing cancellation');
+    expect(cancelSuccess).toBe(true);
+    expect(strategy.getPendingOrders().length).toBe(2); // Assuming BaseStrategy still mirrors for getPendingOrders
+    expect(strategy.getCancelledOrders().length).toBe(1); // Assuming BaseStrategy mirrors for getCancelledOrders
+    const cancelledOrderInstance = strategy.getCancelledOrders().find(o => o.id === limitOrder.id);
+    expect(cancelledOrderInstance).toBeDefined();
+    expect(cancelledOrderInstance?.status).toBe('CANCELLED');
   });
 
   test('trade management methods work correctly', () => {

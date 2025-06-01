@@ -37,6 +37,10 @@ export class OrderManager {
     this.tickSize = tickSize;
   }
 
+  public getTickSize(): number {
+    return this.tickSize;
+  }
+
   private roundToTickSize(price: number): number {
     return Math.round(price / this.tickSize) * this.tickSize;
   }

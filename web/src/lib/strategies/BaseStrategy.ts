@@ -18,11 +18,27 @@ import {
   BacktestResults,
   TradeType
 } from '../types/backtester';
+import { OrderManager } from '../OrderManager'; // Corrected path
 
 /**
- * Abstract base class that implements common functionality for all strategies.
- * Provides default implementations for many IStrategy methods while leaving
- * strategy-specific logic to be implemented by derived classes.
+ * Abstract base class for trading strategies, providing common infrastructure for
+ * configuration, state management, order handling (via an injected OrderManager),
+ * trade tracking, and backtesting.
+ *
+ * Derived classes must implement the `processBar` method to define their core logic,
+ * as well as `getName`, `getDescription`, and `getVersion`.
+ *
+ * Key responsibilities of BaseStrategy:
+ * - Managing strategy configuration (`BaseStrategyConfig`).
+ * - Interfacing with an `OrderManager` for order submission and state.
+ * - Tracking conceptual trades (`SimulatedTrade`) and signals (`StrategySignal`).
+ * - Providing hooks for customization (e.g., `onReset`, `onConfigUpdated`, `onOrderFilled`).
+ * - Offering utility methods for common tasks (e.g., `calculatePositionSize`, `placeProtectiveOrders`).
+ * - Storing and providing current values of strategy indicators.
+ * - Basic backtesting loop and results calculation.
+ *
+ * P&L and final trade records are primarily sourced from the `OrderManager` to ensure
+ * a single source of truth.
  */
 export abstract class BaseStrategy implements IStrategy {
   // Configuration
@@ -30,24 +46,32 @@ export abstract class BaseStrategy implements IStrategy {
 
   // State tracking
   protected signals: StrategySignal[] = [];
-  protected trades: SimulatedTrade[] = [];
+  // protected trades: SimulatedTrade[] = []; // Removed, OrderManager.getCompletedTrades() is the source
   protected openTrade: SimulatedTrade | null = null;
-  protected indicators: Record<string, number> = {};
+  protected indicators: Record<string, number | Record<string, number>> = {};
   
   // Order management
-  protected pendingOrders: Order[] = [];
-  protected filledOrders: Order[] = [];
-  protected cancelledOrders: Order[] = [];
+  // Local order arrays are being removed as OrderManager will be the source of truth.
+  // protected pendingOrders: Order[] = [];
+  // protected filledOrders: Order[] = [];
+  // protected cancelledOrders: Order[] = [];
   
   // Counter for generating unique IDs
   private nextOrderId = 1;
   private nextTradeId = 1;
 
+  protected orderManager: OrderManager;
+
   /**
-   * Constructor for BaseStrategy
-   * @param config - Strategy configuration options
+   * Constructs a new BaseStrategy instance.
+   * @param orderManagerInstance An instance of `OrderManager` that this strategy will use
+   *                             for all order submissions and to query order/trade states.
+   * @param config Optional partial configuration for the strategy. Defaults will be
+   *               applied for common parameters, and strategy-specific parameters
+   *               should be handled by the derived class's `validateStrategySpecificConfig`.
    */
-  constructor(config?: Partial<BaseStrategyConfig>) {
+  constructor(orderManagerInstance: OrderManager, config?: Partial<BaseStrategyConfig>) {
+    this.orderManager = orderManagerInstance;
     // Set default configuration values
     this.config = {
       name: this.getName(),
@@ -57,6 +81,116 @@ export abstract class BaseStrategy implements IStrategy {
       positionSize: 1,
       ...config
     };
+    
+    // Validate the initial configuration
+    this.validateConfig(this.config);
+  }
+
+  /**
+   * Validates configuration parameters to ensure they meet requirements
+   * @param config - Configuration to validate
+   * @throws Error if configuration is invalid
+   */
+  protected validateConfig(config: BaseStrategyConfig): void {
+    // Validate required fields
+    if (!config.name) {
+      throw new Error('Strategy configuration error: name is required');
+    }
+    
+    if (!config.description) {
+      throw new Error('Strategy configuration error: description is required');
+    }
+    
+    if (!config.version) {
+      throw new Error('Strategy configuration error: version is required');
+    }
+    
+    // Validate numeric values
+    if (typeof config.commission !== 'number') {
+      throw new Error('Strategy configuration error: commission must be a number');
+    }
+    
+    if (config.commission < 0) {
+      throw new Error(`Strategy configuration error: commission must be >= 0, got ${config.commission}`);
+    }
+    
+    if (typeof config.positionSize !== 'number') {
+      throw new Error('Strategy configuration error: positionSize must be a number');
+    }
+    
+    if (config.positionSize <= 0) {
+      throw new Error(`Strategy configuration error: positionSize must be > 0, got ${config.positionSize}`);
+    }
+    
+    // Validate optional numeric parameters if present
+    if (config.stopLossPercent !== undefined) {
+      if (typeof config.stopLossPercent !== 'number') {
+        throw new Error('Strategy configuration error: stopLossPercent must be a number');
+      }
+      if (config.stopLossPercent <= 0) {
+        throw new Error(`Strategy configuration error: stopLossPercent must be > 0, got ${config.stopLossPercent}`);
+      }
+    }
+    
+    if (config.stopLossTicks !== undefined) {
+      if (typeof config.stopLossTicks !== 'number') {
+        throw new Error('Strategy configuration error: stopLossTicks must be a number');
+      }
+      if (config.stopLossTicks <= 0) {
+        throw new Error(`Strategy configuration error: stopLossTicks must be > 0, got ${config.stopLossTicks}`);
+      }
+    }
+    
+    if (config.takeProfitPercent !== undefined) {
+      if (typeof config.takeProfitPercent !== 'number') {
+        throw new Error('Strategy configuration error: takeProfitPercent must be a number');
+      }
+      if (config.takeProfitPercent <= 0) {
+        throw new Error(`Strategy configuration error: takeProfitPercent must be > 0, got ${config.takeProfitPercent}`);
+      }
+    }
+    
+    if (config.takeProfitTicks !== undefined) {
+      if (typeof config.takeProfitTicks !== 'number') {
+        throw new Error('Strategy configuration error: takeProfitTicks must be a number');
+      }
+      if (config.takeProfitTicks <= 0) {
+        throw new Error(`Strategy configuration error: takeProfitTicks must be > 0, got ${config.takeProfitTicks}`);
+      }
+    }
+    
+    if (config.limitOrderOffset !== undefined) {
+      if (typeof config.limitOrderOffset !== 'number') {
+        throw new Error('Strategy configuration error: limitOrderOffset must be a number');
+      }
+    }
+    
+    if (config.orderTimeoutBars !== undefined) {
+      if (typeof config.orderTimeoutBars !== 'number') {
+        throw new Error('Strategy configuration error: orderTimeoutBars must be a number');
+      }
+      if (config.orderTimeoutBars < 0) {
+        throw new Error(`Strategy configuration error: orderTimeoutBars must be >= 0, got ${config.orderTimeoutBars}`);
+      }
+    }
+    
+    // Validate boolean parameters if present
+    if (config.useMarketOrders !== undefined && typeof config.useMarketOrders !== 'boolean') {
+      throw new Error('Strategy configuration error: useMarketOrders must be a boolean');
+    }
+    
+    // Strategy-specific validation can be implemented in derived classes
+    this.validateStrategySpecificConfig(config);
+  }
+  
+  /**
+   * Hook for strategy-specific configuration validation
+   * Override this method in derived classes to add custom validation rules
+   * @param config - Configuration to validate
+   */
+  protected validateStrategySpecificConfig(config: BaseStrategyConfig): void {
+    // Default implementation does nothing
+    // Derived classes should override to add specific validation
   }
 
   /**
@@ -64,12 +198,12 @@ export abstract class BaseStrategy implements IStrategy {
    */
   reset(): void {
     this.signals = [];
-    this.trades = [];
+    // this.trades = []; // Removed
     this.openTrade = null;
-    this.indicators = {};
-    this.pendingOrders = [];
-    this.filledOrders = [];
-    this.cancelledOrders = [];
+    this.indicators = {}; // Clears all indicator values
+    // this.pendingOrders = []; // Removed
+    // this.filledOrders = []; // Removed
+    // this.cancelledOrders = []; // Removed
     this.nextOrderId = 1;
     this.nextTradeId = 1;
     
@@ -97,85 +231,115 @@ export abstract class BaseStrategy implements IStrategy {
   ): Promise<StrategyResult> | StrategyResult;
 
   /**
-   * Get all completed trades
+   * Get all completed trades.
+   * Retrieves trade records from the OrderManager, which is the source of truth for
+   * finalized P&L and trade details.
+   * @returns An array of `SimulatedTrade` objects.
    */
   getTrades(): SimulatedTrade[] {
-    return this.trades;
+    // OrderManager is now the source of truth for completed trades with P&L
+    return this.orderManager.getCompletedTrades();
   }
 
   /**
-   * Get currently open trade (if any)
+   * Get the currently open conceptual trade being managed by the strategy.
+   * Note: The authoritative position state resides within the OrderManager.
+   * @returns The open `SimulatedTrade` object or `null` if no trade is open.
    */
   getOpenTrade(): SimulatedTrade | null {
     return this.openTrade;
   }
 
   /**
-   * Get all signals generated by the strategy
+   * Get all signals generated and recorded by the strategy.
+   * @returns An array of `StrategySignal` objects.
    */
   getSignals(): StrategySignal[] {
     return this.signals;
   }
 
   /**
-   * Get current indicator values
+   * Get current values of all indicators tracked by the strategy.
+   * Values are updated by derived strategies calling `updateIndicatorValue`.
+   * @returns A record of indicator names to their current values, or `null` if no indicators.
    */
-  getCurrentIndicators(): Record<string, number> | null {
-    return Object.keys(this.indicators).length > 0 ? this.indicators : null;
+  getCurrentIndicators(): Record<string, number | Record<string, number>> | null {
+    return Object.keys(this.indicators).length > 0 ? { ...this.indicators } : null;
   }
 
   /**
-   * Get all pending orders
-   * @param contractId - Optional contract ID to filter orders
+   * Protected method for derived strategies to update the value of a specific indicator.
+   * This allows BaseStrategy to store and provide current indicator values without
+   * needing to manage the indicator objects themselves.
+   * @param name - The name of the indicator.
+   * @param value - The new value of the indicator (can be a single number or a record for multi-value indicators).
+   */
+  protected updateIndicatorValue(name: string, value: number | Record<string, number>): void {
+    this.indicators[name] = value;
+  }
+
+  /**
+   * Get all pending orders from the OrderManager.
+   * @param contractId - Optional contract ID to filter orders.
+   * @returns An array of pending `Order` objects.
    */
   getPendingOrders(contractId?: string): Order[] {
-    if (contractId) {
-      return this.pendingOrders.filter(order => order.contractId === contractId);
-    }
-    return this.pendingOrders;
+    return this.orderManager.getPendingOrders(contractId);
   }
 
   /**
-   * Get all filled orders
-   * @param contractId - Optional contract ID to filter orders
+   * Get all filled orders from the OrderManager.
+   * @param contractId - Optional contract ID to filter orders.
+   * @returns An array of filled `Order` objects.
    */
   getFilledOrders(contractId?: string): Order[] {
-    if (contractId) {
-      return this.filledOrders.filter(order => order.contractId === contractId);
-    }
-    return this.filledOrders;
+    return this.orderManager.getFilledOrders(contractId);
   }
 
   /**
-   * Get all cancelled orders
-   * @param contractId - Optional contract ID to filter orders
+   * Get all cancelled orders from the OrderManager.
+   * @param contractId - Optional contract ID to filter orders.
+   * @returns An array of cancelled `Order` objects.
    */
   getCancelledOrders(contractId?: string): Order[] {
-    if (contractId) {
-      return this.cancelledOrders.filter(order => order.contractId === contractId);
-    }
-    return this.cancelledOrders;
+    return this.orderManager.getCancelledOrders(contractId);
   }
 
   /**
    * Update strategy configuration
    * @param config - Partial configuration to merge with current config
+   * @throws Error if resulting configuration is invalid
    */
   updateConfig(config: Partial<StrategyConfig>): void {
-    this.config = {
+    // Store the previous configuration for comparison
+    const previousConfig = { ...this.config };
+    
+    // Create the new configuration by merging
+    const newConfig = {
       ...this.config,
       ...config
     };
     
+    // Validate the new configuration
+    this.validateConfig(newConfig as BaseStrategyConfig);
+    
+    // Apply the validated configuration
+    this.config = newConfig as BaseStrategyConfig;
+    
+    // Calculate what changed for the hook
+    const changedKeys = Object.keys(config);
+    
     // Allow derived classes to react to configuration changes
-    this.onConfigUpdated();
+    this.onConfigUpdated(changedKeys, previousConfig);
   }
 
   /**
    * Hook for strategy-specific configuration update logic
    * Override this method in derived classes to handle configuration changes
+   * @param changedKeys - Array of keys that were updated
+   * @param previousConfig - Previous configuration before update
    */
-  protected onConfigUpdated(): void {
+  protected onConfigUpdated(changedKeys: string[] = [], previousConfig: BaseStrategyConfig = {} as BaseStrategyConfig): void {
     // Default implementation does nothing
   }
 
@@ -234,10 +398,12 @@ export abstract class BaseStrategy implements IStrategy {
   }
 
   /**
-   * Calculate backtest performance metrics
+   * Calculate backtest performance metrics based on trades from OrderManager.
+   * Metrics include total P&L, win rate, total trades, max drawdown, and profit factor.
+   * @returns A `BacktestResults` object.
    */
   protected calculateBacktestResults(): BacktestResults {
-    const closedTrades = this.trades.filter(trade => trade.status === 'CLOSED');
+    const closedTrades = this.orderManager.getCompletedTrades().filter(trade => trade.status === 'CLOSED');
     
     // Calculate total profit/loss
     const totalProfitOrLoss = closedTrades.reduce(
@@ -287,7 +453,7 @@ export abstract class BaseStrategy implements IStrategy {
       totalTrades: closedTrades.length,
       maxDrawdown,
       profitFactor,
-      trades: [...this.trades] // Return a copy of trades array
+      trades: [...closedTrades] // Use the filtered list from OrderManager
     };
   }
 
@@ -307,8 +473,8 @@ export abstract class BaseStrategy implements IStrategy {
     tradeId?: string,
     contractId?: string
   ): Order {
-    const order: Order = {
-      id: this.generateOrderId(),
+    const order: Partial<Order> = { // Use Partial<Order> as submitOrder in OM takes Partial
+      id: this.generateOrderId(), // BaseStrategy still generates ID for its conceptual order
       type: OrderType.MARKET,
       side,
       quantity,
@@ -319,8 +485,8 @@ export abstract class BaseStrategy implements IStrategy {
       message: "Market order created"
     };
     
-    this.pendingOrders.push(order);
-    return order;
+    // this.pendingOrders.push(order); // OrderManager now handles this
+    return this.orderManager.submitOrder(order);
   }
 
   /**
@@ -341,7 +507,7 @@ export abstract class BaseStrategy implements IStrategy {
     tradeId?: string,
     contractId?: string
   ): Order {
-    const order: Order = {
+    const order: Partial<Order> = {
       id: this.generateOrderId(),
       type: OrderType.LIMIT,
       side,
@@ -354,8 +520,8 @@ export abstract class BaseStrategy implements IStrategy {
       message: "Limit order created"
     };
     
-    this.pendingOrders.push(order);
-    return order;
+    // this.pendingOrders.push(order); // OrderManager now handles this
+    return this.orderManager.submitOrder(order);
   }
 
   /**
@@ -378,7 +544,7 @@ export abstract class BaseStrategy implements IStrategy {
     contractId?: string,
     isStopLoss: boolean = false
   ): Order {
-    const order: Order = {
+    const order: Partial<Order> = {
       id: this.generateOrderId(),
       type: OrderType.STOP,
       side,
@@ -392,8 +558,8 @@ export abstract class BaseStrategy implements IStrategy {
       message: isStopLoss ? "Stop loss order created" : "Stop order created"
     };
     
-    this.pendingOrders.push(order);
-    return order;
+    // this.pendingOrders.push(order); // OrderManager now handles this
+    return this.orderManager.submitOrder(order);
   }
 
   /**
@@ -414,7 +580,7 @@ export abstract class BaseStrategy implements IStrategy {
     tradeId?: string,
     contractId?: string
   ): Order {
-    const order: Order = {
+    const order: Partial<Order> = {
       id: this.generateOrderId(),
       type: OrderType.LIMIT,
       side,
@@ -428,8 +594,8 @@ export abstract class BaseStrategy implements IStrategy {
       message: "Take profit order created"
     };
     
-    this.pendingOrders.push(order);
-    return order;
+    // this.pendingOrders.push(order); // OrderManager now handles this
+    return this.orderManager.submitOrder(order);
   }
 
   /**
@@ -444,11 +610,27 @@ export abstract class BaseStrategy implements IStrategy {
     fillPrice: number,
     fillTime: UTCTimestamp
   ): Order {
-    // Remove from pending orders
-    this.pendingOrders = this.pendingOrders.filter(o => o.id !== order.id);
-    
-    // Update order details
-    order.status = OrderStatus.FILLED;
+    // This method's role changes. It might now be called by the strategy
+    // after OrderManager reports a fill, to update BaseStrategy's internal
+    // concept of filled orders if still needed, or it might be deprecated.
+    // This method's role is significantly reduced or potentially deprecated now that
+    // OrderManager is the source of truth for order states and BaseStrategy's
+    // getFilledOrders() proxies to OrderManager.
+    // A strategy's processBar should react to fills returned by orderManager.processBar().
+    // This method might only be relevant if BaseStrategy needs to perform some specific
+    // action upon receiving confirmation of a fill that OrderManager itself doesn't handle
+    // in the context of the strategy's conceptual trades (e.g. updating this.openTrade).
+
+    // For now, let's simplify its body. If derived strategies need to react to a fill,
+    // they should do so based on the output of orderManager.processBar().
+    // The `order` parameter here would be the order object *as known by the strategy*
+    // before it was processed and potentially filled by OrderManager.
+    // The actual filled order details should come from OrderManager.
+
+    // console.warn("[BaseStrategy.fillOrder] This method's utility should be re-evaluated. OrderManager handles fills.");
+
+    // Update the passed-in order object if it's a direct reference used by the strategy.
+    // However, the canonical filled order is in OrderManager.
     order.filledPrice = fillPrice;
     order.filledTime = fillTime;
     order.filledQuantity = order.quantity;
@@ -460,29 +642,22 @@ export abstract class BaseStrategy implements IStrategy {
     }
     
     // Add to filled orders
-    this.filledOrders.push(order);
-    
-    return order;
+    // this.filledOrders.push(order); // Removed as OM is source of truth
+    return order; // Return the (potentially updated) order reference
   }
 
   /**
-   * Cancel an order
-   * @param order - The order to cancel
-   * @param reason - Reason for cancellation
-   * @returns The cancelled order
+   * Cancel an order via the OrderManager.
+   * @param orderId - The ID of the order to cancel.
+   * @param reason - Reason for cancellation (optional, OrderManager might handle messaging).
+   * @returns True if cancellation was accepted by OrderManager, false otherwise.
    */
-  protected cancelOrder(order: Order, reason: string): Order {
-    // Remove from pending orders
-    this.pendingOrders = this.pendingOrders.filter(o => o.id !== order.id);
-    
-    // Update order details
-    order.status = OrderStatus.CANCELLED;
-    order.message = reason;
-    
-    // Add to cancelled orders
-    this.cancelledOrders.push(order);
-    
-    return order;
+  protected cancelOrder(orderId: string, reason?: string): boolean {
+    // BaseStrategy no longer manages its own pending/cancelled lists directly for this.
+    // It relies on OrderManager.
+    return this.orderManager.cancelOrder(orderId);
+    // If a strategy needs to react to a cancellation, it should check the status
+    // of orders obtained from orderManager.get[Pending/Cancelled]Orders() or results from orderManager.processBar().
   }
 
   /**
@@ -545,25 +720,130 @@ export abstract class BaseStrategy implements IStrategy {
     trade.exitOrder = exitOrder;
     trade.signalExit = exitSignal;
     trade.exitReason = exitReason;
+
+    // P&L is now handled by OrderManager. BaseStrategy's SimulatedTrade
+    // should reflect the P&L from the corresponding trade record in OrderManager.
+    // This method's responsibility shifts to primarily managing the strategy's
+    // concept of an open trade and associating exit orders/signals.
+
+    // Find the completed trade record from OrderManager to get the authoritative P&L
+    const completedTradeFromOM = this.orderManager.getCompletedTrades().find(t => t.id === trade.id || (t.exitOrder && exitOrder && t.exitOrder.id === exitOrder.id));
     
-    // Calculate P&L
-    const multiplier = trade.type === 'BUY' ? 1 : -1;
-    trade.profitOrLoss = multiplier * (exitPrice - trade.entryPrice) * trade.size;
-    
-    // Subtract commission if configured
-    if (trade.commission) {
-      trade.profitOrLoss -= trade.commission;
+    if (completedTradeFromOM) {
+      trade.profitOrLoss = completedTradeFromOM.profitOrLoss;
+      trade.commission = completedTradeFromOM.commission; // Ensure commission is also sourced from OM's record
+    } else {
+      // Fallback or error: If OM doesn't have this trade, P&L might be missing or stale.
+      // For now, we'll clear it to indicate it should come from OM.
+      // This situation implies a mismatch that needs debugging in how trades are correlated.
+      console.warn(`[BaseStrategy.closeTrade] Could not find completed trade ${trade.id} in OrderManager. P&L might be inaccurate.`);
+      trade.profitOrLoss = undefined; // Or 0, or handle as an error
     }
-    
+        
     // If this is the currently open trade, clear it
     if (this.openTrade && this.openTrade.id === trade.id) {
       this.openTrade = null;
     }
     
-    // Add to completed trades
-    this.trades.push(trade);
-    
+    // BaseStrategy no longer maintains its own primary list of completed trades.    
     return trade;
+  }
+
+  /**
+   * Hook called when an order submitted by this strategy is filled.
+   * Derived strategies can override this to implement logic that should occur
+   * immediately after an entry order is filled, such as placing stop-loss or
+   * take-profit orders.
+   * @param filledOrder - The order that was filled.
+   * @param trade - The trade that was opened or added to by this fill, if applicable.
+   */
+  protected onOrderFilled(filledOrder: Order, trade?: SimulatedTrade): void {
+    // Default implementation: if a trade was opened and SL/TP is configured, place protective orders.
+    if (trade && trade.status === 'OPEN' && trade.entryOrder?.id === filledOrder.id) {
+      // Check if this fill opened the trade 'trade'
+      this.placeProtectiveOrders(trade, filledOrder);
+    }
+  }
+
+  /**
+   * Calculate the position size for a new trade.
+   * Derived strategies can override this for custom position sizing logic.
+   * @param bar - The current bar data, which might be used for volatility-based sizing etc.
+   * @returns The number of contracts/shares to trade.
+   */
+  protected calculatePositionSize(bar: BacktestBarData): number {
+    // Default implementation uses fixed position size from config.
+    // Derived classes can use bar data, account info (if available via OrderManager), etc.
+    return this.config.positionSize;
+  }
+
+  /**
+   * Places stop-loss and/or take-profit orders if configured.
+   * This is a helper method that can be called by derived strategies after a trade entry is confirmed.
+   * @param trade - The trade that was just entered.
+   * @param entryFill - The order fill that opened the trade.
+   */
+  protected placeProtectiveOrders(trade: SimulatedTrade, entryFill: Order): void {
+    const { stopLossPercent, stopLossTicks, takeProfitPercent, takeProfitTicks } = this.config;
+    const entryPrice = entryFill.filledPrice;
+
+    if (!entryPrice) {
+      console.warn(`[BaseStrategy.placeProtectiveOrders] Entry fill for trade ${trade.id} has no fill price. Cannot place protective orders.`);
+      return;
+    }
+
+    const quantity = entryFill.filledQuantity || trade.size; // Use filled quantity from the entry order
+
+    // Place Stop Loss
+    if (stopLossPercent || stopLossTicks) {
+      let slPrice: number;
+      if (stopLossTicks) {
+        slPrice = trade.type === TradeType.BUY 
+          ? entryPrice - stopLossTicks * this.orderManager.getTickSize() // Assuming OrderManager has getTickSize()
+          : entryPrice + stopLossTicks * this.orderManager.getTickSize();
+      } else if (stopLossPercent) { // stopLossPercent takes precedence if both are defined, or use as fallback
+        slPrice = trade.type === TradeType.BUY
+          ? entryPrice * (1 - stopLossPercent / 100)
+          : entryPrice * (1 + stopLossPercent / 100);
+      } else {
+        return; // Should not happen if logic is correct
+      }
+      
+      this.createStopOrder(
+        trade.type === TradeType.BUY ? OrderSide.SELL : OrderSide.BUY,
+        quantity,
+        slPrice,
+        { time: entryFill.filledTime || entryFill.submittedTime } as BacktestBarData, // Use fill time for SL/TP submission time
+        trade.id,
+        entryFill.contractId,
+        true // isStopLoss
+      );
+    }
+
+    // Place Take Profit
+    if (takeProfitPercent || takeProfitTicks) {
+      let tpPrice: number;
+      if (takeProfitTicks) {
+        tpPrice = trade.type === TradeType.BUY
+          ? entryPrice + takeProfitTicks * this.orderManager.getTickSize()
+          : entryPrice - takeProfitTicks * this.orderManager.getTickSize();
+      } else if (takeProfitPercent) { // takeProfitPercent takes precedence
+        tpPrice = trade.type === TradeType.BUY
+          ? entryPrice * (1 + takeProfitPercent / 100)
+          : entryPrice * (1 - takeProfitPercent / 100);
+      } else {
+        return; // Should not happen
+      }
+
+      this.createTakeProfitOrder(
+        trade.type === TradeType.BUY ? OrderSide.SELL : OrderSide.BUY,
+        quantity,
+        tpPrice,
+        { time: entryFill.filledTime || entryFill.submittedTime } as BacktestBarData, // Use fill time
+        trade.id,
+        entryFill.contractId
+      );
+    }
   }
 
   /**
