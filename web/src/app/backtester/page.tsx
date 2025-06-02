@@ -7,6 +7,7 @@ import TopBar from '@/components/backtester/TopBar';
 import CompactResultsPanel from '@/components/backtester/CompactResultsPanel';
 import AnalysisPanel from '@/components/backtester/AnalysisPanel';
 import CompactOrderPanel from '@/components/backtester/CompactOrderPanel';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { 
   BacktestBarData, 
   SubBarData, 
@@ -505,89 +506,120 @@ const BacktesterPage = () => {
         <div className="relative bg-white rounded-lg shadow-sm border">
           <div className="h-[700px] flex">
             <div className="flex-1">
-              <TradeChart 
-                mainTimeframeBars={mainTimeframeBars}
-                subTimeframeBars={subTimeframeBars}
-                currentBarIndex={currentBarIndex}
-                currentSubBarIndex={currentSubBarIndex}
-                barFormationMode={barFormationMode}
-                timeframeConfig={timeframeConfig}
-                tradeMarkers={liveTradeMarkers}
-                emaData={selectedStrategy === 'ema' ? undefined : undefined}
-                pendingOrders={liveStrategyState.pendingOrders}
-                filledOrders={liveStrategyState.filledOrders}
-                openPositions={liveStrategyState.openTrade ? [{
-                    entryPrice: liveStrategyState.openTrade.entryPrice,
-                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
-                }] : []}
-              /> 
+              <ErrorBoundary
+                resetKeys={[mainTimeframeBars.length, currentBarIndex, selectedStrategy]}
+                resetOnPropsChange={true}
+                onError={(error, errorInfo) => {
+                  console.error('TradeChart Error:', error, errorInfo);
+                  setError(`Chart error: ${error.message}`);
+                }}
+              >
+                <TradeChart 
+                  mainTimeframeBars={mainTimeframeBars}
+                  subTimeframeBars={subTimeframeBars}
+                  currentBarIndex={currentBarIndex}
+                  currentSubBarIndex={currentSubBarIndex}
+                  barFormationMode={barFormationMode}
+                  timeframeConfig={timeframeConfig}
+                  tradeMarkers={liveTradeMarkers}
+                  emaData={selectedStrategy === 'ema' ? undefined : undefined}
+                  pendingOrders={liveStrategyState.pendingOrders}
+                  filledOrders={liveStrategyState.filledOrders}
+                  openPositions={liveStrategyState.openTrade ? [{
+                      entryPrice: liveStrategyState.openTrade.entryPrice,
+                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                  }] : []}
+                /> 
+              </ErrorBoundary>
             </div>
             
             {(liveStrategyState.pendingOrders.length > 0 || liveStrategyState.filledOrders.length > 0 || liveStrategyState.openTrade) && (
               <div className="w-80 bg-gray-800 border-l border-gray-700">
-                <CompactOrderPanel 
-                  pendingOrders={liveStrategyState.pendingOrders}
-                  filledOrders={liveStrategyState.filledOrders}
-                  openPositions={liveStrategyState.openTrade ? [{
-                    entryPrice: liveStrategyState.openTrade.entryPrice,
-                    stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                    takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
-                  }] : []}
-                  onCancelOrder={handleCancelOrder}
-                />
+                <ErrorBoundary
+                  resetKeys={[liveStrategyState.pendingOrders.length, liveStrategyState.filledOrders.length]}
+                  resetOnPropsChange={true}
+                >
+                  <CompactOrderPanel 
+                    pendingOrders={liveStrategyState.pendingOrders}
+                    filledOrders={liveStrategyState.filledOrders}
+                    openPositions={liveStrategyState.openTrade ? [{
+                      entryPrice: liveStrategyState.openTrade.entryPrice,
+                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
+                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                    }] : []}
+                    onCancelOrder={handleCancelOrder}
+                  />
+                </ErrorBoundary>
               </div>
             )}
           </div>
           
           <div className="absolute top-4 right-4 w-48 z-10">
-            <CompactResultsPanel 
-              profitOrLoss={liveTotalPnL}
-              winRate={liveWinRate}
-              totalTrades={liveTotalTrades}
-            />
+            <ErrorBoundary
+              resetKeys={[liveTotalPnL, liveWinRate, liveTotalTrades]}
+              resetOnPropsChange={true}
+            >
+              <CompactResultsPanel 
+                profitOrLoss={liveTotalPnL}
+                winRate={liveWinRate}
+                totalTrades={liveTotalTrades}
+              />
+            </ErrorBoundary>
           </div>
         </div>
 
-        <AnalysisPanel 
-          trades={liveTradesData} 
-          totalPnL={liveTotalPnL}
-          winRate={liveWinRate}
-          totalTrades={liveTotalTrades}
-          pendingOrders={liveStrategyState.pendingOrders}
-          filledOrders={liveStrategyState.filledOrders}
-          cancelledOrders={liveStrategyState.cancelledOrders}
-          onCancelOrder={handleCancelOrder}
-          currentConfig={
-            {
-              // Core fields from backtester.ts#StrategyConfig
-              commission: strategyConfig.commission ?? 0,
-              positionSize: strategyConfig.positionSize ?? 1,
-              stopLossPercent: strategyConfig.stopLossPercent ?? 0,
-              stopLossTicks: strategyConfig.stopLossTicks ?? 0,
-              takeProfitPercent: strategyConfig.takeProfitPercent ?? 0,
-              takeProfitTicks: strategyConfig.takeProfitTicks ?? 0,
-              useMarketOrders: strategyConfig.useMarketOrders ?? true,
-              limitOrderOffset: strategyConfig.limitOrderOffsetTicks ?? strategyConfig.limitOrderOffset ?? 0,
-              orderTimeoutBars: strategyConfig.orderTimeoutBars ?? 0,
-              
-              // Explicitly include all fields from UIPanelStrategyConfig with defaults
-              // to ensure the object is as complete as possible before any cast.
-              name: strategyConfig.name ?? 'N/A',
-              description: strategyConfig.description ?? 'N/A',
-              version: strategyConfig.version ?? 'N/A',
-              contractId: strategyConfig.contractId, // Optional in Base, might be needed
-              timeframe: strategyConfig.timeframe,   // Optional in Base, might be needed
-              
-              fastPeriod: strategyConfig.fastPeriod ?? 12,
-              slowPeriod: strategyConfig.slowPeriod ?? 26,
-              minConfirmationBars: strategyConfig.minConfirmationBars ?? 2,
-              confidenceThreshold: strategyConfig.confidenceThreshold ?? 0.6,
-              limitOrderOffsetTicks: strategyConfig.limitOrderOffsetTicks // Already handled by limitOrderOffset
-            } as any // Last resort: cast to any to bypass persistent specific type error
-          }
-          onConfigChange={handleConfigChange as (config: UIPanelStrategyConfig) => void}
-        />
+        <ErrorBoundary
+          resetKeys={[
+            liveTradesData.length, 
+            selectedStrategy, 
+            strategyConfig.commission,
+            strategyConfig.positionSize,
+            strategyConfig.stopLossPercent,
+            strategyConfig.takeProfitPercent
+          ]}
+          resetOnPropsChange={true}
+        >
+          <AnalysisPanel 
+            trades={liveTradesData} 
+            totalPnL={liveTotalPnL}
+            winRate={liveWinRate}
+            totalTrades={liveTotalTrades}
+            pendingOrders={liveStrategyState.pendingOrders}
+            filledOrders={liveStrategyState.filledOrders}
+            cancelledOrders={liveStrategyState.cancelledOrders}
+            onCancelOrder={handleCancelOrder}
+            currentConfig={
+              {
+                // Core fields from backtester.ts#StrategyConfig
+                commission: strategyConfig.commission ?? 0,
+                positionSize: strategyConfig.positionSize ?? 1,
+                stopLossPercent: strategyConfig.stopLossPercent ?? 0,
+                stopLossTicks: strategyConfig.stopLossTicks ?? 0,
+                takeProfitPercent: strategyConfig.takeProfitPercent ?? 0,
+                takeProfitTicks: strategyConfig.takeProfitTicks ?? 0,
+                useMarketOrders: strategyConfig.useMarketOrders ?? true,
+                limitOrderOffset: strategyConfig.limitOrderOffsetTicks ?? strategyConfig.limitOrderOffset ?? 0,
+                orderTimeoutBars: strategyConfig.orderTimeoutBars ?? 0,
+                
+                // Explicitly include all fields from UIPanelStrategyConfig with defaults
+                // to ensure the object is as complete as possible before any cast.
+                name: strategyConfig.name ?? 'N/A',
+                description: strategyConfig.description ?? 'N/A',
+                version: strategyConfig.version ?? 'N/A',
+                contractId: strategyConfig.contractId, // Optional in Base, might be needed
+                timeframe: strategyConfig.timeframe,   // Optional in Base, might be needed
+                
+                fastPeriod: strategyConfig.fastPeriod ?? 12,
+                slowPeriod: strategyConfig.slowPeriod ?? 26,
+                minConfirmationBars: strategyConfig.minConfirmationBars ?? 2,
+                confidenceThreshold: strategyConfig.confidenceThreshold ?? 0.6,
+                limitOrderOffsetTicks: strategyConfig.limitOrderOffsetTicks // Already handled by limitOrderOffset
+              } as any // Last resort: cast to any to bypass persistent specific type error
+            }
+            onConfigChange={handleConfigChange as (config: UIPanelStrategyConfig) => void}
+          />
+        </ErrorBoundary>
       </div>
     </Layout>
   );
