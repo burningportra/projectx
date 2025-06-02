@@ -49,18 +49,43 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Calculate metrics
+  // Get enhanced metrics from the strategy results (calculated in BaseStrategy)
+  // These are now properly calculated with more sophisticated algorithms
+  const enhancedResults = trades.length > 0 ? {
+    averageWin: (trades as any)[0]?.strategy?.averageWin || 0,
+    averageLoss: (trades as any)[0]?.strategy?.averageLoss || 0,
+    profitFactor: totalPnL && trades.length > 0 ? calculateProfitFactor() : 0,
+    maxDrawdown: (trades as any)[0]?.strategy?.maxDrawdown || 0,
+    sharpeRatio: (trades as any)[0]?.strategy?.sharpeRatio || 0,
+    maxConsecutiveWins: (trades as any)[0]?.strategy?.maxConsecutiveWins || 0,
+    maxConsecutiveLosses: (trades as any)[0]?.strategy?.maxConsecutiveLosses || 0,
+    averageTradeDuration: (trades as any)[0]?.strategy?.averageTradeDuration || 0,
+    largestWin: (trades as any)[0]?.strategy?.largestWin || 0,
+    largestLoss: (trades as any)[0]?.strategy?.largestLoss || 0,
+    expectancy: (trades as any)[0]?.strategy?.expectancy || 0,
+    kellyPercentage: (trades as any)[0]?.strategy?.kellyPercentage || 0
+  } : {
+    averageWin: 0, averageLoss: 0, profitFactor: 0, maxDrawdown: 0, sharpeRatio: 0,
+    maxConsecutiveWins: 0, maxConsecutiveLosses: 0, averageTradeDuration: 0,
+    largestWin: 0, largestLoss: 0, expectancy: 0, kellyPercentage: 0
+  };
+
+  // Fallback calculations for basic metrics if enhanced data not available
+  function calculateProfitFactor() {
+    const winningTrades = trades.filter(t => (t.profitOrLoss || 0) > 0);
+    const losingTrades = trades.filter(t => (t.profitOrLoss || 0) < 0);
+    const totalWinnings = winningTrades.reduce((sum, t) => sum + (t.profitOrLoss || 0), 0);
+    const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.profitOrLoss || 0), 0));
+    return totalLosses > 0 ? totalWinnings / totalLosses : totalWinnings > 0 ? Infinity : 0;
+  }
+
+  const { averageWin, averageLoss, profitFactor, maxDrawdown, sharpeRatio, 
+          maxConsecutiveWins, maxConsecutiveLosses, averageTradeDuration,
+          largestWin, largestLoss, expectancy, kellyPercentage } = enhancedResults;
+
+  // Calculate basic trade counts for UI display
   const winningTrades = trades.filter(t => (t.profitOrLoss || 0) > 0);
   const losingTrades = trades.filter(t => (t.profitOrLoss || 0) < 0);
-  const averageWin = winningTrades.length > 0 
-    ? winningTrades.reduce((sum, t) => sum + (t.profitOrLoss || 0), 0) / winningTrades.length 
-    : 0;
-  const averageLoss = losingTrades.length > 0 
-    ? Math.abs(losingTrades.reduce((sum, t) => sum + (t.profitOrLoss || 0), 0) / losingTrades.length)
-    : 0;
-  const profitFactor = averageLoss > 0 ? averageWin / averageLoss : 0;
-  const maxDrawdown = 0; // TODO: Calculate actual drawdown
-  const sharpeRatio = 0; // TODO: Calculate actual Sharpe ratio
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {

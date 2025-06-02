@@ -422,6 +422,35 @@ export abstract class BaseStrategy implements IStrategy {
   protected calculateBacktestResults(): BacktestResults {
     const closedTrades = this.orderManager.getCompletedTrades().filter(trade => trade.status === 'CLOSED');
     
+    if (closedTrades.length === 0) {
+      return {
+        totalProfitOrLoss: 0,
+        winRate: 0,
+        totalTrades: 0,
+        maxDrawdown: 0,
+        profitFactor: 0,
+        trades: [],
+        averageWin: 0,
+        averageLoss: 0,
+        averageTrade: 0,
+        sharpeRatio: 0,
+        maxConsecutiveWins: 0,
+        maxConsecutiveLosses: 0,
+        averageTradeDuration: 0,
+        returnOnMaxDrawdown: 0,
+        winningTrades: 0,
+        losingTrades: 0,
+        largestWin: 0,
+        largestLoss: 0,
+        expectancy: 0,
+        kellyPercentage: 0
+      };
+    }
+    
+    // Separate winning and losing trades
+    const winningTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) > 0);
+    const losingTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) < 0);
+    
     // Calculate total profit/loss
     const totalProfitOrLoss = closedTrades.reduce(
       (sum, trade) => sum + (trade.profitOrLoss || 0),
@@ -429,32 +458,48 @@ export abstract class BaseStrategy implements IStrategy {
     );
     
     // Calculate win rate
-    const winningTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) > 0);
-    const winRate = closedTrades.length > 0 
-      ? (winningTrades.length / closedTrades.length) * 100 
-      : 0;
+    const winRate = (winningTrades.length / closedTrades.length) * 100;
     
-    // Calculate profit factor (sum of winning trades / sum of losing trades)
+    // Calculate average trade metrics
     const totalWinnings = winningTrades.reduce(
       (sum, trade) => sum + (trade.profitOrLoss || 0),
       0
     );
     
-    const losingTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) < 0);
-    const totalLosses = losingTrades.reduce(
-      (sum, trade) => sum + Math.abs(trade.profitOrLoss || 0),
+    const totalLosses = Math.abs(losingTrades.reduce(
+      (sum, trade) => sum + (trade.profitOrLoss || 0),
       0
-    );
+    ));
     
+    const averageWin = winningTrades.length > 0 ? totalWinnings / winningTrades.length : 0;
+    const averageLoss = losingTrades.length > 0 ? totalLosses / losingTrades.length : 0;
+    const averageTrade = totalProfitOrLoss / closedTrades.length;
+    
+    // Calculate profit factor
     const profitFactor = totalLosses > 0 ? totalWinnings / totalLosses : totalWinnings > 0 ? Infinity : 0;
     
-    // Calculate max drawdown
+    // Calculate max drawdown and equity curve for advanced metrics
     let maxDrawdown = 0;
     let peak = 0;
     let runningTotal = 0;
+    const returns: number[] = [];
+    let previousEquity = 0;
     
     closedTrades.forEach(trade => {
       runningTotal += (trade.profitOrLoss || 0);
+      
+      // Calculate return as percentage change in equity
+      if (previousEquity !== 0) {
+        const returnPct = (runningTotal - previousEquity) / Math.abs(previousEquity);
+        returns.push(returnPct);
+      } else if (runningTotal !== 0) {
+        // First trade return calculation
+        const firstTradeAbs = Math.abs(trade.profitOrLoss || 1);
+        returns.push((trade.profitOrLoss || 0) / firstTradeAbs);
+      }
+      previousEquity = runningTotal;
+      
+      // Update peak and calculate drawdown
       if (runningTotal > peak) {
         peak = runningTotal;
       }
@@ -464,13 +509,99 @@ export abstract class BaseStrategy implements IStrategy {
       }
     });
     
+    // Calculate Sharpe ratio (simplified version)
+    let sharpeRatio = 0;
+    if (returns.length > 1) {
+      const meanReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
+      const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - meanReturn, 2), 0) / (returns.length - 1);
+      const stdDev = Math.sqrt(variance);
+      
+      if (stdDev > 0) {
+        // Simplified annualized Sharpe ratio
+        const annualizedReturn = meanReturn * Math.sqrt(252); // Assuming daily-like frequency
+        const annualizedStdDev = stdDev * Math.sqrt(252);
+        sharpeRatio = annualizedReturn / annualizedStdDev;
+      }
+    }
+    
+    // Calculate consecutive wins/losses
+    let maxConsecutiveWins = 0;
+    let maxConsecutiveLosses = 0;
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    
+    closedTrades.forEach(trade => {
+      const pnl = trade.profitOrLoss || 0;
+      if (pnl > 0) {
+        currentWinStreak++;
+        currentLossStreak = 0;
+        maxConsecutiveWins = Math.max(maxConsecutiveWins, currentWinStreak);
+      } else if (pnl < 0) {
+        currentLossStreak++;
+        currentWinStreak = 0;
+        maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentLossStreak);
+      } else {
+        currentWinStreak = 0;
+        currentLossStreak = 0;
+      }
+    });
+    
+    // Calculate average trade duration (in minutes)
+    let averageTradeDuration = 0;
+    const tradesWithDuration = closedTrades.filter(trade => trade.entryTime && trade.exitTime);
+    if (tradesWithDuration.length > 0) {
+      const totalDuration = tradesWithDuration.reduce((sum, trade) => {
+        const durationSeconds = (trade.exitTime! - trade.entryTime!);
+        return sum + (durationSeconds / 60); // Convert to minutes
+      }, 0);
+      averageTradeDuration = totalDuration / tradesWithDuration.length;
+    }
+    
+    // Calculate return on max drawdown
+    const returnOnMaxDrawdown = maxDrawdown > 0 ? (totalProfitOrLoss / maxDrawdown) : 0;
+    
+    // Find largest win and loss
+    const largestWin = winningTrades.length > 0 
+      ? Math.max(...winningTrades.map(t => t.profitOrLoss || 0))
+      : 0;
+    const largestLoss = losingTrades.length > 0 
+      ? Math.min(...losingTrades.map(t => t.profitOrLoss || 0))
+      : 0;
+    
+    // Calculate expectancy (average expected value per trade)
+    const winProbability = winningTrades.length / closedTrades.length;
+    const loseProbability = losingTrades.length / closedTrades.length;
+    const expectancy = (winProbability * averageWin) - (loseProbability * averageLoss);
+    
+    // Calculate Kelly percentage (optimal bet size)
+    let kellyPercentage = 0;
+    if (averageLoss > 0) {
+      const winLossRatio = averageWin / averageLoss;
+      kellyPercentage = ((winLossRatio * winProbability) - loseProbability) / winLossRatio;
+      kellyPercentage = Math.max(0, Math.min(1, kellyPercentage)); // Clamp between 0 and 1
+    }
+    
     return {
       totalProfitOrLoss,
       winRate,
       totalTrades: closedTrades.length,
       maxDrawdown,
       profitFactor,
-      trades: [...closedTrades] // Use the filtered list from OrderManager
+      trades: [...closedTrades],
+      averageWin,
+      averageLoss,
+      averageTrade,
+      sharpeRatio,
+      maxConsecutiveWins,
+      maxConsecutiveLosses,
+      averageTradeDuration,
+      returnOnMaxDrawdown,
+      winningTrades: winningTrades.length,
+      losingTrades: losingTrades.length,
+      largestWin,
+      largestLoss,
+      expectancy,
+      kellyPercentage
     };
   }
 

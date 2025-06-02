@@ -172,7 +172,21 @@ export interface BacktestResults {
   profitFactor: number;
   sharpeRatio?: number; // Optional, more advanced metric
   trades: SimulatedTrade[];
-  // Add any other summary statistics needed
+  
+  // Enhanced metrics for better analysis
+  averageWin?: number;           // Average winning trade amount
+  averageLoss?: number;          // Average losing trade amount
+  averageTrade?: number;         // Average trade P&L
+  maxConsecutiveWins?: number;   // Maximum consecutive winning trades
+  maxConsecutiveLosses?: number; // Maximum consecutive losing trades
+  averageTradeDuration?: number; // Average trade duration in minutes
+  returnOnMaxDrawdown?: number;  // Total return divided by max drawdown
+  winningTrades?: number;        // Number of winning trades
+  losingTrades?: number;         // Number of losing trades
+  largestWin?: number;           // Largest winning trade
+  largestLoss?: number;          // Largest losing trade (negative value)
+  expectancy?: number;           // Mathematical expectancy per trade
+  kellyPercentage?: number;      // Kelly criterion optimal bet size
 }
 
 // Enum for playback speeds
