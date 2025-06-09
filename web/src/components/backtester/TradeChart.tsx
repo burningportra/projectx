@@ -63,6 +63,7 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const markersApiRef = useRef<any | null>(null);
   const ema12SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ema26SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
@@ -413,11 +414,8 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
         // console.log(`[TradeChart] Final visible markers: ${markersToShow.length} trade markers`);
 
         // Set markers on the series
-        try {
-          createSeriesMarkers(candlestickSeriesRef.current, markersToShow);
-          // console.log(`[TradeChart] Successfully set ${markersToShow.length} markers`);
-        } catch (error) {
-          console.error('[TradeChart] Failed to set markers:', error);
+        if (markersApiRef.current) {
+          markersApiRef.current.setMarkers(markersToShow);
         }
       } else {
         // console.log(`[TradeChart] Marker conditions not met. Series: ${!!candlestickSeriesRef.current}, Trade Markers: ${!!tradeMarkers}, Chart: ${!!chartRef.current}`);
@@ -477,6 +475,9 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
             wickUpColor: '#26a69a',
             wickDownColor: '#ef5350',
         });
+        if (candlestickSeriesRef.current) {
+          markersApiRef.current = createSeriesMarkers(candlestickSeriesRef.current, []);
+        }
         // console.log('[TradeChart] Candlestick series added.');
 
         // Add EMA 12 line series (blue)

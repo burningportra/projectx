@@ -53,6 +53,7 @@ interface TrendPoint {
 }
 
 const timeframeOptions: TimeframeOption[] = [
+  { label: "1 Min", unit: 2, value: 1 },
   { label: "5 Min", unit: 2, value: 5 },
   { label: "15 Min", unit: 2, value: 15 },
   { label: "30 Min", unit: 2, value: 30 },
@@ -122,45 +123,32 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
   useEffect(() => {
     if (externalSelectedTimeframe) {
       // Convert external timeframe format (like "5m") to internal format (like "5 Min")
-      // Get the suffix (last character)
-      const unit = externalSelectedTimeframe.slice(-1);
-      // Get the numeric part
-      const value = externalSelectedTimeframe.slice(0, -1);
-      
-      // Log the values for debugging
-      console.log(`Converting timeframe: value=${value}, unit=${unit}`);
+      console.log(`Converting external timeframe: ${externalSelectedTimeframe}`);
 
       // Direct mapping to ensure we match exactly with available options
-      if (externalSelectedTimeframe === "5m") {
-        setSelectedTimeframe("5 Min");
-      } 
-      else if (externalSelectedTimeframe === "1m") {
-        setSelectedTimeframe("1 Min");
-      }
-      else if (externalSelectedTimeframe === "15m") {
-        setSelectedTimeframe("15 Min");
-      }
-      else if (externalSelectedTimeframe === "30m") {
-        setSelectedTimeframe("30 Min");
-      }
-      else if (externalSelectedTimeframe === "1h") {
-        setSelectedTimeframe("1 Hour");
-      }
-      else if (externalSelectedTimeframe === "4h") {
-        setSelectedTimeframe("4 Hour");
-      }
-      else if (externalSelectedTimeframe === "1d") {
-        setSelectedTimeframe("1 Day");
-      }
-      else if (externalSelectedTimeframe === "1w") {
-        setSelectedTimeframe("1 Week");
-      }
-      else {
-        console.warn(`Unknown timeframe format: ${externalSelectedTimeframe}, defaulting to 5 Min`);
-        setSelectedTimeframe("5 Min");
+      const timeframeMap: Record<string, string> = {
+        "1m": "1 Min",
+        "5m": "5 Min", 
+        "15m": "15 Min",
+        "30m": "30 Min",
+        "1h": "1 Hour",
+        "4h": "4 Hour", 
+        "1d": "1 Day",
+        "1w": "1 Week"
+      };
+
+      const internalTimeframe = timeframeMap[externalSelectedTimeframe];
+      if (internalTimeframe) {
+        // Only update if it's different from current to avoid loops
+        if (selectedTimeframe !== internalTimeframe) {
+          console.log(`Setting timeframe from ${selectedTimeframe} to ${internalTimeframe}`);
+          setSelectedTimeframe(internalTimeframe);
+        }
+      } else {
+        console.warn(`Unknown timeframe format: ${externalSelectedTimeframe}, keeping current: ${selectedTimeframe}`);
       }
     }
-  }, [externalSelectedTimeframe]);
+  }, [externalSelectedTimeframe, selectedTimeframe]);
 
   // Update when refreshTrigger changes
   useEffect(() => {
@@ -172,30 +160,12 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
   // Add memoization for the timeframe finding function to prevent recreation on each render
   const getCurrentTimeframeString = useCallback(() => {
     console.log("Getting timeframe string for:", selectedTimeframe);
-    console.log("Available timeframes:", timeframeOptions.map(tf => `${tf.label} (${tf.unit}-${tf.value})`));
     
     const tf = timeframeOptions.find(t => t.label === selectedTimeframe);
     if (!tf) {
-      // If no match, try to convert from "5m" format directly
-      if (selectedTimeframe?.endsWith('m')) {
-        const minutes = parseInt(selectedTimeframe.slice(0, -1), 10);
-        console.log(`Direct conversion from ${selectedTimeframe} to ${minutes}m`);
-        return `${minutes}m`;
-      }
-      if (selectedTimeframe?.endsWith('h')) {
-        const hours = parseInt(selectedTimeframe.slice(0, -1), 10);
-        console.log(`Direct conversion from ${selectedTimeframe} to ${hours}h`);
-        return `${hours}h`;
-      }
-      if (selectedTimeframe?.endsWith('d')) {
-        const days = parseInt(selectedTimeframe.slice(0, -1), 10);
-        console.log(`Direct conversion from ${selectedTimeframe} to ${days}d`);
-        return `${days}d`;
-      }
-      
-      // If no match and no direct conversion, use default
-      console.warn(`No matching timeframe found for ${selectedTimeframe}, using default 5m`);
-      return "5m";
+      console.error(`No matching timeframe found for "${selectedTimeframe}"`);
+      console.log("Available timeframes:", timeframeOptions.map(tf => tf.label));
+      throw new Error(`Invalid timeframe selected: "${selectedTimeframe}"`);
     }
     
     // Convert from internal format (e.g., "5 Min") to API format (e.g., "5m")
@@ -204,13 +174,17 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
     console.log(`Converted ${selectedTimeframe} to API timeframe: ${apiTimeframe}`);
     
     return apiTimeframe;
-  }, [selectedTimeframe, timeframeOptions]);
+  }, [selectedTimeframe]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Clear existing data immediately when timeframe changes to prevent accumulation
+        setData([]);
+        setTrendPoints([]);
         
         // Get the timeframe details
         const timeframe = timeframeOptions.find(tf => tf.label === selectedTimeframe);
@@ -317,7 +291,29 @@ const TrendChartContainer: React.FC<TrendChartContainerProps> = ({
 
         // Now fetch trend points based on toggle state
         try {
-          const timeframeString = getCurrentTimeframeString();
+          let timeframeString;
+          try {
+            timeframeString = getCurrentTimeframeString();
+                     } catch (timeframeError) {
+             console.error("Error getting timeframe string:", timeframeError);
+             // Use a fallback or skip trend points - use the data with trend indicators initialized
+             console.warn("Skipping trend points fetch due to timeframe error");
+             const dataWithDefaultTrends = processedMarketData.map(bar => ({
+               ...bar,
+               uptrendStart: false,
+               downtrendStart: false,
+               highestDowntrendStart: false,
+               unbrokenUptrendStart: false,
+               uptrendToHigh: false
+             })) as OhlcBarWithTrends[];
+             
+             setData(dataWithDefaultTrends);
+             if (onDataUpdated) {
+               onDataUpdated(dataWithDefaultTrends);
+             }
+             return;
+           }
+          
           console.log("Fetching trend points with timeframe:", timeframeString);
           
           // Log timeframeOptions and selectedTimeframe to debug

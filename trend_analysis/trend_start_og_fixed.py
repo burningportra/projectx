@@ -242,7 +242,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Trend Start Analysis Script")
     parser.add_argument("--debug-start", type=int, help="Start bar index for detailed debugging (1-based)")
     parser.add_argument("--debug-end", type=int, help="End bar index for detailed debugging (1-based)")
-    parser.add_argument("--input-csv", type=str, default="trend_analysis/data/CON.F.US.MES.M25_1d_ohlc.csv", help="Input CSV file path")
+    parser.add_argument("--input-csv", type=str, default="trend_analysis/data/CON.F.US.MES.M25_4h_ohlc.csv", help="Input CSV file path")
     parser.add_argument("--output-csv", type=str, default="trend_analysis/confirmed_trend_starts_output.csv", help="Output CSV file path for signals")
     parser.add_argument("--debug-log-csv", type=str, default="trend_analysis/debug_log_output.csv", help="Output CSV file path for debug logs")
     args = parser.parse_args()

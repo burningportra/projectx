@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   createChart,
+  createSeriesMarkers,
   IChartApi,
   ISeriesApi,
   SeriesMarker,
@@ -11,10 +12,10 @@ import {
   CandlestickData,
   WhitespaceData,
   CandlestickSeries,
-  createSeriesMarkers,
   Time, // Import Time type for series.update
 } from 'lightweight-charts';
 import useSWR from 'swr';
+import Layout from "@/components/layout/Layout";
 
 const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:8765';
 
@@ -39,6 +40,22 @@ interface OhlcDataForChart extends CandlestickData {
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
+const getTimeframeInSeconds = (timeframe: string): number => {
+  const value = parseInt(timeframe.slice(0, -1));
+  const unit = timeframe.slice(-1);
+  switch (unit) {
+    case 's': return value;
+    case 'm': return value * 60;
+    case 'h': return value * 60 * 60;
+    case 'd': return value * 24 * 60 * 60;
+    default: return 60; // Default to 1 minute if unknown
+  }
+};
+
+const getBarStartTime = (timestamp: UTCTimestamp, timeframeSeconds: number): UTCTimestamp => {
+  return (Math.floor(timestamp / timeframeSeconds) * timeframeSeconds) as UTCTimestamp;
+};
+
 // Helper to convert timeframe_unit (integer from backend) to char (e.g., 'm', 'h')
 const getTimeframeUnitChar = (timeframeUnit: number): string => {
   switch (timeframeUnit) {
@@ -56,6 +73,7 @@ const TrendsPage: React.FC = () => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const markersApiRef = useRef<any | null>(null);
   const [seriesData, setSeriesData] = useState<OhlcDataForChart[]>([]);
 
   const [selectedContract, setSelectedContract] = useState<string>(availableContracts[0]);
@@ -173,18 +191,12 @@ const TrendsPage: React.FC = () => {
           });
       }
         
-      if (candlestickSeriesRef.current) {
+      if (markersApiRef.current) {
         // Sort markers by time in ascending order before plotting
         signalMarkersToPlot.sort((a, b) => a.time - b.time);
-
-        // First, attempt to clear existing markers by passing an empty array
-        createSeriesMarkers(candlestickSeriesRef.current, []); 
-        // Then, add the new markers for the current selection
-        if (signalMarkersToPlot.length > 0) {
-          createSeriesMarkers(candlestickSeriesRef.current, signalMarkersToPlot);
-        }
+        markersApiRef.current.setMarkers(signalMarkersToPlot);
       } else {
-        console.error('Candlestick series object not available. Markers will not be updated.');
+        console.error('Candlestick series object or markers API not available. Markers will not be updated.');
       }
     }
     
@@ -225,6 +237,11 @@ const TrendsPage: React.FC = () => {
           wickUpColor: '#089981',
           wickDownColor: '#F23645',
         });
+
+        if (candlestickSeriesRef.current) {
+          // Initialize the series markers plugin and store its API
+          markersApiRef.current = createSeriesMarkers(candlestickSeriesRef.current, []);
+        }
       }
     }
 
@@ -307,24 +324,39 @@ const TrendsPage: React.FC = () => {
             const lastBar = currentData[currentData.length - 1];
             const tickPrice = Number(message.price);
             const tickTime = (new Date(message.timestamp).getTime() / 1000) as UTCTimestamp;
-
-            // TODO: More robust logic to check if tick belongs to the current selectedTimeframe's forming bar
-            // For now, assume any tick updates the last bar of the selected timeframe if it's very recent.
-            // This might need adjustment based on how frequently your 'ohlc' type messages arrive for the selectedTimeframe.
-            // A common approach is to check if tickTime is >= lastBar.time and < next bar's expected time for selectedTimeframe.
-
-            const updatedLastBar: OhlcDataForChart = {
-              ...lastBar,
-              high: Math.max(lastBar.high, tickPrice),
-              low: Math.min(lastBar.low, tickPrice),
-              close: tickPrice,
-            };
+            const timeframeSeconds = getTimeframeInSeconds(selectedTimeframe);
             
-            series.update(updatedLastBar);
+            const tickBarStartTime = getBarStartTime(tickTime, timeframeSeconds);
+
+            let updatedBar: OhlcDataForChart;
+
+            if (lastBar.time === tickBarStartTime) {
+              // Tick belongs to the last bar, update it
+              updatedBar = {
+                ...lastBar,
+                high: Math.max(lastBar.high, tickPrice),
+                low: Math.min(lastBar.low, tickPrice),
+                close: tickPrice,
+              };
+              series.update(updatedBar);
+              const newData = [...currentData];
+              newData[newData.length - 1] = updatedBar;
+              return newData;
+            } else if (tickBarStartTime > lastBar.time) {
+              // Tick is for a new bar
+              updatedBar = {
+                time: tickBarStartTime,
+                open: tickPrice,
+                high: tickPrice,
+                low: tickPrice,
+                close: tickPrice,
+              };
+              series.update(updatedBar);
+              return [...currentData, updatedBar];
+            }
             
-            const newData = [...currentData];
-            newData[newData.length - 1] = updatedLastBar;
-            return newData;
+            // If the tick is for a past bar, ignore it for this logic
+            return currentData;
           });
         }
       } catch (error) {
@@ -355,10 +387,11 @@ const TrendsPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Trend Analysis</h1>
-      </header>
+    <Layout>
+      <div className="min-h-screen bg-gray-100 p-4">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Trend Analysis</h1>
+        </header>
 
       <div className="mb-6 p-4 bg-white rounded-lg shadow flex space-x-4 items-end">
         <div>
@@ -448,6 +481,7 @@ const TrendsPage: React.FC = () => {
         )}
       </div>
     </div>
+    </Layout>
   );
 };
 

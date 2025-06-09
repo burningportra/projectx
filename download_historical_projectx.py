@@ -236,12 +236,13 @@ async def download_historical_data(
                 for timeframe in timeframes:
                     logger.info(f"Downloading {contract_id} {timeframe} data...")
                     
+                    # Parse timeframe for use throughout the download loop
+                    from src.core.utils import parse_timeframe
+                    unit, unit_number = parse_timeframe(timeframe)
+                    
                     # Calculate appropriate start date if not specified
                     current_start_date = start_date
                     if current_start_date is None:
-                        # Calculate start date based on timeframe to get a reasonable amount of history
-                        from src.core.utils import parse_timeframe
-                        unit, unit_number = parse_timeframe(timeframe)
                         
                         # Default lookback periods based on timeframe - set to longer periods
                         if unit == 1:  # Seconds

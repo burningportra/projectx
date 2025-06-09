@@ -41,7 +41,7 @@ def load_db_config():
         'port': int(os.getenv("LOCAL_DB_PORT", 5432)),
         'user': os.getenv("LOCAL_DB_USER", "postgres"),
         'password': os.getenv("LOCAL_DB_PASSWORD", "password"), # Ensure this is set in .env
-        'database': os.getenv("LOCAL_DB_NAME", "projectx")
+        'database': os.getenv("LOCAL_DB_NAME", "projectx_test")
     }
 
 DB_CONFIG = load_db_config()
@@ -105,7 +105,7 @@ async def pg_notification_handler(connection, pid, channel, payload_str):
     except Exception as e:
         logger.error(f"Error in pg_notification_handler: {e}. Payload: {payload_str}", exc_info=True)
 
-async def listen_for_db_notifications(): # Renamed from listen_for_ohlc_updates
+async def listen_for_db_notifications():
     conn = None
     while True: # Keep trying to connect and listen
         try:
@@ -132,7 +132,7 @@ async def listen_for_db_notifications(): # Renamed from listen_for_ohlc_updates
         except (asyncpg.exceptions.PostgresConnectionError, ConnectionRefusedError, OSError) as e:
             logger.error(f"PostgreSQL connection failed: {e}. Retrying in 10 seconds...")
         except Exception as e:
-            logger.error(f"Unexpected error in listen_for_db_notifications: {e}", exc_info=True) # Renamed
+            logger.error(f"Unexpected error in listen_for_db_notifications: {e}", exc_info=True)
             logger.info("Retrying in 10 seconds due to unexpected error...")
         finally:
             if conn and not conn.is_closed():
@@ -149,7 +149,7 @@ async def listen_for_db_notifications(): # Renamed from listen_for_ohlc_updates
 # --- Main Server ---
 async def main():
     # Start the PostgreSQL listener
-    listener_task = asyncio.create_task(listen_for_db_notifications()) # Renamed
+    listener_task = asyncio.create_task(listen_for_db_notifications())
     # Start the WebSocket server
     async with websockets.serve(register_client, WEBSOCKET_HOST, WEBSOCKET_PORT) as server:
         logger.info(f"WebSocket server started on ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")

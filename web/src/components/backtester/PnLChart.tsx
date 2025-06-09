@@ -24,6 +24,7 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const markersApiRef = useRef<any | null>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateRef = useRef<number>(0);
   const lastTradesLengthRef = useRef<number>(0);
@@ -46,10 +47,8 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
       if (tradesToProcess.length === 0) {
         // Clear the chart when no trades
         lineSeriesRef.current.setData([]);
-        try {
-          createSeriesMarkers(lineSeriesRef.current, []);
-        } catch (error) {
-          // console.log('[PnLChart] No markers to clear');
+        if (markersApiRef.current) {
+          markersApiRef.current.setMarkers([]);
         }
         return;
       }
@@ -95,10 +94,8 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
       if (validTrades.length === 0) {
         // console.log('[PnLChart] No valid trades to display');
         lineSeriesRef.current.setData([]);
-        try {
-          createSeriesMarkers(lineSeriesRef.current, []);
-        } catch (error) {
-          // console.log('[PnLChart] No markers to clear');
+        if (markersApiRef.current) {
+          markersApiRef.current.setMarkers([]);
         }
         return;
       }
@@ -178,12 +175,9 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
         // Set data and markers with error handling
         lineSeriesRef.current.setData(equityData);
         
-        // Use createSeriesMarkers for setting markers
-        try {
-          createSeriesMarkers(lineSeriesRef.current, tradeMarkers);
-          // console.log(`[PnLChart] Successfully set ${tradeMarkers.length} markers`);
-        } catch (markerError) {
-          console.error('[PnLChart] Failed to set markers:', markerError);
+        // Use setMarkers for setting markers
+        if (markersApiRef.current) {
+          markersApiRef.current.setMarkers(tradeMarkers);
         }
 
         // Fit chart to content if we have data
@@ -277,6 +271,10 @@ const PnLChart: React.FC<PnLChartProps> = ({ trades, totalPnL, className = '' })
     });
 
     lineSeriesRef.current = lineSeries;
+
+    if (lineSeriesRef.current) {
+      markersApiRef.current = createSeriesMarkers(lineSeriesRef.current, []);
+    }
 
     // Handle resize
     const handleResize = () => {

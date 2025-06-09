@@ -9,6 +9,7 @@ import numpy as np
 from typing import List, Dict, Any, Callable, Optional
 import os
 import csv
+import argparse
 
 from src.core.config import Config
 from src.strategies.trend_start_finder import generate_trend_starts
@@ -25,6 +26,8 @@ STRATEGY_MAPPING = {
 }
 
 DB_POOL_MAIN_FOR_HANDLER: Optional[asyncpg.Pool] = None
+ANALYSIS_QUEUE: Optional[asyncio.Queue] = None
+ANALYSIS_LOCKS: Dict[str, asyncio.Lock] = {}
 
 CSV_LOG_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'logs')
 CSV_FILE_PATH = os.path.join(CSV_LOG_DIR, 'detected_signals_history.csv')
@@ -231,48 +234,23 @@ async def store_signals(
         if conn: await pool.release(conn)
     return num_stored
 
-async def fetch_ohlc_bars_for_analysis(
-    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int, 
-    timeframe_value: int, last_processed_timestamp: Optional[datetime]
+async def fetch_all_bars_up_to(
+    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int,
+    timeframe_value: int, end_timestamp: datetime
 ) -> pd.DataFrame:
-    if not pool: return pd.DataFrame()
-    if last_processed_timestamp is None:
-        last_processed_timestamp = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    query = """
-        SELECT "timestamp", "open", "high", "low", "close", "volume" 
-        FROM ohlc_bars
-        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3 AND "timestamp" > $4
-        ORDER BY "timestamp" ASC;
-    """
-    try:
-        async with pool.acquire() as conn:
-            records = await conn.fetch(query, contract_id, timeframe_unit, timeframe_value, last_processed_timestamp)
-    except Exception as e:
-        logger.error(f"Error fetching OHLC bars: {e}", exc_info=True)
-        return pd.DataFrame()
-    if not records: return pd.DataFrame()
-    df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    for col in ['open', 'high', 'low', 'close', 'volume']:
-        if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    return df
-
-async def fetch_ohlc_bars_for_analysis_window(
-    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int, 
-    timeframe_value: int, end_timestamp: datetime, bar_count: int
-) -> pd.DataFrame:
+    """Fetches all OHLC bars for a contract/timeframe up to and including the end_timestamp."""
     if not pool: return pd.DataFrame()
     query = """
         SELECT "timestamp", "open", "high", "low", "close", "volume"
         FROM ohlc_bars
         WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3 AND "timestamp" <= $4
-        ORDER BY "timestamp" DESC LIMIT $5;
+        ORDER BY "timestamp" ASC;
     """
     try:
         async with pool.acquire() as conn:
-            records = await conn.fetch(query, contract_id, timeframe_unit, timeframe_value, end_timestamp, bar_count)
+            records = await conn.fetch(query, contract_id, timeframe_unit, timeframe_value, end_timestamp)
     except Exception as e:
-        logger.error(f"Error fetching OHLC window: {e}", exc_info=True)
+        logger.error(f"Error fetching all bars up to {end_timestamp}: {e}", exc_info=True)
         return pd.DataFrame()
     if not records: return pd.DataFrame()
     df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -281,6 +259,24 @@ async def fetch_ohlc_bars_for_analysis_window(
         if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return df
+
+async def get_latest_bar_timestamp(
+    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int, timeframe_value: int
+) -> Optional[datetime]:
+    """Fetches the latest timestamp for a given contract and timeframe."""
+    if not pool: return None
+    query = """
+        SELECT MAX("timestamp") as latest_timestamp
+        FROM ohlc_bars
+        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3;
+    """
+    try:
+        async with pool.acquire() as conn:
+            record = await conn.fetchrow(query, contract_id, timeframe_unit, timeframe_value)
+            return record['latest_timestamp'] if record and record['latest_timestamp'] else None
+    except Exception as e:
+        logger.error(f"Error fetching latest bar timestamp: {e}", exc_info=True)
+        return None
 
 async def get_analyzer_watermark(pool: asyncpg.Pool, analyzer_id: str, contract_id: str, timeframe: str) -> Optional[datetime]:
     if not pool: return None
@@ -313,20 +309,28 @@ async def run_analyzer_for_target(
     contract_id = target_config['contract_id']
     timeframe_str = target_config['timeframe']
     logger.info(f"  Processing {contract_id} [{timeframe_str}] for analyzer '{analyzer_id}'")
-    watermark_ts = await get_analyzer_watermark(pool, analyzer_id, contract_id, timeframe_str)
-    logger.info(f"    Last processed timestamp for {analyzer_id}/{contract_id}/{timeframe_str}: {watermark_ts or 'None'}")
     
     tf_unit_val, tf_value_val = parse_timeframe(timeframe_str)
-    new_bars_df = await fetch_ohlc_bars_for_analysis(
-        pool, contract_id, tf_unit_val, tf_value_val, watermark_ts
-    )
-    if new_bars_df.empty:
-        logger.info(f"    No new OHLC data for {contract_id} [{timeframe_str}] since {watermark_ts or 'beginning'}.")
+    
+    # For a full backlog run, find the latest data point and process everything up to it.
+    latest_ts = await get_latest_bar_timestamp(pool, contract_id, tf_unit_val, tf_value_val)
+    if not latest_ts:
+        logger.info(f"    No OHLC data found at all for {contract_id} [{timeframe_str}]. Skipping backlog.")
         return
 
-    logger.info(f"    Fetched {len(new_bars_df)} new OHLC bars for {contract_id} [{timeframe_str}].")
+    logger.info(f"    Latest bar for {contract_id} [{timeframe_str}] is at {latest_ts}. Running full analysis.")
     
-    generated_signals, debug_logs = strategy_func(new_bars_df, contract_id=contract_id, timeframe_str=timeframe_str)
+    analysis_df = await fetch_all_bars_up_to(
+        pool, contract_id, tf_unit_val, tf_value_val, latest_ts
+    )
+
+    if analysis_df.empty:
+        logger.info(f"    Fetched bar history for {contract_id} [{timeframe_str}] but it was empty. Skipping.")
+        return
+
+    logger.info(f"    Fetched {len(analysis_df)} total bars for full analysis of {contract_id} [{timeframe_str}].")
+
+    generated_signals, debug_logs = strategy_func(analysis_df, contract_id=contract_id, timeframe_str=timeframe_str)
 
     if debug_logs:
         write_strategy_debug_logs_to_csv(debug_logs, analyzer_id, contract_id, timeframe_str)
@@ -340,7 +344,8 @@ async def run_analyzer_for_target(
         )
         logger.info(f"    Stored {num_stored} signals for {analyzer_id}/{contract_id}/{timeframe_str}.")
 
-    new_max_timestamp = new_bars_df['timestamp'].max()
+    # The new watermark is the timestamp of the last bar processed.
+    new_max_timestamp = analysis_df['timestamp'].max()
     if pd.notna(new_max_timestamp):
         new_watermark = new_max_timestamp.to_pydatetime()
         if new_watermark.tzinfo is None: new_watermark = new_watermark.replace(tzinfo=timezone.utc)
@@ -351,6 +356,11 @@ async def run_analyzer_for_target(
     logger.info(f"Finished analysis cycle for {analyzer_id} - {contract_id} [{timeframe_str}].")
 
 async def handle_new_bar_notification(connection, pid, channel, payload_str):
+    global ANALYSIS_QUEUE
+    if not ANALYSIS_QUEUE:
+        logger.error("Analysis queue is not initialized. Cannot process notification.")
+        return
+        
     logger.info(f"Notification on '{channel}'. Raw: {payload_str[:200]}...")
     try:
         payload = json.loads(payload_str)
@@ -379,50 +389,99 @@ async def handle_new_bar_notification(connection, pid, channel, payload_str):
             config_contract_id = target_config.get('contract_id')
             if not analyzer_id or not config_contract_id: continue
 
-            strategy_func_name = target_config.get('strategy', 'cus_cds_trend_finder')
-            strategy_func = STRATEGY_MAPPING.get(strategy_func_name)
-            if not strategy_func:
-                logger.error(f"Strategy '{strategy_func_name}' for analyzer '{analyzer_id}' not found. Cannot process notification.")
-                continue
-
             if contract_id_notif == config_contract_id:
                 for config_timeframe_str in target_config.get('timeframes', []):
                     if timeframe_str_notif == config_timeframe_str:
-                        logger.info(f"  MATCH: Analyzer='{analyzer_id}', Contract='{contract_id_notif}', TF='{timeframe_str_notif}'. Triggering.")
-                        tf_unit_for_query, tf_value_for_query = parse_timeframe(config_timeframe_str)
-                        
-                        historical_bars_df = await fetch_ohlc_bars_for_analysis_window(
-                            DB_POOL_MAIN_FOR_HANDLER, contract_id_notif, 
-                            tf_unit_for_query, tf_value_for_query, bar_timestamp, BAR_HISTORY_COUNT
-                        )
-                        if historical_bars_df.empty or len(historical_bars_df) < config.settings.get('analysis',{}).get('min_bars_for_notification_trigger', 50): # Use a config value
-                            logger.info(f"    Not enough history ({len(historical_bars_df)}) for {contract_id_notif} [{config_timeframe_str}]. Skipping.")
-                            continue
-                        
-                        generated_signals, debug_logs = strategy_func(
-                            historical_bars_df, contract_id=contract_id_notif, timeframe_str=config_timeframe_str
-                        )
-                        if debug_logs:
-                            write_strategy_debug_logs_to_csv(
-                                debug_logs, analyzer_id, contract_id_notif, config_timeframe_str
-                            )
-                        if generated_signals:
-                            num_stored = await store_signals(
-                                DB_POOL_MAIN_FOR_HANDLER, analyzer_id, contract_id_notif,
-                                tf_unit_for_query, tf_value_for_query, generated_signals
-                            )
-                            logger.info(f"    Stored {num_stored} signals for {analyzer_id}/{contract_id_notif}/{config_timeframe_str} from notification.")
-                        
-                        await update_analyzer_watermark(DB_POOL_MAIN_FOR_HANDLER, analyzer_id, contract_id_notif, config_timeframe_str, bar_timestamp)
-                        logger.info(f"    Updated watermark for {analyzer_id}/{contract_id_notif}/{config_timeframe_str} to {bar_timestamp} from notification.")
+                        logger.info(f"  MATCH: Analyzer='{analyzer_id}', Contract='{contract_id_notif}', TF='{timeframe_str_notif}'. Queueing for analysis.")
+                        work_item = {
+                            "analyzer_id": analyzer_id,
+                            "contract_id": contract_id_notif,
+                            "timeframe": config_timeframe_str,
+                            "bar_timestamp": bar_timestamp,
+                            "strategy": target_config.get('strategy', 'cus_cds_trend_finder')
+                        }
+                        await ANALYSIS_QUEUE.put(work_item)
                         break 
     except Exception as e:
         logger.error(f"Error processing notification: {e}", exc_info=True)
 
+async def analysis_worker(name: str, queue: asyncio.Queue, pool: asyncpg.Pool):
+    global ANALYSIS_LOCKS
+    logger.info(f"Analysis worker '{name}' started.")
+    while True:
+        try:
+            work_item = await queue.get()
+            analyzer_id = work_item['analyzer_id']
+            contract_id = work_item['contract_id']
+            timeframe_str = work_item['timeframe']
+            bar_timestamp = work_item['bar_timestamp']
+            strategy_name = work_item['strategy']
+            strategy_func = STRATEGY_MAPPING.get(strategy_name)
+
+            if not strategy_func:
+                logger.error(f"Strategy '{strategy_name}' not found. Cannot process work item: {work_item}")
+                queue.task_done()
+                continue
+            
+            lock_key = f"{analyzer_id}:{contract_id}:{timeframe_str}"
+            if lock_key not in ANALYSIS_LOCKS:
+                ANALYSIS_LOCKS[lock_key] = asyncio.Lock()
+            
+            async with ANALYSIS_LOCKS[lock_key]:
+                logger.info(f"Worker '{name}' acquired lock for {lock_key} and started processing.")
+                tf_unit_for_query, tf_value_for_query = parse_timeframe(timeframe_str)
+                
+                full_history_df = await fetch_all_bars_up_to(
+                    pool, contract_id, 
+                    tf_unit_for_query, tf_value_for_query, bar_timestamp
+                )
+
+                min_bars = config.settings.get('analysis',{}).get('min_bars_for_notification_trigger', 50)
+                if full_history_df.empty or len(full_history_df) < min_bars:
+                    logger.info(f"    Not enough history ({len(full_history_df)}) for {contract_id} [{timeframe_str}]. Skipping.")
+                    queue.task_done()
+                    continue
+                
+                generated_signals, debug_logs = strategy_func(
+                    full_history_df, contract_id=contract_id, timeframe_str=timeframe_str
+                )
+
+                if debug_logs:
+                    write_strategy_debug_logs_to_csv(debug_logs, analyzer_id, contract_id, timeframe_str)
+
+                if generated_signals:
+                    num_stored = await store_signals(
+                        pool, analyzer_id, contract_id,
+                        tf_unit_for_query, tf_value_for_query, generated_signals
+                    )
+                    logger.info(f"    Worker '{name}' stored {num_stored} signals for {lock_key}.")
+                
+                await update_analyzer_watermark(pool, analyzer_id, contract_id, timeframe_str, bar_timestamp)
+                logger.info(f"    Worker '{name}' updated watermark for {lock_key} to {bar_timestamp}.")
+
+            logger.info(f"Worker '{name}' released lock for {lock_key} and finished processing.")
+            queue.task_done()
+        except asyncio.CancelledError:
+            logger.info(f"Analysis worker '{name}' cancelled.")
+            break
+        except Exception as e:
+            logger.error(f"Error in analysis worker '{name}': {e}", exc_info=True)
+
 async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
-    logger.info("Starting Analyzer Service event loop...")
+    global ANALYSIS_QUEUE
+    ANALYSIS_QUEUE = asyncio.Queue()
+    
+    logger.info("Starting Analyzer Service...")
     await create_signals_table_if_not_exists(pool)
     await create_watermarks_table_if_not_exists(pool)
+
+    # Start worker tasks
+    num_workers = app_config.settings.get('analysis', {}).get('num_workers', 2)
+    workers = [
+        asyncio.create_task(analysis_worker(f'worker-{i}', ANALYSIS_QUEUE, pool))
+        for i in range(num_workers)
+    ]
+    logger.info(f"Started {num_workers} analysis workers.")
 
     analysis_config = app_config.settings.get('analysis', {})
     analysis_targets = analysis_config.get('targets', [])
@@ -433,7 +492,7 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
             await conn.add_listener('ohlc_update', handle_new_bar_notification)
             logger.info("Listening for new OHLC bar notifications on 'ohlc_update'...")
 
-            logger.info("Performing initial analysis run for configured targets (1D only for debug)...")
+            logger.info("Performing initial analysis run for all configured targets...")
             initial_analysis_tasks = []
             for target_config in analysis_targets:
                 analyzer_id = target_config.get('analyzer_id')
@@ -443,23 +502,40 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
                 contract_id = target_config.get('contract_id')
                 if not contract_id: continue
 
+                # The new run_analyzer_for_target handles all timeframes inside it
+                # So we just need to trigger it once per analyzer/contract config
+                unique_config_key = f"{analyzer_id}:{contract_id}"
+                
+                # To avoid queueing the same contract analysis multiple times if it's in the config more than once
+                # we can use a set, but for simplicity, we assume one config entry per analyzer/contract combo.
+                # The logic below will now process all TFs for a contract within run_analyzer_for_target
+                
+                # We need to create a slightly different config dict for each timeframe though
                 for tf_str in target_config.get('timeframes', []):
                     single_target_run_config_for_backlog = {
-                        'analyzer_id': analyzer_id, 'contract_id': contract_id, 'timeframe': tf_str,
+                        'analyzer_id': analyzer_id, 
+                        'contract_id': contract_id, 
+                        'timeframe': tf_str,
+                        'strategy': strategy_func_name # Pass strategy name
                     }
-                    logger.info(f"Queueing {tf_str} backlog analysis for: {analyzer_id} - {contract_id} [{tf_str}]")
+                    logger.info(f"Queueing full backlog analysis for: {analyzer_id} - {contract_id} [{tf_str}]")
                     task = run_analyzer_for_target(pool, single_target_run_config_for_backlog, strategy_func)
                     initial_analysis_tasks.append(task)
             
             if initial_analysis_tasks:
                 await asyncio.gather(*initial_analysis_tasks)
-            logger.info("Initial backlog processing complete (1D only). Switching to full notification-driven mode.")
+            logger.info("Initial backlog processing complete. Switching to notification-driven mode.")
 
+            # Main loop is just to keep the service running for the listener and workers
             while True:
                 await asyncio.sleep(3600)
                 logger.debug("Analyzer service alive...")
     except asyncio.CancelledError:
         logger.info("Analyzer service loop cancelled.")
+        for worker in workers:
+            worker.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
+        logger.info("All workers have been shut down.")
     except Exception as e:
         logger.error(f"Critical error in analyzer service loop: {e}", exc_info=True)
     finally:
@@ -523,12 +599,110 @@ async def run_service_with_pool():
     finally:
         await close_db_pool_main_runner() # Use renamed function
 
-if __name__ == "__main__":
+async def run_backtest(args):
+    """Runs the analyzer in backtesting mode."""
+    logger.info("--- Starting Backtest Mode ---")
+    
+    pool = await init_db_pool_main_runner()
+    if not pool:
+        logger.error("Failed to init DB pool. Backtest cannot start.")
+        return
+
     try:
-        asyncio.run(run_service_with_pool())
-    except KeyboardInterrupt:
-        logger.info("AnalyzerService received KeyboardInterrupt. Shutting down...")
+        contract_id = args.contract
+        timeframe_str = args.timeframe
+        start_date = pd.to_datetime(args.start_date, utc=True)
+        end_date = pd.to_datetime(args.end_date, utc=True)
+        
+        logger.info(f"Backtest params: Contract='{contract_id}', Timeframe='{timeframe_str}', Period='{start_date}' to '{end_date}'")
+
+        tf_unit, tf_value = parse_timeframe(timeframe_str)
+        
+        # 1. Fetch all bars for the backtest period
+        backtest_bars_df = await fetch_all_bars_up_to(pool, contract_id, tf_unit, tf_value, end_date)
+        backtest_bars_df = backtest_bars_df[backtest_bars_df['timestamp'] >= start_date]
+        
+        if backtest_bars_df.empty:
+            logger.warning("No data found for the specified backtest period.")
+            return
+
+        logger.info(f"Found {len(backtest_bars_df)} bars for backtest period.")
+        
+        # 2. Find the relevant analyzer config
+        analysis_config = config.settings.get('analysis', {})
+        target_analyzer = None
+        for target in analysis_config.get('targets', []):
+            if target.get('contract_id') == contract_id and timeframe_str in target.get('timeframes', []):
+                target_analyzer = target
+                break
+        
+        if not target_analyzer:
+            logger.error(f"No analyzer configuration found for Contract='{contract_id}' and Timeframe='{timeframe_str}'.")
+            return
+            
+        analyzer_id = target_analyzer['analyzer_id']
+        strategy_name = target_analyzer.get('strategy', 'cus_cds_trend_finder')
+        strategy_func = STRATEGY_MAPPING.get(strategy_name)
+
+        if not strategy_func:
+            logger.error(f"Strategy '{strategy_name}' not found for analyzer '{analyzer_id}'.")
+            return
+        
+        logger.info(f"Using analyzer '{analyzer_id}' with strategy '{strategy_name}'.")
+
+        # 3. Simulate bar-by-bar processing
+        for i in range(len(backtest_bars_df)):
+            current_bar_timestamp = backtest_bars_df['timestamp'].iloc[i]
+            # On each step, run analysis on all history up to that point
+            analysis_window_df = backtest_bars_df.iloc[:i+1]
+            
+            min_bars = config.settings.get('analysis',{}).get('min_bars_for_notification_trigger', 50)
+            if len(analysis_window_df) < min_bars:
+                continue
+
+            generated_signals, _ = strategy_func(
+                analysis_window_df, contract_id=contract_id, timeframe_str=timeframe_str
+            )
+            
+            if generated_signals:
+                logger.info(f"[{current_bar_timestamp}] Generated {len(generated_signals)} signals.")
+                # For backtesting, we might want to store these in a separate table
+                # or just log them. For now, we'll use the main store_signals.
+                await store_signals(
+                    pool, f"backtest_{analyzer_id}", contract_id,
+                    tf_unit, tf_value, generated_signals
+                )
+
+        logger.info("--- Backtest Finished ---")
+        
     except Exception as e:
-        logger.error(f"Unhandled exception in AnalyzerService __main__: {e}", exc_info=True)
+        logger.error(f"An error occurred during backtest: {e}", exc_info=True)
     finally:
-        logger.info("AnalyzerService main execution finished.") 
+        await close_db_pool_main_runner()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Analyzer Service for Trend Detection")
+    parser.add_argument(
+        '--backtest', 
+        action='store_true', 
+        help="Run in backtesting mode instead of live."
+    )
+    parser.add_argument('--contract', type=str, help="Contract ID for backtesting (e.g., 'CON.F.US.MES.M25')")
+    parser.add_argument('--timeframe', type=str, help="Timeframe for backtesting (e.g., '1d', '4h')")
+    parser.add_argument('--start-date', type=str, help="Start date for backtesting (YYYY-MM-DD)")
+    parser.add_argument('--end-date', type=str, help="End date for backtesting (YYYY-MM-DD)")
+    args = parser.parse_args()
+
+    if args.backtest:
+        if not all([args.contract, args.timeframe, args.start_date, args.end_date]):
+            parser.error("--backtest mode requires --contract, --timeframe, --start-date, and --end-date.")
+        asyncio.run(run_backtest(args))
+    else:
+        try:
+            asyncio.run(run_service_with_pool())
+        except KeyboardInterrupt:
+            logger.info("AnalyzerService received KeyboardInterrupt. Shutting down...")
+        except Exception as e:
+            logger.error(f"Unhandled exception in AnalyzerService __main__: {e}", exc_info=True)
+        finally:
+            logger.info("AnalyzerService main execution finished.") 

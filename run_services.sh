@@ -15,7 +15,7 @@ echo "Existing services (if any) should be stopped and ports released."
 # Check database configuration from environment or use defaults
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5433}"
-DB_NAME="${DB_NAME:-projectx}"
+DB_NAME="${DB_NAME:-projectx_test}"
 DB_USER="${DB_USER:-postgres}"
 
 echo "Checking database connection at ${DB_HOST}:${DB_PORT}..."
@@ -40,10 +40,20 @@ nohup python3 -m src.data.ingestion.live_ingester > logs/ingester.log 2>&1 &
 
 # Start the broadcaster service in the background with nohup and output redirection
 echo "Starting broadcaster.py in background (see logs/broadcaster.log)..."
-nohup python3 -m src.services.broadcaster > logs/broadcaster.log 2>&1 &
+nohup env LOCAL_DB_NAME=${DB_NAME} python3 -m src.services.broadcaster > logs/broadcaster.log 2>&1 &
+BROADCASTER_PID=$!
 
 # Add a small delay to allow background services to attempt startup and potentially fail fast
 sleep 2
+
+# Check if the broadcaster is still running
+if ! ps -p $BROADCASTER_PID > /dev/null; then
+    echo "ERROR: broadcaster.py failed to start. Displaying log:"
+    cat logs/broadcaster.log
+    # Also kill the ingester since the pipeline is broken
+    pkill -f "src.data.ingestion.live_ingester"
+    exit 1
+fi
 
 # Start the analyzer service in the foreground
 echo "Starting analyzer_service.py in foreground..."
