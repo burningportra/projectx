@@ -8,21 +8,181 @@
       "testStrategy": "1. Write unit tests for new methods in OrderManager.\n2. Test various scenarios of trade execution and P&L calculation.\n3. Verify that closed position history is correctly maintained and accessible.\n4. Perform integration tests with mock strategy implementations.",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
-      "subtasks": []
+      "status": "done",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Review Current OrderManager Implementation",
+          "description": "Analyze the existing OrderManager codebase to understand current responsibilities, data flows, and pain points, with a focus on P&L exposure, position management, and trade execution details.",
+          "dependencies": [],
+          "details": "Document current class structure, method responsibilities, and identify areas of high complexity or technical debt.",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Design New P&L Exposure Interfaces",
+          "description": "Define clear interfaces and data contracts for exposing real-time and historical P&L, ensuring they can serve as the authoritative source for downstream consumers.",
+          "dependencies": [
+            1
+          ],
+          "details": "Work with stakeholders to specify required P&L metrics, update interface definitions, and plan for integration points.",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Implement Closed Position History Management",
+          "description": "Develop mechanisms to track, store, and retrieve closed position data, ensuring accurate historical P&L and auditability.",
+          "dependencies": [
+            2
+          ],
+          "details": "Refactor or extend data models and storage logic to persist closed positions and their associated P&L snapshots.",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Expose Trade Execution Details",
+          "description": "Refactor or extend OrderManager to provide detailed trade execution information, including timestamps, prices, and order IDs, via new or updated interfaces.",
+          "dependencies": [
+            3
+          ],
+          "details": "Ensure trade execution data is accessible for both real-time monitoring and historical analysis.",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Update Position Management Logic",
+          "description": "Refactor position management to align with new P&L and trade execution interfaces, ensuring consistency and correctness across open and closed positions.",
+          "dependencies": [
+            4
+          ],
+          "details": "Simplify or modularize position update logic, and ensure all edge cases (e.g., partial fills, cancellations) are handled.",
+          "status": "done"
+        },
+        {
+          "id": 6,
+          "title": "Add Error and Edge Case Handling",
+          "description": "Identify and implement robust error handling and edge case management throughout the refactored OrderManager, especially for data inconsistencies and unexpected execution scenarios.",
+          "dependencies": [],
+          "details": "Document all handled cases and ensure graceful degradation or alerting for unhandled scenarios.",
+          "status": "done"
+        },
+        {
+          "id": 7,
+          "title": "Write and Expand Unit and Integration Tests",
+          "description": "Develop comprehensive unit and integration tests to validate all new and refactored functionality, with a focus on P&L accuracy, position transitions, and error handling.",
+          "dependencies": [],
+          "details": "Ensure high test coverage and automate test execution as part of the CI/CD pipeline.",
+          "status": "done"
+        }
+      ]
     },
     {
       "id": 2,
-      "title": "Refactor EmaStrategy.ts",
-      "description": "Refactor EmaStrategy to use OrderManager as the source of truth for trade outcomes and P&L calculations.",
-      "details": "1. Update openPosition method to submit entry orders to OrderManager and only populate critical fields upon fill confirmation.\n2. Implement handleOrderFill method to react to OrderManager's fill confirmations.\n3. Update closePosition method to only submit closing orders to OrderManager.\n4. Refactor getTrades method to return SimulatedTrade objects consistent with OrderManager's processed fills.\n5. Remove any redundant P&L calculations within the strategy.",
-      "testStrategy": "1. Write unit tests for refactored methods in EmaStrategy.\n2. Test various scenarios of trade execution, including entry, exit, and P&L calculation.\n3. Verify that strategy correctly reacts to OrderManager fill confirmations.\n4. Ensure getTrades method returns accurate trade information.",
-      "priority": "high",
+      "title": "Finalize BaseStrategy Abstract Class for Advanced Features",
+      "description": "Review and finalize the existing BaseStrategy abstract class (in web/src/lib/strategies/BaseStrategy.ts) to ensure it fully supports upcoming features like the Strategy Fluent Builder and Enhanced TrendAnalyzer. This includes verifying its P&L calculations, trade management, order handling, configuration system, and extensibility points. Ensure all necessary hooks and common functionalities are robust and well-documented to serve as a solid foundation for all derived strategies.",
+      "status": "done",
       "dependencies": [
         1
       ],
-      "status": "pending",
-      "subtasks": []
+      "priority": "high",
+      "details": "1. Review and update existing methods in BaseStrategy to ensure compatibility with OrderManager.\n2. Verify and enhance P&L calculation methods.\n3. Implement or improve trade management functionalities.\n4. Refine order handling processes.\n5. Develop a robust configuration system for strategy parameters.\n6. Create clear extension points for derived strategies.\n7. Ensure comprehensive documentation for all methods and properties.",
+      "testStrategy": "1. Write comprehensive unit tests for all methods in BaseStrategy.\n2. Create integration tests to verify BaseStrategy's interaction with OrderManager and other components.\n3. Test various scenarios of trade execution, including entry, exit, and P&L calculation.\n4. Verify that the strategy correctly handles different configuration parameters.\n5. Ensure all extension points are properly tested with mock derived strategies.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Review and Update Existing Methods",
+          "description": "Review all existing methods in BaseStrategy and update them to ensure full compatibility with OrderManager and support for advanced features.",
+          "dependencies": [],
+          "details": "Analyze current BaseStrategy methods, identify areas for improvement, and update to support new requirements including Strategy Fluent Builder and Enhanced TrendAnalyzer.",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Enhance P&L Calculation Methods",
+          "description": "Review and improve the profit and loss (P&L) calculation methods in BaseStrategy to ensure accuracy and efficiency.",
+          "dependencies": [
+            1
+          ],
+          "details": "Audit existing P&L calculation logic, optimize for performance, and ensure it correctly interacts with OrderManager for accurate results.",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Implement Trade Management Functionalities",
+          "description": "Develop or enhance trade management functionalities in BaseStrategy to provide a comprehensive set of tools for derived strategies.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Implement methods for trade entry, exit, position sizing, and risk management that can be easily extended or overridden by derived strategies.",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Refine Order Handling Processes",
+          "description": "Review and refine order handling processes in BaseStrategy to ensure seamless integration with OrderManager and support for various order types.",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Update order submission, cancellation, and modification methods to work efficiently with OrderManager and provide flexibility for different trading scenarios.",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Develop Configuration System",
+          "description": "Create a robust configuration system within BaseStrategy to handle various strategy parameters and settings.",
+          "dependencies": [
+            1
+          ],
+          "details": "Design and implement a flexible configuration mechanism that allows easy customization of strategy behavior through parameters and supports the Strategy Fluent Builder.",
+          "status": "done"
+        },
+        {
+          "id": 6,
+          "title": "Create Extension Points",
+          "description": "Identify and create clear extension points in BaseStrategy to facilitate easy customization in derived strategies.",
+          "dependencies": [
+            1,
+            3,
+            4,
+            5
+          ],
+          "details": "Define abstract methods, hooks, and customizable components that derived strategies can leverage to implement their specific logic while maintaining a consistent structure.",
+          "status": "done"
+        },
+        {
+          "id": 7,
+          "title": "Enhance Documentation",
+          "description": "Improve and expand the documentation for BaseStrategy to ensure clarity and ease of use for developers creating derived strategies.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "details": "Write comprehensive JSDoc comments for all methods and properties, create usage examples, and document best practices for extending BaseStrategy.",
+          "status": "done"
+        },
+        {
+          "id": 8,
+          "title": "Write and Expand Unit and Integration Tests",
+          "description": "Develop comprehensive unit and integration tests to cover all updated and new logic in BaseStrategy, ensuring correctness and preventing regressions.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "details": "Write new tests and expand existing ones to validate all BaseStrategy methods, including P&L calculations, trade management, order handling, and configuration system under various scenarios.",
+          "status": "done"
+        }
+      ]
     },
     {
       "id": 3,
@@ -34,8 +194,67 @@
       "dependencies": [
         1
       ],
-      "status": "pending",
-      "subtasks": []
+      "status": "done",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Update openPosition Method",
+          "description": "Refactor the openPosition method to align with the new logic and ensure compatibility with the updated order and position management flow.",
+          "dependencies": [],
+          "details": "Analyze the current openPosition implementation, identify areas for improvement, and update the method to support the new refactored structure. Ensure it interacts correctly with OrderManager and other related components.",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Implement handleOrderFill Method",
+          "description": "Create or refactor the handleOrderFill method to process order fill events and update positions and trades accordingly.",
+          "dependencies": [
+            1
+          ],
+          "details": "Design and implement handleOrderFill to handle order fill callbacks, update position state, and trigger any necessary downstream logic. Ensure it integrates seamlessly with openPosition and OrderManager.",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Refactor closePosition Method",
+          "description": "Refactor the closePosition method to utilize the new order handling and position management logic.",
+          "dependencies": [
+            2
+          ],
+          "details": "Update closePosition to work with the refactored openPosition and handleOrderFill methods. Remove any legacy logic that is now redundant and ensure proper closure of positions.",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Update getTrades Method",
+          "description": "Modify the getTrades method to reflect changes in trade and position tracking introduced by the refactor.",
+          "dependencies": [
+            3
+          ],
+          "details": "Review and update getTrades to ensure it accurately retrieves trade data based on the new data structures and logic. Ensure consistency and correctness of trade reporting.",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Remove Redundant P&L Logic",
+          "description": "Identify and eliminate any redundant profit and loss (P&L) calculation logic that is no longer necessary after the refactor.",
+          "dependencies": [
+            4
+          ],
+          "details": "Audit the codebase for duplicate or obsolete P&L logic, consolidate calculations where appropriate, and ensure all P&L reporting is accurate and streamlined.",
+          "status": "done"
+        },
+        {
+          "id": 6,
+          "title": "Write and Expand Unit and Integration Tests",
+          "description": "Develop comprehensive unit and integration tests to cover the refactored methods and ensure system reliability.",
+          "dependencies": [
+            5
+          ],
+          "details": "Write new tests and expand existing ones to validate the behavior of openPosition, handleOrderFill, closePosition, getTrades, and P&L logic. Ensure high test coverage and robustness against regressions.",
+          "status": "done"
+        }
+      ]
     },
     {
       "id": 4,
@@ -48,8 +267,60 @@
         2,
         3
       ],
-      "status": "pending",
-      "subtasks": []
+      "status": "done",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Identify Shared Logic Across Strategies",
+          "description": "Analyze the existing strategy classes to find duplicated or similar logic that can be centralized.",
+          "dependencies": [],
+          "details": "Review all strategy implementations, document common methods or code blocks, and determine which logic is suitable for extraction.",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Extract Shared Logic to Base Class",
+          "description": "Create a new abstract base class and move the identified shared logic into it.",
+          "dependencies": [
+            1
+          ],
+          "details": "Define an abstract or concrete base class, encapsulate the shared methods or properties, and ensure the base class provides a clear contract for derived strategies.",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Implement Abstract Methods in Derived Strategies",
+          "description": "For any abstract methods defined in the base class, implement the required logic in each derived strategy class.",
+          "dependencies": [
+            2
+          ],
+          "details": "Update each strategy to provide concrete implementations for abstract methods, ensuring they fulfill the intended behavior.",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Update Inheritance in Strategy Classes",
+          "description": "Modify all relevant strategy classes to inherit from the new base class instead of their previous parent (if any).",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Change class declarations to extend the new base class and remove any now-redundant code that has been centralized.",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Write or Expand Unit Tests for the Base Class",
+          "description": "Develop or update unit tests to cover the shared logic in the base class and ensure correct behavior in derived strategies.",
+          "dependencies": [
+            2,
+            3,
+            4
+          ],
+          "details": "Create tests for the base class methods, mock or stub abstract methods as needed, and verify that derived classes function as expected with the new inheritance structure.",
+          "status": "done"
+        }
+      ]
     },
     {
       "id": 5,
@@ -64,7 +335,71 @@
         4
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Update CompactResultsPanel UI Components",
+          "description": "Modify the CompactResultsPanel to accommodate new data structures and display requirements",
+          "dependencies": [],
+          "details": "Identify all UI components that need updating, refactor the panel layout, implement new visual elements, and ensure responsive design across different screen sizes",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Modify AnalysisPanel Structure and Functionality",
+          "description": "Restructure the AnalysisPanel to handle updated data formats and implement new analysis features",
+          "dependencies": [],
+          "details": "Update component hierarchy, implement new data visualization elements, ensure proper state management, and optimize rendering performance",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Update Statistics Calculation Logic",
+          "description": "Refactor the backend statistics calculation methods to improve accuracy and performance",
+          "dependencies": [],
+          "details": "Review existing algorithms, implement optimized calculation methods, ensure real-time data processing capabilities, and validate results against expected outcomes",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Implement Comprehensive Error Handling",
+          "description": "Develop robust error handling mechanisms for both UI components and backend operations",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Create error boundary components, implement graceful degradation, add user-friendly error messages, and establish logging for debugging purposes",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Write and Expand Unit Tests",
+          "description": "Create comprehensive unit tests for all new and modified components and functions",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "details": "Develop test cases for UI components, statistics calculations, error handling scenarios, and edge cases to ensure code quality and reliability",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Perform Integration and Manual UI Testing",
+          "description": "Conduct thorough integration testing and manual UI verification",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "details": "Test component interactions, verify data flow through the system, check UI rendering across browsers/devices, and validate user experience against requirements",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 6,
@@ -79,7 +414,73 @@
         4
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement P&L calculation method",
+          "description": "Create a robust method to calculate profit and loss for different trade types",
+          "dependencies": [],
+          "details": "Develop a calculatePL function that handles both long and short positions using the formulas: Long Trade = Size × (Exit Price − Entry Price) and Short Trade = Size × (Entry Price − Exit Price). Include support for different financial instruments (stocks, forex, futures) with their specific calculation requirements. Ensure the method can calculate both realized P&L (closed trades) and unrealized P&L (open positions).",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Integrate commission logic into P&L calculations",
+          "description": "Add support for transaction fees and commissions in the P&L calculation",
+          "dependencies": [
+            1
+          ],
+          "details": "Extend the P&L calculation to subtract commissions and fees from the gross profit. Update the formula to: P&L = Basic Calculation - Fees. Implement different fee structures based on trade type, size, and broker requirements. Create a flexible commission model that can be configured per trade or globally for the trading system.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Ensure P&L calculation on trade closure",
+          "description": "Implement event-driven P&L calculation that triggers when trades are closed",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Create an event handler that calculates and finalizes P&L when a trade is closed. Implement a mechanism to distinguish between realized P&L (closed trades) and unrealized P&L (open positions). Ensure the calculation is performed at the exact moment of trade closure to capture the correct exit price and market conditions.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Update SimulatedTrade class with P&L functionality",
+          "description": "Enhance the SimulatedTrade class to store and calculate P&L information",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Add P&L-related properties to the SimulatedTrade class including realizedPL, unrealizedPL, and totalPL. Implement methods to update these values in real-time as market conditions change. Add helper methods for P&L analysis such as calculating percentage returns and comparing performance against benchmarks.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Update getTrades method to include P&L information",
+          "description": "Modify the getTrades method to return comprehensive P&L data with trade information",
+          "dependencies": [
+            4
+          ],
+          "details": "Enhance the getTrades method to include detailed P&L information in its return value. Add filtering and sorting capabilities based on P&L metrics (e.g., most profitable trades, losing trades). Implement aggregation functions to calculate summary statistics like total P&L, average P&L per trade, and win/loss ratio.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Write and expand unit/integration tests for P&L functionality",
+          "description": "Develop comprehensive test suite to verify P&L calculation accuracy",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "details": "Create unit tests for the P&L calculation method with various scenarios (long/short positions, different asset types, edge cases). Develop integration tests to verify P&L calculations through the entire trade lifecycle. Implement stress tests with large numbers of trades and extreme market conditions. Create regression tests to ensure P&L calculations remain accurate after code changes.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 7,
@@ -95,7 +496,56 @@
         6
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Trade Closure Detection",
+          "description": "Develop logic to detect when a trade should be closed, based on event-driven triggers such as order fills, stop-loss, or take-profit conditions.",
+          "dependencies": [],
+          "details": "This involves monitoring trade status and market events to determine when a trade has reached its completion criteria.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Finalize Trade Data",
+          "description": "Create routines to finalize and lock in all relevant trade data once closure is detected, ensuring no further modifications.",
+          "dependencies": [
+            1
+          ],
+          "details": "This includes capturing final prices, timestamps, and any other relevant trade metadata at the moment of closure.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Calculate and Store Final P&L",
+          "description": "Implement logic to compute the final profit and loss for the trade and persist this information in the appropriate data store.",
+          "dependencies": [
+            2
+          ],
+          "details": "This step requires accurate calculation based on finalized trade data and updating the trade record with the computed P&L.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Move Trade to Completed List",
+          "description": "Transfer the finalized trade record from the active trades list to the completed trades list or archive.",
+          "dependencies": [
+            3
+          ],
+          "details": "Ensure the trade is no longer considered active and is available for historical analysis or reporting.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Write and Expand Unit Tests for Finalization Logic",
+          "description": "Develop and enhance unit tests to cover all aspects of the trade finalization process, including edge cases and error handling.",
+          "dependencies": [
+            4
+          ],
+          "details": "Tests should validate correct detection, data finalization, P&L calculation, and proper movement to the completed list.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 8,
@@ -113,7 +563,46 @@
         7
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Review Existing Tests",
+          "description": "Analyze the current test suite to understand coverage and identify tests affected by recent code changes or refactoring.",
+          "dependencies": [],
+          "details": "Catalog all existing tests, note which areas of the codebase they cover, and flag any tests that may be impacted by new logic or methods.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Update Tests for New Logic and Methods",
+          "description": "Modify existing tests to align with updated or newly introduced logic and methods resulting from the refactor.",
+          "dependencies": [
+            1
+          ],
+          "details": "Ensure that all tests accurately reflect the current behavior of the codebase, updating assertions and test data as needed.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Add New Tests for Refactored Features",
+          "description": "Develop additional tests to cover new or significantly changed features introduced during the refactor.",
+          "dependencies": [
+            2
+          ],
+          "details": "Identify gaps in test coverage created by the refactor and write new unit, integration, or end-to-end tests as appropriate.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Verify Full Test Coverage",
+          "description": "Run the complete test suite and use coverage tools to confirm that all new and updated logic is thoroughly tested.",
+          "dependencies": [
+            3
+          ],
+          "details": "Analyze coverage reports, address any uncovered code, and ensure all tests pass to prevent regression errors.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 9,
@@ -133,7 +622,75 @@
         8
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Design Test Scenarios",
+          "description": "Identify and document comprehensive test scenarios covering the strategy, OrderManager, and UI flow, including both positive and negative cases.",
+          "dependencies": [],
+          "details": "Define the scope of integration, enumerate all possible interactions between components, and ensure scenarios reflect real-world and edge cases.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Mock Market Data",
+          "description": "Develop and configure mock market data feeds to simulate various market conditions for testing purposes.",
+          "dependencies": [
+            1
+          ],
+          "details": "Create mock data sources that can be controlled and manipulated to test different trading scenarios and system responses.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Implement Integration Tests for Strategy-OrderManager-UI Flow",
+          "description": "Develop automated integration tests that validate the end-to-end flow between the strategy, OrderManager, and UI components.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Write and automate test cases based on the designed scenarios, ensuring all interfaces and data exchanges are exercised.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Test Multiple Trading Scenarios",
+          "description": "Execute integration tests across a variety of trading scenarios, including normal, edge, and failure cases.",
+          "dependencies": [
+            3
+          ],
+          "details": "Run tests simulating different order types, market conditions, and user actions to validate system robustness.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Verify Data Consistency",
+          "description": "Check that data remains consistent and accurate across all system layers during and after test execution.",
+          "dependencies": [
+            4
+          ],
+          "details": "Validate that order states, trade executions, and UI displays are synchronized and correct throughout the flow.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Run Performance Benchmarks",
+          "description": "Measure and analyze the performance of the integrated system under various loads and trading scenarios.",
+          "dependencies": [
+            5
+          ],
+          "details": "Conduct stress and load tests to identify bottlenecks and ensure the system meets performance requirements.",
+          "status": "pending"
+        },
+        {
+          "id": 7,
+          "title": "Document Test Results",
+          "description": "Compile and document the outcomes of all integration tests, including issues found, resolutions, and performance metrics.",
+          "dependencies": [],
+          "details": "Prepare detailed reports for stakeholders, summarizing test coverage, results, and recommendations for improvements.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 10,
@@ -154,7 +711,56 @@
         9
       ],
       "status": "pending",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Organize Code Review Session",
+          "description": "Schedule and coordinate a code review session with relevant team members, ensuring clear objectives and communication channels are established.",
+          "dependencies": [],
+          "details": "Identify reviewers, set an agenda, and distribute code review checklists to ensure a structured and effective review process.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Update Inline Documentation",
+          "description": "Revise and enhance inline code comments and docstrings to improve code readability and maintainability based on review feedback.",
+          "dependencies": [
+            1
+          ],
+          "details": "Ensure all functions, classes, and complex logic are clearly documented within the codebase.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Update External Documentation/README",
+          "description": "Update the project's external documentation, including the README file, to reflect recent changes and provide accurate usage instructions.",
+          "dependencies": [
+            2
+          ],
+          "details": "Document new features, configuration options, and usage examples as needed.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Create or Update Architecture Diagrams",
+          "description": "Develop or revise architecture diagrams to visually represent the current system structure and data flows.",
+          "dependencies": [
+            3
+          ],
+          "details": "Ensure diagrams are consistent with the updated codebase and documentation.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Verify Documentation Accuracy Through Peer Review",
+          "description": "Conduct a peer review of all updated documentation and diagrams to ensure accuracy, clarity, and completeness.",
+          "dependencies": [
+            4
+          ],
+          "details": "Assign reviewers, collect feedback, and make necessary revisions before finalizing documentation.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 11,
@@ -162,33 +768,7 @@
       "description": "Develop a fluent builder pattern to enable intuitive, chainable strategy creation syntax for traders, supporting indicators, entry/exit conditions, and risk management.",
       "details": "Design and implement a StrategyFluentBuilder class (or similar) that exposes a chainable API for constructing trading strategies. The builder should allow users to fluently define indicators (e.g., moving averages), entry and exit conditions, and risk management parameters in a readable, sequential manner. Use method chaining by returning 'this' or appropriate interface types from each method to enforce correct build order and prevent incomplete configurations. Ensure the builder integrates with the refactored EmaStrategy and OrderManager, leveraging OrderManager as the source of truth for trade execution and P&L. Provide clear documentation and usage examples demonstrating how traders can compose strategies using the fluent API. Consider extensibility for future strategy types and validation to prevent incomplete or invalid strategies. Reference fluent builder best practices, such as interface chaining for required steps and optional parameters, to maximize safety and usability[1][4][5].",
       "testStrategy": "1. Write unit tests that construct strategies using the fluent builder, verifying that all required steps (indicators, entry/exit, risk) are enforced and optional parameters are handled gracefully. 2. Test that the resulting strategies integrate correctly with EmaStrategy and OrderManager, submitting trades and calculating P&L as expected. 3. Validate that incomplete or invalid builder chains are caught at compile-time or throw meaningful runtime errors. 4. Review API documentation and usage examples for clarity and trader-friendliness. 5. Conduct code reviews to ensure extensibility and adherence to fluent builder best practices.",
-      "status": "pending",
-      "dependencies": [
-        2
-      ],
-      "priority": "high",
-      "subtasks": []
-    },
-    {
-      "id": 12,
-      "title": "Implement Enhanced TrendAnalyzer Class",
-      "description": "Develop an Enhanced TrendAnalyzer class that wraps the existing TrendIdentifier and provides trader-friendly derived signals based on trend starts, including methods for accessing recent trend starts, identifying strengthening trends, calculating trend duration and magnitude, and finding trend starts that created highest highs or lowest lows.",
-      "details": "1. Create a new class called EnhancedTrendAnalyzer that encapsulates the existing TrendIdentifier.\n\n2. Implement a constructor that takes a TrendIdentifier instance as a parameter:\n   ```typescript\n   constructor(private trendIdentifier: TrendIdentifier) {}\n   ```\n\n3. Develop the following public methods:\n   a. getRecentTrendStarts(count: number): TrendStart[]\n      - Returns the most recent 'count' number of trend starts.\n   \n   b. identifyStrengtheningTrends(threshold: number): TrendStart[]\n      - Identifies trends that are gaining strength based on a given threshold.\n   \n   c. calculateTrendDuration(trendStart: TrendStart): number\n      - Calculates the duration of a trend in terms of time periods or candles.\n   \n   d. calculateTrendMagnitude(trendStart: TrendStart): number\n      - Calculates the magnitude of a trend (e.g., price change from start to current).\n   \n   e. findExtremeTrendStarts(): { highestHigh: TrendStart, lowestLow: TrendStart }\n      - Identifies trend starts that led to the highest high and lowest low.\n\n4. Implement private helper methods as needed, such as:\n   - isStrengthening(trendStart: TrendStart, threshold: number): boolean\n   - calculatePriceChange(start: number, end: number): number\n\n5. Ensure all methods properly handle edge cases, such as insufficient data or no trends identified.\n\n6. Implement error handling and input validation for all public methods.\n\n7. Optimize the class for performance, considering caching mechanisms for frequently accessed data.\n\n8. Document the class and its methods using JSDoc comments.\n\n9. Integrate the EnhancedTrendAnalyzer with the Strategy Fluent Builder Pattern (from Task 11) to allow easy incorporation of trend analysis in strategy creation.\n\n10. Create example usage scenarios to demonstrate how traders can leverage the EnhancedTrendAnalyzer in their strategies.",
-      "testStrategy": "1. Unit Tests:\n   a. Write tests for each public method of EnhancedTrendAnalyzer.\n   b. Test edge cases (e.g., empty data, single trend, multiple trends).\n   c. Verify correct handling of invalid inputs.\n\n2. Integration Tests:\n   a. Test EnhancedTrendAnalyzer with actual market data.\n   b. Verify integration with Strategy Fluent Builder Pattern.\n\n3. Performance Tests:\n   a. Benchmark the performance of EnhancedTrendAnalyzer methods.\n   b. Ensure efficient handling of large datasets.\n\n4. Functional Tests:\n   a. Create a sample trading strategy using EnhancedTrendAnalyzer.\n   b. Backtest the strategy to verify correct trend analysis.\n\n5. Code Review:\n   a. Conduct a thorough code review to ensure clean, maintainable code.\n   b. Verify proper error handling and documentation.\n\n6. User Acceptance Testing:\n   a. Have experienced traders review and test the EnhancedTrendAnalyzer functionality.\n   b. Gather feedback on the usefulness and accuracy of the derived signals.\n\n7. Regression Testing:\n   a. Ensure that the introduction of EnhancedTrendAnalyzer doesn't break existing functionality.\n   b. Verify that the underlying TrendIdentifier still works as expected.\n\n8. Documentation Review:\n   a. Review and validate the API documentation for completeness and clarity.\n   b. Ensure example usage scenarios are correct and helpful.",
-      "status": "pending",
-      "dependencies": [
-        11
-      ],
-      "priority": "high",
-      "subtasks": []
-    },
-    {
-      "id": 13,
-      "title": "Implement Strategy Fluent Builder Pattern",
-      "description": "Develop a fluent builder pattern to enable trader-friendly, chainable strategy creation syntax, supporting indicators, entry/exit conditions, and risk management parameters.",
-      "details": "Design and implement a StrategyFluentBuilder class that provides an intuitive, chainable API for constructing trading strategies. The builder should allow users to define indicators (e.g., EMA, RSI), set entry and exit conditions, and configure risk management parameters (such as stop loss, take profit, and position sizing) through method chaining. Each method should return the builder instance to support fluent chaining. Ensure the builder enforces the correct sequence of required steps (e.g., indicators before entry conditions, entry before exit, etc.) by leveraging interface chaining or staged builder patterns. Integrate the builder with the refactored EmaStrategy and OrderManager, ensuring that strategy objects created via the builder interact correctly with the underlying trade execution and P&L logic. Provide comprehensive documentation and usage examples to demonstrate the builder's capabilities and syntax. Consider extensibility for future indicators and strategy components.",
-      "testStrategy": "1. Write unit tests to verify that the builder enforces the correct sequence of method calls and that all required parameters must be set before building a strategy.\n2. Create integration tests that use the builder to construct strategies with various combinations of indicators, entry/exit conditions, and risk management settings, then execute them in a simulated environment to ensure correct behavior.\n3. Validate that strategies built with the fluent builder interact properly with OrderManager and EmaStrategy, including correct trade execution and P&L calculation.\n4. Review documentation and usage examples for clarity and completeness, ensuring they match the implemented API.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         2
       ],
@@ -197,181 +777,328 @@
         {
           "id": 1,
           "title": "Design Builder Class and Interfaces",
-          "description": "Architect the main builder class and define interfaces to represent each step in the build process, ensuring clear separation of concerns and fluent chaining.",
+          "description": "Define the core builder class and associated interfaces to represent the construction steps for trading strategies, ensuring clear separation of concerns and extensibility.",
           "dependencies": [],
-          "details": "Identify the required and optional configuration steps. Create interfaces for each stage, and ensure the builder class implements these interfaces to guide the build sequence.",
-          "status": "pending"
+          "details": "Identify required and optional components (e.g., indicators, entry/exit, risk) and design interfaces to enforce their configuration. Use interface chaining to guide build order and prevent incomplete construction.",
+          "status": "done"
         },
         {
           "id": 2,
-          "title": "Implement Method Chaining",
-          "description": "Develop fluent setter methods that return the appropriate interface for the next step, enabling method chaining and guiding users through the build process.",
+          "title": "Implement Fluent Method Chaining",
+          "description": "Develop the builder methods to support fluent chaining, returning the appropriate interface at each step to guide the user through the correct build sequence.",
           "dependencies": [
             1
           ],
-          "details": "Each method should return the next interface in the chain, enforcing the correct order of method calls and supporting a fluent API.",
-          "status": "pending"
+          "details": "Ensure each method returns the next interface in the chain, enforcing the correct order of method calls and improving usability.",
+          "status": "done"
         },
         {
           "id": 3,
-          "title": "Enforce Build Sequence",
-          "description": "Ensure that the builder enforces the correct sequence of method calls, preventing premature or invalid builds.",
+          "title": "Enforce Build Order and Validation",
+          "description": "Implement compile-time and runtime checks to ensure required steps are completed in the correct order and that the final object is valid.",
           "dependencies": [
             2
           ],
-          "details": "Use interface chaining so that only valid next steps are exposed at each stage, and restrict access to the build method until all required steps are completed.",
-          "status": "pending"
+          "details": "Use interface chaining for compile-time safety and add runtime validation in the build method to catch any remaining configuration errors.",
+          "status": "done"
         },
         {
           "id": 4,
           "title": "Integrate with EmaStrategy and OrderManager",
-          "description": "Connect the builder with EmaStrategy and OrderManager components, allowing seamless configuration and instantiation of these strategies within the builder flow.",
+          "description": "Connect the builder to existing EmaStrategy and OrderManager components, ensuring seamless creation and management of trading strategies.",
           "dependencies": [
             3
           ],
-          "details": "Ensure the builder can accept and configure EmaStrategy and OrderManager objects, and that integration points are clear and maintainable.",
-          "status": "pending"
+          "details": "Adapt the builder to produce objects compatible with EmaStrategy and OrderManager, and ensure integration points are well-defined.",
+          "status": "done"
         },
         {
           "id": 5,
           "title": "Support Indicators, Entry, Exit, and Risk Configuration",
-          "description": "Extend the builder to support configuration of indicators, entry/exit logic, and risk management parameters.",
+          "description": "Extend the builder to allow configuration of indicators, entry/exit logic, and risk management parameters as part of the fluent API.",
           "dependencies": [
             4
           ],
-          "details": "Add methods and interfaces for specifying indicators, entry/exit rules, and risk controls, ensuring these are integrated into the fluent build sequence.",
-          "status": "pending"
+          "details": "Provide methods for adding and configuring various strategy components, ensuring each is validated and integrated into the final strategy object.",
+          "status": "done"
         },
         {
           "id": 6,
           "title": "Write Documentation and Usage Examples",
-          "description": "Document the builder API and provide clear usage examples to demonstrate typical and advanced usage patterns.",
+          "description": "Create comprehensive documentation and code examples demonstrating how to use the builder to construct strategies, highlighting method chaining and build order enforcement.",
           "dependencies": [],
-          "details": "Create comprehensive documentation and code samples that illustrate how to use the builder, including integration with EmaStrategy, OrderManager, and custom configurations.",
-          "status": "pending"
+          "details": "Include both inline documentation and standalone usage guides to assist developers in adopting the builder pattern.",
+          "status": "done"
         },
         {
           "id": 7,
-          "title": "Ensure Extensibility",
-          "description": "Design the builder and interfaces to be easily extensible for future features and custom strategies.",
+          "title": "Ensure Extensibility for Future Features",
+          "description": "Design the builder and interfaces to be easily extensible, allowing for future additions such as new indicators or risk modules without breaking existing code.",
           "dependencies": [],
-          "details": "Use design patterns and abstractions that allow new configuration steps, strategies, or integrations to be added with minimal changes to existing code.",
-          "status": "pending"
+          "details": "Use design patterns and interface segregation to facilitate extension, and document extension points for future developers.",
+          "status": "done"
         },
         {
           "id": 8,
           "title": "Write Comprehensive Tests",
-          "description": "Develop a suite of unit and integration tests to verify builder correctness, sequence enforcement, integration, and extensibility.",
+          "description": "Develop unit and integration tests to verify builder correctness, method chaining, build order enforcement, integration with EmaStrategy/OrderManager, and extensibility.",
           "dependencies": [],
-          "details": "Test all builder paths, invalid sequences, integration with EmaStrategy and OrderManager, and extensibility points to ensure reliability and maintainability.",
-          "status": "pending"
+          "details": "Test both valid and invalid usage scenarios, ensuring compile-time and runtime safety, and maintain high code coverage.",
+          "status": "done"
         }
       ]
     },
     {
-      "id": 14,
+      "id": 12,
       "title": "Implement Enhanced TrendAnalyzer Class",
       "description": "Develop an Enhanced TrendAnalyzer class that wraps the existing TrendIdentifier and provides trader-friendly derived signals based on trend starts, including methods for accessing recent trend starts, identifying strengthening trends, calculating trend duration and magnitude, and finding trend starts that created highest highs or lowest lows.",
-      "details": "1. Create a new class called EnhancedTrendAnalyzer that encapsulates the existing TrendIdentifier.\n\n2. Implement a constructor that takes a TrendIdentifier instance as a parameter:\n   ```typescript\n   constructor(private trendIdentifier: TrendIdentifier) {}\n   ```\n\n3. Develop a method to access recent trend starts:\n   ```typescript\n   getRecentTrendStarts(count: number): TrendStart[] {\n     // Implement logic to return the most recent 'count' trend starts\n   }\n   ```\n\n4. Create a method to identify strengthening trends:\n   ```typescript\n   identifyStrengtheningTrends(threshold: number): TrendStart[] {\n     // Implement logic to find trends that are gaining momentum\n   }\n   ```\n\n5. Implement methods for calculating trend duration and magnitude:\n   ```typescript\n   calculateTrendDuration(trendStart: TrendStart): number {\n     // Calculate the duration of a trend in time units\n   }\n\n   calculateTrendMagnitude(trendStart: TrendStart): number {\n     // Calculate the magnitude of a trend (e.g., price change)\n   }\n   ```\n\n6. Develop a method to find trend starts that created highest highs or lowest lows:\n   ```typescript\n   findExtremeTrendStarts(): { highestHigh: TrendStart, lowestLow: TrendStart } {\n     // Implement logic to identify trend starts resulting in extreme prices\n   }\n   ```\n\n7. Implement a method to generate trader-friendly signals based on trend analysis:\n   ```typescript\n   generateTradingSignals(): TradingSignal[] {\n     // Analyze trends and generate actionable trading signals\n   }\n   ```\n\n8. Create utility methods for trend comparison and filtering:\n   ```typescript\n   compareTrends(trend1: TrendStart, trend2: TrendStart): number {\n     // Compare trends based on user-defined criteria\n   }\n\n   filterTrendsByCondition(condition: (trend: TrendStart) => boolean): TrendStart[] {\n     // Filter trends based on a custom condition\n   }\n   ```\n\n9. Implement proper error handling and input validation for all methods.\n\n10. Ensure the class is well-documented with JSDoc comments for each method and property.\n\n11. Optimize the class for performance, considering caching mechanisms for frequently accessed data.\n\n12. Integrate the EnhancedTrendAnalyzer with the Strategy Fluent Builder Pattern (from Task 13) to allow easy incorporation of trend analysis in strategy creation.",
-      "testStrategy": "1. Create unit tests for each method of the EnhancedTrendAnalyzer class:\n   - Test getRecentTrendStarts with various counts and edge cases.\n   - Verify identifyStrengtheningTrends with different thresholds.\n   - Test calculateTrendDuration and calculateTrendMagnitude with known trend data.\n   - Ensure findExtremeTrendStarts correctly identifies highest highs and lowest lows.\n   - Validate generateTradingSignals produces expected outputs for given trend scenarios.\n\n2. Implement integration tests:\n   - Test the EnhancedTrendAnalyzer with real market data to ensure accurate trend identification.\n   - Verify the interaction between EnhancedTrendAnalyzer and TrendIdentifier.\n\n3. Performance testing:\n   - Measure the execution time of methods with large datasets.\n   - Ensure optimal performance for real-time analysis scenarios.\n\n4. Edge case testing:\n   - Test behavior with empty data sets, single data point, and very large data sets.\n   - Verify correct handling of trends that span the entire dataset.\n\n5. Compatibility testing:\n   - Ensure EnhancedTrendAnalyzer works correctly with the Strategy Fluent Builder Pattern.\n   - Verify that generated trading signals can be consumed by other components of the trading system.\n\n6. Documentation and API testing:\n   - Review and verify that all methods are properly documented.\n   - Ensure the API is intuitive and consistent with other parts of the system.\n\n7. Error handling and input validation testing:\n   - Test with invalid inputs to ensure proper error messages are thrown.\n   - Verify that the class gracefully handles unexpected data formats or values.\n\n8. Regression testing:\n   - Ensure that the enhancement doesn't break existing functionality of TrendIdentifier.\n\n9. User acceptance testing:\n   - Have traders or end-users test the EnhancedTrendAnalyzer to ensure it meets their needs and provides valuable insights.",
-      "status": "pending",
+      "details": "1. Create a new class called EnhancedTrendAnalyzer that encapsulates the existing TrendIdentifier.\n\n2. Implement a constructor that takes a TrendIdentifier instance as a parameter:\n   ```typescript\n   constructor(private trendIdentifier: TrendIdentifier) {}\n   ```\n\n3. Develop the following public methods:\n   a. getRecentTrendStarts(count: number): TrendStart[]\n      - Returns the most recent 'count' number of trend starts.\n   \n   b. identifyStrengtheningTrends(threshold: number): TrendStart[]\n      - Identifies trends that are gaining strength based on a given threshold.\n   \n   c. calculateTrendDuration(trendStart: TrendStart): number\n      - Calculates the duration of a trend in terms of time periods or candles.\n   \n   d. calculateTrendMagnitude(trendStart: TrendStart): number\n      - Calculates the magnitude of a trend (e.g., price change from start to current).\n   \n   e. findExtremeTrendStarts(): { highestHigh: TrendStart, lowestLow: TrendStart }\n      - Identifies trend starts that led to the highest high and lowest low.\n\n4. Implement private helper methods as needed, such as:\n   - isStrengthening(trendStart: TrendStart, threshold: number): boolean\n   - calculatePriceChange(start: number, end: number): number\n\n5. Ensure all methods properly handle edge cases, such as insufficient data or no trends identified.\n\n6. Implement error handling and input validation for all public methods.\n\n7. Optimize the class for performance, considering caching mechanisms for frequently accessed data.\n\n8. Document the class and its methods using JSDoc comments.\n\n9. Integrate the EnhancedTrendAnalyzer with the Strategy Fluent Builder Pattern (from Task 11) to allow easy incorporation of trend analysis in strategy creation.\n\n10. Create example usage scenarios to demonstrate how traders can leverage the EnhancedTrendAnalyzer in their strategies.",
+      "testStrategy": "1. Unit Tests:\n   a. Write tests for each public method of EnhancedTrendAnalyzer.\n   b. Test edge cases (e.g., empty data, single trend, multiple trends).\n   c. Verify correct handling of invalid inputs.\n\n2. Integration Tests:\n   a. Test EnhancedTrendAnalyzer with actual market data.\n   b. Verify integration with Strategy Fluent Builder Pattern.\n\n3. Performance Tests:\n   a. Benchmark the performance of EnhancedTrendAnalyzer methods.\n   b. Ensure efficient handling of large datasets.\n\n4. Functional Tests:\n   a. Create a sample trading strategy using EnhancedTrendAnalyzer.\n   b. Backtest the strategy to verify correct trend analysis.\n\n5. Code Review:\n   a. Conduct a thorough code review to ensure clean, maintainable code.\n   b. Verify proper error handling and documentation.\n\n6. User Acceptance Testing:\n   a. Have experienced traders review and test the EnhancedTrendAnalyzer functionality.\n   b. Gather feedback on the usefulness and accuracy of the derived signals.\n\n7. Regression Testing:\n   a. Ensure that the introduction of EnhancedTrendAnalyzer doesn't break existing functionality.\n   b. Verify that the underlying TrendIdentifier still works as expected.\n\n8. Documentation Review:\n   a. Review and validate the API documentation for completeness and clarity.\n   b. Ensure example usage scenarios are correct and helpful.",
+      "status": "done",
       "dependencies": [
-        13
+        11
       ],
       "priority": "high",
       "subtasks": [
         {
           "id": 1,
-          "title": "Design EnhancedTrendAnalyzer Class Structure",
-          "description": "Define the overall architecture, responsibilities, and interfaces for the EnhancedTrendAnalyzer, ensuring extensibility and maintainability.",
+          "title": "Design EnhancedTrendAnalyzer Class Architecture",
+          "description": "Create a comprehensive class design including UML diagrams, interface definitions, and data flow architecture",
           "dependencies": [],
-          "details": "Determine class attributes, method signatures, and select appropriate design patterns for analytics and integration.",
-          "status": "pending"
+          "details": "Define the class structure with all public and private methods, determine data types for inputs/outputs, establish relationships with other system components, and create a detailed architecture diagram showing data flow through the analyzer",
+          "status": "done"
         },
         {
           "id": 2,
-          "title": "Implement Constructor",
-          "description": "Develop the constructor for EnhancedTrendAnalyzer to initialize required data structures and configuration parameters.",
+          "title": "Implement Constructor and Configuration Logic",
+          "description": "Develop the class constructor with flexible configuration options and initialization logic",
           "dependencies": [
             1
           ],
-          "details": "Ensure the constructor sets up internal state, validates input data, and prepares the object for analysis.",
-          "status": "pending"
+          "details": "Create constructor that accepts configuration parameters, implement initialization logic for data sources, configure default analysis parameters, and establish wrapping logic for underlying data processing libraries",
+          "status": "done"
         },
         {
           "id": 3,
-          "title": "Develop Recent Trends Analysis Method",
-          "description": "Implement a method to analyze and extract recent trends from the input data.",
+          "title": "Develop Recent Trends Detection Method",
+          "description": "Implement the public method for identifying and analyzing recent trends in the data",
           "dependencies": [
             2
           ],
-          "details": "The method should identify the most current patterns and summarize their characteristics.",
-          "status": "pending"
+          "details": "Create algorithm to detect emerging patterns, implement statistical significance testing, develop filtering mechanisms for noise reduction, and format trend results with relevant metadata",
+          "status": "done"
         },
         {
           "id": 4,
-          "title": "Develop Trend Strengthening Detection Method",
-          "description": "Create a method to detect and quantify the strengthening of trends over time.",
+          "title": "Implement Trend Strength and Duration Analysis",
+          "description": "Create methods to analyze trend strength, persistence, and duration characteristics",
           "dependencies": [
-            2
+            3
           ],
-          "details": "This method should measure changes in trend momentum and highlight periods of intensification.",
-          "status": "pending"
+          "details": "Develop algorithms to calculate trend strength metrics, implement duration analysis functions, create persistence scoring mechanism, and design visualization data structures for strength/duration relationships",
+          "status": "done"
         },
         {
           "id": 5,
-          "title": "Implement Duration and Magnitude Analysis Methods",
-          "description": "Develop methods to calculate the duration and magnitude of detected trends.",
+          "title": "Build Magnitude and Extremes Detection",
+          "description": "Implement methods for identifying trend magnitude and detecting extreme values",
           "dependencies": [
-            2
+            3
           ],
-          "details": "These methods should provide detailed metrics on how long trends persist and their relative impact.",
-          "status": "pending"
+          "details": "Create algorithms for calculating trend magnitude, implement statistical methods for outlier detection, develop functions to identify local and global extremes, and design threshold-based alerting mechanisms",
+          "status": "done"
         },
         {
           "id": 6,
-          "title": "Develop Extremes and Signal Detection Methods",
-          "description": "Implement methods to identify extreme values and generate actionable signals based on trend analysis.",
+          "title": "Develop Private Helper Methods",
+          "description": "Implement internal utility functions to support the public API methods",
           "dependencies": [
-            2
+            2,
+            3,
+            4,
+            5
           ],
-          "details": "Include logic for detecting outliers, peaks, troughs, and generating alerts or recommendations.",
-          "status": "pending"
+          "details": "Create data normalization functions, implement caching mechanisms, develop time-series processing utilities, build statistical analysis helpers, and implement data transformation functions",
+          "status": "done"
         },
         {
           "id": 7,
-          "title": "Add Utility Functions and Error Handling",
-          "description": "Integrate utility methods for data preprocessing, validation, and robust error handling throughout the class.",
+          "title": "Implement Error Handling and Input Validation",
+          "description": "Add comprehensive error handling and input validation throughout the class",
           "dependencies": [
             3,
             4,
             5,
             6
           ],
-          "details": "Ensure all methods handle edge cases and invalid inputs gracefully, providing informative error messages.",
-          "status": "pending"
+          "details": "Implement input parameter validation, create custom error types, develop graceful failure mechanisms, add logging infrastructure, and implement recovery strategies for common failure scenarios",
+          "status": "done"
         },
         {
           "id": 8,
-          "title": "Optimize Performance and Write Documentation/Tests",
-          "description": "Profile and optimize the class for performance, then write comprehensive documentation and automated tests.",
-          "dependencies": [],
-          "details": "Refactor code for efficiency, document all public interfaces, and develop unit/integration tests to ensure correctness.",
-          "status": "pending"
+          "title": "Optimize Performance and Create Documentation",
+          "description": "Optimize class performance and create comprehensive documentation with examples and tests",
+          "dependencies": [
+            7
+          ],
+          "details": "Profile and optimize critical algorithms, implement memory usage improvements, create detailed API documentation, develop usage examples for common scenarios, and write comprehensive unit and integration tests",
+          "status": "done"
         }
       ]
     },
     {
+      "id": 13,
+      "title": "Integrate Message Bus Architecture into Backtesting System",
+      "description": "Implement a MessageBus class to enable decoupled, event-driven communication between backtesting components, updating strategies and OrderManager to use event publishing and handling.",
+      "details": "1. Design and implement a MessageBus class that supports event publishing, subscription, and message dispatching between components (e.g., strategies, OrderManager, position tracker). Use a type-safe, in-memory approach in TypeScript, allowing handlers to register for specific event types (such as order submissions, fills, cancellations, and position updates).\n2. Refactor existing strategies and the OrderManager to publish events to the MessageBus instead of making direct method calls. For example, when a strategy submits an order, it should publish an 'OrderSubmitted' event, and the OrderManager should subscribe to handle such events.\n3. Implement event handler registration and dispatch logic, ensuring that all relevant components can react to published events asynchronously and in the correct order.\n4. Create event types and payload interfaces for all key actions (order submission, fill, cancellation, position update, etc.), ensuring strong typing and extensibility.\n5. Ensure backward compatibility by maintaining legacy direct method call paths during the transition, with clear deprecation warnings and documentation.\n6. Update documentation to describe the new event-driven architecture and migration steps for existing components.\n7. Provide code examples and migration guides for strategy and OrderManager integration with the MessageBus.",
+      "testStrategy": "- Write unit tests for the MessageBus class covering event publishing, subscription, and handler invocation for all supported event types.\n- Create integration tests simulating end-to-end backtest runs, verifying that strategies and OrderManager interact solely via the MessageBus and that all events are correctly handled.\n- Test backward compatibility by running legacy strategies and OrderManager logic in parallel with the new event-driven approach, ensuring no regressions.\n- Validate that event handlers are invoked in the correct order and that no events are lost or duplicated.\n- Review and test documentation and migration guides for clarity and completeness.",
+      "status": "done",
+      "dependencies": [
+        2,
+        3,
+        4
+      ],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Type-Safe In-Memory MessageBus Class",
+          "description": "Design and implement a MessageBus class in TypeScript that supports type-safe event publishing, subscription, and message dispatching between components.",
+          "dependencies": [],
+          "details": "Create a MessageBus class that allows components to register handlers for specific event types, publish events, and dispatch messages in-memory. Ensure strong typing for event payloads and handler signatures. Support asynchronous event handling and maintain a registry of subscribers for each event type.",
+          "status": "done",
+          "testStrategy": "Write unit tests to verify event publishing, subscription, and dispatching. Test type safety by attempting to register handlers with incorrect payload types."
+        },
+        {
+          "id": 2,
+          "title": "Update OrderManager to Publish Events via MessageBus",
+          "description": "Refactor the OrderManager to publish events (such as order submissions, fills, and cancellations) to the MessageBus instead of making direct method calls.",
+          "dependencies": [
+            1
+          ],
+          "details": "Identify all points in the OrderManager where events occur. Replace direct calls to other components with MessageBus.publish() calls, using the appropriate event types and payloads. Ensure the OrderManager subscribes to relevant events if it needs to react to them.",
+          "status": "done",
+          "testStrategy": "Mock the MessageBus in tests and verify that the correct events are published with accurate payloads when OrderManager actions are triggered."
+        },
+        {
+          "id": 3,
+          "title": "Refactor Strategies to Use Event Publishing and Subscription",
+          "description": "Update strategy components to publish events (e.g., order requests) and subscribe to relevant events (e.g., fills, position updates) via the MessageBus.",
+          "dependencies": [
+            1
+          ],
+          "details": "Replace direct interactions between strategies and other components with event-based communication through the MessageBus. Ensure strategies publish events for actions they initiate and register handlers for events they need to react to.",
+          "status": "done",
+          "testStrategy": "Test that strategies correctly publish and handle events by simulating event flows and verifying expected outcomes."
+        },
+        {
+          "id": 4,
+          "title": "Implement and Register Event Handlers for Core Actions",
+          "description": "Create event handler functions for all key actions (order submission, fill, cancellation, position update) and register them with the MessageBus.",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Define event types and payload interfaces for each core action. Implement handler functions that process these events and update system state as needed. Register handlers with the MessageBus to ensure correct event flow.",
+          "status": "done",
+          "testStrategy": "Trigger events through the MessageBus and verify that handlers are invoked in the correct order and update state as expected."
+        },
+        {
+          "id": 5,
+          "title": "Migrate UI Components to Subscribe to MessageBus Events",
+          "description": "Update UI components to subscribe to relevant MessageBus events for real-time updates, replacing any direct polling or method calls.",
+          "dependencies": [
+            1,
+            4
+          ],
+          "details": "Identify UI components that require updates based on system events (e.g., order status, position changes). Refactor them to subscribe to the MessageBus and update their state in response to relevant events.\n<info added on 2025-06-09T03:45:14.723Z>\nCompleted implementation of BacktestEngineAdapter that bridges BacktesterPage with the new MessageBus/Cache architecture. The adapter encapsulates MessageBus, Cache, and EventHandlers, providing processBar() and getState() methods for seamless integration with the existing strategy interface and UI. It manages event subscriptions, state change notifications, and ensures signals and orders are stored in cache when events are published. Cache data is converted to the UI-expected format (including trade markers and indicators). A comprehensive test suite with 7 passing tests validates the adapter, enabling gradual migration of UI components to the new event-driven architecture without disrupting current functionality.\n</info added on 2025-06-09T03:45:14.723Z>",
+          "status": "done",
+          "testStrategy": "Simulate events and verify that UI components update their displays or state accordingly in response to MessageBus notifications."
+        },
+        {
+          "id": 6,
+          "title": "Test and Validate MessageBus Integration Across the System",
+          "description": "Conduct integration testing to ensure all components interact correctly via the MessageBus, and legacy paths are maintained with deprecation warnings.",
+          "dependencies": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "details": "Perform end-to-end tests covering typical backtesting workflows. Ensure both event-driven and legacy direct-call paths function correctly. Add deprecation warnings and update documentation to guide migration.\n<info added on 2025-06-09T03:49:25.365Z>\nIntegration testing for the MessageBus architecture has been completed. A new test file, MessageBus.Integration.test.ts, was created with 10 comprehensive tests covering end-to-end event flows (order lifecycle, position lifecycle, strategy signals), event handler order and consistency, error isolation between handlers, backward compatibility with direct method calls, performance (1000+ events without loss), message history limits, concurrent event publishing, and full backtest workflow using only events. Integration issues were resolved, including updates to BacktestEngineAdapter for ORDER_FILLED events, addition of handlers for POSITION_OPENED and POSITION_CLOSED events, creation of an event interception mechanism to forward OrderManager events from singleton to adapter instance, and ensuring cache updates on event publishing. All tests are passing, confirming the MessageBus architecture functions correctly across the system.\n</info added on 2025-06-09T03:49:25.365Z>",
+          "status": "done",
+          "testStrategy": "Run comprehensive integration tests, verify event flows, check for race conditions or missed events, and confirm backward compatibility."
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Implement Centralized Cache System",
+      "description": "The Centralized Cache System is now fully implemented and tested. The Cache class serves as the single source of truth for all trading data, including bars, orders, positions, strategy state, indicators, and performance metrics. It integrates with the MessageBus for automatic updates and provides a subscription mechanism for real-time UI updates. All required functionality is complete and validated by a comprehensive test suite.",
+      "status": "done",
+      "dependencies": [
+        13
+      ],
+      "priority": "high",
+      "details": "1. The Cache class is implemented with the following features:\n   - Market data storage (bars by symbol/timeframe)\n   - Order management (add, update, query by status)\n   - Position tracking (open/closed positions with P&L calculation)\n   - Strategy state and indicator storage\n   - Performance tracking (balance, equity curve, unrealized P&L)\n   - Subscription mechanism for real-time updates\n   - MessageBus integration for automatic updates\n2. Comprehensive test suite (Cache.test.ts) created with 18 tests covering all major features:\n   - Market data management\n   - Order management\n   - Position management with P&L calculations\n   - Strategy state management\n   - Indicator management\n   - Performance tracking\n   - Subscription mechanism\n   - Reset functionality\n   - Thread safety and performance (10,000+ operations)\n3. All tests are passing, validating the Cache system as the single source of truth for trading data.",
+      "testStrategy": "1. All cache operations (add, update, query, subscribe) are covered by unit tests.\n2. MessageBus integration tested by publishing events and verifying cache updates.\n3. Subscription mechanism tested with mock UI components.\n4. Performance verified under high-frequency updates (10,000+ operations).\n5. Data consistency verified across concurrent operations.\n6. All tests in Cache.test.ts are passing, confirming system correctness.",
+      "subtasks": []
+    },
+    {
       "id": 15,
-      "title": "Implement Simple Moving Average Crossover Strategy",
-      "description": "Develop a concrete strategy class that extends BaseStrategy, implementing a simple moving average (SMA) crossover trading approach with configurable parameters.",
-      "details": "1. Create a new class `SmaCrossoverStrategy` that extends `BaseStrategy`:\n```typescript\nclass SmaCrossoverStrategy extends BaseStrategy {\n  private fastSMA: SimpleMovingAverage;\n  private slowSMA: SimpleMovingAverage;\n  private enhancedTrendAnalyzer: EnhancedTrendAnalyzer;\n\n  constructor(\n    private fastPeriod: number,\n    private slowPeriod: number,\n    private trendStrengthThreshold: number\n  ) {\n    super();\n    this.fastSMA = new SimpleMovingAverage(fastPeriod);\n    this.slowSMA = new SimpleMovingAverage(slowPeriod);\n    this.enhancedTrendAnalyzer = new EnhancedTrendAnalyzer(new TrendIdentifier());\n  }\n}\n```\n\n2. Implement the `onTick` method to process new price data:\n```typescript\nonTick(tick: Tick): void {\n  const fastSMA = this.fastSMA.update(tick.close);\n  const slowSMA = this.slowSMA.update(tick.close);\n  \n  if (fastSMA > slowSMA && this.enhancedTrendAnalyzer.isTrendStrengthening(tick.timestamp, this.trendStrengthThreshold)) {\n    this.enterLong(tick);\n  } else if (fastSMA < slowSMA && this.enhancedTrendAnalyzer.isTrendStrengthening(tick.timestamp, this.trendStrengthThreshold)) {\n    this.enterShort(tick);\n  }\n}\n```\n\n3. Implement entry methods using the OrderManager:\n```typescript\nprivate enterLong(tick: Tick): void {\n  if (!this.position.isLong()) {\n    if (this.position.isShort()) {\n      this.orderManager.closePosition(this.position);\n    }\n    const quantity = this.calculatePositionSize(tick.close);\n    this.orderManager.submitOrder({\n      symbol: tick.symbol,\n      quantity,\n      side: 'buy',\n      type: 'market'\n    });\n  }\n}\n\nprivate enterShort(tick: Tick): void {\n  // Similar to enterLong, but for short positions\n}\n```\n\n4. Implement position sizing and risk management:\n```typescript\nprivate calculatePositionSize(currentPrice: number): number {\n  const accountBalance = this.orderManager.getAccountBalance();\n  const riskPerTrade = 0.01; // 1% risk per trade\n  const stopLossPercent = 0.02; // 2% stop loss\n  const positionSize = (accountBalance * riskPerTrade) / stopLossPercent;\n  return Math.floor(positionSize / currentPrice);\n}\n```\n\n5. Implement a method to handle order fills:\n```typescript\nonOrderFill(fill: OrderFill): void {\n  super.onOrderFill(fill);\n  if (fill.side === 'buy') {\n    const stopLossPrice = fill.price * 0.98; // 2% stop loss\n    const takeProfitPrice = fill.price * 1.04; // 4% take profit\n    this.orderManager.submitOrder({\n      symbol: fill.symbol,\n      quantity: fill.quantity,\n      side: 'sell',\n      type: 'stop',\n      stopPrice: stopLossPrice\n    });\n    this.orderManager.submitOrder({\n      symbol: fill.symbol,\n      quantity: fill.quantity,\n      side: 'sell',\n      type: 'limit',\n      limitPrice: takeProfitPrice\n    });\n  }\n  // Similar logic for short positions\n}\n```\n\n6. Implement configurable parameters using the Strategy Fluent Builder pattern:\n```typescript\nconst smaCrossoverStrategy = new StrategyFluentBuilder()\n  .setName('SMA Crossover')\n  .addIndicator('fastSMA', new SimpleMovingAverage(10))\n  .addIndicator('slowSMA', new SimpleMovingAverage(20))\n  .setEntryCondition((indicators, tick) => \n    indicators.fastSMA.getValue() > indicators.slowSMA.getValue())\n  .setExitCondition((indicators, tick) => \n    indicators.fastSMA.getValue() < indicators.slowSMA.getValue())\n  .setRiskManagement({\n    stopLossPercent: 0.02,\n    takeProfitPercent: 0.04,\n    riskPerTradePercent: 0.01\n  })\n  .build();\n```\n\n7. Ensure the strategy uses the EnhancedTrendAnalyzer for additional trend analysis and decision making.",
-      "testStrategy": "1. Unit Tests:\n   - Create unit tests for each method in the SmaCrossoverStrategy class.\n   - Test the SMA calculations with known data series.\n   - Verify that entry and exit conditions are correctly identified.\n   - Test position sizing calculations with various account balances and prices.\n\n2. Integration Tests:\n   - Create a test suite that simulates a series of price ticks.\n   - Verify that orders are correctly submitted to the OrderManager.\n   - Check that stop-loss and take-profit orders are placed after entry orders are filled.\n   - Ensure that the strategy correctly uses the EnhancedTrendAnalyzer for decision making.\n\n3. Backtesting:\n   - Implement a backtesting framework if not already available.\n   - Run the strategy against historical data for multiple symbols and timeframes.\n   - Compare the performance metrics (e.g., Sharpe ratio, max drawdown) with benchmark strategies.\n\n4. Edge Cases:\n   - Test the strategy's behavior during rapid price movements and high volatility.\n   - Verify correct handling of scenarios where the fast SMA and slow SMA are very close in value.\n   - Ensure proper error handling for invalid input parameters.\n\n5. Performance Testing:\n   - Measure the execution time of the onTick method to ensure it can handle high-frequency data.\n   - Profile memory usage to identify any potential memory leaks.\n\n6. Configuration Testing:\n   - Verify that the strategy can be correctly configured using the StrategyFluentBuilder.\n   - Test different combinations of SMA periods and risk management parameters.\n\n7. Dependency Verification:\n   - Ensure that the strategy correctly integrates with the EnhancedTrendAnalyzer.\n   - Verify that the OrderManager is used correctly for all order submissions and position management.\n\n8. Logging and Monitoring:\n   - Implement comprehensive logging for all strategy decisions and actions.\n   - Create a dashboard or reporting mechanism to visualize the strategy's performance over time.",
+      "title": "Refactor BacktestEngine with New Architecture",
+      "description": "Create a new BacktestEngine class that orchestrates backtesting using the existing MessageBus and Cache implementations, replacing the current inline processing in BacktesterPage.tsx.",
       "status": "pending",
       "dependencies": [
+        13,
         14
       ],
       "priority": "high",
+      "details": "1. Implement BacktestEngine class that manages the backtesting lifecycle using event-driven architecture.\n2. Integrate with existing MessageBus for all component communication instead of direct method calls.\n3. Utilize the existing Cache implementation as the single source of truth for all data.\n4. Support multiple strategies running simultaneously with portfolio optimization.\n5. Implement progress tracking, pause/resume functionality.\n6. Calculate comprehensive backtest results including all performance metrics.\n7. Provide clean API for loading data, adding strategies, and running backtests.\n8. Ensure proper cleanup and resource management.",
+      "testStrategy": "1. Write unit tests for BacktestEngine lifecycle methods.\n2. Test multi-strategy backtesting scenarios.\n3. Verify correct event flow through MessageBus.\n4. Test pause/resume functionality.\n5. Validate result calculations against known benchmarks.",
+      "subtasks": []
+    },
+    {
+      "id": 16,
+      "title": "Migrate UI Components to New Architecture",
+      "description": "Update BacktesterPage.tsx and related UI components to use the new BacktestEngine, Cache subscriptions, and MessageBus events.",
+      "details": "1. Replace direct strategy processing in BacktesterPage with BacktestEngine usage.\n2. Subscribe UI components to Cache updates instead of maintaining local state.\n3. Use MessageBus events for user actions (play/pause, order cancellation).\n4. Update chart components to receive data from Cache subscriptions.\n5. Refactor results panels to display Cache-provided metrics.\n6. Ensure smooth real-time updates during playback.\n7. Maintain backward compatibility during transition.\n8. Update error handling to work with new architecture.",
+      "testStrategy": "1. Test UI responsiveness to Cache updates.\n2. Verify correct rendering of all data from new sources.\n3. Test user interactions through MessageBus.\n4. Ensure no regressions in UI functionality.\n5. Performance test UI updates during fast playback.",
+      "status": "pending",
+      "dependencies": [
+        14,
+        15
+      ],
+      "priority": "high",
+      "subtasks": []
+    },
+    {
+      "id": 17,
+      "title": "Add Portfolio Management Module",
+      "description": "Implement a Portfolio class following NautilusTrader patterns to track positions across multiple instruments and strategies.",
+      "details": "1. Create Portfolio class to aggregate positions and performance across strategies.\n2. Track position exposure, risk metrics, and correlations.\n3. Calculate portfolio-level P&L, drawdown, and risk metrics.\n4. Integrate with Cache and MessageBus for real-time updates.\n5. Support position netting and margin calculations.\n6. Implement risk limits and position sizing constraints.\n7. Provide portfolio analytics and reporting capabilities.\n8. Enable multi-strategy and multi-instrument backtesting.",
+      "testStrategy": "1. Test position aggregation across multiple strategies.\n2. Verify risk calculations and limit enforcement.\n3. Test portfolio metrics calculation.\n4. Validate integration with Cache and MessageBus.\n5. Test edge cases like position netting.",
+      "status": "pending",
+      "dependencies": [
+        14,
+        15
+      ],
+      "priority": "medium",
+      "subtasks": []
+    },
+    {
+      "id": 18,
+      "title": "Implement Advanced Order Types",
+      "description": "Extend OrderManager to support advanced order types including stop-limit, trailing stops, and bracket orders.",
+      "details": "1. Add support for stop-limit orders with separate trigger and limit prices.\n2. Implement trailing stop orders with dynamic stop price adjustment.\n3. Create bracket order functionality (entry + stop loss + take profit).\n4. Add OCO (One-Cancels-Other) order groups.\n5. Implement order time-in-force options (GTC, GTD, FOK, IOC).\n6. Update order processing logic to handle new order types.\n7. Ensure MessageBus events cover all new order states.\n8. Update UI components to display and manage advanced orders.",
+      "testStrategy": "1. Test each order type with various market scenarios.\n2. Verify correct trigger and execution logic.\n3. Test order group behavior (OCO, brackets).\n4. Validate time-in-force enforcement.\n5. Test edge cases and order interactions.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        13
+      ],
+      "priority": "medium",
       "subtasks": []
     }
   ]

@@ -1,0 +1,22 @@
+# Task ID: 17
+# Title: Add Portfolio Management Module
+# Status: pending
+# Dependencies: 14, 15
+# Priority: medium
+# Description: Implement a Portfolio class following NautilusTrader patterns to track positions across multiple instruments and strategies.
+# Details:
+1. Create Portfolio class to aggregate positions and performance across strategies.
+2. Track position exposure, risk metrics, and correlations.
+3. Calculate portfolio-level P&L, drawdown, and risk metrics.
+4. Integrate with Cache and MessageBus for real-time updates.
+5. Support position netting and margin calculations.
+6. Implement risk limits and position sizing constraints.
+7. Provide portfolio analytics and reporting capabilities.
+8. Enable multi-strategy and multi-instrument backtesting.
+
+# Test Strategy:
+1. Test position aggregation across multiple strategies.
+2. Verify risk calculations and limit enforcement.
+3. Test portfolio metrics calculation.
+4. Validate integration with Cache and MessageBus.
+5. Test edge cases like position netting.

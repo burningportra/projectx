@@ -1,0 +1,22 @@
+# Task ID: 16
+# Title: Migrate UI Components to New Architecture
+# Status: pending
+# Dependencies: 14, 15
+# Priority: high
+# Description: Update BacktesterPage.tsx and related UI components to use the new BacktestEngine, Cache subscriptions, and MessageBus events.
+# Details:
+1. Replace direct strategy processing in BacktesterPage with BacktestEngine usage.
+2. Subscribe UI components to Cache updates instead of maintaining local state.
+3. Use MessageBus events for user actions (play/pause, order cancellation).
+4. Update chart components to receive data from Cache subscriptions.
+5. Refactor results panels to display Cache-provided metrics.
+6. Ensure smooth real-time updates during playback.
+7. Maintain backward compatibility during transition.
+8. Update error handling to work with new architecture.
+
+# Test Strategy:
+1. Test UI responsiveness to Cache updates.
+2. Verify correct rendering of all data from new sources.
+3. Test user interactions through MessageBus.
+4. Ensure no regressions in UI functionality.
+5. Performance test UI updates during fast playback.

@@ -1,0 +1,25 @@
+# Test configuration override for ProjectX Trading System
+# This file overrides settings for testing with the test database
+
+# Database Configuration for Test Environment
+database:
+  use_timescale: true
+  default_ingestion_db: test_timescaledb
+  default_analysis_db: test_timescaledb
+  test_timescaledb:
+    host: "localhost"
+    port: 5434  # Test database port
+    user: "postgres"
+    password_env_var: "LOCAL_DB_PASSWORD"
+    dbname: "projectx_test"  # Test database name
+    dsn_template: "postgresql://{user}:{password}@{host}:{port}/{dbname}"
+    min_pool_size: 1
+    max_pool_size: 10
+  # Keep the original config for reference
+  local_timescaledb:
+    host: "localhost"
+    port: 5433
+    user: "postgres"
+    password_env_var: "LOCAL_DB_PASSWORD"
+    dbname: "projectx"
+    dsn_template: "postgresql://{user}:{password}@{host}:{port}/{dbname}" 

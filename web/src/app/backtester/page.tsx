@@ -109,7 +109,7 @@ const BacktesterPage = () => {
 
   const orderManagerRef = useRef(new OrderManager(0.25));
 
-  const [selectedStrategy, setSelectedStrategy] = useState<string>('ema');
+  const [selectedStrategy, setSelectedStrategy] = useState<string>('trendstart');
   
   const [emaStrategy] = useState(() => new EmaStrategy(orderManagerRef.current, {
     name: 'EMA Crossover', description: 'A simple EMA crossover strategy.', version: '1.0.0',
@@ -128,7 +128,7 @@ const BacktesterPage = () => {
     }
   ));
   
-  const [currentStrategyInstance, setCurrentStrategyInstance] = useState<IStrategy>(emaStrategy);
+  const [currentStrategyInstance, setCurrentStrategyInstance] = useState<IStrategy>(trendStartStrategy);
 
   useEffect(() => {
     setCurrentStrategyInstance(selectedStrategy === 'ema' ? emaStrategy : trendStartStrategy);

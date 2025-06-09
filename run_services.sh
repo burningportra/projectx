@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Create logs directory if it doesn't exist
+mkdir -p logs
 
 # Kill existing services to prevent "address already in use" errors
 echo "Attempting to stop any existing services..."
@@ -11,13 +12,25 @@ echo "Waiting for ports to release..."
 sleep 1 # Add a 1-second delay
 echo "Existing services (if any) should be stopped and ports released."
 
-# Check if TimescaleDB is ready
-echo "Checking TimescaleDB connection..."
-if pg_isready -h localhost -p 5433 -U postgres -d projectx; then
-    echo "TimescaleDB is ready."
+# Check database configuration from environment or use defaults
+DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5433}"
+DB_NAME="${DB_NAME:-projectx}"
+DB_USER="${DB_USER:-postgres}"
+
+echo "Checking database connection at ${DB_HOST}:${DB_PORT}..."
+if pg_isready -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME}; then
+    echo "Database is ready."
 else
-    echo "TimescaleDB is not ready. Please ensure it is running and accessible."
-    echo "You might need to run: sh run_timescaledb_docker.sh"
+    echo "Database is not ready. Please ensure it is running and accessible."
+    echo "Current configuration:"
+    echo "  Host: ${DB_HOST}"
+    echo "  Port: ${DB_PORT}"
+    echo "  Database: ${DB_NAME}"
+    echo "  User: ${DB_USER}"
+    echo ""
+    echo "To use a different database, set environment variables:"
+    echo "  DB_HOST=localhost DB_PORT=5434 DB_NAME=projectx_test ./run_services.sh"
     exit 1
 fi
 

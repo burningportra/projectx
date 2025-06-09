@@ -1,0 +1,57 @@
+# Task ID: 15
+# Title: Refactor BacktestEngine with New Architecture
+# Status: pending
+# Dependencies: 13, 14
+# Priority: high
+# Description: Create a new BacktestEngine class that orchestrates backtesting using the existing MessageBus and Cache implementations, replacing the current inline processing in BacktesterPage.tsx.
+# Details:
+1. Implement BacktestEngine class that manages the backtesting lifecycle using event-driven architecture.
+2. Integrate with existing MessageBus for all component communication instead of direct method calls.
+3. Utilize the existing Cache implementation as the single source of truth for all data.
+4. Support multiple strategies running simultaneously with portfolio optimization.
+5. Implement progress tracking, pause/resume functionality.
+6. Calculate comprehensive backtest results including all performance metrics.
+7. Provide clean API for loading data, adding strategies, and running backtests.
+8. Ensure proper cleanup and resource management.
+
+# Test Strategy:
+1. Write unit tests for BacktestEngine lifecycle methods.
+2. Test multi-strategy backtesting scenarios.
+3. Verify correct event flow through MessageBus.
+4. Test pause/resume functionality.
+5. Validate result calculations against known benchmarks.
+
+# Subtasks:
+## 1. Design and Implement BacktestEngine Core with Event-Driven Lifecycle [done]
+### Dependencies: None
+### Description: Create the BacktestEngine class that manages the backtesting lifecycle using an event-driven architecture, defining core event types and the event loop.
+### Details:
+Define the BacktestEngine class structure. Implement the event loop that processes events (e.g., MarketEvent, SignalEvent, OrderEvent, FillEvent). Establish the event queue and event handler logic. Ensure the engine can manage the lifecycle: initialization, running, pausing, resuming, and stopping. Use clear interfaces for extensibility.
+<info added on 2025-06-09T04:06:06.483Z>
+Completed implementation of BacktestEngineV2 with a robust event-driven architecture. The new engine features comprehensive lifecycle management, supporting states such as IDLE, RUNNING, PAUSED, STOPPED, and ERROR. Event types are clearly defined, including MARKET_DATA, SIGNAL, ORDER, FILL, PROGRESS, COMPLETE, ERROR, PAUSE, RESUME, and STOP, enabling precise event handling and extensibility. The event queue and processing loop are configurable for speed, ensuring efficient event management. Integration with the existing MessageBus allows for seamless event subscriptions, while the Cache is used for reliable data storage and retrieval. Strategy management is enhanced with add/remove capabilities, and data loading supports both main bars and sub-bars. Progress tracking is implemented with configurable update intervals, and pause/resume functionality is fully supported. Results calculation is performed using cached data. A comprehensive test suite with 14 passing tests validates all core functionalities, including error handling and state transitions. The engine successfully processes bars through strategies, maintains proper state throughout its lifecycle, and handles errors gracefully.
+</info added on 2025-06-09T04:06:06.483Z>
+
+## 2. Integrate MessageBus and Cache for Communication and State Management [in-progress]
+### Dependencies: 15.1
+### Description: Connect the BacktestEngine to the existing MessageBus for all inter-component communication and use the Cache as the single source of truth for all data.
+### Details:
+Replace direct method calls with MessageBus event publishing and subscription. Ensure all data reads/writes go through the Cache. Implement handlers for relevant MessageBus events (e.g., data updates, strategy signals). Validate that the engine reacts to and emits events appropriately.
+
+## 3. Implement Progress Tracking, Pause/Resume, and Multi-Strategy Support [pending]
+### Dependencies: 15.2
+### Description: Add support for tracking backtest progress, pausing/resuming execution, and running multiple strategies simultaneously with portfolio optimization.
+### Details:
+Implement progress tracking (e.g., percentage complete, current simulation time). Add pause and resume controls that interact with the event loop. Enable registration and concurrent execution of multiple strategies, coordinating their signals and trades. Integrate portfolio optimization logic to manage allocations across strategies.
+
+## 4. Calculate and Aggregate Comprehensive Backtest Results [pending]
+### Dependencies: 15.3
+### Description: Develop modules within BacktestEngine to calculate and aggregate all relevant performance metrics and results for each strategy and the overall portfolio.
+### Details:
+Implement result aggregation logic for metrics such as returns, drawdown, Sharpe ratio, and trade statistics. Ensure results are updated in real-time or at the end of the backtest. Provide a clean API for retrieving results per strategy and for the combined portfolio.
+
+## 5. Migrate BacktesterPage to Use BacktestEngine and Ensure Clean API [pending]
+### Dependencies: 15.4
+### Description: Refactor BacktesterPage.tsx to utilize the new BacktestEngine, replacing all inline processing and ensuring proper cleanup and resource management.
+### Details:
+Replace existing inline backtesting logic in BacktesterPage.tsx with calls to BacktestEngine's API for loading data, adding strategies, running backtests, and retrieving results. Ensure all resources are properly cleaned up on component unmount. Update UI to reflect new progress and results reporting.
+

@@ -1,0 +1,22 @@
+# Task ID: 18
+# Title: Implement Advanced Order Types
+# Status: pending
+# Dependencies: 1, 13
+# Priority: medium
+# Description: Extend OrderManager to support advanced order types including stop-limit, trailing stops, and bracket orders.
+# Details:
+1. Add support for stop-limit orders with separate trigger and limit prices.
+2. Implement trailing stop orders with dynamic stop price adjustment.
+3. Create bracket order functionality (entry + stop loss + take profit).
+4. Add OCO (One-Cancels-Other) order groups.
+5. Implement order time-in-force options (GTC, GTD, FOK, IOC).
+6. Update order processing logic to handle new order types.
+7. Ensure MessageBus events cover all new order states.
+8. Update UI components to display and manage advanced orders.
+
+# Test Strategy:
+1. Test each order type with various market scenarios.
+2. Verify correct trigger and execution logic.
+3. Test order group behavior (OCO, brackets).
+4. Validate time-in-force enforcement.
+5. Test edge cases and order interactions.

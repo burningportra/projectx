@@ -9,7 +9,7 @@ DATABASE_NAME="projectx"
 USERNAME="postgres"
 PASSWORD="password"
 PORT=5433
-DATA_DIR="./timescale_data"
+VOLUME_NAME="projectx_ts_data" # Using a named volume instead of a host directory
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
@@ -27,6 +27,7 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         echo "Database: ${DATABASE_NAME}"
         echo "Username: ${USERNAME}"
         echo "Password: ${PASSWORD}"
+        echo "Volume: ${VOLUME_NAME}"
         echo
         echo "Connection URL: postgresql://${USERNAME}:${PASSWORD}@localhost:${PORT}/${DATABASE_NAME}"
         exit 0
@@ -39,15 +40,19 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         echo "Database: ${DATABASE_NAME}"
         echo "Username: ${USERNAME}"
         echo "Password: ${PASSWORD}"
+        echo "Volume: ${VOLUME_NAME}"
         echo
         echo "Connection URL: postgresql://${USERNAME}:${PASSWORD}@localhost:${PORT}/${DATABASE_NAME}"
         exit 0
     fi
 fi
 
-# Create data directory if it doesn't exist
-mkdir -p ${DATA_DIR}
-echo "Data will be stored in ${DATA_DIR}"
+# Create Docker volume if it doesn't exist
+if ! docker volume ls --format '{{.Name}}' | grep -q "^${VOLUME_NAME}$"; then
+    echo "Creating Docker volume '${VOLUME_NAME}' for data persistence..."
+    docker volume create ${VOLUME_NAME}
+fi
+echo "Data will be stored in Docker volume '${VOLUME_NAME}'"
 
 # Run TimescaleDB container
 echo "Starting TimescaleDB container..."
@@ -57,7 +62,7 @@ docker run -d \
     -e POSTGRES_PASSWORD=${PASSWORD} \
     -e POSTGRES_USER=${USERNAME} \
     -e POSTGRES_DB=${DATABASE_NAME} \
-    -v ${DATA_DIR}:/var/lib/postgresql/data \
+    -v ${VOLUME_NAME}:/var/lib/postgresql/data \
     -p ${PORT}:5432 \
     timescale/timescaledb:latest-pg15
 
@@ -67,6 +72,7 @@ if [ $? -eq 0 ]; then
     echo "Database: ${DATABASE_NAME}"
     echo "Username: ${USERNAME}"
     echo "Password: ${PASSWORD}"
+    echo "Volume: ${VOLUME_NAME}"
     echo
     echo "Connection URL: postgresql://${USERNAME}:${PASSWORD}@localhost:${PORT}/${DATABASE_NAME}"
     echo

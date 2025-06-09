@@ -116,20 +116,18 @@ class GatewayClient:
             async with self.session.post(url, headers=headers, json=data) as response:
                 logger.info(f"Login response status: {response.status}")
                 
-                try:
-                    response_text = await response.text()
-                    logger.info(f"Raw response: {response_text}")
-                    try:
-                        response_data = json.loads(response_text)
-                        logger.debug("Successfully parsed JSON response")
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Invalid JSON response: {response_text}")
-                        logger.error(f"JSON decode error: {str(e)}")
-                        raise ApiError(f"Invalid JSON response: {response_text}")
-                except Exception as e:
-                    logger.error(f"Error reading response: {str(e)}")
-                    raise ApiError(f"Error reading response: {str(e)}")
+                response_text = await response.text()
                 
+                try:
+                    # Try to parse JSON first
+                    response_data = json.loads(response_text)
+                    logger.debug("Successfully parsed JSON response")
+                except json.JSONDecodeError as e:
+                    # If JSON parsing fails, log the raw text and raise an error
+                    logger.error("Failed to parse JSON response from server.", exc_info=True)
+                    logger.error(f"Raw response text that caused the error:\n---\n{response_text}\n---")
+                    raise ApiError(f"Invalid JSON response from server. Status: {response.status}") from e
+
                 if not response.ok:
                     error_msg = response_data.get('errorMessage', 'Unknown error')
                     logger.error(f"Login failed with status {response.status}: {error_msg}")
@@ -181,9 +179,6 @@ class GatewayClient:
         except aiohttp.ClientError as e:
             logger.error(f"HTTP request error during login: {str(e)}")
             raise ApiError(f"Login request failed: {str(e)}")
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON response during login: {str(e)}")
-            raise ApiError("Invalid JSON response from login API")
         except ApiError:
             # Re-raise API errors without wrapping
             raise

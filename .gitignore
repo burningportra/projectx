@@ -49,3 +49,4 @@ node_modules/
 *.sln
 *.sw?
 # OS specific
+/projectx_test_data
