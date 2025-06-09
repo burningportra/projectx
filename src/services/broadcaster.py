@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from dotenv import load_dotenv
+from typing import Optional
 
 sys.stderr.write("Broadcaster.py: Imports done (stderr)\n")
 sys.stderr.flush()
@@ -89,21 +90,31 @@ async def broadcast_message(message_json_str):
             # Potentially remove problematic clients from connected_clients here
 
 # --- PostgreSQL LISTEN/NOTIFY Handling ---
-async def pg_notification_handler(connection, pid, channel, payload_str):
-    logger.info(f"Received NOTIFY on channel '{channel}'") # Payload: {payload_str[:150]}...")
+MAIN_EVENT_LOOP: Optional[asyncio.AbstractEventLoop] = None
+
+def pg_notification_handler_threadsafe(connection, pid, channel, payload_str):
+    """
+    This is the actual callback from asyncpg, which may run in a different thread.
+    It safely schedules the async handler to run on the main event loop.
+    """
+    if MAIN_EVENT_LOOP:
+        asyncio.run_coroutine_threadsafe(
+            pg_notification_handler_async(channel, payload_str), 
+            MAIN_EVENT_LOOP
+        )
+    else:
+        logger.error("Main event loop not available for notification handler.")
+
+async def pg_notification_handler_async(channel, payload_str):
+    """This async version of the handler does the actual work."""
+    logger.info(f"Received NOTIFY on channel '{channel}'")
     try:
-        # Payload is already a JSON string.
-        # Validate it's JSON just in case.
-        json.loads(payload_str) # This will raise JSONDecodeError if invalid
-        
-        # Broadcast the raw JSON string payload to all connected WebSocket clients.
-        # Using create_task to ensure this handler returns quickly.
-        asyncio.create_task(broadcast_message(payload_str))
-        # logger.debug(f"Scheduled broadcast for channel '{channel}': {payload_str[:100]}...") # Generic log
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON payload from NOTIFY: {e}. Payload: {payload_str}")
+        json.loads(payload_str)
+        await broadcast_message(payload_str)
+    except json.JSONDecodeError:
+        logger.error(f"Failed to decode JSON payload from NOTIFY: {payload_str}")
     except Exception as e:
-        logger.error(f"Error in pg_notification_handler: {e}. Payload: {payload_str}", exc_info=True)
+        logger.error(f"Error in async notification handler: {e}", exc_info=True)
 
 async def listen_for_db_notifications():
     conn = None
@@ -112,10 +123,10 @@ async def listen_for_db_notifications():
             conn = await asyncpg.connect(**DB_CONFIG)
             logger.info("Successfully connected to PostgreSQL for LISTEN.")
             
-            # Add listeners for both channels.
-            await conn.add_listener('ohlc_update', pg_notification_handler)
+            # Add listeners for both channels, using the thread-safe wrapper
+            await conn.add_listener('ohlc_update', pg_notification_handler_threadsafe)
             logger.info("Listening for 'ohlc_update' notifications from PostgreSQL...")
-            await conn.add_listener('tick_data_channel', pg_notification_handler)
+            await conn.add_listener('tick_data_channel', pg_notification_handler_threadsafe)
             logger.info("Listening for 'tick_data_channel' notifications from PostgreSQL...")
             
             # Keep the connection alive and processing notifications.
@@ -124,8 +135,8 @@ async def listen_for_db_notifications():
             
             logger.warning("PostgreSQL connection closed. Attempting to reconnect...")
             if conn and not conn.is_closed():
-                 await conn.remove_listener('ohlc_update', pg_notification_handler)
-                 await conn.remove_listener('tick_data_channel', pg_notification_handler)
+                 await conn.remove_listener('ohlc_update', pg_notification_handler_threadsafe)
+                 await conn.remove_listener('tick_data_channel', pg_notification_handler_threadsafe)
                  await conn.close()
             conn = None
 
@@ -137,8 +148,8 @@ async def listen_for_db_notifications():
         finally:
             if conn and not conn.is_closed():
                 try:
-                    await conn.remove_listener('ohlc_update', pg_notification_handler)
-                    await conn.remove_listener('tick_data_channel', pg_notification_handler)
+                    await conn.remove_listener('ohlc_update', pg_notification_handler_threadsafe)
+                    await conn.remove_listener('tick_data_channel', pg_notification_handler_threadsafe)
                 except Exception as e_rem:
                     logger.error(f"Error removing listeners during cleanup: {e_rem}")
                 await conn.close()
@@ -148,6 +159,9 @@ async def listen_for_db_notifications():
 
 # --- Main Server ---
 async def main():
+    global MAIN_EVENT_LOOP
+    MAIN_EVENT_LOOP = asyncio.get_running_loop()
+
     # Start the PostgreSQL listener
     listener_task = asyncio.create_task(listen_for_db_notifications())
     # Start the WebSocket server

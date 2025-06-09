@@ -21,7 +21,7 @@ def generate_trend_starts(
     timeframe_str: str,
     config: Optional[Dict[str, Any]] = None, # Keep for API compatibility, though not used by new core logic directly
     debug: bool = False # This will now be controlled by trend_utils.DEBUG_MODE_ACTIVE via script args
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, Any]]:
     """
     Generates trend start signals (CUS/CDS) using the refactored trend_analysis logic.
 
@@ -34,9 +34,10 @@ def generate_trend_starts(
         debug (bool): Controls debug log generation (now through trend_utils global flags).
 
     Returns:
-        Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]: 
+        Tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, Any]]: 
             - A list of signal dictionaries.
             - A list of debug log dictionaries.
+            - A dictionary representing the final state of the analyzer.
     """
     log_prefix = f"[generate_trend_starts_v2][{contract_id}][{timeframe_str}]"
     
@@ -70,7 +71,7 @@ def generate_trend_starts(
             trend_utils.DEBUG_MODE_ACTIVE = initial_debug_active
             trend_utils.DEBUG_START_INDEX = initial_debug_start
             trend_utils.DEBUG_END_INDEX = initial_debug_end
-        return [], []
+        return [], [], {}
 
     all_bars: List[Bar] = []
     for i, row_tuple in enumerate(bars_df.itertuples(index=False)):
@@ -103,14 +104,14 @@ def generate_trend_starts(
                 trend_utils.DEBUG_MODE_ACTIVE = initial_debug_active
                 trend_utils.DEBUG_START_INDEX = initial_debug_start
                 trend_utils.DEBUG_END_INDEX = initial_debug_end
-            return [], [] 
+            return [], [], {} 
         except ValueError as e:
             logger.error(f"{log_prefix} Error processing row {i} from DataFrame: Value error {e}. Row: {row_tuple}")
             if debug: 
                 trend_utils.DEBUG_MODE_ACTIVE = initial_debug_active
                 trend_utils.DEBUG_START_INDEX = initial_debug_start
                 trend_utils.DEBUG_END_INDEX = initial_debug_end
-            return [], []
+            return [], [], {}
 
     if not all_bars:
         logger.info(f"{log_prefix} No bars could be constructed from DataFrame.")
@@ -118,11 +119,11 @@ def generate_trend_starts(
             trend_utils.DEBUG_MODE_ACTIVE = initial_debug_active
             trend_utils.DEBUG_START_INDEX = initial_debug_start
             trend_utils.DEBUG_END_INDEX = initial_debug_end
-        return [], []
+        return [], [], {}
 
     logger.info(f"{log_prefix} Successfully prepared {len(all_bars)} bars for trend analysis.")
 
-    signals_found, debug_log_entries = trend_start_og_fixed.process_trend_logic(
+    signals_found, debug_log_entries, final_state = trend_start_og_fixed.process_trend_logic(
         all_bars, 
         contract_id=contract_id, 
         timeframe_str=timeframe_str
@@ -147,7 +148,7 @@ def generate_trend_starts(
         trend_utils.DEBUG_START_INDEX = initial_debug_start
         trend_utils.DEBUG_END_INDEX = initial_debug_end
 
-    return signals_found, debug_log_entries
+    return signals_found, debug_log_entries, final_state
 
 def process_api_input():
     """Process input from stdin for API integration"""
@@ -178,7 +179,7 @@ def process_api_input():
         bars_df['timestamp'] = pd.to_datetime(bars_df['timestamp'])
         
         # Generate trend starts
-        signals, debug_logs = generate_trend_starts(
+        signals, debug_logs, final_state = generate_trend_starts(
             bars_df, 
             contract_id, 
             timeframe,
@@ -244,7 +245,7 @@ if __name__ == '__main__':
         }
         sample_df = pd.DataFrame(data)
 
-        signals, debug_logs = generate_trend_starts(sample_df, "TEST.CON.CLI", "1h", debug=True)
+        signals, debug_logs, final_state = generate_trend_starts(sample_df, "TEST.CON.CLI", "1h", debug=True)
         
         print("\n--- Signals Found ---")
         if signals:

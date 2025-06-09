@@ -1,8 +1,12 @@
 Broadcaster.py: Top of file reached (stderr)
 Broadcaster.py: Imports done (stderr)
-2025-06-09 13:23:01,969 - OHLCBroadcaster - INFO - Broadcaster.py: Logging configured.
-2025-06-09 13:23:01,984 - websockets.server - INFO - server listening on 127.0.0.1:8765
-2025-06-09 13:23:01,985 - websockets.server - INFO - server listening on [::1]:8765
-2025-06-09 13:24:25,432 - websockets.server - INFO - connection open
-ning on [::1]:8765
-2025-06-09 13:24:25,432 - websockets.server - INFO - connection open
+2025-06-09 18:44:40,303 - OHLCBroadcaster - INFO - Broadcaster.py: Logging configured.
+2025-06-09 18:44:40,320 - websockets.server - INFO - server listening on [::1]:8765
+2025-06-09 18:44:40,320 - websockets.server - INFO - server listening on 127.0.0.1:8765
+2025-06-09 18:45:56,506 - websockets.server - INFO - connection open
+2025-06-09 18:51:13,729 - websockets.server - INFO - connection open
+2025-06-09 18:51:26,867 - websockets.server - INFO - connection open
+2025-06-09 18:52:31,119 - websockets.server - INFO - connection open
+2025-06-09 18:52:35,206 - websockets.server - INFO - connection open
+ - connection open
+2025-06-09 18:52:35,206 - websockets.server - INFO - connection open

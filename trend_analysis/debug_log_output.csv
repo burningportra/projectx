@@ -1,0 +1,221 @@
+event_timestamp,event_type,processing_bar_index,message,processing_bar_timestamp,processing_bar_ohlc,pds_potential_idx,pds_anchor_h,pds_candidate_idx,pds_candidate_h,pds_candidate_l,pus_potential_idx,pus_anchor_l,pus_candidate_idx,pus_candidate_l,pus_candidate_h,in_containment,containment_ref_idx,containment_ref_type,last_trend_type,last_trend_idx,overall_trend_up
+2025-06-09T21:41:32.716974+00:00,STRATEGY_DEBUG,1,Processing Bar 1 (2025-03-16T22:00:00+00:00),2025-03-16T22:00:00+00:00,"O:5679.75,H:5684.0,L:5654.25,C:5666.0,V:45862.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.716994+00:00,STRATEGY_DEBUG,1,Bar OHLCV: O:5679.75 H:5684.0 L:5654.25 C:5666.0 V:45862.0,2025-03-16T22:00:00+00:00,"O:5679.75,H:5684.0,L:5654.25,C:5666.0,V:45862.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717000+00:00,STRATEGY_DEBUG,1,"First bar, no previous bar for comparison.",2025-03-16T22:00:00+00:00,"O:5679.75,H:5684.0,L:5654.25,C:5666.0,V:45862.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717005+00:00,STRATEGY_DEBUG,2,Processing Bar 2 (2025-03-17T02:00:00+00:00),2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717009+00:00,STRATEGY_DEBUG,2,Bar OHLCV: O:5666.25 H:5666.75 L:5659.25 C:5662.0 V:12537.0,2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717014+00:00,STRATEGY_DEBUG,2,Initial State - PUS Candidate: Bar None (L:N/A) | PDS Candidate: Bar None (H:N/A),2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717018+00:00,STRATEGY_DEBUG,2,Initial State - Last Confirmed Trend: None at Bar None,2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717022+00:00,STRATEGY_DEBUG,2,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,,,,,,,,,False,,,,,
+2025-06-09T21:41:32.717026+00:00,STRATEGY_DEBUG,2,CUS Evaluation: No initial PUS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717028+00:00,STRATEGY_DEBUG,2,CDS Evaluation: No initial PDS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717030+00:00,STRATEGY_DEBUG,2,Signal Generation: Checking PDS for prev_bar (1) triggered by current_bar (2).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717033+00:00,STRATEGY_DEBUG,2,"Signal Generation (PDS on prev_bar 1): is_lower_ohlc_bar=False, is_pending_downtrend_start_rule=True, is_simple_pending_downtrend_start_signal=True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717035+00:00,STRATEGY_DEBUG,1,Attempting to set PDS on Bar 1. Current PDS cand: None (H:None). Prev bar H check passed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717037+00:00,STRATEGY_DEBUG,1,"PDS set/updated on Bar 1 (H:5684.0, L:5654.25). Cleared PUS on same bar if present.",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717038+00:00,STRATEGY_DEBUG,2,Signal Generation: PDS conditions MET. PDS set/updated on prev_bar (1).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717040+00:00,STRATEGY_DEBUG,2,Signal Generation: Checking PUS for prev_bar (1) triggered by current_bar (2).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717042+00:00,STRATEGY_DEBUG,2,"Signal Generation (PUS on prev_bar 1): is_higher_ohlc_bar=False, is_pending_uptrend_start_rule=False, is_simple_pending_uptrend_start_signal=True, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717044+00:00,STRATEGY_DEBUG,1,Attempting to set PUS on Bar 1. Current PUS cand: None (L:None).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717046+00:00,STRATEGY_DEBUG,1,"PUS set/updated on Bar 1 (L:5654.25, H:5684.0). Cleared PDS on same bar if present.",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717048+00:00,STRATEGY_DEBUG,2,Signal Generation: PUS conditions MET. PUS set/updated on prev_bar (1).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717051+00:00,STRATEGY_DEBUG,2,Bar Summary: Pending Downtrend Start on Bar 1 (2025-03-16T22:00:00+00:00); Pending Uptrend Start on Bar 1 (2025-03-16T22:00:00+00:00),2025-03-17T02:00:00+00:00,"O:5666.25,H:5666.75,L:5659.25,C:5662.0,V:12537.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717055+00:00,STRATEGY_DEBUG,3,Processing Bar 3 (2025-03-17T06:00:00+00:00),2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717060+00:00,STRATEGY_DEBUG,3,Bar OHLCV: O:5661.75 H:5670.25 L:5651.25 C:5666.5 V:38939.0,2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717066+00:00,STRATEGY_DEBUG,3,Initial State - PUS Candidate: Bar 1 (L:5654.25) | PDS Candidate: Bar 1 (H:5684.0),2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717070+00:00,STRATEGY_DEBUG,3,Initial State - Last Confirmed Trend: None at Bar None,2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717075+00:00,STRATEGY_DEBUG,3,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,1.0,5684.0,5654.25,1.0,5654.25,1.0,5654.25,5684.0,False,,,,,
+2025-06-09T21:41:32.717080+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717082+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717083+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717085+00:00,STRATEGY_DEBUG,3,CUS Rule 'LowUndercutHighRespect' REJECTED: PDS context (Bar 1) not after PUS candidate (Bar 1).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717086+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Rule 'LowUndercutHighRespect' NOT MET for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717088+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Checking rule 'HigherHighLowerLowDownClose' for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717090+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Rule 'HigherHighLowerLowDownClose' NOT MET for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717091+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Checking rule 'EngulfingUpPDSLowBreak' for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717093+00:00,STRATEGY_DEBUG,3,CUS Rule 'check_cus_confirmation_engulfing_up_with_pds_low_break' MET for PDS cand 1,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717094+00:00,STRATEGY_DEBUG,3,CUS Evaluation: Rule 'EngulfingUpPDSLowBreak' MET for PUS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717096+00:00,STRATEGY_DEBUG,3,CDS Evaluation: Checking rule 'LowThenHigherClose_vs_PDSOpen' for PDS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717098+00:00,STRATEGY_DEBUG,3,CDS Rule 'check_cds_confirmation_low_then_higher_close_vs_pds_open' MET for PDS 1,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717100+00:00,STRATEGY_DEBUG,3,CDS Evaluation: Rule 'LowThenHigherClose_vs_PDSOpen' MET for PDS on Bar 1.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717104+00:00,STRATEGY_DEBUG,1,CUS Confirmed from Bar 1. Last confirmed: UPTREND at 1,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717107+00:00,STRATEGY_DEBUG,3,Apply CUS: Rule 'EngulfingUpPDSLowBreak' triggered. No automatic PDS generation for this rule.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717110+00:00,STRATEGY_DEBUG,1,CDS Confirmed from Bar 1. Last confirmed: DOWNTREND at 1,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717111+00:00,STRATEGY_DEBUG,1,Apply CDS: PDS candidate on CDS Bar 1 is being reset as it is now confirmed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717115+00:00,STRATEGY_DEBUG,3,Bar Summary: Confirmed Downtrend Start from Bar 1 (2025-03-16T22:00:00+00:00); Confirmed Uptrend Start from Bar 1 (2025-03-16T22:00:00+00:00),2025-03-17T06:00:00+00:00,"O:5661.75,H:5670.25,L:5651.25,C:5666.5,V:38939.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717119+00:00,STRATEGY_DEBUG,4,Processing Bar 4 (2025-03-17T10:00:00+00:00),2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717123+00:00,STRATEGY_DEBUG,4,Bar OHLCV: O:5666.5 H:5726.25 L:5664.75 C:5719.25 V:214455.0,2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717127+00:00,STRATEGY_DEBUG,4,Initial State - PUS Candidate: Bar None (L:N/A) | PDS Candidate: Bar None (H:N/A),2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717131+00:00,STRATEGY_DEBUG,4,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717134+00:00,STRATEGY_DEBUG,4,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,,,,,,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717138+00:00,STRATEGY_DEBUG,4,CUS Evaluation: No initial PUS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717140+00:00,STRATEGY_DEBUG,4,CDS Evaluation: No initial PDS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717141+00:00,STRATEGY_DEBUG,4,Signal Generation: Checking PDS for prev_bar (3) triggered by current_bar (4).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717144+00:00,STRATEGY_DEBUG,4,"Signal Generation (PDS on prev_bar 3): is_lower_ohlc_bar=False, is_pending_downtrend_start_rule=False, is_simple_pending_downtrend_start_signal=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717145+00:00,STRATEGY_DEBUG,4,Signal Generation: No PDS conditions met for prev_bar (3).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717147+00:00,STRATEGY_DEBUG,4,Signal Generation: Checking PUS for prev_bar (3) triggered by current_bar (4).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717149+00:00,STRATEGY_DEBUG,4,"Signal Generation (PUS on prev_bar 3): is_higher_ohlc_bar=True, is_pending_uptrend_start_rule=True, is_simple_pending_uptrend_start_signal=True, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717151+00:00,STRATEGY_DEBUG,3,Attempting to set PUS on Bar 3. Current PUS cand: None (L:None).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717153+00:00,STRATEGY_DEBUG,3,"PUS set/updated on Bar 3 (L:5651.25, H:5670.25). Cleared PDS on same bar if present.",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717154+00:00,STRATEGY_DEBUG,4,Signal Generation: PUS conditions MET. PUS set/updated on prev_bar (3).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717156+00:00,STRATEGY_DEBUG,4,Bar Summary: Pending Uptrend Start on Bar 3 (2025-03-17T06:00:00+00:00),2025-03-17T10:00:00+00:00,"O:5666.5,H:5726.25,L:5664.75,C:5719.25,V:214455.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717160+00:00,STRATEGY_DEBUG,5,Processing Bar 5 (2025-03-17T14:00:00+00:00),2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717164+00:00,STRATEGY_DEBUG,5,Bar OHLCV: O:5719.25 H:5736.25 L:5689.75 C:5733.5 V:537104.0,2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717168+00:00,STRATEGY_DEBUG,5,Initial State - PUS Candidate: Bar 3 (L:5651.25) | PDS Candidate: Bar None (H:N/A),2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717176+00:00,STRATEGY_DEBUG,5,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717180+00:00,STRATEGY_DEBUG,5,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,3.0,5651.25,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717184+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717186+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717187+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717189+00:00,STRATEGY_DEBUG,5,CUS Rule 'LowUndercutHighRespect' REJECTED: Missing PUS (3) or PDS context (None).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717190+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Rule 'LowUndercutHighRespect' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717191+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Checking rule 'HigherHighLowerLowDownClose' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717192+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Rule 'HigherHighLowerLowDownClose' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717194+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Checking rule 'EngulfingUpPDSLowBreak' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717195+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Rule 'EngulfingUpPDSLowBreak' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717196+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Checking rule 'BreakoutAfterFailedLowV2' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717198+00:00,STRATEGY_DEBUG,5,CUS Rule '_cus_rule_breakout_after_failed_low_v2' REJECTED: No initial PUS (3) or PDS (None) candidate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717199+00:00,STRATEGY_DEBUG,5,CUS Evaluation: Rule 'BreakoutAfterFailedLowV2' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717201+00:00,STRATEGY_DEBUG,5,CDS Evaluation: No initial PDS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717202+00:00,STRATEGY_DEBUG,5,Signal Generation: Checking PDS for prev_bar (4) triggered by current_bar (5).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717204+00:00,STRATEGY_DEBUG,5,"Signal Generation (PDS on prev_bar 4): is_lower_ohlc_bar=False, is_pending_downtrend_start_rule=False, is_simple_pending_downtrend_start_signal=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717205+00:00,STRATEGY_DEBUG,5,Signal Generation: No PDS conditions met for prev_bar (4).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717207+00:00,STRATEGY_DEBUG,5,Signal Generation: Checking PUS for prev_bar (4) triggered by current_bar (5).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717209+00:00,STRATEGY_DEBUG,5,"Signal Generation (PUS on prev_bar 4): is_higher_ohlc_bar=True, is_pending_uptrend_start_rule=True, is_simple_pending_uptrend_start_signal=True, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717210+00:00,STRATEGY_DEBUG,4,Attempting to set PUS on Bar 4. Current PUS cand: 3 (L:5651.25).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717212+00:00,STRATEGY_DEBUG,4,PUS on Bar 4 not set/updated (existing cand Bar 3 has L:5651.25).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717213+00:00,STRATEGY_DEBUG,5,Signal Generation: PUS conditions MET BUT PUS on prev_bar (4) was not updated (e.g. existing cand better).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717214+00:00,STRATEGY_DEBUG,5,Bar Summary: Neutral (no specific events).,2025-03-17T14:00:00+00:00,"O:5719.25,H:5736.25,L:5689.75,C:5733.5,V:537104.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717218+00:00,STRATEGY_DEBUG,6,Processing Bar 6 (2025-03-17T18:00:00+00:00),2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717223+00:00,STRATEGY_DEBUG,6,Bar OHLCV: O:5733.5 H:5759.75 L:5725.5 C:5732.25 V:233213.0,2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717227+00:00,STRATEGY_DEBUG,6,Initial State - PUS Candidate: Bar 3 (L:5651.25) | PDS Candidate: Bar None (H:N/A),2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717230+00:00,STRATEGY_DEBUG,6,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717235+00:00,STRATEGY_DEBUG,6,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",,,,,,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717240+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717242+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717243+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717245+00:00,STRATEGY_DEBUG,6,CUS Rule 'LowUndercutHighRespect' REJECTED: Missing PUS (3) or PDS context (None).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717246+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Rule 'LowUndercutHighRespect' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717247+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Checking rule 'HigherHighLowerLowDownClose' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717248+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Rule 'HigherHighLowerLowDownClose' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717249+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Checking rule 'EngulfingUpPDSLowBreak' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717251+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Rule 'EngulfingUpPDSLowBreak' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717252+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Checking rule 'BreakoutAfterFailedLowV2' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717253+00:00,STRATEGY_DEBUG,6,CUS Rule '_cus_rule_breakout_after_failed_low_v2' REJECTED: No initial PUS (3) or PDS (None) candidate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717254+00:00,STRATEGY_DEBUG,6,CUS Evaluation: Rule 'BreakoutAfterFailedLowV2' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717256+00:00,STRATEGY_DEBUG,6,CDS Evaluation: No initial PDS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717257+00:00,STRATEGY_DEBUG,6,Signal Generation: Checking Rule C for PDS on current_bar (6).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717259+00:00,STRATEGY_DEBUG,6,Attempting to set PDS on Bar 6. Current PDS cand: None (H:None). Prev bar H check passed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717262+00:00,STRATEGY_DEBUG,6,"PDS set/updated on Bar 6 (H:5759.75, L:5725.5). Cleared PUS on same bar if present.",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717263+00:00,STRATEGY_DEBUG,6,Signal Generation: Rule C MET. PDS set on current_bar (6).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717265+00:00,STRATEGY_DEBUG,6,Bar Summary: Pending Downtrend Start on Bar 6 (2025-03-17T18:00:00+00:00) by Rule C,2025-03-17T18:00:00+00:00,"O:5733.5,H:5759.75,L:5725.5,C:5732.25,V:233213.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717269+00:00,STRATEGY_DEBUG,7,Processing Bar 7 (2025-03-17T22:00:00+00:00),2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717273+00:00,STRATEGY_DEBUG,7,Bar OHLCV: O:5732.0 H:5738.0 L:5716.5 C:5717.5 V:35976.0,2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717277+00:00,STRATEGY_DEBUG,7,Initial State - PUS Candidate: Bar 3 (L:5651.25) | PDS Candidate: Bar 6 (H:5759.75),2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717280+00:00,STRATEGY_DEBUG,7,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717283+00:00,STRATEGY_DEBUG,7,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717288+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717290+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717291+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717293+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Rule 'LowUndercutHighRespect' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717294+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Checking rule 'HigherHighLowerLowDownClose' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717295+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Rule 'HigherHighLowerLowDownClose' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717297+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Checking rule 'EngulfingUpPDSLowBreak' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717298+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Rule 'EngulfingUpPDSLowBreak' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717299+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Checking rule 'BreakoutAfterFailedLowV2' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717302+00:00,STRATEGY_DEBUG,7,"CUS Rule '_cus_rule_breakout_after_failed_low_v2' NOT MET. PUS:3, PDS:6. cond_new_high_vs_pds:False, cond_closes_higher_prev:False, cond_up_bar:False, pus_low_respected:True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717304+00:00,STRATEGY_DEBUG,7,CUS Evaluation: Rule 'BreakoutAfterFailedLowV2' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717305+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'LowThenHigherClose_vs_PDSOpen' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717307+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'LowThenHigherClose_vs_PDSOpen' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717308+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'RallyLowBreaksPeakLow_A' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717311+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'RallyLowBreaksPeakLow_A' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717312+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'NewHighWeakAdvance_B' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717313+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'NewHighWeakAdvance_B' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717314+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'FailedRallyAfterLowBreak_F' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717316+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'FailedRallyAfterLowBreak_F' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717317+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'HigherOHLCAfterLowBreak_G' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717319+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'HigherOHLCAfterLowBreak_G' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717320+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Checking rule 'OutsideBarStrongerClose_H' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717321+00:00,STRATEGY_DEBUG,7,CDS Evaluation: Rule 'OutsideBarStrongerClose_H' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717323+00:00,STRATEGY_DEBUG,7,Signal Generation: Checking PDS for prev_bar (6) triggered by current_bar (7).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717324+00:00,STRATEGY_DEBUG,7,"Signal Generation (PDS on prev_bar 6): is_lower_ohlc_bar=True, is_pending_downtrend_start_rule=True, is_simple_pending_downtrend_start_signal=True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717326+00:00,STRATEGY_DEBUG,6,Attempting to set PDS on Bar 6. Current PDS cand: 6 (H:5759.75). Prev bar H check passed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717328+00:00,STRATEGY_DEBUG,6,PDS on Bar 6 not set/updated (existing cand Bar 6 has H:5759.75).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717329+00:00,STRATEGY_DEBUG,7,"Signal Generation: PDS conditions MET BUT PDS on prev_bar (6) was rejected or not updated (e.g. H < prev H, or existing cand better).",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717330+00:00,STRATEGY_DEBUG,7,Signal Generation: Checking PUS for prev_bar (6) triggered by current_bar (7).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717332+00:00,STRATEGY_DEBUG,7,"Signal Generation (PUS on prev_bar 6): is_higher_ohlc_bar=False, is_pending_uptrend_start_rule=False, is_simple_pending_uptrend_start_signal=False, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717333+00:00,STRATEGY_DEBUG,7,Signal Generation: No PUS conditions met for prev_bar (6).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717335+00:00,STRATEGY_DEBUG,7,Bar Summary: Neutral (no specific events).,2025-03-17T22:00:00+00:00,"O:5732.0,H:5738.0,L:5716.5,C:5717.5,V:35976.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717338+00:00,STRATEGY_DEBUG,8,Processing Bar 8 (2025-03-18T02:00:00+00:00),2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717343+00:00,STRATEGY_DEBUG,8,Bar OHLCV: O:5717.5 H:5720.25 L:5707.75 C:5713.75 V:19078.0,2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717350+00:00,STRATEGY_DEBUG,8,Initial State - PUS Candidate: Bar 3 (L:5651.25) | PDS Candidate: Bar 6 (H:5759.75),2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717354+00:00,STRATEGY_DEBUG,8,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717357+00:00,STRATEGY_DEBUG,8,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717362+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717363+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717364+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717366+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Rule 'LowUndercutHighRespect' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717367+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Checking rule 'HigherHighLowerLowDownClose' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717368+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Rule 'HigherHighLowerLowDownClose' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717369+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Checking rule 'EngulfingUpPDSLowBreak' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717371+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Rule 'EngulfingUpPDSLowBreak' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717372+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Checking rule 'BreakoutAfterFailedLowV2' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717378+00:00,STRATEGY_DEBUG,8,"CUS Rule '_cus_rule_breakout_after_failed_low_v2' NOT MET. PUS:3, PDS:6. cond_new_high_vs_pds:False, cond_closes_higher_prev:False, cond_up_bar:False, pus_low_respected:True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717379+00:00,STRATEGY_DEBUG,8,CUS Evaluation: Rule 'BreakoutAfterFailedLowV2' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717380+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'LowThenHigherClose_vs_PDSOpen' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717382+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'LowThenHigherClose_vs_PDSOpen' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717383+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'RallyLowBreaksPeakLow_A' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717385+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'RallyLowBreaksPeakLow_A' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717387+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'NewHighWeakAdvance_B' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717388+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'NewHighWeakAdvance_B' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717389+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'FailedRallyAfterLowBreak_F' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717391+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'FailedRallyAfterLowBreak_F' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717392+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'HigherOHLCAfterLowBreak_G' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717393+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'HigherOHLCAfterLowBreak_G' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717395+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Checking rule 'OutsideBarStrongerClose_H' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717396+00:00,STRATEGY_DEBUG,8,CDS Evaluation: Rule 'OutsideBarStrongerClose_H' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717397+00:00,STRATEGY_DEBUG,8,Signal Generation: Checking PDS for prev_bar (7) triggered by current_bar (8).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717398+00:00,STRATEGY_DEBUG,8,"Signal Generation (PDS on prev_bar 7): is_lower_ohlc_bar=True, is_pending_downtrend_start_rule=True, is_simple_pending_downtrend_start_signal=True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717401+00:00,STRATEGY_DEBUG,8,"Signal Generation: PDS conditions MET BUT PDS on prev_bar (7) was rejected or not updated (e.g. H < prev H, or existing cand better).",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717402+00:00,STRATEGY_DEBUG,8,Signal Generation: Checking PUS for prev_bar (7) triggered by current_bar (8).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717403+00:00,STRATEGY_DEBUG,8,"Signal Generation (PUS on prev_bar 7): is_higher_ohlc_bar=False, is_pending_uptrend_start_rule=False, is_simple_pending_uptrend_start_signal=False, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717404+00:00,STRATEGY_DEBUG,8,Signal Generation: No PUS conditions met for prev_bar (7).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717406+00:00,STRATEGY_DEBUG,8,Bar Summary: PDS on Bar 7 rejected: H (5738.0) < H of prev bar 6 (5759.75),2025-03-18T02:00:00+00:00,"O:5717.5,H:5720.25,L:5707.75,C:5713.75,V:19078.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717409+00:00,STRATEGY_DEBUG,9,Processing Bar 9 (2025-03-18T06:00:00+00:00),2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717413+00:00,STRATEGY_DEBUG,9,Bar OHLCV: O:5713.75 H:5735.75 L:5712.0 C:5723.75 V:51934.0,2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717417+00:00,STRATEGY_DEBUG,9,Initial State - PUS Candidate: Bar 3 (L:5651.25) | PDS Candidate: Bar 6 (H:5759.75),2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717420+00:00,STRATEGY_DEBUG,9,Initial State - Last Confirmed Trend: downtrend at Bar 1,2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717423+00:00,STRATEGY_DEBUG,9,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",6.0,5759.75,6.0,5759.75,5725.5,4.0,5664.75,3.0,5651.25,5670.25,False,,,downtrend,1.0,False
+2025-06-09T21:41:32.717427+00:00,STRATEGY_DEBUG,9,CUS Evaluation: Checking rule 'EXHAUSTION_REVERSAL' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717428+00:00,STRATEGY_DEBUG,9,CUS Evaluation: Rule 'EXHAUSTION_REVERSAL' NOT MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717430+00:00,STRATEGY_DEBUG,9,CUS Evaluation: Checking rule 'LowUndercutHighRespect' for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717431+00:00,STRATEGY_DEBUG,9,CUS Rule 'check_cus_confirmation_low_undercut_high_respect' MET for PDS cand 6,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717432+00:00,STRATEGY_DEBUG,9,CUS Evaluation: Rule 'LowUndercutHighRespect' MET for PUS on Bar 3.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717433+00:00,STRATEGY_DEBUG,9,CDS Evaluation: Checking rule 'LowThenHigherClose_vs_PDSOpen' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717435+00:00,STRATEGY_DEBUG,9,CDS Evaluation: Rule 'LowThenHigherClose_vs_PDSOpen' NOT MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717436+00:00,STRATEGY_DEBUG,9,CDS Evaluation: Checking rule 'RallyLowBreaksPeakLow_A' for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717439+00:00,STRATEGY_DEBUG,9,CDS Rule 'check_cds_confirmation_pattern_A' MET for PDS 6,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717440+00:00,STRATEGY_DEBUG,9,CDS Evaluation: Rule 'RallyLowBreaksPeakLow_A' MET for PDS on Bar 6.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717443+00:00,STRATEGY_DEBUG,3,CUS Confirmed from Bar 3. Last confirmed: UPTREND at 3,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717447+00:00,STRATEGY_DEBUG,6,CDS Confirmed from Bar 6. Last confirmed: DOWNTREND at 6,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717448+00:00,STRATEGY_DEBUG,6,Apply CDS: PDS candidate on CDS Bar 6 is being reset as it is now confirmed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717450+00:00,STRATEGY_DEBUG,9,Bar Summary: Confirmed Downtrend Start from Bar 6 (2025-03-17T18:00:00+00:00); Confirmed Uptrend Start from Bar 3 (2025-03-17T06:00:00+00:00),2025-03-18T06:00:00+00:00,"O:5713.75,H:5735.75,L:5712.0,C:5723.75,V:51934.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717454+00:00,STRATEGY_DEBUG,10,Processing Bar 10 (2025-03-18T10:00:00+00:00),2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717459+00:00,STRATEGY_DEBUG,10,Bar OHLCV: O:5723.5 H:5725.0 L:5666.75 C:5668.25 V:303275.0,2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717463+00:00,STRATEGY_DEBUG,10,Initial State - PUS Candidate: Bar None (L:N/A) | PDS Candidate: Bar None (H:N/A),2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717466+00:00,STRATEGY_DEBUG,10,Initial State - Last Confirmed Trend: downtrend at Bar 6,2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717469+00:00,STRATEGY_DEBUG,10,"Initial State - Containment: False (Ref Bar: None, H:N/A, L:N/A, Start Bar: None, Consecutive Inside: 0)",2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",,,,,,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717472+00:00,STRATEGY_DEBUG,10,CUS Evaluation: No initial PUS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717473+00:00,STRATEGY_DEBUG,10,CDS Evaluation: No initial PDS candidate to evaluate.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717475+00:00,STRATEGY_DEBUG,10,Signal Generation: Checking PDS for prev_bar (9) triggered by current_bar (10).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717476+00:00,STRATEGY_DEBUG,10,"Signal Generation (PDS on prev_bar 9): is_lower_ohlc_bar=True, is_pending_downtrend_start_rule=True, is_simple_pending_downtrend_start_signal=True",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717478+00:00,STRATEGY_DEBUG,9,Attempting to set PDS on Bar 9. Current PDS cand: None (H:None). Prev bar H check passed.,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717480+00:00,STRATEGY_DEBUG,9,"PDS set/updated on Bar 9 (H:5735.75, L:5712.0). Cleared PUS on same bar if present.",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717481+00:00,STRATEGY_DEBUG,10,Signal Generation: PDS conditions MET. PDS set/updated on prev_bar (9).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717482+00:00,STRATEGY_DEBUG,10,Signal Generation: Checking PUS for prev_bar (9) triggered by current_bar (10).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717483+00:00,STRATEGY_DEBUG,10,"Signal Generation (PUS on prev_bar 9): is_higher_ohlc_bar=False, is_pending_uptrend_start_rule=False, is_simple_pending_uptrend_start_signal=False, cond_curr_triggers_pus_on_prev_via_hhll=False",,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717484+00:00,STRATEGY_DEBUG,10,Signal Generation: No PUS conditions met for prev_bar (9).,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717486+00:00,STRATEGY_DEBUG,10,Bar Summary: Pending Downtrend Start on Bar 9 (2025-03-18T06:00:00+00:00),2025-03-18T10:00:00+00:00,"O:5723.5,H:5725.0,L:5666.75,C:5668.25,V:303275.0",9.0,5735.75,9.0,5735.75,5712.0,,,,,,False,,,downtrend,6.0,False
+2025-06-09T21:41:32.717513+00:00,STRATEGY_DEBUG,9,FORCED CUS from Bar 8 due to CDS at 9. Last confirmed: UPTREND at 8,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717515+00:00,STRATEGY_DEBUG,9,CDS Confirmed from Bar 9. Last confirmed: DOWNTREND at 9,,,,,,,,,,,,,,,,,,
+2025-06-09T21:41:32.717516+00:00,STRATEGY_DEBUG,9,Apply CDS: PDS candidate on CDS Bar 9 is being reset as it is now confirmed.,,,,,,,,,,,,,,,,,,

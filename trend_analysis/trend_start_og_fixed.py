@@ -56,9 +56,10 @@ def process_trend_logic(all_bars: List[Bar], contract_id: str = "", timeframe_st
         timeframe_str (str): Optional timeframe string for enriching signal data.
 
     Returns:
-        tuple: (list[dict], list[dict])
+        tuple: (list[dict], list[dict], dict)
             - A list of signal dictionaries (for CUS/CDS).
             - A list of debug log dictionaries collected during processing.
+            - A dictionary representing the final state of the analyzer.
     """
     if not all_bars:
         return [], []
@@ -202,8 +203,11 @@ def process_trend_logic(all_bars: List[Bar], contract_id: str = "", timeframe_st
         if key not in seen_keys:
             seen_keys.add(key)
             unique_signals_deduped.append(sig)
+            
+    # Compile final state for return
+    final_state = state.to_dict(all_bars)
 
-    return unique_signals_deduped, debug_log_entries
+    return unique_signals_deduped, debug_log_entries, final_state
 
 def export_trend_start_events_to_csv(signals_list: List[dict], output_csv="trend_analysis/confirmed_trend_starts.csv"):
     """
@@ -265,8 +269,8 @@ if __name__ == "__main__":
             print(f"Successfully loaded {len(all_bars_chronological)} bars.")
             
             print("\nStarting trend start analysis...")
-            # process_trend_logic now returns (signals, debug_logs)
-            generated_signals, collected_debug_logs = process_trend_logic(all_bars_chronological, contract_id="CLI_RUN", timeframe_str="TF_CLI")
+            # process_trend_logic now returns (signals, debug_logs, final_state)
+            generated_signals, collected_debug_logs, final_state_info = process_trend_logic(all_bars_chronological, contract_id="CLI_RUN", timeframe_str="TF_CLI")
             print("Trend start analysis finished.")
 
             if generated_signals:
@@ -288,6 +292,11 @@ if __name__ == "__main__":
                     print(f"Debug logs exported to {args.debug_log_csv}")
             else:
                 print("\n--- No debug logs collected (or debug mode was off/range did not match). ---")
+            
+            if final_state_info:
+                print("\n--- Final Analyzer State ---")
+                import json
+                print(json.dumps(final_state_info, indent=2, default=str))
 
     except FileNotFoundError:
         print(f"Error: The CSV data file '{csv_file_path}' was not found. ")

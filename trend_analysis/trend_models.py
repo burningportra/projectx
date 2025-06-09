@@ -1,4 +1,5 @@
 import datetime # Add this import
+from typing import List
 
 from . import trend_utils # For log_debug and find_intervening_bar_for_forced_trend
 
@@ -248,3 +249,40 @@ class State:
         self.last_confirmed_trend_type = 'downtrend' 
         self.last_confirmed_trend_bar_index = confirmed_cds_bar.index
         trend_utils.log_debug(confirmed_cds_bar.index, f"CDS Confirmed from Bar {confirmed_cds_bar.index}. Last confirmed: DOWNTREND at {self.last_confirmed_trend_bar_index}") 
+
+    def to_dict(self, all_bars: List['Bar']) -> dict:
+        """Serializes the state to a dictionary, including details of candidate bars."""
+        
+        def get_bar_details(bar_index):
+            if not bar_index or bar_index > len(all_bars):
+                return None
+            bar = all_bars[bar_index - 1]
+            return {
+                "index": bar.index,
+                "timestamp": bar.timestamp.isoformat(),
+                "open": bar.o,
+                "high": bar.h,
+                "low": bar.l,
+                "close": bar.c,
+                "volume": bar.volume,
+            }
+
+        return {
+            "last_confirmed_trend": {
+                "type": self.last_confirmed_trend_type,
+                "bar": get_bar_details(self.last_confirmed_trend_bar_index)
+            },
+            "pds_candidate": {
+                "bar": get_bar_details(self.pds_candidate_for_cds_bar_index),
+                "anchor_bar": get_bar_details(self.pending_downtrend_start_bar_index) # MUST end in _idx
+            },
+            "pus_candidate": {
+                "bar": get_bar_details(self.pus_candidate_for_cus_bar_index),
+                "anchor_bar": get_bar_details(self.pending_uptrend_start_bar_index) # MUST end in _idx
+            },
+            "containment": {
+                "in_containment": self.in_containment,
+                "ref_bar": get_bar_details(self.containment_ref_bar_index),
+                "consecutive_bars": self.containment_consecutive_bars_inside,
+            }
+        } 

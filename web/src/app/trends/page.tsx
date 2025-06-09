@@ -16,6 +16,9 @@ import {
 } from 'lightweight-charts';
 import useSWR from 'swr';
 import Layout from "@/components/layout/Layout";
+import { TrendAnalysisStatus } from '@/components/trends/TrendAnalysisStatus';
+import { PendingSignalCard } from '@/components/trends/PendingSignalCard';
+import { DebugLogViewer } from '@/components/trends/DebugLogViewer';
 
 const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:8765';
 
@@ -36,6 +39,16 @@ interface Signal {
 
 interface OhlcDataForChart extends CandlestickData {
   time: UTCTimestamp;
+}
+
+interface LiveStateData {
+    last_updated: string;
+    analyzer_id: string;
+    final_state: {
+        pds_candidate: any;
+        pus_candidate: any;
+    };
+    debug_logs: any[];
 }
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -91,6 +104,12 @@ const TrendsPage: React.FC = () => {
     fetcher
   );
 
+  const { data: liveState, error: liveStateError, isLoading: liveStateIsLoading } = useSWR<LiveStateData>(
+    selectedContract && selectedTimeframe ? `/api/trend-analysis/live-state?contract_id=${selectedContract}&timeframe=${selectedTimeframe}` : null,
+    fetcher,
+    { refreshInterval: 5000 } // Poll every 5 seconds
+  );
+
   // This is the new core function for fetching and preparing all data
   const prepareChartData = useCallback(async () => {
     if (!ohlcApiResponse?.data || !candlestickSeriesRef.current) {
@@ -108,39 +127,62 @@ const TrendsPage: React.FC = () => {
       }))
       .sort((a: OhlcDataForChart, b: OhlcDataForChart) => a.time - b.time);
 
-    // 2. Check for and construct the currently forming bar if needed
+    // 2. Handle the currently forming bar logic
+    const timeframeSeconds = getTimeframeInSeconds(selectedTimeframe);
+    const now = new Date().getTime() / 1000;
+    const nowBarStartTime = getBarStartTime(now as UTCTimestamp, timeframeSeconds);
+
     if (historicalOhlc.length > 0) {
       const lastHistoricalBar = historicalOhlc[historicalOhlc.length - 1];
-      const timeframeSeconds = getTimeframeInSeconds(selectedTimeframe);
-      const nextBarStartTime = (lastHistoricalBar.time + timeframeSeconds) as UTCTimestamp;
-      
-      // Fetch 1m bars that may have occurred since the last historical bar was completed
-      const nextBarTimeISO = new Date(nextBarStartTime * 1000).toISOString();
-      const recentTicksResponse = await fetch(`/api/ohlc?contract=${selectedContract}&timeframe=1m&since=${nextBarTimeISO}`);
-      const recentTicksData = await recentTicksResponse.json();
 
-      if (recentTicksData.success && recentTicksData.data.length > 0) {
-        // A new bar has started forming. Construct it from the 1m ticks.
-        const formingBar: OhlcDataForChart = {
-          time: getBarStartTime(
-            (new Date(recentTicksData.data[0].timestamp).getTime() / 1000) as UTCTimestamp, 
-            timeframeSeconds
-          ),
-          open: parseFloat(recentTicksData.data[0].open),
-          high: Math.max(...recentTicksData.data.map((t: any) => parseFloat(t.high))),
-          low: Math.min(...recentTicksData.data.map((t: any) => parseFloat(t.low))),
-          close: parseFloat(recentTicksData.data[recentTicksData.data.length - 1].close),
-        };
-        historicalOhlc.push(formingBar);
+      if (lastHistoricalBar.time === nowBarStartTime) {
+        // Case A: The last historical bar is the one currently forming. Rebuild it to be up-to-date.
+        const lastBarTimeISO = new Date(lastHistoricalBar.time * 1000).toISOString();
+        const granularDataResponse = await fetch(`/api/ohlc?contract=${selectedContract}&timeframe=1m&since=${lastBarTimeISO}`);
+        const granularData = await granularDataResponse.json();
+
+        if (granularData.success && granularData.data.length > 0) {
+          const rebuiltLastBar = {
+            time: lastHistoricalBar.time,
+            open: lastHistoricalBar.open,
+            high: Math.max(...granularData.data.map((t: any) => parseFloat(t.high))),
+            low: Math.min(...granularData.data.map((t: any) => parseFloat(t.low))),
+            close: parseFloat(granularData.data[granularData.data.length - 1].close),
+          };
+          historicalOhlc[historicalOhlc.length - 1] = rebuiltLastBar;
+        }
+      } else if (nowBarStartTime > lastHistoricalBar.time) {
+        // Case B: A new bar has started since the last historical entry. Create it.
+        const newBarTimeISO = new Date(nowBarStartTime * 1000).toISOString();
+        const granularDataResponse = await fetch(`/api/ohlc?contract=${selectedContract}&timeframe=1m&since=${newBarTimeISO}`);
+        const granularData = await granularDataResponse.json();
+
+        if (granularData.success && granularData.data.length > 0) {
+          const formingBar: OhlcDataForChart = {
+            time: nowBarStartTime,
+            open: parseFloat(granularData.data[0].open),
+            high: Math.max(...granularData.data.map((t: any) => parseFloat(t.high))),
+            low: Math.min(...granularData.data.map((t: any) => parseFloat(t.low))),
+            close: parseFloat(granularData.data[granularData.data.length - 1].close),
+          };
+          historicalOhlc.push(formingBar);
+        }
       }
     }
 
-    // 3. Prepare and set markers
-    if (signalsApiResponse?.data) {
-      const ohlcDataMap = new Map<UTCTimestamp, OhlcDataForChart>();
-      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar));
+    // Set the potentially modified data to state and chart
+    setSeriesData(historicalOhlc);
+    candlestickSeriesRef.current.setData(historicalOhlc);
+    setIsDataLoaded(true);
 
-      const signalMarkersToPlot: SeriesMarker<UTCTimestamp>[] = signalsApiResponse.data
+    // 3. Prepare and set markers
+    const allMarkers: SeriesMarker<UTCTimestamp>[] = [];
+    const ohlcDataMap = new Map<UTCTimestamp, OhlcDataForChart>();
+    historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar));
+
+    // Add confirmed signal markers
+    if (signalsApiResponse?.data) {
+      const signalMarkers = signalsApiResponse.data
         .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
         .map((signal: Signal) => {
           const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
@@ -158,20 +200,50 @@ const TrendsPage: React.FC = () => {
             size: 2,
           };
         });
+      allMarkers.push(...signalMarkers);
+    }
 
-      if (markersApiRef.current) {
-        signalMarkersToPlot.sort((a, b) => a.time - b.time);
-        markersApiRef.current.setMarkers(signalMarkersToPlot);
+    // Add pending candidate markers
+    if (liveState?.final_state) {
+      // PUS Candidate marker
+      if (liveState.final_state.pus_candidate?.bar) {
+        const pusTime = (new Date(liveState.final_state.pus_candidate.bar.timestamp).getTime() / 1000) as UTCTimestamp;
+        const pusBar = ohlcDataMap.get(pusTime);
+        allMarkers.push({
+          time: pusTime,
+          position: 'belowBar' as const,
+          color: '#42a5f5', // Light blue
+          shape: 'circle' as const,
+          text: pusBar ? `PUS ${pusBar.low.toFixed(2)}` : 'PUS',
+          size: 2,
+        });
+      }
+
+      // PDS Candidate marker
+      if (liveState.final_state.pds_candidate?.bar) {
+        const pdsTime = (new Date(liveState.final_state.pds_candidate.bar.timestamp).getTime() / 1000) as UTCTimestamp;
+        const pdsBar = ohlcDataMap.get(pdsTime);
+        allMarkers.push({
+          time: pdsTime,
+          position: 'aboveBar' as const,
+          color: '#ff9800', // Orange
+          shape: 'circle' as const,
+          text: pdsBar ? `PDS ${pdsBar.high.toFixed(2)}` : 'PDS',
+          size: 2,
+        });
       }
     }
-    
-    // 4. Set final data to state and chart
-    setSeriesData(historicalOhlc);
-    candlestickSeriesRef.current.setData(historicalOhlc);
-    chartRef.current?.timeScale().fitContent();
-    setIsDataLoaded(true); // Signal that initial data load is complete
 
-  }, [ohlcApiResponse, signalsApiResponse, selectedContract, selectedTimeframe]);
+    // Set all markers
+    if (markersApiRef.current && allMarkers.length > 0) {
+      allMarkers.sort((a, b) => a.time - b.time);
+      markersApiRef.current.setMarkers(allMarkers);
+    }
+    
+    // The chart no longer needs to be refit here, as the initial load is just history.
+    // chartRef.current?.timeScale().fitContent();
+
+  }, [ohlcApiResponse, signalsApiResponse, selectedContract, selectedTimeframe, liveState]);
 
   useEffect(() => {
     if (chartContainerRef.current && !chartRef.current) {
@@ -236,7 +308,7 @@ const TrendsPage: React.FC = () => {
         });
         prepareChartData(); // This is the new main function to call
     }
-  }, [selectedContract, selectedTimeframe, ohlcApiResponse, signalsApiResponse, prepareChartData]);
+  }, [selectedTimeframe, ohlcApiResponse, prepareChartData]);
 
 
   // EFFECT FOR WEBSOCKET CONNECTION AND LIVE DATA
@@ -308,11 +380,9 @@ const TrendsPage: React.FC = () => {
             
             const tickBarStartTime = getBarStartTime(tickTime, timeframeSeconds);
 
-            let updatedBar: OhlcDataForChart;
-
             if (lastBar.time === tickBarStartTime) {
               // Tick belongs to the last bar, update it
-              updatedBar = {
+              const updatedBar = {
                 ...lastBar,
                 high: Math.max(lastBar.high, tickPrice),
                 low: Math.min(lastBar.low, tickPrice),
@@ -323,16 +393,16 @@ const TrendsPage: React.FC = () => {
               newData[newData.length - 1] = updatedBar;
               return newData;
             } else if (tickBarStartTime > lastBar.time) {
-              // Tick is for a new bar
-              updatedBar = {
+              // This is the first tick for a new bar. Create it.
+              const newBar = {
                 time: tickBarStartTime,
                 open: tickPrice,
                 high: tickPrice,
                 low: tickPrice,
                 close: tickPrice,
               };
-              series.update(updatedBar);
-              return [...currentData, updatedBar];
+              series.update(newBar);
+              return [...currentData, newBar];
             }
             
             // If the tick is for a past bar, ignore it for this logic
@@ -414,7 +484,14 @@ const TrendsPage: React.FC = () => {
         </div>
       }
 
+      <TrendAnalysisStatus contractId={selectedContract} timeframe={selectedTimeframe} />
+
       <div ref={chartContainerRef} className="w-full bg-white rounded-lg shadow mb-6" />
+
+      <div className="flex space-x-4 my-4">
+          <PendingSignalCard type="PUS" signalInfo={liveState?.final_state?.pus_candidate} />
+          <PendingSignalCard type="PDS" signalInfo={liveState?.final_state?.pds_candidate} />
+      </div>
 
       <div className="mt-8">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Detected Signals</h2>
@@ -466,6 +543,13 @@ const TrendsPage: React.FC = () => {
           !signalsIsLoading && <p className="text-gray-600">No signals found for the selected criteria.</p>
         )}
       </div>
+
+        <DebugLogViewer 
+            logs={liveState?.debug_logs} 
+            isLoading={liveStateIsLoading}
+            error={liveStateError ? (liveStateError.message || 'Failed to load live logs') : null}
+        />
+
     </div>
     </Layout>
   );

@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Callable, Optional
 import os
 import csv
 import argparse
+import threading
 
 from src.core.config import Config
 from src.strategies.trend_start_finder import generate_trend_starts
@@ -28,8 +29,12 @@ STRATEGY_MAPPING = {
 DB_POOL_MAIN_FOR_HANDLER: Optional[asyncpg.Pool] = None
 ANALYSIS_QUEUE: Optional[asyncio.Queue] = None
 ANALYSIS_LOCKS: Dict[str, asyncio.Lock] = {}
+LIVE_STATE_FILE_LOCK = threading.Lock()
 
-CSV_LOG_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'logs')
+# Correctly define CSV_LOG_DIR relative to the project root
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+CSV_LOG_DIR = os.path.join(PROJECT_ROOT, 'logs')
+LIVE_STATE_FILE_PATH = os.path.join(CSV_LOG_DIR, 'analyzer_live_state.json')
 CSV_FILE_PATH = os.path.join(CSV_LOG_DIR, 'detected_signals_history.csv')
 CSV_HEADERS = [
     'analyzer_id', 'timestamp', 'trigger_timestamp', 'contract_id', 'timeframe',
@@ -89,6 +94,35 @@ def write_strategy_debug_logs_to_csv(
         logger.info(f"Wrote {len(debug_log_entries)} debug log entries to {debug_log_filepath}")
     except Exception as e:
         logger.error(f"Error writing strategy debug logs to {debug_log_filepath}: {e}", exc_info=True)
+
+def update_live_state_file(analyzer_id: str, contract_id: str, timeframe_str: str, final_state: Dict[str, Any], debug_logs: List[Dict[str, Any]]):
+    """Atomically updates the live state JSON file."""
+    with LIVE_STATE_FILE_LOCK:
+        try:
+            # Read existing data
+            if os.path.exists(LIVE_STATE_FILE_PATH) and os.path.getsize(LIVE_STATE_FILE_PATH) > 0:
+                with open(LIVE_STATE_FILE_PATH, 'r') as f:
+                    live_state_data = json.load(f)
+            else:
+                live_state_data = {}
+
+            # Update the specific key for the contract and timeframe
+            if contract_id not in live_state_data:
+                live_state_data[contract_id] = {}
+            
+            live_state_data[contract_id][timeframe_str] = {
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "analyzer_id": analyzer_id,
+                "final_state": final_state,
+                "debug_logs": debug_logs[-20:] # Store last 20 debug messages
+            }
+
+            # Write data back to the file
+            with open(LIVE_STATE_FILE_PATH, 'w') as f:
+                json.dump(live_state_data, f, indent=2, default=str)
+
+        except Exception as e:
+            logger.error(f"Error updating live state file for {contract_id}/{timeframe_str}: {e}", exc_info=True)
 
 async def create_watermarks_table_if_not_exists(pool: asyncpg.Pool):
     if not pool:
@@ -260,6 +294,79 @@ async def fetch_all_bars_up_to(
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return df
 
+async def fetch_incremental_bars(
+    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int,
+    timeframe_value: int, start_timestamp_exclusive: datetime, lookback_period: int = 200
+) -> pd.DataFrame:
+    """Fetches bars since a watermark, plus a lookback period for context."""
+    if not pool: return pd.DataFrame()
+
+    # Query for new bars strictly after the watermark
+    new_bars_query = """
+        SELECT "timestamp", "open", "high", "low", "close", "volume"
+        FROM ohlc_bars
+        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3 AND "timestamp" > $4
+        ORDER BY "timestamp" ASC;
+    """
+    
+    # Query for the lookback window of bars at or before the watermark
+    lookback_query = """
+        SELECT "timestamp", "open", "high", "low", "close", "volume"
+        FROM ohlc_bars
+        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3 AND "timestamp" <= $4
+        ORDER BY "timestamp" DESC
+        LIMIT $5;
+    """
+    
+    try:
+        async with pool.acquire() as conn:
+            new_bars_records = await conn.fetch(new_bars_query, contract_id, timeframe_unit, timeframe_value, start_timestamp_exclusive)
+            lookback_records = await conn.fetch(lookback_query, contract_id, timeframe_unit, timeframe_value, start_timestamp_exclusive, lookback_period)
+    except Exception as e:
+        logger.error(f"Error fetching incremental bars from {start_timestamp_exclusive}: {e}", exc_info=True)
+        return pd.DataFrame()
+
+    records = lookback_records + new_bars_records
+    if not records: return pd.DataFrame()
+
+    df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df.drop_duplicates(subset=['timestamp'], keep='first', inplace=True)
+    df = df.sort_values(by='timestamp', ascending=True).reset_index(drop=True)
+    
+    for col in ['open', 'high', 'low', 'close', 'volume']:
+        if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    return df
+
+async def fetch_lookback_window(
+    pool: asyncpg.Pool, contract_id: str, timeframe_unit: int,
+    timeframe_value: int, end_timestamp: datetime, limit: int
+) -> pd.DataFrame:
+    """Fetches a fixed number of most recent bars up to a specific timestamp."""
+    if not pool: return pd.DataFrame()
+    query = """
+        SELECT "timestamp", "open", "high", "low", "close", "volume"
+        FROM ohlc_bars
+        WHERE contract_id = $1 AND timeframe_unit = $2 AND timeframe_value = $3 AND "timestamp" <= $4
+        ORDER BY "timestamp" DESC
+        LIMIT $5;
+    """
+    try:
+        async with pool.acquire() as conn:
+            records = await conn.fetch(query, contract_id, timeframe_unit, timeframe_value, end_timestamp, limit)
+    except Exception as e:
+        logger.error(f"Error fetching lookback window up to {end_timestamp}: {e}", exc_info=True)
+        return pd.DataFrame()
+    if not records: return pd.DataFrame()
+
+    df = pd.DataFrame(records, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df = df.sort_values(by='timestamp', ascending=True).reset_index(drop=True)
+    for col in ['open', 'high', 'low', 'close', 'volume']:
+        if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    return df
+
 async def get_latest_bar_timestamp(
     pool: asyncpg.Pool, contract_id: str, timeframe_unit: int, timeframe_value: int
 ) -> Optional[datetime]:
@@ -308,29 +415,40 @@ async def run_analyzer_for_target(
     analyzer_id = target_config['analyzer_id']
     contract_id = target_config['contract_id']
     timeframe_str = target_config['timeframe']
-    logger.info(f"  Processing {contract_id} [{timeframe_str}] for analyzer '{analyzer_id}'")
-    
+    lookback_bars = config.settings.get('analysis', {}).get('lookback_bars_for_startup', 200)
+    logger.info(f"  Processing {contract_id} [{timeframe_str}] for analyzer '{analyzer_id}' (lookback: {lookback_bars} bars)")
+
     tf_unit_val, tf_value_val = parse_timeframe(timeframe_str)
     
-    # For a full backlog run, find the latest data point and process everything up to it.
-    latest_ts = await get_latest_bar_timestamp(pool, contract_id, tf_unit_val, tf_value_val)
-    if not latest_ts:
-        logger.info(f"    No OHLC data found at all for {contract_id} [{timeframe_str}]. Skipping backlog.")
-        return
-
-    logger.info(f"    Latest bar for {contract_id} [{timeframe_str}] is at {latest_ts}. Running full analysis.")
+    # Check for a watermark to determine if this is an incremental run.
+    watermark = await get_analyzer_watermark(pool, analyzer_id, contract_id, timeframe_str)
     
-    analysis_df = await fetch_all_bars_up_to(
-        pool, contract_id, tf_unit_val, tf_value_val, latest_ts
-    )
+    if watermark:
+        logger.info(f"    Found watermark at {watermark}. Fetching incremental data.")
+        analysis_df = await fetch_incremental_bars(
+            pool, contract_id, tf_unit_val, tf_value_val, watermark, lookback_bars
+        )
+    else:
+        # No watermark found, run analysis on the full history.
+        latest_ts = await get_latest_bar_timestamp(pool, contract_id, tf_unit_val, tf_value_val)
+        if not latest_ts:
+            logger.info(f"    No OHLC data found at all for {contract_id} [{timeframe_str}]. Skipping backlog.")
+            return
+
+        logger.info(f"    No watermark found. Latest bar is at {latest_ts}. Running full analysis.")
+        analysis_df = await fetch_all_bars_up_to(
+            pool, contract_id, tf_unit_val, tf_value_val, latest_ts
+        )
 
     if analysis_df.empty:
         logger.info(f"    Fetched bar history for {contract_id} [{timeframe_str}] but it was empty. Skipping.")
         return
 
-    logger.info(f"    Fetched {len(analysis_df)} total bars for full analysis of {contract_id} [{timeframe_str}].")
+    logger.info(f"    Fetched {len(analysis_df)} total bars for backlog analysis of {contract_id} [{timeframe_str}].")
 
-    generated_signals, debug_logs = strategy_func(analysis_df, contract_id=contract_id, timeframe_str=timeframe_str)
+    generated_signals, debug_logs, final_state = strategy_func(analysis_df, contract_id=contract_id, timeframe_str=timeframe_str)
+    
+    update_live_state_file(analyzer_id, contract_id, timeframe_str, final_state, debug_logs)
 
     if debug_logs:
         write_strategy_debug_logs_to_csv(debug_logs, analyzer_id, contract_id, timeframe_str)
@@ -431,20 +549,27 @@ async def analysis_worker(name: str, queue: asyncio.Queue, pool: asyncpg.Pool):
                 logger.info(f"Worker '{name}' acquired lock for {lock_key} and started processing.")
                 tf_unit_for_query, tf_value_for_query = parse_timeframe(timeframe_str)
                 
-                full_history_df = await fetch_all_bars_up_to(
+                # Fetch a lookback window of bars for analysis instead of the full history.
+                lookback_bars = config.settings.get('analysis', {}).get('lookback_bars_for_live', 200)
+                
+                history_df = await fetch_lookback_window(
                     pool, contract_id, 
-                    tf_unit_for_query, tf_value_for_query, bar_timestamp
+                    tf_unit_for_query, tf_value_for_query, bar_timestamp, lookback_bars
                 )
 
-                min_bars = config.settings.get('analysis',{}).get('min_bars_for_notification_trigger', 50)
-                if full_history_df.empty or len(full_history_df) < min_bars:
-                    logger.info(f"    Not enough history ({len(full_history_df)}) for {contract_id} [{timeframe_str}]. Skipping.")
+                min_bars_for_analysis = config.settings.get('analysis',{}).get('min_bars_for_notification_trigger', 50)
+                if history_df.empty or len(history_df) < min_bars_for_analysis:
+                    logger.info(f"    Not enough history ({len(history_df)}/{min_bars_for_analysis}) for live analysis of {contract_id} [{timeframe_str}]. Skipping.")
                     queue.task_done()
                     continue
                 
-                generated_signals, debug_logs = strategy_func(
-                    full_history_df, contract_id=contract_id, timeframe_str=timeframe_str
+                logger.info(f"    Worker '{name}' processing {lock_key} with {len(history_df)} bars up to {bar_timestamp}.")
+
+                generated_signals, debug_logs, final_state = strategy_func(
+                    history_df, contract_id=contract_id, timeframe_str=timeframe_str
                 )
+
+                update_live_state_file(analyzer_id, contract_id, timeframe_str, final_state, debug_logs)
 
                 if debug_logs:
                     write_strategy_debug_logs_to_csv(debug_logs, analyzer_id, contract_id, timeframe_str)
@@ -524,12 +649,36 @@ async def main_analyzer_loop(app_config: Config, pool: asyncpg.Pool):
             
             if initial_analysis_tasks:
                 await asyncio.gather(*initial_analysis_tasks)
-            logger.info("Initial backlog processing complete. Switching to notification-driven mode.")
+            logger.info("Initial backlog processing complete. Switching to notification-driven and polling mode.")
 
-            # Main loop is just to keep the service running for the listener and workers
+            # Main loop now includes periodic polling
             while True:
-                await asyncio.sleep(3600)
-                logger.debug("Analyzer service alive...")
+                await asyncio.sleep(60) # Poll every 60 seconds
+                
+                logger.info("Performing periodic analysis run for all configured targets...")
+                periodic_analysis_tasks = []
+                for target_config in analysis_targets:
+                    analyzer_id = target_config.get('analyzer_id')
+                    strategy_func_name = target_config.get('strategy', 'cus_cds_trend_finder')
+                    strategy_func = STRATEGY_MAPPING.get(strategy_func_name)
+                    if not analyzer_id or not strategy_func: continue
+                    contract_id = target_config.get('contract_id')
+                    if not contract_id: continue
+
+                    for tf_str in target_config.get('timeframes', []):
+                        single_target_run_config = {
+                            'analyzer_id': analyzer_id, 
+                            'contract_id': contract_id, 
+                            'timeframe': tf_str,
+                            'strategy': strategy_func_name
+                        }
+                        task = run_analyzer_for_target(pool, single_target_run_config, strategy_func)
+                        periodic_analysis_tasks.append(task)
+                
+                if periodic_analysis_tasks:
+                    await asyncio.gather(*periodic_analysis_tasks)
+                logger.info("Periodic analysis run complete.")
+
     except asyncio.CancelledError:
         logger.info("Analyzer service loop cancelled.")
         for worker in workers:
