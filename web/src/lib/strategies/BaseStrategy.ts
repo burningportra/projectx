@@ -20,6 +20,7 @@ import {
   TradeType
 } from '../types/backtester';
 import { OrderManager } from '../OrderManager'; // Corrected path
+import { messageBus, MessageType } from '../MessageBus';
 
 /**
  * Abstract base class for trading strategies, providing common infrastructure for
@@ -215,8 +216,21 @@ export abstract class BaseStrategy implements IStrategy {
     this.nextOrderId = 1;
     this.nextTradeId = 1;
     
+    // Publish strategy stopped event before reset
+    messageBus.publish(MessageType.STRATEGY_STOPPED, `Strategy-${this.getName()}`, {
+      strategyName: this.getName(),
+      timestamp: Date.now() / 1000
+    });
+    
     // Call strategy-specific reset implementation
     this.onReset();
+    
+    // Publish strategy started event after reset
+    messageBus.publish(MessageType.STRATEGY_STARTED, `Strategy-${this.getName()}`, {
+      strategyName: this.getName(),
+      config: this.config,
+      timestamp: Date.now() / 1000
+    });
   }
 
   /**
@@ -1110,6 +1124,14 @@ export abstract class BaseStrategy implements IStrategy {
    */
   protected recordSignal(signal: StrategySignal): StrategySignal {
     this.signals.push(signal);
+    
+    // Publish signal generated event
+    messageBus.publish(MessageType.SIGNAL_GENERATED, `Strategy-${this.getName()}`, {
+      signal,
+      strategyName: this.getName(),
+      timestamp: Date.now() / 1000
+    });
+    
     return signal;
   }
 

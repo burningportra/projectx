@@ -10,6 +10,7 @@ import {
   SimulatedTrade,
   TradeType
 } from '@/lib/types/backtester';
+import { messageBus, MessageType } from '@/lib/MessageBus';
 
 interface ManagedPosition {
   id: string; // Typically contractId or a strategy-defined ID
@@ -80,12 +81,26 @@ export class OrderManager {
       console.warn('[OrderManager] Attempted to submit order with zero or negative quantity:', order);
       order.status = OrderStatus.REJECTED;
       order.message = 'Invalid quantity';
+      
+      // Publish rejection event
+      messageBus.publish(MessageType.ORDER_REJECTED, 'OrderManager', {
+        order,
+        reason: 'Invalid quantity'
+      });
+      
       // Do not add rejected orders to the main queue if they are invalid from the start
       return order;
     }
     
     this.orders.push(order);
     this.orders.sort((a, b) => (a.submittedTime || 0) - (b.submittedTime || 0)); // FIFO
+    
+    // Publish order submitted event
+    messageBus.publish(MessageType.ORDER_SUBMITTED, 'OrderManager', {
+      order,
+      timestamp: order.submittedTime
+    });
+    
     return order;
   }
 
@@ -95,6 +110,14 @@ export class OrderManager {
       order.status = OrderStatus.CANCELLED;
       order.message = 'Cancelled by user/strategy';
       // console.log(`[OrderManager] Order ${orderId} cancelled.`);
+      
+      // Publish order cancelled event
+      messageBus.publish(MessageType.ORDER_CANCELLED, 'OrderManager', {
+        orderId: order.id,
+        order,
+        timestamp: Date.now() / 1000
+      });
+      
       // Optionally remove from orders array or filter out later
       this.orders = this.orders.filter(o => o.id !== orderId || o.status !== OrderStatus.CANCELLED);
       return true;
@@ -323,6 +346,17 @@ export class OrderManager {
       order.message = `${order.message} (Partially Filled ${order.filledQuantity}/${order.quantity} @ ${price} on bar ${barIndex})`;
     }
     // console.log(`[OrderManager] Order ${order.id} filled: ${order.status} ${order.filledQuantity}/${order.quantity} @ ${price}`);
+    
+    // Publish order filled event
+    messageBus.publish(MessageType.ORDER_FILLED, 'OrderManager', {
+      orderId: order.id,
+      order,
+      filledPrice: price,
+      filledQuantity: quantity,
+      filledTime: time,
+      barIndex,
+      status: order.status
+    });
 
     // Update or Create Position
     const contractId = order.contractId || 'DEFAULT_CONTRACT';
@@ -348,6 +382,16 @@ export class OrderManager {
                 
                 // Create completed trade record for P&L chart
                 this.createCompletedTrade(position, order, time);
+                
+                // Publish position closed event
+                messageBus.publish(MessageType.POSITION_CLOSED, 'OrderManager', {
+                    positionId: position.id,
+                    position: { ...position }, // Copy before deletion
+                    closePrice: price,
+                    closeTime: time,
+                    realizedPnl: position.realizedPnl,
+                    exitReason: order.isStopLoss ? 'STOP_LOSS' : order.isTakeProfit ? 'TAKE_PROFIT' : 'SIGNAL'
+                });
                 
                 this.openPositions.delete(contractId);
                 console.log(`[OrderManager] Total open positions after deletion: ${this.openPositions.size}`);
@@ -388,6 +432,16 @@ export class OrderManager {
             this.openPositions.set(contractId, position);
             console.log(`[OrderManager] Opened new position ${position.id}. Size: ${position.size}, Avg Entry: ${position.averageEntryPrice.toFixed(2)}, ContractId: ${contractId}`);
             console.log(`[OrderManager] Total open positions after creation: ${this.openPositions.size}`);
+            
+            // Publish position opened event
+            messageBus.publish(MessageType.POSITION_OPENED, 'OrderManager', {
+                positionId: position.id,
+                position,
+                entryPrice: position.averageEntryPrice,
+                entryTime: time,
+                size: position.size,
+                side: position.side
+            });
         }
          // Strategy is responsible for placing SL/TP for new/modified positions.
          // If order.isStopLoss or isTakeProfit were true here, it implies they were *entry* orders that also act as SL/TP,
