@@ -50,3 +50,5 @@ node_modules/
 *.sw?
 # OS specific
 /projectx_test_data
+logs/broadcaster.log
+*.log

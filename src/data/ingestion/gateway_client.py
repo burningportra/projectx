@@ -375,23 +375,21 @@ class GatewayClient:
         try:
             await self._ensure_auth()
             
-            # Get auth headers with session token
-            headers = self._get_auth_headers()
-            logger.debug("Connecting to Market Hub with session token")
+            # Construct the URL with the session token as a query parameter
+            if "?" in self.market_hub_url:
+                url_with_token = f"{self.market_hub_url}&access_token={self.session_token}"
+            else:
+                url_with_token = f"{self.market_hub_url}?access_token={self.session_token}"
 
-            # Log connection details
             logger.info(f"Connecting to Market Hub URL: {self.market_hub_url}")
-            logger.info(f"Using session token (masked): {self.session_token[:5]}...{self.session_token[-5:] if len(self.session_token) > 10 else ''}")
             
-            # Build the SignalR connection
+            # Build the SignalR connection using the correct authentication method
             builder = HubConnectionBuilder()
             builder = builder.with_url(
-                self.market_hub_url,  # Already converted to wss:// in config
-                options={
-                    "headers": headers,
-                    "skip_negotiation": True,
-                    "transport": "webSockets",
-                    "verify_ssl": False  # For demo environment
+                url_with_token,
+                options={ 
+                    "access_token_factory": lambda: self.session_token,
+                    "skip_negotiation": True
                 }
             )
             
@@ -434,6 +432,7 @@ class GatewayClient:
                 # Wait for connection with timeout
                 await asyncio.wait_for(connection_future, timeout=30.0)
                 logger.info("Connected to ProjectX Market Hub")
+                return self.market_hub_connection # Return the connection object on success
             except asyncio.TimeoutError:
                 raise WebSocketConnectionError("Connection timeout")
             except Exception as e:
@@ -474,15 +473,8 @@ class GatewayClient:
             raise WebSocketConnectionError("Not connected to Market Hub")
             
         try:
-            # The signalrcore library's send method might not be properly awaitable
-            # Try to use it non-async if the await fails
-            try:
-                # First try to await it
-                await self.market_hub_connection.send("SubscribeContractTrades", [contract_id])
-            except AttributeError:
-                # If await fails, try to use it synchronously
-                logger.info("Falling back to synchronous send method")
-                self.market_hub_connection.send("SubscribeContractTrades", [contract_id])
+            # The signalrcore library's send method is not async
+            self.market_hub_connection.send("SubscribeContractTrades", [contract_id])
                 
             logger.info(f"Subscribed to trades for contract: {contract_id}")
         except Exception as e:
@@ -498,43 +490,58 @@ class GatewayClient:
         """
         self.trade_callbacks.append(callback)
         
-    def _handle_trade_event(self, contract_id: str, data: Dict[str, Any]):
+    def _handle_trade_event(self, args: List[Any]):
         """
         Handle a trade event from the Market Hub.
-        
-        Args:
-            contract_id: Contract ID the trade belongs to
-            data: Trade data from the API
+        The 'args' parameter is a list from the SignalR message.
+        Example: ['CON.F.US.MES.M25', [{'symbolId': 'F.US.MES', 'price': ...}]]
         """
-        try:
-            # Parse the trade data
-            trade = Trade(
-                contract_id=contract_id,
-                timestamp=datetime.fromisoformat(data.get("timestamp", datetime.now().isoformat())),
-                price=data.get("price", 0.0),
-                volume=data.get("volume", 0.0)
-            )
+        if not isinstance(args, list) or len(args) < 2:
+            logger.warning(f"Received malformed trade event args: {args}")
+            return
+
+        contract_id = args[0]
+        trade_data_list = args[1]
+
+        if not isinstance(trade_data_list, list):
+            logger.warning(f"Expected list for trade data, got {type(trade_data_list)}")
+            return
             
-            # Call all registered callbacks
-            for callback in self.trade_callbacks:
-                try:
-                    callback(trade)
-                except Exception as e:
-                    logger.error(f"Error in trade callback: {str(e)}")
-                    
-        except Exception as e:
-            logger.error(f"Error handling trade event: {str(e)}")
+        for trade_item in trade_data_list:
+            try:
+                # Parse the trade data
+                trade = Trade(
+                    contract_id=contract_id,
+                    timestamp=datetime.fromisoformat(trade_item.get("timestamp", datetime.now().isoformat())),
+                    price=trade_item.get("price", 0.0),
+                    volume=trade_item.get("volume", 0.0)
+                )
+                
+                # Call all registered callbacks
+                for callback in self.trade_callbacks:
+                    try:
+                        callback(trade)
+                    except Exception as e:
+                        logger.error(f"Error in trade callback: {str(e)}")
+                        
+            except Exception as e:
+                logger.error(f"Error handling single trade item: {str(e)}", exc_info=True)
             
-    def _handle_quote_event(self, contract_id: str, data: Dict[str, Any]):
+    def _handle_quote_event(self, args: List[Any]):
         """
         Handle a quote event from the Market Hub.
-        
-        Args:
-            contract_id: Contract ID the quote belongs to
-            data: Quote data from the API
+        The 'args' parameter is a list from the SignalR message.
         """
-        # Implementation for handling quotes
-        pass
+        if not isinstance(args, list) or len(args) < 2:
+            logger.warning(f"Received malformed quote event args: {args}")
+            return
+            
+        contract_id = args[0]
+        quote_data = args[1]
+        
+        # Placeholder for quote processing logic
+        # For now, we'll just log it to confirm it's being received correctly.
+        logger.debug(f"Quote received for {contract_id}: {quote_data}")
         
     def _handle_depth_event(self, contract_id: str, data: Dict[str, Any]):
         """

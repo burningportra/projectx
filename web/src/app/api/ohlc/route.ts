@@ -29,11 +29,17 @@ export async function GET(request: NextRequest) {
     const contract = searchParams.get('contract') || 'ES';
     const timeframe = searchParams.get('timeframe') || '5m';
     const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const since = searchParams.get('since');
     
     // Parse timeframe string to get unit and value
     const { timeframeUnit, timeframeValue } = parseTimeframe(timeframe);
     
-    console.log(`Fetching ${limit} bars for ${contract} with timeframe ${timeframe} (${timeframeValue}${timeframeUnit})`);
+    console.log(`Fetching bars for ${contract} with timeframe ${timeframe}`);
+    if (since) {
+      console.log(`...since timestamp ${since}`);
+    } else {
+      console.log(`...with a limit of ${limit} bars`);
+    }
     
     // Map the contract symbol to the actual contract ID format
     let contractId = contract;
@@ -51,18 +57,36 @@ export async function GET(request: NextRequest) {
       contractId = contractMap[contract] || contract;
     }
     
-    // Query the database using Prisma
-    const bars = await prisma.ohlcBar.findMany({
+    // Build the query dynamically based on whether 'since' is provided
+    const queryOptions: any = {
       where: {
         contractId: contractId,
         timeframeUnit: timeframeUnit,
         timeframeValue: timeframeValue
-      },
-      orderBy: {
+      }
+    };
+
+    if (since) {
+      queryOptions.where.timestamp = {
+        gte: new Date(since)
+      };
+      queryOptions.orderBy = {
+        timestamp: 'asc' // Fetch in ascending order when getting recent data
+      };
+    } else {
+      queryOptions.orderBy = {
         timestamp: 'desc'
-      },
-      take: limit
-    });
+      };
+      queryOptions.take = limit;
+    }
+    
+    // Query the database using Prisma
+    const bars = await prisma.ohlcBar.findMany(queryOptions);
+
+    if (!since) {
+      // The historical fetch is 'desc', so we need to reverse it for the chart
+      bars.reverse();
+    }
     
     // Initialize an empty map for trend points
     const trendPointMap = new Map();

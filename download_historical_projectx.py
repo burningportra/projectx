@@ -195,39 +195,31 @@ async def download_historical_data(
         else:
             raise
     
-    # Create gateway client
-    gateway_client = GatewayClient(config)
-    
-    # Set end date to current time if not provided
-    if end_date is None:
-        end_date = datetime.now(timezone.utc)
-        logger.info(f"End date set to current time: {end_date.isoformat()}")
-    
-    # Contract IDs to download - using the full qualified name format
-    if contracts is None:
-        contracts = [
-            "CON.F.US.MES.M25",  # Micro E-mini S&P 500 June 2025
-        ]
-    
-    # Use default timeframes if not specified
-    if timeframes is None:
-        # Try to get from config, fall back to defaults if not present
-        try:
-            timeframes = config.get_timeframes()
-            logger.info(f"Using timeframes from config: {timeframes}")
-        except Exception:
-            timeframes = DEFAULT_TIMEFRAMES
-            logger.info(f"Using default timeframes: {timeframes}")
-    
-    try:
-        # Initialize gateway session
-        await gateway_client._ensure_session()
+    # Use the client as an async context manager to ensure proper cleanup
+    async with GatewayClient(config) as gateway_client:
+        # Set end date to current time if not provided
+        if end_date is None:
+            end_date = datetime.now(timezone.utc)
+            logger.info(f"End date set to current time: {end_date.isoformat()}")
         
-        # Login
+        # Contract IDs to download - using the full qualified name format
+        if contracts is None:
+            contracts = [
+                "CON.F.US.MES.M25",  # Micro E-mini S&P 500 June 2025
+            ]
+        
+        # Use default timeframes if not specified
+        if timeframes is None:
+            # Try to get from config, fall back to defaults if not present
+            try:
+                timeframes = config.get_timeframes()
+                logger.info(f"Using timeframes from config: {timeframes}")
+            except Exception:
+                timeframes = DEFAULT_TIMEFRAMES
+                logger.info(f"Using default timeframes: {timeframes}")
+        
         try:
-            await gateway_client._login()
-            logger.info("Authentication successful")
-            
+            # The context manager now handles login
             # Track total downloaded bars
             total_bars = 0
             
@@ -324,6 +316,11 @@ async def download_historical_data(
                             bars_downloaded += num_stored
                             total_bars += num_stored
                             
+                            # If the earliest bar in this batch is before our desired start date, stop.
+                            if start_date and valid_bars and min(bar.t for bar in valid_bars) < start_date:
+                                logger.info(f"Stopping download for {timeframe} as desired start date ({start_date.isoformat()}) has been reached.")
+                                break
+                            
                             # Progress indicator
                             if total_requests_for_timeframe % 10 == 0:
                                 logger.info(f"Progress: {total_requests_for_timeframe} requests made, {bars_downloaded} total bars downloaded for {contract_id} {timeframe}")
@@ -391,21 +388,16 @@ async def download_historical_data(
             logger.info(f"Historical data download complete - {total_bars} total new bars stored in {db_type}")
             
         except Exception as e:
-            logger.error(f"Authentication failed: {str(e)}")
+            logger.error(f"An error occurred during download: {str(e)}", exc_info=True)
             return 1
             
-    except Exception as e:
-        logger.error(f"Error during historical download: {str(e)}", exc_info=True)
-        return 1
-        
-    finally:
-        # Clean up
-        if gateway_client.session:
-            await gateway_client.session.close()
-        
+    # The `finally` block for client cleanup is no longer needed here as __aexit__ handles it.
+    try:
         if db_handler:
             await db_handler.close()
-    
+    except Exception as e:
+        logger.error(f"Error closing DB handler: {e}")
+
     return 0
 
 

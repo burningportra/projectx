@@ -75,6 +75,7 @@ const TrendsPage: React.FC = () => {
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const markersApiRef = useRef<any | null>(null);
   const [seriesData, setSeriesData] = useState<OhlcDataForChart[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag for initial data load
 
   const [selectedContract, setSelectedContract] = useState<string>(availableContracts[0]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1d'); // Default to 1d
@@ -90,13 +91,13 @@ const TrendsPage: React.FC = () => {
     fetcher
   );
 
-  // Initialize or update chart with historical data and markers
-  const initializeChartWithData = useCallback(() => {
-    if (!candlestickSeriesRef.current || !ohlcApiResponse?.data) {
+  // This is the new core function for fetching and preparing all data
+  const prepareChartData = useCallback(async () => {
+    if (!ohlcApiResponse?.data || !candlestickSeriesRef.current) {
       return;
     }
 
-    // Base historical OHLC data
+    // 1. Process base historical OHLC data
     let historicalOhlc: OhlcDataForChart[] = ohlcApiResponse.data
       .map((bar: any) => ({
         time: (new Date(bar.timestamp).getTime() / 1000) as UTCTimestamp,
@@ -106,31 +107,49 @@ const TrendsPage: React.FC = () => {
         close: parseFloat(bar.close),
       }))
       .sort((a: OhlcDataForChart, b: OhlcDataForChart) => a.time - b.time);
-    
-    // Prepare and embed markers if signals API response is available
+
+    // 2. Check for and construct the currently forming bar if needed
+    if (historicalOhlc.length > 0) {
+      const lastHistoricalBar = historicalOhlc[historicalOhlc.length - 1];
+      const timeframeSeconds = getTimeframeInSeconds(selectedTimeframe);
+      const nextBarStartTime = (lastHistoricalBar.time + timeframeSeconds) as UTCTimestamp;
+      
+      // Fetch 1m bars that may have occurred since the last historical bar was completed
+      const nextBarTimeISO = new Date(nextBarStartTime * 1000).toISOString();
+      const recentTicksResponse = await fetch(`/api/ohlc?contract=${selectedContract}&timeframe=1m&since=${nextBarTimeISO}`);
+      const recentTicksData = await recentTicksResponse.json();
+
+      if (recentTicksData.success && recentTicksData.data.length > 0) {
+        // A new bar has started forming. Construct it from the 1m ticks.
+        const formingBar: OhlcDataForChart = {
+          time: getBarStartTime(
+            (new Date(recentTicksData.data[0].timestamp).getTime() / 1000) as UTCTimestamp, 
+            timeframeSeconds
+          ),
+          open: parseFloat(recentTicksData.data[0].open),
+          high: Math.max(...recentTicksData.data.map((t: any) => parseFloat(t.high))),
+          low: Math.min(...recentTicksData.data.map((t: any) => parseFloat(t.low))),
+          close: parseFloat(recentTicksData.data[recentTicksData.data.length - 1].close),
+        };
+        historicalOhlc.push(formingBar);
+      }
+    }
+
+    // 3. Prepare and set markers
     if (signalsApiResponse?.data) {
       const ohlcDataMap = new Map<UTCTimestamp, OhlcDataForChart>();
-      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar)); // For text assignment
+      historicalOhlc.forEach(bar => ohlcDataMap.set(bar.time, bar));
 
-      // Create a map of markers keyed by their timestamp for efficient lookup
-      const markersByTime = new Map<UTCTimestamp, SeriesMarker<UTCTimestamp>[]>();
-
-      signalsApiResponse.data
+      const signalMarkersToPlot: SeriesMarker<UTCTimestamp>[] = signalsApiResponse.data
         .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
-        .forEach((signal: Signal) => {
+        .map((signal: Signal) => {
           const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
           const correspondingBar = ohlcDataMap.get(signalTime);
           let markerText = signal.signal_type === 'uptrend_start' ? 'UT' : 'DT';
-
           if (correspondingBar) {
-            if (signal.signal_type === 'uptrend_start') {
-              markerText = correspondingBar.low.toFixed(2);
-            } else if (signal.signal_type === 'downtrend_start') {
-              markerText = correspondingBar.high.toFixed(2);
-            }
+            markerText = signal.signal_type === 'uptrend_start' ? correspondingBar.low.toFixed(2) : correspondingBar.high.toFixed(2);
           }
-          
-          const newMarker: SeriesMarker<UTCTimestamp> = {
+          return {
             time: signalTime,
             position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
             color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
@@ -138,72 +157,20 @@ const TrendsPage: React.FC = () => {
             text: markerText,
             size: 2,
           };
-
-          if (!markersByTime.has(signalTime)) {
-            markersByTime.set(signalTime, []);
-          }
-          markersByTime.get(signalTime)!.push(newMarker);
         });
 
-      // Augment historicalOhlc with markers
-      // The SeriesMarker<Time> should be part of the CandlestickData or WhitespaceData object.
-      // Let's ensure OhlcDataForChart can hold markers.
-      // The type SeriesDataItemTypeMap[TSeriesType] is CandlestickData | WhitespaceData for 'Candlestick'.
-      // CandlestickData itself doesn't have a 'markers' property in the standard type.
-      // This implies markers are not directly embedded this way in the core library for setData.
-
-      // The series.setMarkers() method is indeed the standard way.
-      // The runtime error means something is wrong with the candlestickSeriesRef.current or the library version.
-
-      // Let's stick to trying series.setMarkers() but clear it first.
-      // If `setMarkers` isn't a function, then this will also fail, but it's the documented API.
-      // Perhaps the ref isn't initialized properly when this is first called, or is the wrong type.
-
-      // Given the runtime error, the direct `setMarkers` call is failing.
-      // Let's log the type of candlestickSeriesRef.current to be sure.
-      console.log('candlestickSeriesRef.current:', candlestickSeriesRef.current);
-      console.log('typeof setMarkers:', typeof (candlestickSeriesRef.current as any)?.setMarkers);
-
-      const signalMarkersToPlot: SeriesMarker<UTCTimestamp>[] = [];
-      if (signalsApiResponse?.data) { // Only process if there's signal data
-        signalsApiResponse.data
-          .filter((signal: Signal) => signal.contract_id === selectedContract && signal.timeframe === selectedTimeframe)
-          .map((signal: Signal) => {
-            const signalTime = (new Date(signal.timestamp).getTime() / 1000) as UTCTimestamp;
-            const correspondingBar = ohlcDataMap.get(signalTime);
-            let markerText = signal.signal_type === 'uptrend_start' ? 'UT' : 'DT';
-
-            if (correspondingBar) {
-              if (signal.signal_type === 'uptrend_start') {
-                markerText = correspondingBar.low.toFixed(2);
-              } else if (signal.signal_type === 'downtrend_start') {
-                markerText = correspondingBar.high.toFixed(2);
-              }
-            }
-            signalMarkersToPlot.push({
-              time: signalTime,
-              position: signal.signal_type === 'uptrend_start' ? 'belowBar' : 'aboveBar',
-              color: signal.signal_type === 'uptrend_start' ? '#26a69a' : '#ef5350',
-              shape: signal.signal_type === 'uptrend_start' ? 'arrowUp' : 'arrowDown',
-              text: markerText,
-              size: 2,
-            });
-          });
-      }
-        
       if (markersApiRef.current) {
-        // Sort markers by time in ascending order before plotting
         signalMarkersToPlot.sort((a, b) => a.time - b.time);
         markersApiRef.current.setMarkers(signalMarkersToPlot);
-      } else {
-        console.error('Candlestick series object or markers API not available. Markers will not be updated.');
       }
     }
     
-    setSeriesData(historicalOhlc); // Set data for WebSocket updates, this does NOT draw on chart
-    candlestickSeriesRef.current.setData(historicalOhlc); // This draws the OHLC bars
-
+    // 4. Set final data to state and chart
+    setSeriesData(historicalOhlc);
+    candlestickSeriesRef.current.setData(historicalOhlc);
     chartRef.current?.timeScale().fitContent();
+    setIsDataLoaded(true); // Signal that initial data load is complete
+
   }, [ohlcApiResponse, signalsApiResponse, selectedContract, selectedTimeframe]);
 
   useEffect(() => {
@@ -260,21 +227,21 @@ const TrendsPage: React.FC = () => {
   }, []); // Create chart once
 
   useEffect(() => {
-    if (candlestickSeriesRef.current && chartRef.current) {
+    if (candlestickSeriesRef.current && chartRef.current && ohlcApiResponse) {
         // Update timescale seconds visibility when timeframe changes
         chartRef.current.applyOptions({
             timeScale: {
                 secondsVisible: selectedTimeframe.endsWith('m') || selectedTimeframe.endsWith('s'),
             }
         });
-        initializeChartWithData(); // Reload data when contract/timeframe changes
+        prepareChartData(); // This is the new main function to call
     }
-  }, [selectedContract, selectedTimeframe, ohlcApiResponse, signalsApiResponse, initializeChartWithData]);
+  }, [selectedContract, selectedTimeframe, ohlcApiResponse, signalsApiResponse, prepareChartData]);
 
 
   // EFFECT FOR WEBSOCKET CONNECTION AND LIVE DATA
   useEffect(() => {
-    if (!candlestickSeriesRef.current || seriesData.length === 0) { // Wait for initial data
+    if (!isDataLoaded || !candlestickSeriesRef.current) {
       return;
     }
 
@@ -301,19 +268,32 @@ const TrendsPage: React.FC = () => {
               low: Number(message.low),
               close: Number(message.close),
             };
-            series.update(barData);
-            // Update our local seriesData state as well
+            
             setSeriesData(currentData => {
-              const existingBarIndex = currentData.findIndex(d => d.time === barData.time);
-              if (existingBarIndex !== -1) {
-                const newData = [...currentData];
-                newData[existingBarIndex] = barData;
-                return newData;
-              } else {
-                // Add new bar and keep sorted by time
-                const newData = [...currentData, barData].sort((a,b) => a.time - b.time);
-                return newData;
+              if (currentData.length === 0) {
+                series.update(barData);
+                return [barData];
               }
+
+              const newData = [...currentData];
+              const existingBarIndex = newData.findIndex(d => d.time === barData.time);
+
+              if (existingBarIndex !== -1) {
+                newData[existingBarIndex] = barData;
+              } else {
+                newData.push(barData);
+                // Ensure data is sorted if a bar was missed and is now being added
+                newData.sort((a, b) => a.time - b.time);
+              }
+              
+              // Only call series.update() if the bar being updated is the last one.
+              // This prevents the "Cannot update oldest data" error.
+              const lastBarInNewData = newData[newData.length - 1];
+              if (lastBarInNewData.time === barData.time) {
+                series.update(barData);
+              }
+
+              return newData;
             });
           }
         } else if (message.type === 'tick' && message.contract_id === selectedContract) {
@@ -376,7 +356,7 @@ const TrendsPage: React.FC = () => {
       console.log(`Closing WebSocket connection for ${selectedContract} ${selectedTimeframe}...`);
       ws.close();
     };
-  }, [selectedContract, selectedTimeframe]); // Key dependencies
+  }, [isDataLoaded, selectedContract, selectedTimeframe]); // Key dependencies
 
   if (ohlcError || signalsError) return (
     <div className="p-4">
@@ -399,7 +379,10 @@ const TrendsPage: React.FC = () => {
           <select 
             id="contractSelect" 
             value={selectedContract}
-            onChange={(e) => setSelectedContract(e.target.value)}
+            onChange={(e) => {
+              setIsDataLoaded(false); // Reset on change
+              setSelectedContract(e.target.value);
+            }}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             {availableContracts.map(contract => (
@@ -412,7 +395,10 @@ const TrendsPage: React.FC = () => {
           <select 
             id="timeframeSelect"
             value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
+            onChange={(e) => {
+              setIsDataLoaded(false); // Reset on change
+              setSelectedTimeframe(e.target.value);
+            }}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             {availableTimeframes.map(tf => (

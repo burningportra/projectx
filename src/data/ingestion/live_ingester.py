@@ -13,6 +13,16 @@ from psycopg2 import sql
 import threading
 from functools import partial # For callbacks
 import json # Added for NOTIFY payload
+from datetime import timedelta
+import asyncio
+from typing import Optional
+
+# Import GatewayClient and DBHandler for the initial download
+from src.data.ingestion.gateway_client import GatewayClient
+from src.data.storage.db_handler import DBHandler
+from src.data.validation import validate_bars
+from src.core.utils import parse_timeframe
+from src.core.config import Config
 
 # --- Constants ---
 SCRIPT_NAME = "LiveIngester"
@@ -33,232 +43,54 @@ hub_connection = None
 # Lock for thread-safe operations on shared resources if needed, e.g., aggregators
 # aggregator_lock = threading.Lock() # Consider if needed with multiple callbacks potentially
 
-# --- Configuration Loading ---
-def load_configuration():
-    """Loads configuration from .env and settings.yaml"""
-    # Load .env
-    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env') # ../../../.env
-    if not os.path.exists(dotenv_path):
-        logger.error(f".env file not found at {dotenv_path}. Please ensure it exists.")
-        sys.exit(1)
-    load_dotenv(dotenv_path=dotenv_path)
-    logger.info(f".env file loaded from {dotenv_path}")
-
-    # Load settings.yaml
-    settings_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'config', 'settings.yaml')
-    if not os.path.exists(settings_path):
-        logger.error(f"settings.yaml file not found at {settings_path}. Please ensure it exists.")
-        sys.exit(1)
-        
-    try:
-        with open(settings_path, 'r') as f:
-            config = yaml.safe_load(f)
-        logger.info(f"Configuration loaded from {settings_path}")
-    except yaml.YAMLError as e:
-        logger.error(f"Error parsing settings.yaml: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Could not read settings.yaml: {e}")
-        sys.exit(1)
-        
-    # Merge .env variables into config where appropriate (e.g., API keys, DB passwords)
-    # API
-    config['api']['api_key'] = os.getenv("PROJECTX_API_TOKEN")
-    config['api']['username_for_token'] = os.getenv("USERNAME_FOR_TOKEN_GENERATION")
-    
-    # Database (Local TimescaleDB for now)
-    db_type = config.get('database', {}).get('default_ingestion_db', 'local_timescaledb')
-    db_config_from_yaml = config.get('database', {}).get(db_type, {})
-    
-    # Create a new dictionary for the active DB config to avoid modifying YAML structure directly during override
-    active_db_config = {}
-
-    if db_type == 'local_timescaledb':
-        active_db_config['host'] = os.getenv("LOCAL_DB_HOST", db_config_from_yaml.get('host'))
-        active_db_config['port'] = os.getenv("LOCAL_DB_PORT", db_config_from_yaml.get('port'))
-        active_db_config['user'] = os.getenv("LOCAL_DB_USER", db_config_from_yaml.get('user'))
-        active_db_config['password'] = os.getenv("LOCAL_DB_PASSWORD") # Must come from .env for local
-        active_db_config['dbname'] = os.getenv("LOCAL_DB_NAME", db_config_from_yaml.get('dbname'))
-    else:
-        # For other db_types, maintain the generic lookup or define specific handling
-        active_db_config['host'] = os.getenv(f"{db_type.upper()}_DB_HOST", db_config_from_yaml.get('host'))
-        active_db_config['port'] = os.getenv(f"{db_type.upper()}_DB_PORT", db_config_from_yaml.get('port'))
-        active_db_config['user'] = os.getenv(f"{db_type.upper()}_DB_USER", db_config_from_yaml.get('user'))
-        active_db_config['password'] = os.getenv(f"{db_type.upper()}_DB_PASSWORD")
-        active_db_config['dbname'] = os.getenv(f"{db_type.upper()}_DB_NAME", db_config_from_yaml.get('dbname'))
-    
-    config['database']['active_ingestion_db'] = active_db_config
-    config['database']['active_ingestion_db_type'] = db_type
-
-    if not config['api']['api_key'] or not config['api']['username_for_token']:
-        logger.error("API key or username for token generation not found in environment variables.")
-        sys.exit(1)
-    if not config['database']['active_ingestion_db'].get('password'):
-        logger.error(f"Database password for {db_type} not found in environment variables.")
-        sys.exit(1)
-        
-    # Validate live_contracts configuration
-    if not config.get('live_contracts') or not isinstance(config['live_contracts'], list):
-        logger.error("Missing or invalid 'live_contracts' configuration in settings.yaml.")
-        sys.exit(1)
-    for contract_conf in config['live_contracts']:
-        if 'contract_id' not in contract_conf or 'timeframes_seconds' not in contract_conf:
-            logger.error("Each entry in 'live_contracts' must have 'contract_id' and 'timeframes_seconds'.")
-            sys.exit(1)
-        if not isinstance(contract_conf['timeframes_seconds'], list) or not contract_conf['timeframes_seconds']:
-            logger.error("'timeframes_seconds' must be a non-empty list.")
-            sys.exit(1)
-
-    return config
-
-CONFIG = load_configuration()
-
-# --- JWT Token Generation ---
-def generate_jwt_token():
-    """Generates a session JWT token for SignalR."""
-    logger.info("Attempting to generate session token...")
-    api_config = CONFIG['api']
-    headers = {"accept": "text/plain", "Content-Type": "application/json"}
-    payload = {"userName": api_config['username_for_token'], "apiKey": api_config['api_key']}
-    
-    try:
-        response = requests.post(f"{api_config['base_url']}{api_config['login_url']}", headers=headers, json=payload, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        if data.get("success") and data.get("token"):
-            logger.info("Session token generated successfully.")
-            return data["token"]
-        else:
-            logger.error(f"Failed to generate token: {data.get('errorMessage', 'Unknown error')}")
-            return None
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error during token generation: {e}")
-        return None
+# --- Use the standardized Config class ---
+config = Config()
 
 # --- Database Operations ---
-DB_CONNECTION = None
-
-def get_db_connection():
-    """Establishes and returns a database connection."""
-    global DB_CONNECTION
-    if DB_CONNECTION and DB_CONNECTION.closed == 0:
-        return DB_CONNECTION
-
-    db_conf = CONFIG['database']['active_ingestion_db']
-    logger.info(f"Connecting to {CONFIG['database']['active_ingestion_db_type']} database: {db_conf['dbname']} on {db_conf['host']}:{db_conf['port']}")
-    try:
-        DB_CONNECTION = psycopg2.connect(
-            host=db_conf['host'],
-            port=db_conf['port'],
-            dbname=db_conf['dbname'],
-            user=db_conf['user'],
-            password=db_conf['password']
-        )
-        logger.info("Database connection successful.")
-        return DB_CONNECTION
-    except psycopg2.Error as e:
-        logger.error(f"Database connection error: {e}")
-        # Consider a retry mechanism or exit
-        return None
-
-def log_last_known_bar_timestamp(contract_id, timeframe_seconds):
-    """Queries and logs the timestamp of the most recent bar for a given contract and timeframe."""
-    conn = get_db_connection()
-    if not conn:
-        logger.warning(f"No DB connection to query last bar for {contract_id} / {timeframe_seconds}s.")
-        return
-
-    # Calculate timeframe_unit and timeframe_value from timeframe_seconds
-    if timeframe_seconds >= 3600 and timeframe_seconds % 3600 == 0:
-        timeframe_unit = 3
-        timeframe_value = timeframe_seconds // 3600
-    elif timeframe_seconds >= 60 and timeframe_seconds % 60 == 0:
-        timeframe_unit = 2
-        timeframe_value = timeframe_seconds // 60
-    else:
-        timeframe_unit = 1
-        timeframe_value = timeframe_seconds
-
-    query = sql.SQL("""
-        SELECT MAX(timestamp)
-        FROM ohlc_bars
-        WHERE contract_id = %s AND timeframe_unit = %s AND timeframe_value = %s;
-    """)
-    
-    last_ts = None
-    try:
-        with conn.cursor() as cur:
-            cur.execute(query, (contract_id, timeframe_unit, timeframe_value))
-            result = cur.fetchone()
-            if result and result[0] is not None:
-                last_ts = result[0]
-        # No commit needed for SELECT
-        if last_ts:
-            logger.info(f"Last known bar for {contract_id} (TF: {timeframe_value} U:{timeframe_unit} - {timeframe_seconds}s) in DB: {last_ts}")
-        else:
-            logger.info(f"No prior bars found in DB for {contract_id} (TF: {timeframe_value} U:{timeframe_unit} - {timeframe_seconds}s).")
-    except psycopg2.Error as e:
-        logger.error(f"Error querying last bar for {contract_id} / {timeframe_seconds}s: {e}")
-    except Exception as e:
-        logger.error(f"Unexpected error querying last bar for {contract_id} / {timeframe_seconds}s: {e}")
+DB_HANDLER_INSTANCE: Optional[DBHandler] = None
+MAIN_EVENT_LOOP: Optional[asyncio.AbstractEventLoop] = None
 
 def insert_ohlc_bar(contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_value):
-    """Inserts an OHLC bar into the database and sends a NOTIFY signal."""
-    conn = get_db_connection()
-    if not conn:
-        logger.error("No database connection available for inserting OHLC bar.")
+    """
+    Inserts an OHLC bar into the database using the shared DB_HANDLER_INSTANCE.
+    This function is now a wrapper that safely schedules an async task from a different thread.
+    """
+    if not DB_HANDLER_INSTANCE:
+        logger.error("DB_HANDLER_INSTANCE not set. Cannot insert OHLC bar.")
+        return
+        
+    if not MAIN_EVENT_LOOP:
+        logger.error("Main event loop not available. Cannot schedule DB insertion.")
         return
 
-    # Make sure timestamp is timezone-aware (UTC assumed from source or converted)
-    if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=datetime.timezone.utc)
+    async def do_insert():
+        # Make sure timestamp is timezone-aware (UTC assumed from source or converted)
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=datetime.timezone.utc)
 
-    insert_query = sql.SQL("""
-        INSERT INTO ohlc_bars (contract_id, timestamp, open, high, low, close, volume, timeframe_unit, timeframe_value)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (contract_id, timestamp, timeframe_unit, timeframe_value) DO NOTHING;
-    """)
-    
-    row_inserted = False # Initialize
-    try:
-        with conn.cursor() as cur:
-            cur.execute(insert_query, (contract_id, ts, float(o), float(h), float(l), float(c), int(v), timeframe_unit, timeframe_value))
-            row_inserted = cur.rowcount > 0
+        # Create a single bar dictionary for the store_bars method
+        bar_to_store = {
+            't': ts, 'o': float(o), 'h': float(h), 'l': float(l), 'c': float(c), 
+            'v': int(v), 'contract_id': contract_id, 
+            'timeframe_unit': timeframe_unit, 'timeframe_value': timeframe_value
+        }
 
-            if row_inserted:
-                logger.info(f"Inserted OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit}) O:{o} H:{h} L:{l} C:{c} V:{v}")
-            else:
-                logger.info(f"OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit}) likely already existed or no update needed based on ON CONFLICT.")
-
-            # Always prepare and send notification if the bar data is complete and valid
-            # The INSERT ON CONFLICT ensures the bar is in the DB (either new or existing)
+        try:
+            num_stored = await DB_HANDLER_INSTANCE.store_bars([bar_to_store])
+            if num_stored > 0:
+                logger.info(f"Inserted OHLC bar for {contract_id} at {ts} (TF Val: {timeframe_value}, Unit: {timeframe_unit})")
+            
+            # Send notification regardless of whether it was a new insert or conflict
             logger.info(f"Attempting to send NOTIFY for completed bar: {contract_id} at {ts}")
-            notify_payload_dict = {
-                "type": "ohlc", 
-                "contract_id": contract_id,
-                "timestamp": ts.isoformat(),
-                "open": float(o),
-                "high": float(h),
-                "low": float(l),
-                "close": float(c),
-                "volume": int(v),
-                "timeframe_unit": timeframe_unit,
-                "timeframe_value": timeframe_value
-            }
-            notify_payload = json.dumps(notify_payload_dict)
-            notify_query = sql.SQL("SELECT pg_notify('ohlc_update', %s);")
-            cur.execute(notify_query, (notify_payload,))
-            logger.info(f"Executed NOTIFY ohlc_update for {contract_id} at {ts}")
+            await DB_HANDLER_INSTANCE.send_ohlc_notification(
+                contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_value
+            )
 
-        conn.commit() 
-        logger.info(f"DB transaction committed for OHLC bar and NOTIFY for {contract_id} at {ts}. Row inserted: {row_inserted}")
+        except Exception as e:
+            logger.error(f"Error during async OHLC bar insertion/notification: {e}", exc_info=True)
 
-    except psycopg2.Error as e:
-        logger.error(f"Error during OHLC bar DB operation: {e}")
-        if conn: conn.rollback() # Rollback on error
-    except Exception as e:
-        logger.error(f"Unexpected error during OHLC bar DB operation: {e}")
-        if conn: conn.rollback()
+    # Schedule the async task to run on the main event loop from the current thread
+    asyncio.run_coroutine_threadsafe(do_insert(), MAIN_EVENT_LOOP)
 
 def send_tick_notification(contract_id_from_stream, timestamp_dt, price_decimal, volume, message_type):
     """Sends a real-time tick notification via PostgreSQL pg_notify."""
@@ -295,6 +127,53 @@ def send_tick_notification(contract_id_from_stream, timestamp_dt, price_decimal,
         logger.error(f"Unexpected error sending tick notification: {e}")
         if conn: conn.rollback()
 
+async def perform_initial_download(config, db_handler, gateway_client):
+    """
+    Performs a "top-up" download of recent historical data before starting live ingestion.
+    This ensures that there's context for any immediate analysis.
+    """
+    logger.info("--- Starting Initial Data Download ---")
+    
+    contracts_to_download = config.settings.get('live_contracts', [])
+    if not contracts_to_download:
+        logger.warning("No live_contracts configured for initial download.")
+        return
+
+    # We'll fetch data from the last 2 days to be safe
+    end_date = datetime.datetime.now(datetime.timezone.utc)
+    start_date = end_date - timedelta(days=2)
+    
+    for contract_config in contracts_to_download:
+        contract_id = contract_config['contract_id']
+        # We only need to download for a few key timeframes to establish context
+        timeframes_to_download = ['1m', '5m', '1h', '4h', '1d']
+        
+        for timeframe in timeframes_to_download:
+            try:
+                logger.info(f"Downloading recent data for {contract_id} ({timeframe})...")
+                bars = await gateway_client.retrieve_bars(
+                    contract_id=contract_id,
+                    timeframe=timeframe,
+                    start_time=start_date,
+                    end_time=end_date,
+                    limit=5000 # Large limit to get all recent data
+                )
+                
+                valid_bars = validate_bars(bars)
+                if valid_bars:
+                    num_stored = await db_handler.store_bars(valid_bars)
+                    logger.info(f"Stored {num_stored} recent bars for {contract_id} ({timeframe}).")
+                else:
+                    logger.info(f"No new recent bars to store for {contract_id} ({timeframe}).")
+                
+                # Small delay between requests to be nice to the API
+                await asyncio.sleep(1)
+
+            except Exception as e:
+                logger.error(f"Failed to download initial data for {contract_id} ({timeframe}): {e}", exc_info=True)
+    
+    logger.info("--- Initial Data Download Finished ---")
+
 # --- OHLC Aggregator ---
 class OHLCAggregator:
     def __init__(self, contract_id, timeframe_seconds, bar_completion_callback):
@@ -318,7 +197,10 @@ class OHLCAggregator:
             self.timeframe_unit = 1  # Seconds
             self.timeframe_value = self.timeframe_seconds
         
-        log_last_known_bar_timestamp(self.contract_id, self.timeframe_seconds)
+        # This logging is useful, but needs the new DB handler if we want to keep it.
+        # For now, we can rely on the download log.
+        # log_last_known_bar_timestamp(self.contract_id, self.timeframe_seconds)
+        
         logger.info(f"OHLC Aggregator initialized for {contract_id} with {timeframe_seconds}s timeframe (Unit: {self.timeframe_unit}, Value: {self.timeframe_value}).")
 
     def _get_aligned_bar_start_time(self, timestamp):
@@ -341,7 +223,12 @@ class OHLCAggregator:
         self.low = price_decimal
         self.close = price_decimal # Will be updated by each tick
         self.volume = decimal.Decimal(str(volume_tick)) if not isinstance(volume_tick, decimal.Decimal) else volume_tick
-        # logger.debug(f"[{self.contract_id} TF:{self.timeframe_seconds}s] Bar reset. Start: {self.current_bar_start_time}, O:{self.open}, V:{self.volume}") # Made too verbose
+        
+        # This logging is useful, but needs the new DB handler if we want to keep it.
+        # For now, we can rely on the download log.
+        # log_last_known_bar_timestamp(self.contract_id, self.timeframe_seconds)
+        
+        logger.info(f"OHLC Aggregator initialized for {self.contract_id} with {self.timeframe_seconds}s timeframe (Unit: {self.timeframe_unit}, Value: {self.timeframe_value}).")
 
     def timeframe_unit_char(self):
         if self.timeframe_unit == 1: return "S"
@@ -537,11 +424,17 @@ def process_single_data_item(data_item, contract_id_from_stream, message_type):
         logger.error(f"Invalid price format: {price} for {contract_id_from_stream}. Data: {data_item}")
         return
 
-    # Send raw tick notification before passing to aggregators
-    send_tick_notification(contract_id_from_stream, timestamp_dt, price_decimal, volume, message_type)
+    # Raw tick notifications are now handled by the main DBHandler
+    if DB_HANDLER_INSTANCE and MAIN_EVENT_LOOP:
+        asyncio.run_coroutine_threadsafe(
+            DB_HANDLER_INSTANCE.send_tick_notification(
+                contract_id_from_stream, timestamp_dt, price_decimal, volume, message_type
+            ),
+            MAIN_EVENT_LOOP
+        )
 
     # Pass to aggregators
-    for contract_config in CONFIG.get('live_contracts', []):
+    for contract_config in config.settings.get('live_contracts', []):
         if contract_config['contract_id'] == contract_id_from_stream: # Use the ID from the SignalR stream args for routing
             for tf_seconds in contract_config.get('timeframes_seconds', []):
                 aggregator_key = (contract_id_from_stream, tf_seconds)
@@ -568,7 +461,7 @@ def on_market_data_message(message_type, args):
         return
         
     # Filter for the contracts we are interested in
-    subscribed_contracts = [c['contract_id'] for c in CONFIG.get('live_contracts', [])]
+    subscribed_contracts = [c['contract_id'] for c in config.settings.get('live_contracts', [])]
     if contract_id_from_stream not in subscribed_contracts:
         # logger.debug(f"Ignoring {message_type} for unsubscribed contract: {contract_id_from_stream}")
         return
@@ -641,7 +534,7 @@ def subscribe_to_streams():
     hub_connection.on("GatewayTrade", on_market_data_trade)
     logger.info("Registered SignalR handlers for 'GatewayQuote' and 'GatewayTrade'.")
 
-    contracts_to_subscribe = [c['contract_id'] for c in CONFIG.get('live_contracts', [])]
+    contracts_to_subscribe = [c['contract_id'] for c in config.settings.get('live_contracts', [])]
     if not contracts_to_subscribe:
         logger.warning("No contracts configured for live ingestion in settings.yaml. Ingester will be idle.")
         return
@@ -664,133 +557,101 @@ def on_signalr_open():
     subscribe_to_streams()
 
 # --- Main Application Logic ---
-def main():
+async def amain(): # Renamed to avoid conflict with main() entry point
     global ohlc_aggregators # Make sure it's the global one
     global hub_connection
+    global DB_HANDLER_INSTANCE
+    global MAIN_EVENT_LOOP
 
     logger.info(f"Starting {SCRIPT_NAME}...")
     
-    # Initialize Database Connection
-    if not get_db_connection():
-        logger.error("Failed to connect to the database. Exiting.")
-        sys.exit(1)
+    MAIN_EVENT_LOOP = asyncio.get_running_loop()
 
-    # Initialize OHLCAggregators for each configured contract and timeframe
-    # The key for the dictionary will be a tuple (contract_id, timeframe_seconds)
-    # to uniquely identify each aggregator.
-    ohlc_aggregators = {} # Reset if main is called multiple times (e.g. in a loop/restart)
-    
-    live_contracts_config = CONFIG.get('live_contracts', [])
-    if not live_contracts_config:
-        logger.warning("No 'live_contracts' configured in settings.yaml. Ingester will start but not process data.")
-    
-    for contract_config in live_contracts_config:
-        contract_id = contract_config['contract_id']
-        timeframes = contract_config.get('timeframes_seconds', [])
-        if not timeframes:
-            logger.warning(f"No 'timeframes_seconds' configured for contract {contract_id}. Skipping.")
-            continue
-        for tf_seconds in timeframes:
-            try:
-                tf_s = int(tf_seconds)
-                if tf_s <= 0:
-                    logger.error(f"Invalid timeframe {tf_s}s for {contract_id}. Must be positive. Skipping.")
-                    continue
-                
-                # Define the callback function for this specific aggregator
-                # It will call insert_ohlc_bar with all necessary parameters
-                # `partial` could be used here, or a lambda, or a nested function.
-                # For simplicity, insert_ohlc_bar is designed to accept all these.
-                
-                aggregator_key = (contract_id, tf_s)
-                ohlc_aggregators[aggregator_key] = OHLCAggregator(
-                    contract_id=contract_id,
-                    timeframe_seconds=tf_s,
-                    bar_completion_callback=insert_ohlc_bar # Pass the DB insert function directly
-                )
-                logger.info(f"Initialized aggregator for {contract_id} - {tf_s}s.")
-            except ValueError:
-                logger.error(f"Invalid timeframe value '{tf_seconds}' for {contract_id}. Must be an integer. Skipping.")
-            except Exception as e:
-                logger.error(f"Error initializing aggregator for {contract_id} - {tf_seconds}s: {e}")
-
-    if not ohlc_aggregators:
-        logger.warning("No aggregators were initialized. Live Ingester will be idle.")
-        # Optionally, exit if no aggregators, or let it run to allow config changes later.
-
-    # Generate JWT Token
-    session_token = generate_jwt_token()
-    if not session_token:
-        logger.error("Failed to generate session token. Exiting.")
-        sys.exit(1)
-
-    # Start SignalR Connection
-    if hub_connection: 
+    # Use a single GatewayClient instance for the entire lifecycle
+    async with GatewayClient(config) as gateway_client:
+        # Initialize Database Connection and set the global instance
+        DB_HANDLER_INSTANCE = DBHandler(config)
         try:
-            hub_connection.stop()
-        except: 
-            pass 
-    
-    api_config = CONFIG['api']
-    base_market_data_hub_url = api_config.get('market_hub_url_base') 
-    if not base_market_data_hub_url:
-        logger.error("Configuration error: 'api.market_hub_url_base' not found in settings.yaml. Cannot connect to SignalR.")
-        sys.exit(1)
+            await DB_HANDLER_INSTANCE.setup()
+            logger.info("Database handler setup successful.")
+        except Exception as e:
+            logger.error(f"Failed to setup DB Handler: {e}. Exiting.")
+            return
 
-    if "?" in base_market_data_hub_url:
-        market_data_hub_url_with_token = f"{base_market_data_hub_url}&access_token={session_token}"
-    else:
-        market_data_hub_url_with_token = f"{base_market_data_hub_url}?access_token={session_token}"
+        # Perform initial data download to ensure we have recent context
+        try:
+            # We pass the already-initialized client to the download function
+            await perform_initial_download(config, DB_HANDLER_INSTANCE, gateway_client)
+        except Exception as e:
+            logger.error(f"Initial data download failed: {e}. Continuing to live ingestion, but may lack context.", exc_info=True)
 
-    logger.info(f"Connecting to SignalR Market Data Hub (with token in URL): {market_data_hub_url_with_token}")
 
-    hub_connection = HubConnectionBuilder() \
-        .with_url(market_data_hub_url_with_token, options={ 
-            "access_token_factory": lambda: session_token, 
-            "headers": {"User-Agent": "ProjectXLiveIngester/1.0"},
-            "skip_negotiation": True 
-        }) \
-        .configure_logging(logging.WARNING) \
-        .with_automatic_reconnect({
-            "type": "interval",
-            "keep_alive_interval": 10, 
-            "intervals": [1, 2, 5, 10, 20, 30, 60] 
-        }) \
-        .build()
-
-    hub_connection.on_open(on_signalr_open) 
-    hub_connection.on_close(lambda: logger.info("SignalR connection closed."))
-    hub_connection.on_error(lambda err: logger.error(f"SignalR connection error: {err}"))
-    
-    try:
-        hub_connection.start()
-        logger.info("SignalR connection process initiated.")
+        # Initialize OHLCAggregators for each configured contract and timeframe
+        ohlc_aggregators = {} 
+        live_contracts_config = config.settings.get('live_contracts', [])
+        if not live_contracts_config:
+            logger.warning("No 'live_contracts' configured in settings.yaml. Ingester will start but not process data.")
         
-        while True:
-            time.sleep(1) 
+        for contract_config in live_contracts_config:
+            contract_id = contract_config['contract_id']
+            timeframes = contract_config.get('timeframes_seconds', [])
+            if not timeframes:
+                logger.warning(f"No 'timeframes_seconds' configured for contract {contract_id}. Skipping.")
+                continue
+            for tf_seconds in timeframes:
+                try:
+                    tf_s = int(tf_seconds)
+                    if tf_s <= 0:
+                        logger.error(f"Invalid timeframe {tf_s}s for {contract_id}. Must be positive. Skipping.")
+                        continue
+                    
+                    aggregator_key = (contract_id, tf_s)
+                    ohlc_aggregators[aggregator_key] = OHLCAggregator(
+                        contract_id=contract_id,
+                        timeframe_seconds=tf_s,
+                        bar_completion_callback=insert_ohlc_bar
+                    )
+                    logger.info(f"Initialized aggregator for {contract_id} - {tf_s}s.")
+                except ValueError:
+                    logger.error(f"Invalid timeframe value '{tf_seconds}' for {contract_id}. Must be an integer. Skipping.")
+                except Exception as e:
+                    logger.error(f"Error initializing aggregator for {contract_id} - {tf_seconds}s: {e}")
 
-    except KeyboardInterrupt:
-        logger.info("Shutdown signal received (KeyboardInterrupt).")
-    except Exception as e:
-        logger.error(f"An unhandled error occurred in main loop: {e}", exc_info=True)
-    finally:
-        logger.info(f"Shutting down {SCRIPT_NAME}...")
-        if hub_connection:
-            try:
-                logger.info("Attempting to stop SignalR hub connection...")
-                hub_connection.stop()
-                logger.info("SignalR hub connection stopped.")
-            except Exception as e:
-                logger.error(f"Error stopping SignalR connection: {e}")
-        
-        if DB_CONNECTION:
-            try:
-                logger.info("Closing database connection...")
-                DB_CONNECTION.close()
-                logger.info("Database connection closed.")
-            except Exception as e:
-                logger.error(f"Error closing database connection: {e}")
-        logger.info(f"{SCRIPT_NAME} has been shut down.")
+        if not ohlc_aggregators:
+            logger.warning("No aggregators were initialized. Live Ingester will be idle.")
+
+        # The GatewayClient is already authenticated from the initial download
+        # Now we connect to the real-time hub using it.
+        try:
+            hub_connection = await gateway_client.connect_market_hub()
+            hub_connection.on("GatewayQuote", on_market_data_quote)
+            hub_connection.on("GatewayTrade", on_market_data_trade)
+            
+            contracts_to_subscribe = [c['contract_id'] for c in config.settings.get('live_contracts', [])]
+            for contract_id in contracts_to_subscribe:
+                await gateway_client.subscribe_contract_trades(contract_id)
+                # Assuming a similar method for quotes exists or can be added
+                # For now, subscribing to trades will provide price updates.
+            
+            logger.info("Successfully connected to live stream and subscribed to contracts.")
+            
+            # Keep the script running to process live data
+            while True:
+                await asyncio.sleep(60)
+                logger.debug("Live ingester heartbeat.")
+
+        except Exception as e:
+            logger.error(f"An unhandled error occurred in main loop: {e}", exc_info=True)
+        finally:
+            logger.info(f"Shutting down {SCRIPT_NAME}...")
+            # The async with block will handle gateway_client cleanup
+            if DB_HANDLER_INSTANCE:
+                await DB_HANDLER_INSTANCE.close()
 
 if __name__ == "__main__":
-    main() 
+    try:
+        asyncio.run(amain())
+    except KeyboardInterrupt:
+        logger.info("Shutdown signal received (KeyboardInterrupt).")
+    finally:
+        logger.info(f"{SCRIPT_NAME} has been shut down.") 

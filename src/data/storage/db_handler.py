@@ -12,6 +12,7 @@ import asyncio
 import aiosqlite
 import asyncpg
 from pathlib import Path
+import json
 
 from src.core.exceptions import DatabaseError
 from src.data.models import Bar
@@ -636,4 +637,52 @@ class DBHandler:
                 
         except Exception as e:
             logger.error(f"Error retrieving latest bar: {str(e)}")
-            raise DatabaseError(f"Failed to retrieve latest bar: {str(e)}") 
+            raise DatabaseError(f"Failed to retrieve latest bar: {str(e)}")
+
+    async def send_tick_notification(self, contract_id: str, timestamp: datetime, price: float, volume: float, tick_type: str):
+        """Sends a real-time tick notification via PostgreSQL pg_notify."""
+        if not self.use_timescale or not self.pg_pool:
+            return
+
+        payload_dict = {
+            "type": "tick",
+            "contract_id": contract_id,
+            "timestamp": timestamp.isoformat(),
+            "price": float(price),
+            "tick_type": tick_type
+        }
+        if tick_type == "trade":
+            payload_dict["volume"] = float(volume)
+
+        notify_payload = json.dumps(payload_dict)
+        
+        try:
+            async with self.pg_pool.acquire() as conn:
+                await conn.execute("SELECT pg_notify('tick_data_channel', $1);", notify_payload)
+        except Exception as e:
+            logger.error(f"Error sending tick notification: {e}", exc_info=True)
+
+    async def send_ohlc_notification(self, contract_id, ts, o, h, l, c, v, timeframe_unit, timeframe_value):
+        """Sends a completed OHLC bar notification via PostgreSQL pg_notify."""
+        if not self.use_timescale or not self.pg_pool:
+            return
+            
+        payload_dict = {
+            "type": "ohlc", 
+            "contract_id": contract_id,
+            "timestamp": ts.isoformat(),
+            "open": float(o),
+            "high": float(h),
+            "low": float(l),
+            "close": float(c),
+            "volume": int(v),
+            "timeframe_unit": timeframe_unit,
+            "timeframe_value": timeframe_value
+        }
+        notify_payload = json.dumps(payload_dict)
+        
+        try:
+            async with self.pg_pool.acquire() as conn:
+                await conn.execute("SELECT pg_notify('ohlc_update', $1);", notify_payload)
+        except Exception as e:
+            logger.error(f"Error sending OHLC notification: {e}", exc_info=True) 

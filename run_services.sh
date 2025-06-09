@@ -37,6 +37,7 @@ fi
 # Start the live ingester in the background with nohup and output redirection
 echo "Starting live_ingester.py in background (see logs/ingester.log)..."
 nohup python3 -m src.data.ingestion.live_ingester > logs/ingester.log 2>&1 &
+INGESTER_PID=$!
 
 # Start the broadcaster service in the background with nohup and output redirection
 echo "Starting broadcaster.py in background (see logs/broadcaster.log)..."
@@ -45,6 +46,13 @@ BROADCASTER_PID=$!
 
 # Add a small delay to allow background services to attempt startup and potentially fail fast
 sleep 2
+
+# Check if the ingester is still running
+if ! ps -p $INGESTER_PID > /dev/null; then
+    echo "ERROR: live_ingester.py failed to start. Displaying log:"
+    cat logs/ingester.log
+    exit 1
+fi
 
 # Check if the broadcaster is still running
 if ! ps -p $BROADCASTER_PID > /dev/null; then

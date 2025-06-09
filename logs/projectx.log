@@ -6538,3 +6538,414 @@ HINT:  Make sure the TimescaleDB extension has been preloaded.
 2025-06-09 09:42:43,614 - projectx - INFO - download_historical_projectx.py:382 - Stopping after 5 consecutive empty batches
 2025-06-09 09:42:43,614 - projectx - INFO - download_historical_projectx.py:386 - Completed CON.F.US.MES.M25 1d: 58 new bars with 5 total requests
 2025-06-09 09:42:45,615 - projectx - INFO - download_historical_projectx.py:391 - Historical data download complete - 118915 total new bars stored in TimescaleDB
+2025-06-09 12:18:30,603 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:18:30,603 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:18:30,603 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:18:30,609 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:18:30,609 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:18:30,609 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:18:30,609 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:18:30,609 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:18:30,631 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:18:30,631 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:18:33,696 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:18:33.696042+00:00
+2025-06-09 12:18:33,899 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:18:33,899 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:18:33,899 - projectx - INFO - download_historical_projectx.py:270 - Initial start date for 1m: 2025-04-10T16:18:33.696042+00:00 (60 days back)
+2025-06-09 12:18:33,899 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-04-10T16:18:33.696042+00:00 to 2025-06-09T16:18:33.696042+00:00
+2025-06-09 12:18:34,171 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:34,172 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-06-01T23:37:59+00:00 to 2025-06-08T23:37:59+00:00
+2025-06-09 12:18:35,174 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:37:59+00:00 to 2025-06-08T23:37:59+00:00
+2025-06-09 12:18:35,393 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:35,394 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-05-30T05:56:59+00:00 to 2025-06-06T05:56:59+00:00
+2025-06-09 12:18:36,396 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 3: 2025-05-30T05:56:59+00:00 to 2025-06-06T05:56:59+00:00
+2025-06-09 12:18:36,602 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 3: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:36,602 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-05-29T12:15:59+00:00 to 2025-06-05T12:15:59+00:00
+2025-06-09 12:18:37,604 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 4: 2025-05-29T12:15:59+00:00 to 2025-06-05T12:15:59+00:00
+2025-06-09 12:18:38,005 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 4: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:39,007 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 5: 2025-05-28T18:34:59+00:00 to 2025-06-04T18:34:59+00:00
+2025-06-09 12:18:39,214 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 5: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:40,216 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 6: 2025-05-28T01:53:59+00:00 to 2025-06-04T01:53:59+00:00
+2025-06-09 12:18:40,409 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 6: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:41,410 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 7: 2025-05-27T08:12:59+00:00 to 2025-06-03T08:12:59+00:00
+2025-06-09 12:18:41,611 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 7: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:42,612 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 8: 2025-05-26T14:31:59+00:00 to 2025-06-02T14:31:59+00:00
+2025-06-09 12:18:42,813 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 8: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:43,817 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 9: 2025-05-23T20:50:59+00:00 to 2025-05-30T20:50:59+00:00
+2025-06-09 12:18:44,021 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 9: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:45,024 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 10: 2025-05-23T04:09:59+00:00 to 2025-05-30T04:09:59+00:00
+2025-06-09 12:18:45,234 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 10: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:45,234 - projectx - INFO - download_historical_projectx.py:329 - Progress: 10 requests made, 10000 total bars downloaded for CON.F.US.MES.M25 1m
+2025-06-09 12:18:46,237 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 11: 2025-05-22T10:28:59+00:00 to 2025-05-29T10:28:59+00:00
+2025-06-09 12:18:46,432 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 11: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:47,434 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 12: 2025-05-21T16:47:59+00:00 to 2025-05-28T16:47:59+00:00
+2025-06-09 12:18:47,648 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 12: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:18:48,649 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 13: 2025-05-21T00:06:59+00:00 to 2025-05-28T00:06:59+00:00
+2025-06-09 12:18:48,866 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 13: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:31,897 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:23:31,897 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:23:31,897 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:23:31,903 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:23:31,904 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:23:31,904 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:23:31,904 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:23:31,904 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:23:31,930 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:23:31,931 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:23:34,984 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:23:34.984836+00:00
+2025-06-09 12:23:35,205 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:23:35,206 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:23:35,206 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:23:34.984836+00:00
+2025-06-09 12:23:35,482 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:35,483 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-06-01T23:42:59+00:00 to 2025-06-08T23:42:59+00:00
+2025-06-09 12:23:36,485 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:42:59+00:00 to 2025-06-08T23:42:59+00:00
+2025-06-09 12:23:36,681 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:36,682 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-05-30T06:01:59+00:00 to 2025-06-06T06:01:59+00:00
+2025-06-09 12:23:37,683 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 3: 2025-05-30T06:01:59+00:00 to 2025-06-06T06:01:59+00:00
+2025-06-09 12:23:37,867 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 3: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:37,869 - projectx - INFO - download_historical_projectx.py:361 - Next batch date range: 2025-05-29T12:20:59+00:00 to 2025-06-05T12:20:59+00:00
+2025-06-09 12:23:38,870 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 4: 2025-05-29T12:20:59+00:00 to 2025-06-05T12:20:59+00:00
+2025-06-09 12:23:39,069 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 4: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:40,071 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 5: 2025-05-28T18:39:59+00:00 to 2025-06-04T18:39:59+00:00
+2025-06-09 12:23:40,260 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 5: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:41,262 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 6: 2025-05-28T01:58:59+00:00 to 2025-06-04T01:58:59+00:00
+2025-06-09 12:23:41,471 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 6: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:42,473 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 7: 2025-05-27T08:17:59+00:00 to 2025-06-03T08:17:59+00:00
+2025-06-09 12:23:42,667 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 7: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:43,669 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 8: 2025-05-26T14:36:59+00:00 to 2025-06-02T14:36:59+00:00
+2025-06-09 12:23:43,862 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 8: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:44,865 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 9: 2025-05-23T20:55:59+00:00 to 2025-05-30T20:55:59+00:00
+2025-06-09 12:23:45,044 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 9: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:46,046 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 10: 2025-05-23T04:14:59+00:00 to 2025-05-30T04:14:59+00:00
+2025-06-09 12:23:46,257 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 10: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:46,258 - projectx - INFO - download_historical_projectx.py:329 - Progress: 10 requests made, 10000 total bars downloaded for CON.F.US.MES.M25 1m
+2025-06-09 12:23:47,260 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 11: 2025-05-22T10:33:59+00:00 to 2025-05-29T10:33:59+00:00
+2025-06-09 12:23:47,441 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 11: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:48,443 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 12: 2025-05-21T16:52:59+00:00 to 2025-05-28T16:52:59+00:00
+2025-06-09 12:23:48,642 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 12: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:49,644 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 13: 2025-05-21T00:11:59+00:00 to 2025-05-28T00:11:59+00:00
+2025-06-09 12:23:49,814 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 13: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:50,817 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 14: 2025-05-20T06:30:59+00:00 to 2025-05-27T06:30:59+00:00
+2025-06-09 12:23:51,016 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 14: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:52,018 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 15: 2025-05-19T08:49:59+00:00 to 2025-05-26T08:49:59+00:00
+2025-06-09 12:23:52,222 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 15: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:53,224 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 16: 2025-05-16T15:08:59+00:00 to 2025-05-23T15:08:59+00:00
+2025-06-09 12:23:53,422 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 16: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:54,423 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 17: 2025-05-15T22:27:59+00:00 to 2025-05-22T22:27:59+00:00
+2025-06-09 12:23:54,614 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 17: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:55,616 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 18: 2025-05-15T04:46:59+00:00 to 2025-05-22T04:46:59+00:00
+2025-06-09 12:23:55,809 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 18: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:56,811 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 19: 2025-05-14T11:05:59+00:00 to 2025-05-21T11:05:59+00:00
+2025-06-09 12:23:57,094 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 19: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:58,096 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 20: 2025-05-13T17:24:59+00:00 to 2025-05-20T17:24:59+00:00
+2025-06-09 12:23:58,290 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 20: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:23:58,290 - projectx - INFO - download_historical_projectx.py:329 - Progress: 20 requests made, 20000 total bars downloaded for CON.F.US.MES.M25 1m
+2025-06-09 12:23:59,292 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 21: 2025-05-13T00:43:59+00:00 to 2025-05-20T00:43:59+00:00
+2025-06-09 12:23:59,451 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 21: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:00,453 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 22: 2025-05-12T07:02:59+00:00 to 2025-05-19T07:02:59+00:00
+2025-06-09 12:24:00,645 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 22: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:01,647 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 23: 2025-05-09T13:21:59+00:00 to 2025-05-16T13:21:59+00:00
+2025-06-09 12:24:01,849 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 23: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:02,851 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 24: 2025-05-08T19:40:59+00:00 to 2025-05-15T19:40:59+00:00
+2025-06-09 12:24:03,044 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 24: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:04,045 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 25: 2025-05-08T02:59:59+00:00 to 2025-05-15T02:59:59+00:00
+2025-06-09 12:24:04,240 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 25: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:05,242 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 26: 2025-05-07T09:18:59+00:00 to 2025-05-14T09:18:59+00:00
+2025-06-09 12:24:05,424 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 26: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:06,425 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 27: 2025-05-06T15:37:59+00:00 to 2025-05-13T15:37:59+00:00
+2025-06-09 12:24:06,612 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 27: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:07,615 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 28: 2025-05-05T22:56:59+00:00 to 2025-05-12T22:56:59+00:00
+2025-06-09 12:24:07,791 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 28: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:08,793 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 29: 2025-05-05T05:15:59+00:00 to 2025-05-12T05:15:59+00:00
+2025-06-09 12:24:08,981 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 29: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:09,983 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 30: 2025-05-02T11:34:59+00:00 to 2025-05-09T11:34:59+00:00
+2025-06-09 12:24:10,173 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 30: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:24:10,173 - projectx - INFO - download_historical_projectx.py:329 - Progress: 30 requests made, 30000 total bars downloaded for CON.F.US.MES.M25 1m
+2025-06-09 12:25:28,302 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:25:28,302 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:25:28,302 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:25:28,309 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:25:28,309 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:25:28,309 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:25:28,309 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:25:28,309 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:25:28,332 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:25:28,332 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:25:31,407 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:31,545 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:25:31,545 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:25:31,546 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:31,756 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:25:31,758 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:44:59+00:00 to 2025-06-08T23:44:59+00:00
+2025-06-09 12:25:32,760 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:44:59+00:00 to 2025-06-08T23:44:59+00:00
+2025-06-09 12:25:32,969 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:25:32,970 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:25:32,970 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:25:34,971 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:25:34,972 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:35,285 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:25:35,286 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:25:35,287 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:25:37,288 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:25:37,288 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:37,476 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:25:37,477 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:25:37,477 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:25:39,479 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:25:39,480 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:39,650 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:25:39,651 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:25:39,651 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:25:41,652 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:25:41,653 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:25:31.407748+00:00
+2025-06-09 12:25:41,719 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:25:41,719 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:25:41,719 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:25:43,721 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:26:18,805 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:26:18,806 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:26:18,806 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:26:18,812 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:26:18,812 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:26:18,812 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:26:18,812 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:26:18,812 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:26:18,831 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:26:18,831 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:26:21,914 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:22,058 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:26:22,058 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:26:22,058 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:22,288 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:26:22,290 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:45:59+00:00 to 2025-06-08T23:45:59+00:00
+2025-06-09 12:26:23,291 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:45:59+00:00 to 2025-06-08T23:45:59+00:00
+2025-06-09 12:26:23,484 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:26:23,484 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:26:23,484 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:26:25,486 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:26:25,487 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:25,741 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:26:25,742 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:26:25,742 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:26:27,743 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:26:27,743 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:27,925 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:26:27,925 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:26:27,925 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:26:29,927 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:26:29,927 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:30,096 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:26:30,097 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:26:30,097 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:26:32,098 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:26:32,099 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:26:21.913973+00:00
+2025-06-09 12:26:32,161 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:26:32,162 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:26:32,162 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:26:34,162 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:28:17,323 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:28:17,324 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:28:17,324 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:28:17,329 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:28:17,330 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:28:17,330 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:28:17,330 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:28:17,330 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:28:17,353 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:28:17,353 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:28:20,406 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:20,544 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:28:20,545 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:28:20,545 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:20,757 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:28:20,763 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:47:59+00:00 to 2025-06-08T23:47:59+00:00
+2025-06-09 12:28:21,764 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:47:59+00:00 to 2025-06-08T23:47:59+00:00
+2025-06-09 12:28:21,958 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:28:21,958 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:28:21,958 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:28:23,960 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:28:23,960 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:24,246 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:28:24,247 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:28:24,247 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:28:26,248 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:28:26,248 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:26,452 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:28:26,453 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:28:26,453 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:28:28,454 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:28:28,455 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:28,683 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:28:28,683 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:28:28,684 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:28:30,685 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:28:30,685 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:28:20.406728+00:00
+2025-06-09 12:28:30,745 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:28:30,745 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:28:30,745 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:28:32,747 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:30:36,263 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:30:36,263 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:30:36,263 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:30:36,269 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:30:36,269 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:30:36,269 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:30:36,269 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:30:36,269 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:30:36,293 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:30:36,293 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:30:39,367 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:39,632 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:30:39,633 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:30:39,633 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:39,930 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:30:39,931 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:49:59+00:00 to 2025-06-08T23:49:59+00:00
+2025-06-09 12:30:40,933 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:49:59+00:00 to 2025-06-08T23:49:59+00:00
+2025-06-09 12:30:41,134 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:30:41,135 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:30:41,135 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:30:43,136 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:30:43,137 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:43,512 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:30:43,513 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:30:43,514 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:30:45,515 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:30:45,515 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:45,701 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:30:45,702 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:30:45,703 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:30:47,704 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:30:47,704 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:47,836 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:30:47,837 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:30:47,837 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:30:49,838 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:30:49,839 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:30:39.367340+00:00
+2025-06-09 12:30:49,917 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:30:49,918 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:30:49,918 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:30:51,919 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:34:06,135 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:34:06,136 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:34:06,136 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:34:06,142 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:34:06,142 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:34:06,142 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:34:06,142 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:34:06,142 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:34:06,161 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:34:06,161 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:34:09,249 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:09,502 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:34:09,503 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:34:09,503 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:09,851 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:34:09,852 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:53:59+00:00 to 2025-06-08T23:53:59+00:00
+2025-06-09 12:34:10,853 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:53:59+00:00 to 2025-06-08T23:53:59+00:00
+2025-06-09 12:34:11,130 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:34:11,131 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:34:11,131 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:34:13,132 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:34:13,133 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:13,470 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:34:13,472 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:34:13,472 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:34:15,473 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:34:15,474 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:16,018 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:34:16,019 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:34:16,019 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:34:18,021 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:34:18,021 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:18,188 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:34:18,188 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:34:18,188 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:34:20,190 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:34:20,190 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:34:09.249536+00:00
+2025-06-09 12:34:20,268 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:34:20,269 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:34:20,269 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:34:22,269 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:34:22,270 - projectx - INFO - download_historical_projectx.py:410 - Gateway client session closed.
+2025-06-09 12:36:34,405 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:36:34,405 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:36:34,406 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:36:34,412 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:36:34,412 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:36:34,412 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:36:34,412 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:36:34,412 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:36:34,432 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:36:34,432 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:36:37,512 - projectx - INFO - download_historical_projectx.py:204 - End date set to current time: 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:37,698 - projectx - INFO - download_historical_projectx.py:229 - Authentication successful
+2025-06-09 12:36:37,698 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:36:37,699 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:37,986 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:36:37,987 - projectx - INFO - download_historical_projectx.py:366 - Next batch date range: 2025-06-01T23:55:59+00:00 to 2025-06-08T23:55:59+00:00
+2025-06-09 12:36:38,988 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 2: 2025-06-01T23:55:59+00:00 to 2025-06-08T23:55:59+00:00
+2025-06-09 12:36:39,237 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:36:39,240 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:36:39,240 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:36:41,240 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:36:41,241 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:41,582 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:36:41,584 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:36:41,584 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:36:43,585 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:36:43,586 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:43,812 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:36:43,813 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:36:43,813 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:36:45,814 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:36:45,815 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:45,984 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:36:45,984 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:36:45,984 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:36:47,986 - projectx - INFO - download_historical_projectx.py:237 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:36:47,986 - projectx - INFO - download_historical_projectx.py:283 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:36:37.512105+00:00
+2025-06-09 12:36:48,042 - projectx - INFO - download_historical_projectx.py:323 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:36:48,043 - projectx - INFO - download_historical_projectx.py:329 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:36:48,043 - projectx - INFO - download_historical_projectx.py:391 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:36:50,044 - projectx - INFO - download_historical_projectx.py:396 - Historical data download complete - 4416 total new bars stored in TimescaleDB
+2025-06-09 12:36:50,045 - projectx - INFO - download_historical_projectx.py:410 - Gateway client session closed.
+2025-06-09 12:40:39,712 - projectx - INFO - logging_config.py:79 - Logging initialized: INFO level
+2025-06-09 12:40:39,712 - projectx - INFO - download_historical_projectx.py:151 - Starting enhanced historical data download (with duplicate prevention)...
+2025-06-09 12:40:39,712 - projectx - INFO - download_historical_projectx.py:152 - Will attempt to download as far back as possible for each timeframe
+2025-06-09 12:40:39,718 - projectx - INFO - download_historical_projectx.py:57 - Using database configuration: local_timescaledb
+2025-06-09 12:40:39,718 - projectx - INFO - download_historical_projectx.py:58 - Database: projectx_test
+2025-06-09 12:40:39,718 - projectx - INFO - download_historical_projectx.py:59 - Host: localhost:5434
+2025-06-09 12:40:39,718 - projectx - INFO - download_historical_projectx.py:166 - Using TimescaleDB for data storage
+2025-06-09 12:40:39,718 - projectx - INFO - download_historical_projectx.py:76 - Checking for test database container: projectx_test_timescaledb
+2025-06-09 12:40:39,740 - projectx - INFO - download_historical_projectx.py:90 - TimescaleDB container 'projectx_test_timescaledb' is already running
+2025-06-09 12:40:39,740 - projectx - INFO - download_historical_projectx.py:175 - Waiting for TimescaleDB to initialize...
+2025-06-09 12:40:43,037 - projectx - INFO - download_historical_projectx.py:203 - End date set to current time: 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:43,037 - projectx - INFO - download_historical_projectx.py:229 - Downloading CON.F.US.MES.M25 1m data...
+2025-06-09 12:40:43,037 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:43,365 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:40:43,366 - projectx - INFO - download_historical_projectx.py:358 - Next batch date range: 2025-06-01T23:59:59+00:00 to 2025-06-08T23:59:59+00:00
+2025-06-09 12:40:44,368 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 2: 2025-06-01T23:59:59+00:00 to 2025-06-08T23:59:59+00:00
+2025-06-09 12:40:44,616 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 2: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1m
+2025-06-09 12:40:44,618 - projectx - INFO - download_historical_projectx.py:321 - Stopping download for 1m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:40:44,618 - projectx - INFO - download_historical_projectx.py:383 - Completed CON.F.US.MES.M25 1m: 2000 new bars with 2 total requests
+2025-06-09 12:40:46,619 - projectx - INFO - download_historical_projectx.py:229 - Downloading CON.F.US.MES.M25 5m data...
+2025-06-09 12:40:46,620 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:46,954 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 5m
+2025-06-09 12:40:46,955 - projectx - INFO - download_historical_projectx.py:321 - Stopping download for 5m as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:40:46,955 - projectx - INFO - download_historical_projectx.py:383 - Completed CON.F.US.MES.M25 5m: 1000 new bars with 1 total requests
+2025-06-09 12:40:48,955 - projectx - INFO - download_historical_projectx.py:229 - Downloading CON.F.US.MES.M25 1h data...
+2025-06-09 12:40:48,956 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:49,184 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 1: Downloaded and stored 1000 new bars out of 1000 retrieved for CON.F.US.MES.M25 1h
+2025-06-09 12:40:49,185 - projectx - INFO - download_historical_projectx.py:321 - Stopping download for 1h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:40:49,185 - projectx - INFO - download_historical_projectx.py:383 - Completed CON.F.US.MES.M25 1h: 1000 new bars with 1 total requests
+2025-06-09 12:40:51,187 - projectx - INFO - download_historical_projectx.py:229 - Downloading CON.F.US.MES.M25 4h data...
+2025-06-09 12:40:51,188 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:51,344 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 1: Downloaded and stored 358 new bars out of 358 retrieved for CON.F.US.MES.M25 4h
+2025-06-09 12:40:51,344 - projectx - INFO - download_historical_projectx.py:321 - Stopping download for 4h as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:40:51,344 - projectx - INFO - download_historical_projectx.py:383 - Completed CON.F.US.MES.M25 4h: 358 new bars with 1 total requests
+2025-06-09 12:40:53,346 - projectx - INFO - download_historical_projectx.py:229 - Downloading CON.F.US.MES.M25 1d data...
+2025-06-09 12:40:53,347 - projectx - INFO - download_historical_projectx.py:275 - Requesting batch 1: 2025-06-08T00:00:00+00:00 to 2025-06-09T16:40:43.036999+00:00
+2025-06-09 12:40:53,438 - projectx - INFO - download_historical_projectx.py:315 - ✓ Batch 1: Downloaded and stored 58 new bars out of 58 retrieved for CON.F.US.MES.M25 1d
+2025-06-09 12:40:53,439 - projectx - INFO - download_historical_projectx.py:321 - Stopping download for 1d as desired start date (2025-06-08T00:00:00+00:00) has been reached.
+2025-06-09 12:40:53,439 - projectx - INFO - download_historical_projectx.py:383 - Completed CON.F.US.MES.M25 1d: 58 new bars with 1 total requests
+2025-06-09 12:40:55,440 - projectx - INFO - download_historical_projectx.py:388 - Historical data download complete - 4416 total new bars stored in TimescaleDB
