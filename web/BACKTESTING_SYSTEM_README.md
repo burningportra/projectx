@@ -243,6 +243,7 @@ class IncrementalBacktester {
 interface TradWithProtectiveOrders extends Trade {
   protective: {
     stopLossPrice: number;
+    takeProfitPrice: number;
   }
 }
 
