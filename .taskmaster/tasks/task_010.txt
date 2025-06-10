@@ -1,0 +1,11 @@
+# Task ID: 10
+# Title: Implement Incremental State Updates
+# Status: pending
+# Dependencies: 1, 7
+# Priority: low
+# Description: Optimize state calculations to only process changes instead of full recalculation
+# Details:
+Implement a delta-based state update system that only recalculates what has changed since the last bar. This should significantly improve performance for long backtests with many trades.
+
+# Test Strategy:
+Compare performance of incremental updates vs full recalculation on a 10,000 bar backtest with 1000+ trades.

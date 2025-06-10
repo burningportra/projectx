@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Implement Bracket Order Support
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Add first-class support for bracket orders (entry + stop loss + take profit) with a single method call
+# Details:
+Create a BracketOrder interface and implement a createBracketOrder method that handles all three orders (entry, stop loss, take profit) atomically. This should eliminate the need for custom properties on trade objects and manual order linking.
+
+# Test Strategy:
+Test bracket order creation, ensure all three orders are linked correctly, and verify that filling/cancelling one order properly affects the others.

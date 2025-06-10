@@ -1,0 +1,70 @@
+Product Requirements Document: Backtesting System Refactor
+
+Project Overview:
+Refactor the existing backtesting system to simplify architecture, improve developer experience, and enhance performance. The current system works but has accumulated technical debt from iterative development.
+
+Core Objectives:
+1. Simplify the architecture by creating a unified state management system
+2. Make order management more intuitive with first-class bracket order support
+3. Improve developer experience with declarative APIs and better type safety
+4. Enhance debugging capabilities with built-in tools
+5. Optimize performance with incremental updates
+
+Technical Requirements:
+
+1. Unified State Management
+- Create a single BacktestEngine class as the source of truth
+- Remove state duplication across OrderManager, Strategy, and UI
+- Implement a clean API for all state changes
+- Make strategies pure functions without internal state
+
+2. Order Management Simplification
+- Implement bracket orders (entry + stop loss + take profit) as first-class citizens
+- Create a single method to submit all related orders at once
+- Remove need for custom properties and manual order linking
+- Properly type all trade objects to eliminate use of 'any'
+
+3. Declarative Strategy API
+- Replace imperative strategy code with declarative configuration
+- Create a strategy builder that handles boilerplate
+- Support common patterns (CUS/CDS signals, bar-based stops) out of the box
+- Allow custom logic through hooks when needed
+
+4. React State Management
+- Implement React Context or state management library for UI
+- Remove manual state synchronization
+- Eliminate props drilling through multiple components
+- Create hooks for accessing backtest state
+
+5. Debugging and Testing Tools
+- Build time-travel debugging to replay specific scenarios
+- Record all state changes for inspection
+- Create visual debugging tools
+- Remove reliance on console.log debugging
+
+6. Performance Optimization
+- Implement incremental state updates instead of full recalculation
+- Use indexed data structures for order lookups
+- Optimize order matching algorithms
+- Add performance metrics and profiling
+
+7. Type Safety Improvements
+- Create proper TypeScript interfaces for all entities
+- Add compile-time validation for signal types
+- Remove all uses of 'any' type
+- Implement strict null checking
+
+Non-Functional Requirements:
+- Maintain backward compatibility with existing strategies where possible
+- Provide migration guide for existing code
+- Keep the system testable with dependency injection
+- Document all public APIs thoroughly
+- Ensure the refactor is done incrementally to avoid breaking the system
+
+Success Criteria:
+- 50% reduction in lines of code for typical strategy implementation
+- Zero uses of TypeScript 'any' type
+- All state changes go through a single engine
+- Bracket orders can be created with one method call
+- Time-travel debugging is functional
+- Performance improvement of at least 2x for large backtests 

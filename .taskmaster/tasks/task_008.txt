@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Refactor Strategy Base Class
+# Status: pending
+# Dependencies: 1, 5
+# Priority: medium
+# Description: Convert strategies to pure functions without internal state
+# Details:
+Refactor the BaseStrategy class to remove all internal state. Strategies should be pure functions that take the current state and bar data as input and return signals/orders as output. This makes strategies easier to test and reason about.
+
+# Test Strategy:
+Test that strategies produce deterministic output given the same input state and bar data. Verify no internal state is maintained.

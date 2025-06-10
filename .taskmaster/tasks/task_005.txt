@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Implement Declarative Strategy API
+# Status: pending
+# Dependencies: 1, 2
+# Priority: medium
+# Description: Create a declarative API for defining strategies without boilerplate code
+# Details:
+Design a declarative configuration format for strategies that allows defining entry/exit signals, order types, and risk management rules without writing imperative code. Create a strategy builder that generates the implementation from the configuration.
+
+# Test Strategy:
+Create a test strategy using only declarative configuration and verify it produces the same results as the imperative version.

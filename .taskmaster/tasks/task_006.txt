@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Build Time-Travel Debugging
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Implement debugging tools that allow replaying specific backtest scenarios
+# Details:
+Record all state changes during backtesting and create an interface to replay the backtest from any point. Allow stepping forward/backward through bars and inspecting state at each point. This should replace console.log debugging.
+
+# Test Strategy:
+Run a backtest, use time-travel to go to specific bars, and verify the state matches what was recorded during the original run.

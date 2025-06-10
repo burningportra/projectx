@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Create Unified BacktestEngine Class
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Design and implement a single BacktestEngine class that serves as the source of truth for all state management
+# Details:
+Create a new BacktestEngine class that consolidates all state management from OrderManager, Strategy, and UI components. This class should manage orders, positions, trades, and all state transitions through a clean API. All state changes must go through this engine to ensure consistency.
+
+# Test Strategy:
+Unit test the BacktestEngine with mock data to ensure state transitions work correctly. Test order submission, position tracking, and trade completion flows.

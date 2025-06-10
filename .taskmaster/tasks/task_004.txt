@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Create React Context for State Management
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Implement React Context or state management library to eliminate manual state sync and props drilling
+# Details:
+Create a BacktestProvider component that wraps the UI and provides access to backtest state through React Context. Implement custom hooks like useBacktestState, useOrders, usePositions, etc. This should eliminate the need for manual state synchronization.
+
+# Test Strategy:
+Test that all UI components can access state through context without props drilling. Verify automatic re-renders when state changes.

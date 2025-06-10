@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Remove TypeScript 'any' Usage
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Create proper TypeScript interfaces for all entities and eliminate all uses of 'any' type
+# Details:
+Define proper interfaces for Trade, Order, Position, and all other entities. Replace all instances of '(trade as any)' with properly typed objects. Implement strict null checking and ensure full type safety throughout the codebase.
+
+# Test Strategy:
+Enable strict TypeScript checking and ensure the project compiles without any type errors. All 'any' usages should be eliminated.

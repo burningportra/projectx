@@ -1,0 +1,124 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Create Unified BacktestEngine Class",
+      "description": "Design and implement a single BacktestEngine class that serves as the source of truth for all state management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "details": "Create a new BacktestEngine class that consolidates all state management from OrderManager, Strategy, and UI components. This class should manage orders, positions, trades, and all state transitions through a clean API. All state changes must go through this engine to ensure consistency.",
+      "testStrategy": "Unit test the BacktestEngine with mock data to ensure state transitions work correctly. Test order submission, position tracking, and trade completion flows."
+    },
+    {
+      "id": 2,
+      "title": "Implement Bracket Order Support",
+      "description": "Add first-class support for bracket orders (entry + stop loss + take profit) with a single method call",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [1],
+      "details": "Create a BracketOrder interface and implement a createBracketOrder method that handles all three orders (entry, stop loss, take profit) atomically. This should eliminate the need for custom properties on trade objects and manual order linking.",
+      "testStrategy": "Test bracket order creation, ensure all three orders are linked correctly, and verify that filling/cancelling one order properly affects the others."
+    },
+    {
+      "id": 3,
+      "title": "Remove TypeScript 'any' Usage",
+      "description": "Create proper TypeScript interfaces for all entities and eliminate all uses of 'any' type",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "details": "Define proper interfaces for Trade, Order, Position, and all other entities. Replace all instances of '(trade as any)' with properly typed objects. Implement strict null checking and ensure full type safety throughout the codebase.",
+      "testStrategy": "Enable strict TypeScript checking and ensure the project compiles without any type errors. All 'any' usages should be eliminated."
+    },
+    {
+      "id": 4,
+      "title": "Create React Context for State Management",
+      "description": "Implement React Context or state management library to eliminate manual state sync and props drilling",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [1],
+      "details": "Create a BacktestProvider component that wraps the UI and provides access to backtest state through React Context. Implement custom hooks like useBacktestState, useOrders, usePositions, etc. This should eliminate the need for manual state synchronization.",
+      "testStrategy": "Test that all UI components can access state through context without props drilling. Verify automatic re-renders when state changes."
+    },
+    {
+      "id": 5,
+      "title": "Implement Declarative Strategy API",
+      "description": "Create a declarative API for defining strategies without boilerplate code",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1, 2],
+      "details": "Design a declarative configuration format for strategies that allows defining entry/exit signals, order types, and risk management rules without writing imperative code. Create a strategy builder that generates the implementation from the configuration.",
+      "testStrategy": "Create a test strategy using only declarative configuration and verify it produces the same results as the imperative version."
+    },
+    {
+      "id": 6,
+      "title": "Build Time-Travel Debugging",
+      "description": "Implement debugging tools that allow replaying specific backtest scenarios",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1],
+      "details": "Record all state changes during backtesting and create an interface to replay the backtest from any point. Allow stepping forward/backward through bars and inspecting state at each point. This should replace console.log debugging.",
+      "testStrategy": "Run a backtest, use time-travel to go to specific bars, and verify the state matches what was recorded during the original run."
+    },
+    {
+      "id": 7,
+      "title": "Optimize Order Matching Performance",
+      "description": "Implement indexed data structures and efficient algorithms for order matching",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1],
+      "details": "Replace linear searches through orders with indexed data structures (Map by price, Map by time). Implement efficient algorithms for finding orders that can be filled at current prices. Add performance metrics to measure improvement.",
+      "testStrategy": "Benchmark order matching performance with 10,000+ orders and verify at least 2x performance improvement over current implementation."
+    },
+    {
+      "id": 8,
+      "title": "Refactor Strategy Base Class",
+      "description": "Convert strategies to pure functions without internal state",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1, 5],
+      "details": "Refactor the BaseStrategy class to remove all internal state. Strategies should be pure functions that take the current state and bar data as input and return signals/orders as output. This makes strategies easier to test and reason about.",
+      "testStrategy": "Test that strategies produce deterministic output given the same input state and bar data. Verify no internal state is maintained."
+    },
+    {
+      "id": 9,
+      "title": "Create Migration Guide",
+      "description": "Document how to migrate existing strategies to the new architecture",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [1, 2, 3, 4, 5, 8],
+      "details": "Write comprehensive documentation showing how to migrate existing strategies from the old architecture to the new one. Include code examples, common patterns, and a step-by-step migration process.",
+      "testStrategy": "Migrate the existing TrendStartStrategy using the guide and verify it works correctly with the new architecture."
+    },
+    {
+      "id": 10,
+      "title": "Implement Incremental State Updates",
+      "description": "Optimize state calculations to only process changes instead of full recalculation",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [1, 7],
+      "details": "Implement a delta-based state update system that only recalculates what has changed since the last bar. This should significantly improve performance for long backtests with many trades.",
+      "testStrategy": "Compare performance of incremental updates vs full recalculation on a 10,000 bar backtest with 1000+ trades."
+    },
+    {
+      "id": 11,
+      "title": "Add Visual Debugging Tools",
+      "description": "Create UI components for visual state inspection during debugging",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [4, 6],
+      "details": "Build React components that visualize the current state, order book, positions, and P&L during debugging. Allow inspecting state at any point during time-travel debugging.",
+      "testStrategy": "Use visual debugging tools to debug a complex strategy and verify all state is correctly displayed."
+    },
+    {
+      "id": 12,
+      "title": "Implement Performance Profiling",
+      "description": "Add performance metrics and profiling throughout the system",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [1, 7, 10],
+      "details": "Add performance timing to all major operations (bar processing, order matching, state updates). Create a performance dashboard that shows bottlenecks and optimization opportunities.",
+      "testStrategy": "Run performance profiling on various backtest scenarios and verify metrics are accurately captured and displayed."
+    }
+  ]
+} 
