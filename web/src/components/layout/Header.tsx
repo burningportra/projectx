@@ -14,7 +14,6 @@ export default function Header({ activePath }: HeaderProps) {
     { name: 'Strategies', href: '/strategies' },
     { name: 'Positions', href: '/positions' },
     { name: 'Trends', href: '/trends' },
-    { name: 'Trend Starts', href: '/trendstarts' },
     { name: 'Backtest', href: '/backtester' },
     { name: 'Performance', href: '/performance' },
   ];
@@ -25,7 +24,7 @@ export default function Header({ activePath }: HeaderProps) {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">ProjectX Trading</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">ProjectX</h1>
             </div>
             <nav className="ml-6 flex space-x-8">
               {navigation.map((item) => (

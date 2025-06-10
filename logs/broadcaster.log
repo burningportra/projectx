@@ -1,12 +1,17 @@
 Broadcaster.py: Top of file reached (stderr)
 Broadcaster.py: Imports done (stderr)
-2025-06-09 18:44:40,303 - OHLCBroadcaster - INFO - Broadcaster.py: Logging configured.
-2025-06-09 18:44:40,320 - websockets.server - INFO - server listening on [::1]:8765
-2025-06-09 18:44:40,320 - websockets.server - INFO - server listening on 127.0.0.1:8765
-2025-06-09 18:45:56,506 - websockets.server - INFO - connection open
-2025-06-09 18:51:13,729 - websockets.server - INFO - connection open
-2025-06-09 18:51:26,867 - websockets.server - INFO - connection open
-2025-06-09 18:52:31,119 - websockets.server - INFO - connection open
-2025-06-09 18:52:35,206 - websockets.server - INFO - connection open
+2025-06-09 18:56:58,829 - OHLCBroadcaster - INFO - Broadcaster.py: Logging configured.
+2025-06-09 18:56:58,852 - websockets.server - INFO - server listening on 127.0.0.1:8765
+2025-06-09 18:56:58,852 - websockets.server - INFO - server listening on [::1]:8765
+2025-06-09 18:57:43,087 - websockets.server - INFO - connection open
+2025-06-09 18:57:49,471 - websockets.server - INFO - connection open
+2025-06-09 18:59:31,564 - websockets.server - INFO - connection open
+2025-06-09 18:59:45,747 - websockets.server - INFO - connection open
+2025-06-09 18:59:55,808 - websockets.server - INFO - connection open
+2025-06-09 19:00:09,541 - websockets.server - INFO - connection open
+2025-06-09 19:01:22,938 - websockets.server - INFO - connection open
+2025-06-09 23:13:57,225 - websockets.server - INFO - connection open
+2025-06-09 23:14:53,938 - websockets.server - INFO - connection open
+2025-06-09 23:14:55,227 - websockets.server - INFO - connection open
  - connection open
-2025-06-09 18:52:35,206 - websockets.server - INFO - connection open
+2025-06-09 23:14:55,227 - websockets.server - INFO - connection open

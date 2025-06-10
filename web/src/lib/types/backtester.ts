@@ -124,7 +124,7 @@ export interface SimulatedTrade {
   size: number;
   profitOrLoss?: number;
   commission?: number;
-  status?: 'OPEN' | 'CLOSED';
+  status?: 'OPEN' | 'CLOSED' | 'PENDING';
   signalEntry?: StrategySignal; // Signal that triggered entry
   signalExit?: StrategySignal;  // Signal that triggered exit (if applicable)
   

@@ -52,3 +52,4 @@ node_modules/
 /projectx_test_data
 logs/broadcaster.log
 *.log
+*.pyc

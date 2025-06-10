@@ -28,6 +28,7 @@ interface ManagedPosition {
 
 export class OrderManager {
   private orders: Order[] = [];
+  private filledOrders: Order[] = []; // Keep track of filled orders separately
   private openPositions: Map<string, ManagedPosition> = new Map(); // Key: contractId
   private completedTrades: SimulatedTrade[] = []; // Track completed trades for P&L chart
   private orderIdCounter = 1;
@@ -51,9 +52,14 @@ export class OrderManager {
       type: orderInput.type,
       side: orderInput.side,
       quantity: orderInput.quantity,
+      price: orderInput.price,
+      contractId: orderInput.contractId,
       parentTradeId: orderInput.parentTradeId,
       isStopLoss: orderInput.isStopLoss,
-      isTakeProfit: orderInput.isTakeProfit
+      isTakeProfit: orderInput.isTakeProfit,
+      isEntry: orderInput.isEntry,
+      isExit: orderInput.isExit,
+      tradeId: orderInput.tradeId
     });
     const now = (Date.now() / 1000) as UTCTimestamp;
     const order: Order = {
@@ -75,6 +81,8 @@ export class OrderManager {
       isStopLoss: orderInput.isStopLoss || false,
       isTakeProfit: orderInput.isTakeProfit || false,
       parentTradeId: orderInput.parentTradeId, // Keep parentTradeId if strategy manages trades
+      isEntry: orderInput.isEntry,
+      isExit: orderInput.isExit
     };
 
     if (order.quantity <= 0) {
@@ -94,6 +102,17 @@ export class OrderManager {
     
     this.orders.push(order);
     this.orders.sort((a, b) => (a.submittedTime || 0) - (b.submittedTime || 0)); // FIFO
+    
+    console.log(`[OrderManager] Order created and added to queue:`, {
+      orderId: order.id,
+      type: order.type,
+      side: order.side,
+      price: order.price,
+      quantity: order.quantity,
+      contractId: order.contractId,
+      status: order.status,
+      totalPendingOrders: this.orders.filter(o => o.status === OrderStatus.PENDING).length
+    });
     
     // Publish order submitted event
     messageBus.publish(MessageType.ORDER_SUBMITTED, 'OrderManager', {
@@ -143,6 +162,21 @@ export class OrderManager {
   }
 
   processBar(mainBar: BacktestBarData, subBarsForMainBar: SubBarData[] | undefined, barIndex: number): Order[] {
+    const pendingOrders = this.orders.filter(o => o.status === OrderStatus.PENDING);
+    console.log(`[OrderManager] processBar called for bar ${barIndex}:`, {
+      time: mainBar.time,
+      pendingOrderCount: pendingOrders.length,
+      pendingOrders: pendingOrders.map(o => ({
+        id: o.id,
+        type: o.type,
+        side: o.side,
+        isEntry: o.isEntry,
+        isExit: o.isExit,
+        isStopLoss: o.isStopLoss,
+        isTakeProfit: o.isTakeProfit
+      }))
+    });
+    
     const filledThisBar: Order[] = [];
     const useSubBars = subBarsForMainBar && subBarsForMainBar.length > 0;
     const barsToProcess = useSubBars ? subBarsForMainBar : [mainBar as SubBarData]; // Treat mainBar as a SubBarData for uniform processing
@@ -198,10 +232,24 @@ export class OrderManager {
           // If it's a converted stop, it should fill based on that trigger.
           fillPrice = currentProcessingBar.open;
         } else if (order.type === OrderType.LIMIT && order.price) {
+          console.log(`[OrderManager] Checking LIMIT order ${order.id}:`, {
+            orderSide: order.side,
+            orderPrice: order.price,
+            barHigh: currentProcessingBar.high,
+            barLow: currentProcessingBar.low,
+            barOpen: currentProcessingBar.open,
+            barClose: currentProcessingBar.close,
+            barTime: currentBarTime
+          });
+          
           if (order.side === OrderSide.BUY && currentProcessingBar.low <= order.price) {
             fillPrice = order.price; // Fill at limit price as per PRD
+            console.log(`[OrderManager] BUY LIMIT order ${order.id} can fill - bar low ${currentProcessingBar.low} <= limit ${order.price}`);
           } else if (order.side === OrderSide.SELL && currentProcessingBar.high >= order.price) {
             fillPrice = order.price; // Fill at limit price as per PRD
+            console.log(`[OrderManager] SELL LIMIT order ${order.id} can fill - bar high ${currentProcessingBar.high} >= limit ${order.price}`);
+          } else {
+            console.log(`[OrderManager] LIMIT order ${order.id} cannot fill this bar`);
           }
         }
 
@@ -310,7 +358,11 @@ export class OrderManager {
       });
     } // End of loop over barsToProcess (sub-bars or mainBar)
     
-    // Cleanup fully filled or cancelled orders from the main queue
+    // Move fully filled orders to filledOrders array and remove from main queue
+    const fullyFilledOrders = this.orders.filter(o => o.status === OrderStatus.FILLED);
+    this.filledOrders.push(...fullyFilledOrders);
+    
+    // Keep only pending and partially filled orders in the main queue
     this.orders = this.orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.PARTIALLY_FILLED);
 
     // Update unrealized P&L for open positions using the mainBar's close at the end of all processing for this mainBar
@@ -454,7 +506,13 @@ export class OrderManager {
   }
   
   getFilledOrders(contractId?: string): Order[] {
-    return this.orders.filter(o => (o.status === OrderStatus.FILLED || o.status === OrderStatus.PARTIALLY_FILLED) && (!contractId || o.contractId === contractId));
+    // Get partially filled from active orders
+    const partiallyFilled = this.orders.filter(o => o.status === OrderStatus.PARTIALLY_FILLED && (!contractId || o.contractId === contractId));
+    
+    // Get fully filled from filledOrders array
+    const fullyFilled = this.filledOrders.filter(o => (!contractId || o.contractId === contractId));
+    
+    return [...partiallyFilled, ...fullyFilled];
   }
 
   getCancelledOrders(contractId?: string): Order[] {
@@ -476,6 +534,7 @@ export class OrderManager {
 
   reset(): void {
     this.orders = [];
+    this.filledOrders = [];
     this.openPositions.clear();
     this.completedTrades = [];
     this.orderIdCounter = 1;

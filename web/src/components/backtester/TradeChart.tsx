@@ -92,6 +92,14 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
     if (pendingOrders.length > 0) {
       console.log(`[updateOrderLines] Pending orders:`, pendingOrders.map(o => `${o.id} (${o.type} ${o.side} @ ${o.price || o.stopPrice})`));
     }
+    if (openPositions.length > 0) {
+      console.log(`[updateOrderLines] Open positions:`, openPositions.map((p, i) => ({
+        index: i,
+        entryPrice: p.entryPrice,
+        stopLossPrice: p.stopLossPrice,
+        takeProfitPrice: p.takeProfitPrice
+      })));
+    }
 
     // Create a set of prices that are already shown as pending orders
     const pendingOrderPrices = new Set<number>();
@@ -104,11 +112,14 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
 
     // Add price lines for open positions (only entry line if SL/TP are in pending orders)
     openPositions.forEach((position, index) => {
-      // console.log(`[updateOrderLines] Position ${index}:`, {
-      //   entryPrice: position.entryPrice,
-      //   stopLossPrice: position.stopLossPrice,
-      //   takeProfitPrice: position.takeProfitPrice
-      // });
+      console.log(`[updateOrderLines] Creating lines for position ${index}:`, {
+        entryPrice: position.entryPrice,
+        stopLossPrice: position.stopLossPrice,
+        takeProfitPrice: position.takeProfitPrice,
+        hasEntry: !!position.entryPrice,
+        hasSL: !!position.stopLossPrice,
+        hasTP: !!position.takeProfitPrice
+      });
 
       // Entry price line (blue, solid) - always show
       if (position.entryPrice) {
@@ -120,9 +131,9 @@ const TradeChart: React.FC<TradeChartProps> = React.memo(({
           title: `Entry: ${position.entryPrice.toFixed(2)}`,
         });
         currentLines.set(`entry_${index}`, entryLine);
-        // console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
+        console.log(`[updateOrderLines] Created entry line at price: ${position.entryPrice}`);
       } else {
-        // console.log(`[updateOrderLines] No entry price for position ${index}`);
+        console.log(`[updateOrderLines] No entry price for position ${index}`);
       }
 
       // Stop Loss line - only show if not already in pending orders

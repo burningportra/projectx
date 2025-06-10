@@ -16,7 +16,6 @@ import {
 } from 'lightweight-charts';
 import useSWR from 'swr';
 import Layout from "@/components/layout/Layout";
-import { TrendAnalysisStatus } from '@/components/trends/TrendAnalysisStatus';
 import { PendingSignalCard } from '@/components/trends/PendingSignalCard';
 import { DebugLogViewer } from '@/components/trends/DebugLogViewer';
 
@@ -484,7 +483,6 @@ const TrendsPage: React.FC = () => {
         </div>
       }
 
-      <TrendAnalysisStatus contractId={selectedContract} timeframe={selectedTimeframe} />
 
       <div ref={chartContainerRef} className="w-full bg-white rounded-lg shadow mb-6" />
 

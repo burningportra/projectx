@@ -27,9 +27,14 @@ import {
 import { IStrategy, StrategyResult, BaseStrategyConfig as GenericStrategyConfig } from '@/lib/types/strategy';
 import { UTCTimestamp } from 'lightweight-charts';
 import { EmaStrategy, EmaStrategyConfig } from '@/lib/strategies/EmaStrategy';
-import { TrendStartStrategy, TrendStartStrategyConfig } from '@/lib/strategies/TrendStartStrategy';
+import { TrendStartStrategyRefactored } from '@/lib/strategies/TrendStartStrategyRefactored';
+import { TrendStartStrategyConfig } from '@/lib/strategies/config/TrendStartStrategyConfig';
+import { createTrendStartStrategyFactory } from '@/lib/strategies/factories/TrendStartStrategyFactory';
 import { OrderManager } from '@/lib/OrderManager';
 import { TrendIdentifier } from '@/lib/trend-analysis/TrendIdentifier';
+import { Message, MessageBus, MessageType } from '@/lib/MessageBus';
+import { EventDrivenSignalGenerator } from '@/lib/strategies/signals/EventDrivenSignalGenerator';
+import { EventDrivenOrderHandler } from '@/lib/strategies/orders/EventDrivenOrderHandler';
 
 type UIPanelStrategyConfig = Partial<EmaStrategyConfig & TrendStartStrategyConfig & GenericStrategyConfig>;
 
@@ -118,15 +123,28 @@ const BacktesterPage = () => {
   }));
 
   const trendIdentifierRef = useRef(new TrendIdentifier());
-  const [trendStartStrategy] = useState(() => new TrendStartStrategy(
+  const messageBusRef = useRef(new MessageBus());
+  
+  const signalGeneratorRef = useRef(new EventDrivenSignalGenerator(
+    messageBusRef.current,
+    trendIdentifierRef.current
+  ));
+
+  const orderHandlerRef = useRef(new EventDrivenOrderHandler(
+    messageBusRef.current,
+    orderManagerRef.current
+  ));
+
+  const trendStartStrategyFactory = createTrendStartStrategyFactory(
     orderManagerRef.current,
     trendIdentifierRef.current,
-    {
-      name: 'Trend Start Strategy', description: 'Trades on CUS/CDS signals.', version: '1.0.0',
-      stopLossPercent: 2.0, takeProfitPercent: 4.0, useMarketOrders: true, commission: 2.5, positionSize: 1,
-      confidenceThreshold: 0.6, minConfirmationBars: 2, contractId: 'DEFAULT_CONTRACT', timeframe: '1h'
-    }
-  ));
+    messageBusRef.current
+  );
+  const [trendStartStrategy] = useState<IStrategy>(() => trendStartStrategyFactory({
+    name: 'Trend Start Strategy', description: 'Trades on CUS/CDS signals.', version: '1.0.0',
+    stopLossPercent: 2.0, takeProfitPercent: 4.0, useMarketOrders: true, commission: 2.5, positionSize: 1,
+    confidenceThreshold: 0.6, minConfirmationBars: 2, contractId: 'DEFAULT_CONTRACT', timeframe: '1h'
+  }) as unknown as IStrategy);
   
   const [currentStrategyInstance, setCurrentStrategyInstance] = useState<IStrategy>(trendStartStrategy);
 
@@ -146,6 +164,7 @@ const BacktesterPage = () => {
     pendingOrders: Order[];
     filledOrders: Order[];
     cancelledOrders: Order[];
+    allSignals: StrategySignal[];
     lastProcessedBarIndex: number;
     backtestResults: BacktestResults | null; 
     currentIndicators: Record<string, number | Record<string, number>>; 
@@ -154,6 +173,7 @@ const BacktesterPage = () => {
     pendingOrders: [],
     filledOrders: [],
     cancelledOrders: [],
+    allSignals: [],
     lastProcessedBarIndex: -1,
     backtestResults: null,
     currentIndicators: {},
@@ -164,78 +184,269 @@ const BacktesterPage = () => {
 
   const resetLiveStrategy = useCallback(() => {
     currentStrategyInstance.reset(); 
-    orderManagerRef.current.reset(); 
+    signalGeneratorRef.current.reset();
+    orderHandlerRef.current.reset();
+    orderManagerRef.current.reset();
+    messageBusRef.current.clearHistory();
     setLiveStrategyState({
       openTrade: null, pendingOrders: [], filledOrders: [], cancelledOrders: [],
+      allSignals: [],
       lastProcessedBarIndex: -1, backtestResults: null, currentIndicators: {},
     });
     setLiveTradeMarkers([]);
   }, [currentStrategyInstance]);
 
-  const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
-    // Removed: const newTrendMarkers: any[] = []; 
-    let currentIndicatorsForUpdate: Record<string, number | Record<string, number>> = {};
-    let currentOpenTradeForUpdate: SimulatedTrade | null = null;
+  useEffect(() => {
+    if (currentStrategyInstance instanceof TrendStartStrategyRefactored) {
+      if (currentStrategyInstance.getLifecycleState() === 'UNINITIALIZED') {
+        currentStrategyInstance.initialize();
+      }
+      if (currentStrategyInstance.getLifecycleState() === 'INITIALIZED' || currentStrategyInstance.getLifecycleState() === 'STOPPED') {
+        currentStrategyInstance.start();
+      }
+    }
 
-    // Process bars first to update strategy state
+    if (!signalGeneratorRef.current.isRunning()) {
+      signalGeneratorRef.current.start();
+    }
+    if (!orderHandlerRef.current.isRunning()) {
+      orderHandlerRef.current.start();
+    }
+
+    // Add comprehensive event logging
+    const eventLogger = (eventType: string) => (message: Message) => {
+      console.log(`[EVENT] ${eventType}:`, {
+        source: message.source,
+        timestamp: new Date().toISOString(),
+        data: message.data
+      });
+    };
+
+    const subscriptions = [
+      // Log ALL events for debugging
+      messageBusRef.current.subscribe(MessageType.BAR_RECEIVED, eventLogger('BAR_RECEIVED')),
+      messageBusRef.current.subscribe(MessageType.MARKET_UPDATE, eventLogger('MARKET_UPDATE')),
+      messageBusRef.current.subscribe(MessageType.SIGNAL_GENERATED, eventLogger('SIGNAL_GENERATED')),
+      messageBusRef.current.subscribe(MessageType.SUBMIT_ORDER, eventLogger('SUBMIT_ORDER')),
+      messageBusRef.current.subscribe(MessageType.ORDER_SUBMITTED, eventLogger('ORDER_SUBMITTED')),
+      messageBusRef.current.subscribe(MessageType.ORDER_FILLED, (message: Message) => {
+        const filledOrder = message.data.order as Order;
+        console.log('[UI] ORDER_FILLED event received:', {
+          orderId: filledOrder.id,
+          orderStatus: filledOrder.status,
+          isEntry: filledOrder.isEntry,
+          isExit: filledOrder.isExit
+        });
+        
+        setLiveStrategyState(prevState => {
+          const orderExistsInPending = prevState.pendingOrders.some(o => o.id === filledOrder.id);
+          console.log('[UI] Removing order from pending list:', {
+            orderId: filledOrder.id,
+            existsInPending: orderExistsInPending,
+            pendingOrderCount: prevState.pendingOrders.length,
+            pendingOrderIds: prevState.pendingOrders.map(o => o.id)
+          });
+          
+          return {
+            ...prevState,
+            pendingOrders: prevState.pendingOrders.filter(o => o.id !== filledOrder.id),
+            filledOrders: [...prevState.filledOrders, filledOrder],
+          };
+        });
+      }),
+      messageBusRef.current.subscribe(MessageType.ORDER_CANCELLED, eventLogger('ORDER_CANCELLED')),
+      messageBusRef.current.subscribe(MessageType.POSITION_OPENED, eventLogger('POSITION_OPENED')),
+      messageBusRef.current.subscribe(MessageType.POSITION_CLOSED, eventLogger('POSITION_CLOSED')),
+      
+      // Original subscriptions for state updates
+      messageBusRef.current.subscribe(MessageType.SIGNAL_GENERATED, (message: Message) => {
+        setLiveStrategyState(prevState => ({
+          ...prevState,
+          allSignals: [...prevState.allSignals, message.data.signal],
+        }));
+      }),
+      messageBusRef.current.subscribe(MessageType.ORDER_SUBMITTED, (message: Message) => {
+        const submittedOrder = message.data.order as Order;
+        console.log('[UI] ORDER_SUBMITTED event received:', {
+          orderId: submittedOrder.id,
+          orderStatus: submittedOrder.status,
+          isEntry: submittedOrder.isEntry,
+          isExit: submittedOrder.isExit,
+          source: message.source
+        });
+        
+        setLiveStrategyState(prevState => {
+          console.log('[UI] Adding order to pending list:', {
+            orderId: submittedOrder.id,
+            currentPendingCount: prevState.pendingOrders.length,
+            currentPendingIds: prevState.pendingOrders.map(o => o.id)
+          });
+          
+          return {
+            ...prevState,
+            pendingOrders: [...prevState.pendingOrders, submittedOrder],
+          };
+        });
+      }),
+      // ORDER_FILLED is handled above with debugging
+      messageBusRef.current.subscribe(MessageType.ORDER_CANCELLED, (message: Message) => {
+        const cancelledOrder = message.data.order as Order;
+        setLiveStrategyState(prevState => ({
+          ...prevState,
+          pendingOrders: prevState.pendingOrders.filter(o => o.id !== cancelledOrder.id),
+          cancelledOrders: [...prevState.cancelledOrders, cancelledOrder],
+        }));
+      }),
+      messageBusRef.current.subscribe(MessageType.POSITION_OPENED, (message: Message) => {
+        setLiveStrategyState(prevState => ({
+          ...prevState,
+          openTrade: message.data.position,
+        }));
+      }),
+      messageBusRef.current.subscribe(MessageType.POSITION_CLOSED, (message: Message) => {
+        setLiveStrategyState(prevState => ({
+          ...prevState,
+          openTrade: null,
+        }));
+      }),
+    ];
+
+    return () => {
+      if (currentStrategyInstance instanceof TrendStartStrategyRefactored && currentStrategyInstance.getLifecycleState() === 'STARTED') {
+        currentStrategyInstance.stop();
+      }
+      if (signalGeneratorRef.current.isRunning()) {
+        signalGeneratorRef.current.stop();
+      }
+      if (orderHandlerRef.current.isRunning()) {
+        orderHandlerRef.current.stop();
+      }
+      subscriptions.forEach(sub => sub.unsubscribe());
+    };
+  }, [currentStrategyInstance]);
+
+  const processStrategyBars = useCallback(async (startIndex: number, endIndex: number) => {
     for (let barIndex = startIndex; barIndex <= endIndex; barIndex++) {
       const currentMainBar = mainTimeframeBars[barIndex];
       if (!currentMainBar) continue;
+      
       const relevantSubBars = subTimeframeBars.filter(sb => sb.parentBarIndex === barIndex);
       
-      // This call updates currentStrategyInstance's internal state (signals, trades, etc.)
-      const result: StrategyResult = await currentStrategyInstance.processBar(
+      await currentStrategyInstance.processBar(
           currentMainBar, relevantSubBars, barIndex, mainTimeframeBars
       );
-      
-      // Store indicators and open trade from the very last bar processed in this segment
-      if (barIndex === endIndex) {
-        currentIndicatorsForUpdate = result.indicators || {};
-        currentOpenTradeForUpdate = currentStrategyInstance.getOpenTrade();
-      }
     }
     
-    // After processing all bars in the segment, collect all markers
-    const allMarkersForChart: any[] = [];
+    // Sync order state with OrderManager after processing
+    const pendingOrders = orderManagerRef.current.getPendingOrders();
+    const filledOrders = orderManagerRef.current.getFilledOrders();
+    const openPositions = orderManagerRef.current.getAllOpenPositions();
+    
+    console.log('[UI] Syncing order state after bar processing:', {
+      pendingCount: pendingOrders.length,
+      filledCount: filledOrders.length,
+      openPositionsCount: openPositions.length,
+      pendingIds: pendingOrders.map(o => o.id),
+      filledIds: filledOrders.map(o => o.id),
+      openPositionIds: openPositions.map(p => p.id)
+    });
+    
+    // Convert the first open position to a trade object for the UI
+    const openTrade = openPositions.length > 0 ? {
+      id: openPositions[0].id,
+      entryPrice: openPositions[0].averageEntryPrice,
+      size: openPositions[0].size,
+      type: openPositions[0].side === OrderSide.BUY ? TradeType.BUY : TradeType.SELL,
+      status: 'OPEN' as const,
+      entryTime: openPositions[0].lastUpdateTime,
+      // Find associated SL/TP orders
+      stopLossOrder: pendingOrders.find(o => o.parentTradeId === openPositions[0].id && o.isStopLoss),
+      takeProfitOrder: pendingOrders.find(o => o.parentTradeId === openPositions[0].id && o.isTakeProfit)
+    } : null;
+    
+    console.log('[UI] Open trade state:', {
+      hasOpenTrade: !!openTrade,
+      openTradeDetails: openTrade ? {
+        id: openTrade.id,
+        entryPrice: openTrade.entryPrice,
+        hasStopLoss: !!openTrade.stopLossOrder,
+        stopLossPrice: openTrade.stopLossOrder?.stopPrice,
+        hasTakeProfit: !!openTrade.takeProfitOrder,
+        takeProfitPrice: openTrade.takeProfitOrder?.price
+      } : null
+    });
+    
+    // Force a state update to ensure UI reflects the current state
+    setLiveStrategyState(prev => ({
+      ...prev,
+      pendingOrders: [...pendingOrders], // Create new array to force re-render
+      filledOrders: [...filledOrders],
+      openTrade: openTrade
+    }));
+  }, [mainTimeframeBars, subTimeframeBars, currentStrategyInstance]);
 
-    // 1. Collect general trade signals (BUY/SELL arrows for entries/exits)
-    const tradeActionSignals = currentStrategyInstance.getSignals(); // From BaseStrategy
+  useEffect(() => {
+    const allMarkersForChart: any[] = [];
+    
+    const tradeActionSignals = currentStrategyInstance.getSignals(); 
     tradeActionSignals.forEach(sig => {
-      // Only include signals up to the endIndex of the current processing segment
-      if (sig.barIndex <= endIndex && mainTimeframeBars[sig.barIndex]) {
+      if (mainTimeframeBars[sig.barIndex]) {
         allMarkersForChart.push({
           time: mainTimeframeBars[sig.barIndex].time,
           position: sig.type === StrategySignalType.BUY ? 'belowBar' : 'aboveBar',
           color: sig.type === StrategySignalType.BUY ? '#26a69a' : '#ef5350',
           shape: sig.type === StrategySignalType.BUY ? 'arrowUp' : 'arrowDown',
-          text: '', // Hide labels for trend start signals
+          text: `Trade ${sig.type}`,
           size: 1,
         });
       }
     });
 
-    // 2. Trend start signals (CUS/CDS) are now hidden to avoid duplicate markers
-    // The trade action signals (BUY/SELL) above are sufficient to show strategy actions
-    // Trend start signals are still processed internally by the strategy but not displayed
-        
+    liveStrategyState.allSignals.forEach(sig => {
+      if (mainTimeframeBars[sig.barIndex]) {
+        const isCUS = sig.type === StrategySignalType.CONFIRMED_UPTREND_START || sig.type === StrategySignalType.FORCED_CUS;
+        const isCDS = sig.type === StrategySignalType.CONFIRMED_DOWNTREND_START || sig.type === StrategySignalType.FORCED_CDS;
+
+        if (isCUS || isCDS) {
+            allMarkersForChart.push({
+              time: mainTimeframeBars[sig.barIndex].time,
+              position: 'aboveBar',
+              color: isCUS ? '#f68423' : '#a142f6',
+              shape: 'circle',
+              text: isCUS ? 'CUS' : 'CDS',
+              size: 0.5,
+            });
+        }
+      }
+    });
+    
     const finalResults = currentStrategyInstance.getCurrentBacktestResults ? currentStrategyInstance.getCurrentBacktestResults() : null;
     
-    // Deduplicate and sort all markers before setting state
+    console.log('[UI] Backtest results updated:', {
+      hasResults: !!finalResults,
+      totalTrades: finalResults?.totalTrades || 0,
+      trades: finalResults?.trades?.length || 0,
+      totalPnL: finalResults?.totalProfitOrLoss || 0,
+      winRate: finalResults?.winRate || 0,
+      tradeDetails: finalResults?.trades?.map(t => ({
+        id: t.id,
+        status: t.status,
+        pnl: t.profitOrLoss,
+        exitReason: t.exitReason
+      }))
+    });
+    
+    // Update the live strategy state with the final results
+    setLiveStrategyState(prev => ({
+      ...prev,
+      backtestResults: finalResults
+    }));
+    
     const uniqueMarkers = Array.from(new Map(allMarkersForChart.map(m => [`${m.time}-${m.text}-${m.shape}-${m.position}`, m])).values());
     uniqueMarkers.sort((a, b) => a.time - b.time);
     setLiveTradeMarkers(uniqueMarkers);
 
-    setLiveStrategyState(prevState => ({ 
-      ...prevState,
-      pendingOrders: currentStrategyInstance.getPendingOrders(),
-      filledOrders: currentStrategyInstance.getFilledOrders(),
-      cancelledOrders: currentStrategyInstance.getCancelledOrders(),
-      lastProcessedBarIndex: endIndex,
-      backtestResults: finalResults, 
-      currentIndicators: currentIndicatorsForUpdate,
-      openTrade: currentOpenTradeForUpdate,
-    }));
-  }, [mainTimeframeBars, subTimeframeBars, selectedStrategy, currentStrategyInstance, liveTradeMarkers]);
+  }, [liveStrategyState.allSignals, currentStrategyInstance, mainTimeframeBars, currentBarIndex]);
 
   const buildStrategyStateUpToBar = useCallback(async (targetBarIndex: number) => {
     if (mainTimeframeBars.length === 0 || targetBarIndex < 0 || targetBarIndex >= mainTimeframeBars.length) {
@@ -245,14 +456,18 @@ const BacktesterPage = () => {
     const needsFullRebuild = targetBarIndex < lastProcessedIndex || lastProcessedIndex < 0;
     
     if (needsFullRebuild) {
-      currentStrategyInstance.reset();
-      orderManagerRef.current.reset(); 
-      setLiveTradeMarkers([]); 
+      resetLiveStrategy();
       await processStrategyBars(0, targetBarIndex);
     } else if (targetBarIndex > lastProcessedIndex) {
       await processStrategyBars(lastProcessedIndex + 1, targetBarIndex);
     }
-  }, [mainTimeframeBars, currentStrategyInstance, liveStrategyState.lastProcessedBarIndex, processStrategyBars]);
+    
+    // Update the last processed bar index
+    setLiveStrategyState(prev => ({
+      ...prev,
+      lastProcessedBarIndex: targetBarIndex
+    }));
+  }, [mainTimeframeBars, liveStrategyState.lastProcessedBarIndex, processStrategyBars, resetLiveStrategy]);
 
   const handleCancelOrder = useCallback((orderId: string) => {
       orderManagerRef.current.cancelOrder(orderId);
@@ -305,12 +520,18 @@ const BacktesterPage = () => {
   }, [currentBarIndex, mainTimeframeBars, buildStrategyStateUpToBar]);
 
   useEffect(() => {
-    if (mainTimeframeBars.length > 0) resetLiveStrategy();
-  }, [mainTimeframeBars.length, resetLiveStrategy]);
+    if (mainTimeframeBars.length > 0) {
+      resetLiveStrategy();
+      buildStrategyStateUpToBar(0);
+    }
+  }, [mainTimeframeBars.length]);
 
   useEffect(() => {
     resetLiveStrategy(); 
-  }, [selectedStrategy, resetLiveStrategy]);
+    if (mainTimeframeBars.length > 0) {
+      buildStrategyStateUpToBar(0);
+    }
+  }, [selectedStrategy]);
   
   const handlePlayPause = useCallback(() => setIsPlaying(prev => !prev), []);
   const handleSpeedChange = useCallback((speed: PlaybackSpeed) => setPlaybackSpeed(speed), []);
@@ -385,15 +606,13 @@ const BacktesterPage = () => {
         const firstIdx = barFormationMode === BarFormationMode.PROGRESSIVE && subTimeframeBars.length > 0 ? findFirstValidMainBarIndex(subTimeframeBars) : 0;
         if (firstIdx < formattedMainBars.length) {
             setCurrentBarIndex(firstIdx); 
-            await buildStrategyStateUpToBar(firstIdx);
         } else if (formattedMainBars.length > 0) {
             setCurrentBarIndex(0);
-            await buildStrategyStateUpToBar(0);
         }
       }
     } catch (err: any) { setError(err.message || 'Failed to load data.');
     } finally { setIsLoading(false); }
-  }, [barFormationMode, resetLiveStrategy, buildStrategyStateUpToBar, emaStrategy, trendStartStrategy]);
+  }, [barFormationMode, resetLiveStrategy, buildStrategyStateUpToBar, emaStrategy, trendStartStrategy, mainTimeframeBars.length]);
 
   const liveResults = liveStrategyState.backtestResults;
   const liveTradesData = liveResults?.trades || [];
@@ -423,14 +642,14 @@ const BacktesterPage = () => {
             fastPeriod: newConfigFromPanel.fastPeriod || 12,
             slowPeriod: newConfigFromPanel.slowPeriod || 26,
         };
-        currentStrat.updateConfig(emaConf);
-    } else if (selectedStrategy === 'trendstart' && currentStrat instanceof TrendStartStrategy) {
+        (currentStrat as any).updateConfig(emaConf);
+    } else if (selectedStrategy === 'trendstart' && currentStrat.getName && currentStrat.getName() === 'TrendStartStrategy') {
         const trendConf: Partial<TrendStartStrategyConfig> = {
             ...newBaseConfig,
             minConfirmationBars: newConfigFromPanel.minConfirmationBars || 2,
             confidenceThreshold: newConfigFromPanel.confidenceThreshold || 0.6,
         };
-        currentStrat.updateConfig(trendConf);
+        (currentStrat as any).updateConfig(trendConf);
     }
     
     if (mainTimeframeBars.length > 0) {
@@ -527,8 +746,8 @@ const BacktesterPage = () => {
                   filledOrders={liveStrategyState.filledOrders}
                   openPositions={liveStrategyState.openTrade ? [{
                       entryPrice: liveStrategyState.openTrade.entryPrice,
-                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice || liveStrategyState.openTrade.stopLossOrder?.price,
+                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price || liveStrategyState.openTrade.takeProfitOrder?.stopPrice,
                   }] : []}
                 /> 
               </ErrorBoundary>
@@ -545,8 +764,8 @@ const BacktesterPage = () => {
                     filledOrders={liveStrategyState.filledOrders}
                     openPositions={liveStrategyState.openTrade ? [{
                       entryPrice: liveStrategyState.openTrade.entryPrice,
-                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice,
-                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price,
+                      stopLossPrice: liveStrategyState.openTrade.stopLossOrder?.stopPrice || liveStrategyState.openTrade.stopLossOrder?.price,
+                      takeProfitPrice: liveStrategyState.openTrade.takeProfitOrder?.price || liveStrategyState.openTrade.takeProfitOrder?.stopPrice,
                     }] : []}
                     onCancelOrder={handleCancelOrder}
                   />
@@ -591,7 +810,6 @@ const BacktesterPage = () => {
             onCancelOrder={handleCancelOrder}
             currentConfig={
               {
-                // Core fields from backtester.ts#StrategyConfig
                 commission: strategyConfig.commission ?? 0,
                 positionSize: strategyConfig.positionSize ?? 1,
                 stopLossPercent: strategyConfig.stopLossPercent ?? 0,
@@ -601,21 +819,17 @@ const BacktesterPage = () => {
                 useMarketOrders: strategyConfig.useMarketOrders ?? true,
                 limitOrderOffset: strategyConfig.limitOrderOffsetTicks ?? strategyConfig.limitOrderOffset ?? 0,
                 orderTimeoutBars: strategyConfig.orderTimeoutBars ?? 0,
-                
-                // Explicitly include all fields from UIPanelStrategyConfig with defaults
-                // to ensure the object is as complete as possible before any cast.
                 name: strategyConfig.name ?? 'N/A',
                 description: strategyConfig.description ?? 'N/A',
                 version: strategyConfig.version ?? 'N/A',
-                contractId: strategyConfig.contractId, // Optional in Base, might be needed
-                timeframe: strategyConfig.timeframe,   // Optional in Base, might be needed
-                
+                contractId: strategyConfig.contractId,
+                timeframe: strategyConfig.timeframe,
                 fastPeriod: strategyConfig.fastPeriod ?? 12,
                 slowPeriod: strategyConfig.slowPeriod ?? 26,
                 minConfirmationBars: strategyConfig.minConfirmationBars ?? 2,
                 confidenceThreshold: strategyConfig.confidenceThreshold ?? 0.6,
-                limitOrderOffsetTicks: strategyConfig.limitOrderOffsetTicks // Already handled by limitOrderOffset
-              } as any // Last resort: cast to any to bypass persistent specific type error
+                limitOrderOffsetTicks: strategyConfig.limitOrderOffsetTicks
+              } as any
             }
             onConfigChange={handleConfigChange as (config: UIPanelStrategyConfig) => void}
           />

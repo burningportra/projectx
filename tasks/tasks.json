@@ -1154,6 +1154,117 @@
       ],
       "priority": "medium",
       "subtasks": []
+    },
+    {
+      "id": 19,
+      "title": "Refactor TrendStartStrategy.ts to NautilusTrader Architecture Patterns",
+      "description": "Refactor TrendStartStrategy.ts to adopt NautilusTrader architecture, including handler-based event processing, clean configuration separation, lifecycle management, and event-driven design, replacing the monolithic processBar() method with modular event handlers and a cleaner public interface.",
+      "details": "1. Replace the current processBar() method with discrete event handler methods (e.g., onBar, onOrderFill, onPositionUpdate), each subscribing to relevant events via the MessageBus, following NautilusTrader's event-driven and handler-based design.\n2. Separate configuration (static parameters) from mutable strategy state; implement a clear configuration object and ensure all runtime state is managed independently, leveraging the centralized Cache for state persistence and updates.\n3. Integrate lifecycle hooks (e.g., onInit, onStart, onStop, onShutdown) to manage strategy initialization, activation, and teardown, ensuring proper resource management and state transitions.\n4. Refactor the public interface to expose only necessary methods and properties, aligning with NautilusTrader's modular, loosely-coupled component philosophy.\n5. Ensure all event handling, order submission, and state updates are performed via the MessageBus and Cache, avoiding direct dependencies on other system components.\n6. Document the new architecture, event flows, and configuration/state separation for maintainability and extensibility.",
+      "testStrategy": "- Write unit tests for each event handler (e.g., onBar, onOrderFill) to verify correct processing of events and state transitions.\n- Simulate full strategy lifecycle (init, start, stop, shutdown) and assert correct invocation of lifecycle hooks and resource management.\n- Use integration tests to confirm that the strategy responds to published events on the MessageBus and updates state in the Cache as expected.\n- Validate that configuration changes do not affect runtime state and vice versa.\n- Ensure the public interface exposes only intended methods and properties, and that all interactions occur via the event-driven architecture.",
+      "status": "done",
+      "dependencies": [
+        2,
+        13,
+        14
+      ],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Event Handler Architecture",
+          "description": "Replace the monolithic processBar() method with discrete event handlers that subscribe to relevant events via the MessageBus",
+          "dependencies": [],
+          "details": "Create dedicated handler methods (onBar, onQuote, onTrade, onOrderFilled, onPositionChanged) that each subscribe to specific event types through the MessageBus. Each handler should have a single responsibility and process only one type of event. Ensure handlers follow the NautilusTrader pattern of receiving messages through the MessageBus rather than direct method calls.\n<info added on 2025-06-09T23:23:24.085Z>\nThe subtask has been completed successfully. The TrendStartStrategy has been refactored into TrendStartStrategyRefactored.ts with the following implementations:\n\n- Created discrete event handlers (onBar, onOrderFilledEvent, onSignal, onPositionOpened, onPositionClosed) that each handle a specific event type\n- Integrated with the MessageBus for all event subscriptions following NautilusTrader's event-driven architecture pattern\n- Replaced the monolithic processBar approach with a more modular event-driven approach\n- Implemented proper handler registration during initialization and unregistration during cleanup in lifecycle methods\n- Maintained backward compatibility by preserving the processBar method\n- Verified implementation with all 12 unit tests passing, confirming correct event handling, signal processing, and order management functionality\n</info added on 2025-06-09T23:23:24.085Z>",
+          "status": "done",
+          "testStrategy": "Create unit tests that verify each handler correctly processes its specific event type and produces expected state changes or follow-up actions"
+        },
+        {
+          "id": 2,
+          "title": "Create Strategy Configuration Class",
+          "description": "Develop a dedicated configuration class that separates static parameters from mutable strategy state",
+          "dependencies": [],
+          "details": "Design a TrendStartStrategyConfig class that encapsulates all strategy parameters (lookback periods, thresholds, instrument IDs, etc.). Implement validation logic within this class to ensure configuration integrity. Make the configuration immutable after initialization to prevent runtime modifications that could lead to inconsistent behavior.\n<info added on 2025-06-09T23:35:39.894Z>\nThe TrendStartStrategyConfig class has been successfully implemented following NautilusTrader architecture patterns. The implementation includes:\n\n1. Immutable configuration using Object.freeze() to prevent runtime modifications\n2. Comprehensive validation logic for all strategy parameters\n3. Type-safe interface with readonly properties\n4. Helper methods for parameter grouping (getRiskParameters, getExecutionParameters, getSignalParameters)\n5. Configuration compatibility checking\n6. withUpdates() method for creating modified copies while maintaining immutability\n\nAdditional features implemented:\n- Automatic strategy ID generation\n- Timeframe format validation\n- Range validation for all numeric parameters\n- Clean separation of base vs strategy-specific configuration\n- Proper TypeScript typing with definite assignment assertions\n\nThe TrendStartStrategyRefactored class has been updated to:\n- Accept configuration as the first constructor parameter (matching Nautilus pattern)\n- Store the configuration as a frozen, immutable object\n- Pass all tests (28 configuration tests, 12 strategy tests)\n\nThis implementation ensures configuration integrity, prevents accidental runtime modifications, provides clear validation errors, simplifies test configuration creation with partial overrides, and enables type-safe access to all configuration values.\n</info added on 2025-06-09T23:35:39.894Z>",
+          "status": "done",
+          "testStrategy": "Test configuration validation logic with valid and invalid inputs to ensure proper error handling and parameter validation"
+        },
+        {
+          "id": 3,
+          "title": "Implement State Management System",
+          "description": "Separate mutable strategy state from configuration and implement state persistence using the Cache",
+          "dependencies": [
+            2
+          ],
+          "details": "Create a TrendStartStrategyState class to track all runtime state (current positions, calculated indicators, pending orders, etc.). Integrate with NautilusTrader's Cache for state persistence and retrieval. Implement methods to update state atomically and ensure thread safety. Use the MessageBus to publish state change events when appropriate.\n<info added on 2025-06-09T23:42:59.088Z>\nThe TrendStartStrategyState class has been successfully implemented with comprehensive state management capabilities. The class centralizes all mutable state including market data, signals, positions, and performance metrics. Key features include state change history with configurable limits, immutable snapshots for debugging, reset functionality, duplicate signal prevention, and thread-safe state updates.\n\nThe implementation maintains clear separation between configuration and state, with TrendStartStrategyConfig handling immutable settings and TrendStartStrategyState managing all runtime data. The state class provides controlled access methods and tracks state changes for debugging purposes.\n\nIntegration with the NautilusTrader Cache system enables state persistence and retrieval, while the MessageBus is utilized to publish state change events when appropriate. All strategy event handlers have been updated to use the new state management system while maintaining backward compatibility.\n\nComprehensive testing includes 16 unit tests specifically for state management and 12 updated strategy tests, all passing successfully. The implementation resolves previous issues with readonly arrays and provides improved debugging capabilities through state snapshots and history tracking.\n</info added on 2025-06-09T23:42:59.088Z>",
+          "status": "done",
+          "testStrategy": "Verify state persistence across simulated strategy restarts and test state recovery from the Cache"
+        },
+        {
+          "id": 4,
+          "title": "Implement Lifecycle Management Hooks",
+          "description": "Add lifecycle hooks (onInit, onStart, onStop, onShutdown) to manage strategy initialization, activation, and teardown",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Implement the four core lifecycle methods according to NautilusTrader's architecture. onInit should register event handlers and initialize state. onStart should activate trading logic and subscriptions. onStop should pause trading activity while maintaining state. onShutdown should clean up resources and unsubscribe from events. Ensure proper state transitions between these lifecycle phases.\n<info added on 2025-06-09T23:52:18.106Z>\nThe implementation follows NautilusTrader's architectural patterns, which emphasize a common core system with environment contexts (Backtest, Sandbox, Live) sharing the same code base[1]. The lifecycle management system aligns with NautilusTrader's messaging architecture, where components consume messages in a deterministic, synchronous way[1].\n\nThe implemented lifecycle states (UNINITIALIZED, INITIALIZED, STARTED, STOPPED, DISPOSED) and methods (initialize(), start(), stop(), dispose()) create a robust state machine that ensures proper resource management throughout the strategy's lifecycle. This approach is consistent with NautilusTrader's emphasis on software correctness and safety[4].\n\nThe implementation includes protected hook methods (onInit(), onStart(), onStop(), onDispose()) that provide extension points for custom behavior, following NautilusTrader's design philosophy of remaining unopinionated about trading approaches while providing the necessary infrastructure[2].\n\nThe state transition rules and event processing control ensure that the strategy behaves predictably across different environment contexts, maintaining the same behavior whether in backtesting or live trading environments[1]. This is particularly important for NautilusTrader's goal of allowing the same strategy code developed for research and backtesting to be used in live trading[2].\n\nThe comprehensive testing suite with 24 lifecycle tests demonstrates a commitment to software quality, aligning with NautilusTrader's prioritization of correctness and safety in algorithmic trading systems[4].\n</info added on 2025-06-09T23:52:18.106Z>",
+          "status": "done",
+          "testStrategy": "Test each lifecycle transition to verify proper resource management and state handling"
+        },
+        {
+          "id": 5,
+          "title": "Develop Event-Driven Signal Generation",
+          "description": "Replace polling-based signal generation with event-driven approach using the MessageBus",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Refactor signal generation logic to be triggered by relevant market events rather than periodic polling. Implement signal generation as a response to specific event patterns. When signals are generated, publish them to the MessageBus for other components to consume. Ensure signals include all necessary metadata for order generation.\n<info added on 2025-06-09T23:57:04.449Z>\nCompleted event-driven signal generation implementation:\n\n- Refactored TrendStartStrategy to remove direct signal generation, eliminating the _requestTrendSignals method and updating the onBar handler to publish MARKET_UPDATE events instead. Added MARKET_UPDATE to the MessageType enum, ensuring the strategy no longer directly interacts with TrendIdentifier.\n- Introduced the EventDrivenSignalGenerator component, which subscribes to MARKET_UPDATE events, processes market data asynchronously, and publishes SIGNAL_GENERATED events when signals are detected. This component maintains a processing cache to prevent duplicate signals, supports multiple contracts and timeframes, includes lifecycle management (start/stop/reset), and provides processing statistics.\n- Developed a comprehensive test suite with 13 tests covering lifecycle management, market update processing, cache management, and error handling, all of which are passing.\n\nKey benefits include complete decoupling of signal generation from the strategy, improved performance through asynchronous processing, easy extensibility for multiple signal generators, adherence to NautilusTrader's event-driven architecture, and maintained backward compatibility.\n</info added on 2025-06-09T23:57:04.449Z>",
+          "status": "done",
+          "testStrategy": "Test signal generation with various market scenarios to verify correct signal production under different conditions"
+        },
+        {
+          "id": 6,
+          "title": "Implement Order Management Handlers",
+          "description": "Create specialized handlers for different order events (submission, acceptance, rejection, fill, cancellation)",
+          "dependencies": [
+            1,
+            5
+          ],
+          "details": "Develop dedicated handlers for each order lifecycle event: onOrderInitiated, onOrderAccepted, onOrderRejected, onOrderFilled, onOrderCancelled. Each handler should update strategy state appropriately and potentially trigger follow-up actions. Use the MessageBus for all order submissions and updates, avoiding direct calls to execution services.\n<info added on 2025-06-10T00:02:12.024Z>\nCompleted dedicated order management handlers implementation:\n\n1. Created EventDrivenOrderHandler component:\n   - Subscribes to SUBMIT_ORDER, CANCEL_ORDER, MODIFY_ORDER events\n   - Manages order lifecycle through OrderManager\n   - Publishes order status updates (SUBMITTED, FILLED, CANCELLED, REJECTED)\n   - Maintains order metadata for strategy tracking\n   - No direct coupling with strategies\n\n2. Key features implemented:\n   - Order submission handling for all order types (MARKET, LIMIT, STOP)\n   - Order cancellation by ID or trade ID\n   - Order modification support\n   - Automatic order processing on BAR_RECEIVED events\n   - Protective order creation (stop loss and take profit)\n   - Comprehensive error handling with rejection events\n\n3. Test coverage:\n   - 15 comprehensive tests covering all functionality\n   - Tests lifecycle management\n   - Tests order submission, cancellation, modification\n   - Tests order processing and fills\n   - Tests protective order creation\n   - All tests passing\n\nKey benefits:\n- Complete separation of order management from strategy logic\n- Event-driven architecture following NautilusTrader patterns\n- Centralized order handling for all strategies\n- Metadata tracking for order-strategy association\n- Easy to extend with new order types or features\n</info added on 2025-06-10T00:02:12.024Z>",
+          "status": "done",
+          "testStrategy": "Create tests for each order event type to verify proper handling and state updates"
+        },
+        {
+          "id": 7,
+          "title": "Implement Multi-Strategy Support with Unique IDs",
+          "description": "Add support for running multiple instances of the strategy with unique identifiers and isolated state",
+          "dependencies": [
+            2,
+            3,
+            4
+          ],
+          "details": "Modify the strategy to accept a unique identifier during initialization. Use this ID to namespace all Cache entries and MessageBus subscriptions. Ensure all event handlers filter events based on relevance to the specific strategy instance. Implement proper isolation between strategy instances to prevent state leakage or cross-talk.\n<info added on 2025-06-10T00:08:01.881Z>\nMulti-strategy support has been fully implemented with the introduction of a MultiStrategyManager component. This manager oversees multiple strategy instances, each identified by a unique ID, and ensures strict event and state isolation in line with NautilusTrader's event-driven architecture. Key features include strategy registration with duplicate prevention, centralized lifecycle management, event filtering and republishing by strategy ID, namespaced cache key generation, and robust error handling. The event isolation mechanism filters and republishes events (such as ORDER_FILLED and POSITION_OPENED/CLOSED) to ensure strategies only receive relevant events, preventing cross-talk. Comprehensive test coverage (17 tests) validates all aspects of strategy management, event isolation, and error handling. This architecture enables dynamic addition and removal of strategies, centralized monitoring, and production-ready support for concurrent strategies, fully aligned with NautilusTrader's modular, event-driven, and message bus-based design patterns[1][3][4].\n</info added on 2025-06-10T00:08:01.881Z>",
+          "status": "done",
+          "testStrategy": "Test multiple strategy instances running simultaneously to verify proper isolation and independent operation"
+        },
+        {
+          "id": 8,
+          "title": "Refactor Public Interface",
+          "description": "Redesign the strategy's public interface to expose only necessary methods and properties",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "details": "Identify and expose only the minimal set of public methods needed for strategy operation and monitoring. Hide implementation details behind private methods. Implement a clean, documented public API that follows NautilusTrader's component philosophy. Ensure the interface supports all required functionality while maintaining loose coupling with other system components.\n<info added on 2025-06-10T00:13:52.877Z>\nCompleted public interface refactoring:\n\n1. Introduced ITrendStartStrategy interface adhering to NautilusTrader's interface-driven design, exposing only essential public methods for external interaction and monitoring, while encapsulating all implementation details and internal state.\n2. The interface is organized into clear sections: identification, lifecycle management, configuration access, state access, performance metrics, health status, and statistics, each with dedicated methods (e.g., getStrategyId(), initialize(), getConfig(), getStateSnapshot(), getPerformanceMetrics(), getHealthStatus(), getStatistics()).\n3. Lifecycle management methods provide robust control and observability, supporting initialize, start, stop, dispose, and readiness checks.\n4. Configuration is exposed as an immutable object, ensuring external consumers cannot mutate strategy settings.\n5. State access methods allow retrieval of current state snapshots, open trades, position status, and trend signals, supporting real-time monitoring and integration.\n6. Performance, health, and statistics methods deliver comprehensive metrics, error tracking, uptime, and event counts for production-grade observability.\n7. Implemented TrendStartStrategyFactory using the factory pattern for clean instantiation, dependency injection, configuration validation, and simplified testing with mock dependencies. Factory provides createAndInitialize() and createAndStart() helpers.\n8. Enhanced TrendStartStrategyState with additional methods for error, warning, and event counting, as well as start time tracking for accurate uptime calculation. State snapshot structure updated to align with interface requirements.\n9. Achieved full test coverage with 15 comprehensive tests validating all public interface methods, lifecycle transitions, configuration immutability, and factory pattern correctness. All tests are passing.\n10. The refactored design ensures a clean separation of public API from implementation, supports multiple concurrent strategy instances, is easy to mock for testing, and is ready for production monitoring in line with NautilusTrader's architecture patterns.\n</info added on 2025-06-10T00:13:52.877Z>",
+          "status": "done",
+          "testStrategy": "Verify the public interface is sufficient for all required operations while maintaining proper encapsulation"
+        }
+      ]
     }
   ]
 }

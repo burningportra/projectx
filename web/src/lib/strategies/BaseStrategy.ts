@@ -20,7 +20,7 @@ import {
   TradeType
 } from '../types/backtester';
 import { OrderManager } from '../OrderManager'; // Corrected path
-import { messageBus, MessageType } from '../MessageBus';
+import { messageBus, MessageType, Subscription } from '../MessageBus';
 
 /**
  * Abstract base class for trading strategies, providing common infrastructure for
@@ -63,6 +63,9 @@ export abstract class BaseStrategy implements IStrategy {
   private nextTradeId = 1;
 
   protected orderManager: OrderManager;
+
+  // New subscription management
+  protected subscriptions: Subscription[] = [];
 
   /**
    * Constructs a new BaseStrategy instance.
@@ -420,12 +423,16 @@ export abstract class BaseStrategy implements IStrategy {
   }
 
   /**
-   * Gets the current backtest results based on the trades processed so far
-   * by the associated OrderManager, without re-running the backtest.
-   * @returns A `BacktestResults` object.
+   * Get current backtest results including live state
    */
   public getCurrentBacktestResults(): BacktestResults {
-    return this.calculateBacktestResults();
+    const results = this.calculateBacktestResults();
+    console.log(`[${this.getName()}] getCurrentBacktestResults called:`, {
+      totalTrades: results.totalTrades,
+      totalPnL: results.totalProfitOrLoss,
+      completedTradesCount: this.orderManager.getCompletedTrades().length
+    });
+    return results;
   }
 
   /**
@@ -434,189 +441,72 @@ export abstract class BaseStrategy implements IStrategy {
    * @returns A `BacktestResults` object.
    */
   protected calculateBacktestResults(): BacktestResults {
-    const closedTrades = this.orderManager.getCompletedTrades().filter(trade => trade.status === 'CLOSED');
+    const allCompletedTrades = this.orderManager.getCompletedTrades();
+    console.log(`[${this.getName()}] calculateBacktestResults:`, {
+      allCompletedTradesCount: allCompletedTrades.length,
+      allCompletedTrades: allCompletedTrades.map(t => ({
+        id: t.id,
+        status: t.status,
+        pnl: t.profitOrLoss,
+        exitReason: t.exitReason
+      }))
+    });
     
-    if (closedTrades.length === 0) {
-      return {
-        totalProfitOrLoss: 0,
-        winRate: 0,
-        totalTrades: 0,
-        maxDrawdown: 0,
-        profitFactor: 0,
-        trades: [],
-        averageWin: 0,
-        averageLoss: 0,
-        averageTrade: 0,
-        sharpeRatio: 0,
-        maxConsecutiveWins: 0,
-        maxConsecutiveLosses: 0,
-        averageTradeDuration: 0,
-        returnOnMaxDrawdown: 0,
-        winningTrades: 0,
-        losingTrades: 0,
-        largestWin: 0,
-        largestLoss: 0,
-        expectancy: 0,
-        kellyPercentage: 0
-      };
-    }
+    const closedTrades = allCompletedTrades.filter(trade => trade.status === 'CLOSED');
+    console.log(`[${this.getName()}] Filtered closed trades:`, {
+      closedTradesCount: closedTrades.length,
+      closedTrades: closedTrades.map(t => ({
+        id: t.id,
+        pnl: t.profitOrLoss
+      }))
+    });
     
-    // Separate winning and losing trades
+    const totalTrades = closedTrades.length;
     const winningTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) > 0);
     const losingTrades = closedTrades.filter(trade => (trade.profitOrLoss || 0) < 0);
     
-    // Calculate total profit/loss
-    const totalProfitOrLoss = closedTrades.reduce(
-      (sum, trade) => sum + (trade.profitOrLoss || 0),
-      0
-    );
+    const totalProfitOrLoss = closedTrades.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
+    const winRate = totalTrades > 0 ? (winningTrades.length / totalTrades) * 100 : 0;
     
-    // Calculate win rate
-    const winRate = (winningTrades.length / closedTrades.length) * 100;
-    
-    // Calculate average trade metrics
-    const totalWinnings = winningTrades.reduce(
-      (sum, trade) => sum + (trade.profitOrLoss || 0),
-      0
-    );
-    
-    const totalLosses = Math.abs(losingTrades.reduce(
-      (sum, trade) => sum + (trade.profitOrLoss || 0),
-      0
-    ));
-    
-    const averageWin = winningTrades.length > 0 ? totalWinnings / winningTrades.length : 0;
-    const averageLoss = losingTrades.length > 0 ? totalLosses / losingTrades.length : 0;
-    const averageTrade = totalProfitOrLoss / closedTrades.length;
-    
-    // Calculate profit factor
-    const profitFactor = totalLosses > 0 ? totalWinnings / totalLosses : totalWinnings > 0 ? Infinity : 0;
-    
-    // Calculate max drawdown and equity curve for advanced metrics
+    // Calculate max drawdown
     let maxDrawdown = 0;
     let peak = 0;
-    let runningTotal = 0;
-    const returns: number[] = [];
-    let previousEquity = 0;
+    let runningPnL = 0;
     
     closedTrades.forEach(trade => {
-      runningTotal += (trade.profitOrLoss || 0);
-      
-      // Calculate return as percentage change in equity
-      if (previousEquity !== 0) {
-        const returnPct = (runningTotal - previousEquity) / Math.abs(previousEquity);
-        returns.push(returnPct);
-      } else if (runningTotal !== 0) {
-        // First trade return calculation
-        const firstTradeAbs = Math.abs(trade.profitOrLoss || 1);
-        returns.push((trade.profitOrLoss || 0) / firstTradeAbs);
+      runningPnL += trade.profitOrLoss || 0;
+      if (runningPnL > peak) {
+        peak = runningPnL;
       }
-      previousEquity = runningTotal;
-      
-      // Update peak and calculate drawdown
-      if (runningTotal > peak) {
-        peak = runningTotal;
-      }
-      const drawdown = peak - runningTotal;
+      const drawdown = peak - runningPnL;
       if (drawdown > maxDrawdown) {
         maxDrawdown = drawdown;
       }
     });
     
-    // Calculate Sharpe ratio (simplified version)
-    let sharpeRatio = 0;
-    if (returns.length > 1) {
-      const meanReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-      const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - meanReturn, 2), 0) / (returns.length - 1);
-      const stdDev = Math.sqrt(variance);
-      
-      if (stdDev > 0) {
-        // Simplified annualized Sharpe ratio
-        const annualizedReturn = meanReturn * Math.sqrt(252); // Assuming daily-like frequency
-        const annualizedStdDev = stdDev * Math.sqrt(252);
-        sharpeRatio = annualizedReturn / annualizedStdDev;
-      }
-    }
+    // Calculate profit factor
+    const totalWins = winningTrades.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0);
+    const totalLosses = Math.abs(losingTrades.reduce((sum, trade) => sum + (trade.profitOrLoss || 0), 0));
+    const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? Infinity : 0;
     
-    // Calculate consecutive wins/losses
-    let maxConsecutiveWins = 0;
-    let maxConsecutiveLosses = 0;
-    let currentWinStreak = 0;
-    let currentLossStreak = 0;
-    
-    closedTrades.forEach(trade => {
-      const pnl = trade.profitOrLoss || 0;
-      if (pnl > 0) {
-        currentWinStreak++;
-        currentLossStreak = 0;
-        maxConsecutiveWins = Math.max(maxConsecutiveWins, currentWinStreak);
-      } else if (pnl < 0) {
-        currentLossStreak++;
-        currentWinStreak = 0;
-        maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentLossStreak);
-      } else {
-        currentWinStreak = 0;
-        currentLossStreak = 0;
-      }
-    });
-    
-    // Calculate average trade duration (in minutes)
-    let averageTradeDuration = 0;
-    const tradesWithDuration = closedTrades.filter(trade => trade.entryTime && trade.exitTime);
-    if (tradesWithDuration.length > 0) {
-      const totalDuration = tradesWithDuration.reduce((sum, trade) => {
-        const durationSeconds = (trade.exitTime! - trade.entryTime!);
-        return sum + (durationSeconds / 60); // Convert to minutes
-      }, 0);
-      averageTradeDuration = totalDuration / tradesWithDuration.length;
-    }
-    
-    // Calculate return on max drawdown
-    const returnOnMaxDrawdown = maxDrawdown > 0 ? (totalProfitOrLoss / maxDrawdown) : 0;
-    
-    // Find largest win and loss
-    const largestWin = winningTrades.length > 0 
-      ? Math.max(...winningTrades.map(t => t.profitOrLoss || 0))
-      : 0;
-    const largestLoss = losingTrades.length > 0 
-      ? Math.min(...losingTrades.map(t => t.profitOrLoss || 0))
-      : 0;
-    
-    // Calculate expectancy (average expected value per trade)
-    const winProbability = winningTrades.length / closedTrades.length;
-    const loseProbability = losingTrades.length / closedTrades.length;
-    const expectancy = (winProbability * averageWin) - (loseProbability * averageLoss);
-    
-    // Calculate Kelly percentage (optimal bet size)
-    let kellyPercentage = 0;
-    if (averageLoss > 0) {
-      const winLossRatio = averageWin / averageLoss;
-      kellyPercentage = ((winLossRatio * winProbability) - loseProbability) / winLossRatio;
-      kellyPercentage = Math.max(0, Math.min(1, kellyPercentage)); // Clamp between 0 and 1
-    }
-    
-    return {
+    const results: BacktestResults = {
       totalProfitOrLoss,
       winRate,
-      totalTrades: closedTrades.length,
-      maxDrawdown,
-      profitFactor,
-      trades: [...closedTrades],
-      averageWin,
-      averageLoss,
-      averageTrade,
-      sharpeRatio,
-      maxConsecutiveWins,
-      maxConsecutiveLosses,
-      averageTradeDuration,
-      returnOnMaxDrawdown,
+      totalTrades,
       winningTrades: winningTrades.length,
       losingTrades: losingTrades.length,
-      largestWin,
-      largestLoss,
-      expectancy,
-      kellyPercentage
+      maxDrawdown,
+      profitFactor,
+      trades: closedTrades
     };
+    
+    console.log(`[${this.getName()}] Backtest results calculated:`, {
+      totalTrades: results.totalTrades,
+      totalPnL: results.totalProfitOrLoss,
+      winRate: results.winRate
+    });
+    
+    return results;
   }
 
   /**
@@ -861,21 +751,21 @@ export abstract class BaseStrategy implements IStrategy {
       actualEntryPrice = entryOrder.price;
     }
 
-    const trade: SimulatedTrade = {
+    const newTrade: SimulatedTrade = {
       id: this.generateTradeId(),
-      entryTime,
-      entryPrice: actualEntryPrice,
       type,
-      size,
-      status: 'OPEN',
-      entryOrder,
-      signalEntry: entrySignal
+      status: 'PENDING', // Conceptual trade is pending until entry order is filled
+      entryTime: 0 as UTCTimestamp, // Will be set upon fill
+      entryPrice: 0, // Will be set upon fill
+      entryOrder: entryOrder,
+      signalEntry: entrySignal,
+      size: size,
+      profitOrLoss: 0,
     };
     
-    // Store as open trade
-    this.openTrade = trade;
+    this.openTrade = newTrade; // Strategy now holds a pending conceptual trade
     
-    return trade;
+    return newTrade;
   }
 
   /**
@@ -941,61 +831,43 @@ export abstract class BaseStrategy implements IStrategy {
    * @param currentConceptualTrade - The strategy's current conceptual open trade, if any.
    */
   protected onOrderFilled(filledOrder: Order, currentConceptualTrade?: SimulatedTrade): void {
-    console.log(`[BaseStrategy.onOrderFilled] Processing filled order:`, {
+    console.log(`[${this.getName()}.onOrderFilled] Processing filled order:`, {
       orderId: filledOrder.id,
       isEntry: filledOrder.isEntry,
       isExit: filledOrder.isExit,
       isStopLoss: filledOrder.isStopLoss,
       isTakeProfit: filledOrder.isTakeProfit,
-      side: filledOrder.side,
-      quantity: filledOrder.quantity,
-      filledPrice: filledOrder.filledPrice,
-      currentTradeId: currentConceptualTrade?.id,
-      currentTradeStatus: currentConceptualTrade?.status,
-      entryOrderId: currentConceptualTrade?.entryOrder?.id
+      openTradeId: currentConceptualTrade?.id,
     });
 
-    // Scenario 1: The filled order is the designated entry for the current conceptual trade.
-    // Place protective orders.
-    if (currentConceptualTrade && currentConceptualTrade.status === 'OPEN' &&
-        currentConceptualTrade.entryOrder?.id === filledOrder.id &&
-        filledOrder.isEntry === true) { // Explicitly check the isEntry flag
+    if (!currentConceptualTrade) {
+      console.warn(`[${this.getName()}] onOrderFilled received for ${filledOrder.id} but no open conceptual trade was found. Ignoring.`);
+      return;
+    }
 
-        console.log(`[BaseStrategy.onOrderFilled] ✅ Entry fill detected for conceptual trade ${currentConceptualTrade.id}. Placing protective orders.`);
+    // Is this the entry order being filled?
+    if (filledOrder.isEntry && filledOrder.id === currentConceptualTrade.entryOrder?.id) {
+      console.log(`[${this.getName()}] ✅ Entry fill detected for conceptual trade ${currentConceptualTrade.id}. Placing protective orders.`);
+      currentConceptualTrade.status = 'OPEN';
+      currentConceptualTrade.entryPrice = filledOrder.filledPrice!;
+      currentConceptualTrade.entryTime = filledOrder.filledTime!;
+      
         this.placeProtectiveOrders(currentConceptualTrade, filledOrder);
+      
+      messageBus.publish(MessageType.POSITION_OPENED, this.getName(), { trade: currentConceptualTrade });
     }
-    // Scenario 2: The filled order is an exit for the current conceptual trade.
-    // Close the conceptual trade.
-    else if (currentConceptualTrade && currentConceptualTrade.status === 'OPEN' &&
-             (filledOrder.isExit === true || filledOrder.isStopLoss === true || filledOrder.isTakeProfit === true) && // Order flags indicate it's an exit
-             filledOrder.parentTradeId === currentConceptualTrade.id) { // And it belongs to this conceptual trade
-
-        console.log(`[BaseStrategy.onOrderFilled] Exit fill for conceptual trade ${currentConceptualTrade.id}. Closing conceptual trade.`);
-        let exitReason: 'STOP_LOSS' | 'TAKE_PROFIT' | 'SIGNAL' | 'MANUAL' | 'REVERSAL_EXIT' = 'SIGNAL'; // Default
-        if (filledOrder.isStopLoss) {
-            exitReason = 'STOP_LOSS';
-        } else if (filledOrder.isTakeProfit) {
-            exitReason = 'TAKE_PROFIT';
-        } else if (filledOrder.message?.toLowerCase().includes('reversal: closing')) { // Heuristic for reversal's explicit close
-            exitReason = 'REVERSAL_EXIT';
-        }
-        // If isExit is true but not SL/TP/Reversal, it's likely a strategy-signaled exit.
-        // The original signal that led to this exit order might be in the strategy,
-        // but the filledOrder itself is the direct cause of closing the trade here.
-
-        this.closeTrade(
-            currentConceptualTrade,
-            filledOrder.filledPrice!, // Assume filledPrice is present on a filled order
-            filledOrder.filledTime!,   // Assume filledTime is present on a filled order
-            filledOrder,
-            undefined, // No new strategy signal directly caused this SL/TP/ReversalClose fill
-            exitReason
-        );
+    // Is this an exit order being filled?
+    else if (filledOrder.isExit || filledOrder.isStopLoss || filledOrder.isTakeProfit) {
+      if (
+        (currentConceptualTrade.stopLossOrder && filledOrder.id === currentConceptualTrade.stopLossOrder.id) ||
+        (currentConceptualTrade.takeProfitOrder && filledOrder.id === currentConceptualTrade.takeProfitOrder.id)
+      ) {
+        console.log(`[${this.getName()}] ⛔️ Exit fill detected for trade ${currentConceptualTrade.id}. Closing position.`);
+        this._closePosition(currentConceptualTrade, filledOrder);
+      } else {
+        console.warn(`[${this.getName()}] Received an exit-type order fill for ${filledOrder.id}, but it did not match the known SL/TP orders for trade ${currentConceptualTrade.id}.`);
+      }
     }
-    // Other scenarios:
-    // - Fill is for an order not related to currentConceptualTrade (e.g., orphaned, or OrderManager internal).
-    // - currentConceptualTrade is null (no open conceptual trade from strategy's POV).
-    // These are ignored by this default onOrderFilled. Derived strategies could add more logic if needed.
   }
 
   /**
@@ -1080,7 +952,7 @@ export abstract class BaseStrategy implements IStrategy {
         return; // Should not happen if logic is correct
       }
       
-      this.createStopOrder(
+      const slOrder = this.createStopOrder(
         trade.type === TradeType.BUY ? OrderSide.SELL : OrderSide.BUY,
         quantity,
         slPrice,
@@ -1089,6 +961,10 @@ export abstract class BaseStrategy implements IStrategy {
         entryFill.contractId,
         true // isStopLoss
       );
+      
+      // Attach the stop loss order to the trade
+      trade.stopLossOrder = slOrder;
+      console.log(`[BaseStrategy.placeProtectiveOrders] Stop loss order created and attached to trade ${trade.id}:`, slOrder);
     }
 
     // Place Take Profit
@@ -1106,7 +982,7 @@ export abstract class BaseStrategy implements IStrategy {
         return; // Should not happen
       }
 
-      this.createTakeProfitOrder(
+      const tpOrder = this.createTakeProfitOrder(
         trade.type === TradeType.BUY ? OrderSide.SELL : OrderSide.BUY,
         quantity,
         tpPrice,
@@ -1114,6 +990,10 @@ export abstract class BaseStrategy implements IStrategy {
         trade.id,
         entryFill.contractId
       );
+      
+      // Attach the take profit order to the trade
+      trade.takeProfitOrder = tpOrder;
+      console.log(`[BaseStrategy.placeProtectiveOrders] Take profit order created and attached to trade ${trade.id}:`, tpOrder);
     }
   }
 
@@ -1167,5 +1047,61 @@ export abstract class BaseStrategy implements IStrategy {
       this.signals.push(signal);
       console.log(`[BaseStrategy] Generated ${order.isStopLoss ? 'stop loss' : 'take profit'} SELL signal at bar ${barIndex}, price ${signal.price}`);
     });
+  }
+
+  /**
+   * Conceptually closes a trade within the strategy's state.
+   * Note: The authoritative closing is handled by the OrderManager. This method
+   * primarily cleans up the strategy's internal state (`this.openTrade`).
+   *
+   * @param trade - The trade to close conceptually.
+   * @param exitOrder - The order that triggered the closure.
+   */
+  private _closePosition(trade: SimulatedTrade, exitOrder: Order): void {
+    if (!trade) {
+      console.warn(`[${this.getName()}] _closePosition called but there was no open trade.`);
+      return;
+    }
+
+    console.log(`[${this.getName()}] Closing position for trade ${trade.id} due to order ${exitOrder.id}`);
+    
+    // The completed trade details will be sourced from the OrderManager,
+    // but we clear the strategy's open trade placeholder.
+    this.openTrade = null;
+
+    // Publish an event to notify that the position is conceptually closed from the strategy's perspective
+    messageBus.publish(MessageType.POSITION_CLOSED, `Strategy-${this.getName()}`, {
+      strategyName: this.getName(),
+      tradeId: trade.id,
+      orderId: exitOrder.id,
+      reason: exitOrder.isStopLoss ? 'STOP_LOSS' : exitOrder.isTakeProfit ? 'TAKE_PROFIT' : 'EXIT_SIGNAL',
+      timestamp: exitOrder.filledTime,
+      pnl: trade.profitOrLoss, // Note: PnL here might be stale; OM has the final value.
+    });
+  }
+
+  /**
+   * Starts the strategy. Base implementation can be extended by child classes.
+   */
+  public start(): void {
+    console.log(`[${this.getName()}] Strategy starting...`);
+    // Child classes should call super.start() and then initialize their specific subscriptions.
+  }
+
+  /**
+   * Stops the strategy by unsubscribing from all events.
+   */
+  public stop(): void {
+    console.log(`[${this.getName()}] Strategy stopping...`);
+    this.unsubscribeAll();
+  }
+  
+  /**
+   * Unsubscribes from all message bus subscriptions.
+   */
+  public unsubscribeAll(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions = [];
+    console.log(`[${this.getName()}] All subscriptions cleared.`);
   }
 }
