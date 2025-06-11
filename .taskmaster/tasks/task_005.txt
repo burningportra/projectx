@@ -1,11 +1,25 @@
 # Task ID: 5
-# Title: Implement Declarative Strategy API
-# Status: pending
-# Dependencies: 1, 2
+# Title: Phase 5: Trader-Friendly Strategy Layer
+# Status: done
+# Dependencies: 2, 3
 # Priority: medium
-# Description: Create a declarative API for defining strategies without boilerplate code
+# Description: Design declarative strategy schema and UI-based Strategy Builder
 # Details:
-Design a declarative configuration format for strategies that allows defining entry/exit signals, order types, and risk management rules without writing imperative code. Create a strategy builder that generates the implementation from the configuration.
+Enable non-programmers to create strategies through JSON-like templates and visual UI builder.
 
 # Test Strategy:
-Create a test strategy using only declarative configuration and verify it produces the same results as the imperative version.
+Test schema validation, condition evaluation, and UI-generated strategy execution against hand-coded equivalents.
+
+# Subtasks:
+## 1. Design Declarative Strategy Schema and Executor [done]
+### Dependencies: None
+### Description: Design and implement a declarative strategy schema, a condition evaluator, and a generic strategy executor that can run strategies from a simple JSON-like template
+### Details:
+Create a JSON schema for defining strategies declaratively including: entry/exit conditions, risk management rules, position sizing, and indicator configurations. Build a condition evaluator that can parse and execute these rules, and a generic executor that runs template-based strategies.
+
+## 2. Create UI-Based Strategy Builder [done]
+### Dependencies: 5.1
+### Description: Create a UI-based Strategy Builder that allows non-programmers to create and save these declarative strategy templates
+### Details:
+Build a visual drag-and-drop or form-based interface for creating strategies without coding. Must include: condition builders, indicator selectors, risk management controls, visual preview of strategy logic, and save/load functionality. Should generate and validate the JSON schema from the previous subtask.
+

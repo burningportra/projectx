@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
         'NQ': 'CON.F.US.NQ',
         'RTY': 'CON.F.US.RTY',
         'MES': 'CON.F.US.MES',
+        'M25': 'CON.F.US.MES.M25', // Add specific mapping for M25 contract
         'AAPL': 'CON.S.US.AAPL',
         'MSFT': 'CON.S.US.MSFT'
       };

@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "generatedAt": "2025-06-11T01:08:22.107Z",
+    "tasksAnalyzed": 1,
+    "totalTasks": 12,
+    "analysisCount": 1,
+    "thresholdScore": 5,
+    "projectName": "Taskmaster",
+    "usedResearch": true
+  },
+  "complexityAnalysis": [
+    {
+      "taskId": 1,
+      "taskTitle": "Create Unified BacktestEngine Class",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the BacktestEngine class implementation into subtasks covering: 1) Core state management architecture, 2) Order management API, 3) Position tracking system, 4) Trade execution logic, 5) Integration with existing components, and 6) Comprehensive testing framework",
+      "reasoning": "This task involves creating a complex central component that consolidates multiple existing systems (OrderManager, Strategy, UI) with state management responsibilities. The high complexity stems from the need to design a clean API, ensure proper state transitions, maintain consistency across all operations, and implement comprehensive testing. The task requires both architectural design skills and detailed implementation work across multiple interconnected systems."
+    }
+  ]
+}

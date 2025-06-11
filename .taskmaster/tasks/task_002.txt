@@ -1,11 +1,31 @@
 # Task ID: 2
-# Title: Implement Bracket Order Support
-# Status: pending
+# Title: Phase 2: Advanced Execution & Strategy Logic
+# Status: done
 # Dependencies: 1
 # Priority: high
-# Description: Add first-class support for bracket orders (entry + stop loss + take profit) with a single method call
+# Description: Implement synthetic tick order matching, bracket order support, and pure strategy functions
 # Details:
-Create a BracketOrder interface and implement a createBracketOrder method that handles all three orders (entry, stop loss, take profit) atomically. This should eliminate the need for custom properties on trade objects and manual order linking.
+Focus on realistic order execution, OCO logic, and decoupling strategy logic from execution. Strategies become pure functions that accept state/indicators and return signals.
 
 # Test Strategy:
-Test bracket order creation, ensure all three orders are linked correctly, and verify that filling/cancelling one order properly affects the others.
+Test order matching scenarios, race conditions, and strategy purity with comprehensive edge cases.
+
+# Subtasks:
+## 1. Implement Synthetic Tick Order Matching [done]
+### Dependencies: None
+### Description: Implement synthetic tick order matching (O-H-L-C model) to provide realistic fill logic and resolve SL/TP race conditions
+### Details:
+Create realistic order execution simulation using OHLC data. Must handle: intrabar price movement simulation, stop loss/take profit race condition resolution, slippage modeling, and partial fills. This ensures backtests more accurately reflect real trading conditions.
+
+## 2. Add First-Class Bracket Order Support [done]
+### Dependencies: 2.1
+### Description: Add first-class bracket order support (submitBracketOrder) to the engine, including OCO (One-Cancels-Other) logic for the SL/TP legs
+### Details:
+Implement submitBracketOrder method that creates entry order with attached stop loss and take profit orders. Must include OCO logic where SL and TP orders cancel each other when one is filled. Support both market and limit entry orders with bracket attachments.
+
+## 3. Refactor Strategies to Pure Functions [done]
+### Dependencies: None
+### Description: Refactor all strategies to be pure, stateless functions that accept state and indicators, and return signals
+### Details:
+Fully decouple strategy logic from execution by converting strategies to pure functions. Functions should accept (state, indicators, config) and return signals/actions. This makes strategies testable, portable, and eliminates side effects. Remove all internal state from strategy classes.
+

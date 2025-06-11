@@ -1,0 +1,76 @@
+{
+  "project": "Backtesting System Refactor v3",
+  "description": "Definitive tasks for the AI-ready v3 refactor plan. See web/docs/REFACTOR_PLAN.md for full details.",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Phase 1: Build BacktestEngine Core & Data Foundation",
+      "description": "Implement the `BacktestEngine` with immutable state, a `DataSource` abstraction, and a memoized `IndicatorService`.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "details": "This is the foundational task. It involves creating the `BacktestEngine` class, the `BacktestState` interface, the data validation layer, and the indicator service as specified in Tasks 1.1, 1.2, and 1.3 of the REFACTOR_PLAN.md.",
+      "testStrategy": "Unit test the engine's state management with `immer`. Verify the `DataSource` can be mocked. Test that the `IndicatorService` correctly caches results."
+    },
+    {
+      "id": "2",
+      "title": "Phase 2: Implement Advanced Execution & Pure Strategies",
+      "description": "Implement synthetic tick matching, first-class bracket orders, and refactor strategies to be pure functions.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["1"],
+      "details": "Implement the O-H-L-C synthetic tick model for order matching. Add the `submitBracketOrder` method to the engine. Refactor `BaseStrategy` into a pure `Strategy` interface and convert existing strategies. See Tasks 2.1, 2.2, and 2.3 of the plan.",
+      "testStrategy": "Test the tick model resolves SL/TP race conditions correctly. Verify `submitBracketOrder` creates three linked orders and that OCO logic works. Test that pure strategies produce deterministic signals."
+    },
+    {
+      "id": "3",
+      "title": "Phase 3: Integrate UI with React Context & Ensure Type Safety",
+      "description": "Decouple the UI with a `BacktestProvider` and enforce strict TypeScript type safety throughout the project.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["1"],
+      "details": "Create the `BacktestProvider` and `useBacktestState` hook. Refactor UI components to use the hook. Enable `strict` mode in `tsconfig.json` and eliminate all `any` types. Define the `IExecutionEngine` interface for live trading portability. See Tasks 3.1, 3.2, 3.3.",
+      "testStrategy": "Confirm UI components update reactively from the context. The project must compile without errors under `strict` mode. Verify the `BacktestEngine` correctly implements the `IExecutionEngine` interface."
+    },
+    {
+      "id": "4",
+      "title": "Phase 4: Build Advanced Capabilities (Optimization & Debugging)",
+      "description": "Create the `BacktestRunner` for parameter optimization and implement time-travel debugging in the engine.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": ["1", "2"],
+      "details": "Implement the `BacktestRunner` class to orchestrate multiple backtests over a parameter grid. Add state snapshotting to the `BacktestEngine` to enable `getStateAt(barIndex)` and `replayFrom(barIndex)` functionality. See Tasks 4.1, 4.2.",
+      "testStrategy": "Run an optimization for an EMA crossover strategy with a 2x2 parameter grid and verify the results. For debugging, run a backtest, jump to a mid-point, and confirm the state is accurate."
+    },
+    {
+      "id": "5",
+      "title": "Phase 5: Implement Trader-Friendly Strategy Layer",
+      "description": "Build the declarative strategy system, including the schema, evaluator, and generic executor.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": ["2", "3"],
+      "details": "Implement the `TraderFriendlyStrategyTemplate` schema, the `evaluateCondition` function, and the `GenericStrategyExecutor` class. This allows strategies to be defined in JSON instead of code. See Tasks 5.1, 5.2, 5.3.",
+      "testStrategy": "Create a declarative strategy template for a simple moving average crossover. Run it through the `GenericStrategyExecutor` and verify it produces the same trades as the hard-coded pure-function version."
+    },
+    {
+      "id": "6",
+      "title": "Phase 5: Create Strategy Builder UI",
+      "description": "Design and implement a UI for visually creating and editing declarative strategy templates.",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": ["5"],
+      "details": "Build a new React component at `components/builder/StrategyBuilder.tsx` that allows users to create strategies via forms and dropdowns, generating the template JSON. See Task 5.4.",
+      "testStrategy": "Use the UI to build a strategy. Save the generated JSON and feed it to the `GenericStrategyExecutor` to ensure it runs a successful backtest."
+    },
+    {
+      "id": "7",
+      "title": "Phase 6: Deprecate and Remove Obsolete Code",
+      "description": "Systematically remove all old components made redundant by the refactor.",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": ["1", "2", "3", "5"],
+      "details": "After their replacements are fully implemented and tested, delete `OrderManager.ts`, `BaseStrategy.ts`, old stateful strategy classes, and manual UI state-syncing logic from `page.tsx`. See Phase 6 of the plan.",
+      "testStrategy": "The entire application must function correctly after the files are deleted. Run a full regression test (a complete backtest from the UI) to ensure no functionality was broken."
+    }
+  ]
+} 

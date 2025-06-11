@@ -1,11 +1,25 @@
 # Task ID: 4
-# Title: Create React Context for State Management
-# Status: pending
-# Dependencies: 1
-# Priority: high
-# Description: Implement React Context or state management library to eliminate manual state sync and props drilling
+# Title: Phase 4: Advanced Capabilities
+# Status: done
+# Dependencies: 1, 2, 3
+# Priority: medium
+# Description: Create BacktestRunner for parameter optimization and implement time-travel debugging
 # Details:
-Create a BacktestProvider component that wraps the UI and provides access to backtest state through React Context. Implement custom hooks like useBacktestState, useOrders, usePositions, etc. This should eliminate the need for manual state synchronization.
+Build parameter sweep orchestration and state snapshotting/replay functionality for debugging complex backtests.
 
 # Test Strategy:
-Test that all UI components can access state through context without props drilling. Verify automatic re-renders when state changes.
+Test parameter grid execution, state snapshot consistency, and replay accuracy across different scenarios.
+
+# Subtasks:
+## 1. Create BacktestRunner for Parameter Optimization [done]
+### Dependencies: None
+### Description: Create a BacktestRunner class capable of orchestrating parameter optimization sweeps across a grid of strategy inputs
+### Details:
+Build a class that can run multiple backtests with different parameter combinations to find optimal strategy settings. Must support: parameter grids, parallel execution, progress reporting, result aggregation, and performance metrics comparison. Should handle both single-parameter and multi-parameter optimization.
+
+## 2. Implement Time-Travel Debugging [done]
+### Dependencies: None
+### Description: Implement time-travel debugging within the engine, with state snapshotting and replay functionality
+### Details:
+Build debugging capabilities that allow stepping through backtest execution step-by-step. Must include: state snapshots at each bar/tick, ability to replay from any point, state inspection tools, and debugging UI components. This helps developers understand strategy behavior and debug complex scenarios.
+

@@ -1,22 +1,26 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://127.0.0.1:8000';
-
+/**
+ * Orders API Endpoint - v3 Compatible
+ * 
+ * The v3 backtesting system uses self-contained React Context state management
+ * and doesn't require external APIs for order management during backtesting.
+ * This endpoint now returns mock data for compatibility with any legacy components.
+ */
 export async function GET() {
   try {
-    console.log('Fetching orders from:', `${API_BASE_URL}/api/orders`);
-    const response = await fetch(`${API_BASE_URL}/api/orders`);
+    // Return empty orders array since v3 handles order management internally
+    const mockData = {
+      orders: [],
+      message: "v3 backtesting uses internal order management - no external orders",
+      timestamp: new Date().toISOString()
+    };
     
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(mockData);
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error in orders endpoint:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

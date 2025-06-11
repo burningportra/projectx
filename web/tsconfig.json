@@ -5,6 +5,25 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    
+    // Explicit strict mode flags for maximum type safety
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    
+    // Additional type safety
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

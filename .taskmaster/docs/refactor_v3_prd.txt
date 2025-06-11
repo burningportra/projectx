@@ -1,0 +1,29 @@
+Product Requirements: Backtesting System Refactor v3
+
+Project Goal: Execute the detailed, AI-ready v3 refactor plan for the backtesting system as defined in `web/docs/REFACTOR_PLAN.md`. The implementation must adhere to the guiding principles of simplicity, immutability, and testability.
+
+Phase 1: Core Engine & Data Foundation
+- Requirement 1.1: Build the `BacktestEngine` with immutable state management (`immer`) and a subscription model. This is the central nervous system of the new architecture.
+- Requirement 1.2: Implement a `DataSource` abstraction and `DataValidator` to ensure the engine consumes clean, validated data and is decoupled from data sources.
+- Requirement 1.3: Create a memoized `IndicatorService` to provide efficient, cached indicator calculations to strategies.
+
+Phase 2: Advanced Execution & Strategy Logic
+- Requirement 2.1: Implement synthetic tick order matching (O-H-L-C model) to provide realistic fill logic and resolve SL/TP race conditions.
+- Requirement 2.2: Add first-class bracket order support (`submitBracketOrder`) to the engine, including OCO (One-Cancels-Other) logic for the SL/TP legs.
+- Requirement 2.3: Refactor all strategies to be pure, stateless functions that accept state and indicators, and return signals, fully decoupling logic from execution.
+
+Phase 3: UI/DX and Live Trading Abstraction
+- Requirement 3.1: Implement a React Context provider (`BacktestProvider`) and custom hooks (`useBacktestState`) for clean, reactive state management in the UI.
+- Requirement 3.2: Enforce full TypeScript type safety by enabling `strict` mode and eliminating all `any` types.
+- Requirement 3.3: Define a common `IExecutionEngine` interface to make strategy logic portable between the backtester and future live trading environments.
+
+Phase 4: Advanced Capabilities
+- Requirement 4.1: Create a `BacktestRunner` class capable of orchestrating parameter optimization sweeps across a grid of strategy inputs.
+- Requirement 4.2: Implement time-travel debugging within the engine, with state snapshotting and replay functionality.
+
+Phase 5: Trader-Friendly Strategy Layer
+- Requirement 5.1: Design and implement a declarative strategy schema, a condition evaluator, and a generic strategy executor that can run strategies from a simple JSON-like template.
+- Requirement 5.2: Create a UI-based Strategy Builder that allows non-programmers to create and save these declarative strategy templates.
+
+Phase 6: Code Cleanup & Deprecation
+- Requirement 6.1: Systematically remove all obsolete code (`OrderManager`, `BaseStrategy`, old UI syncing logic, etc.) as their new counterparts are completed and verified, ensuring a clean final codebase. 

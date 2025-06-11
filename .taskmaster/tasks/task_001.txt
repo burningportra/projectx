@@ -1,11 +1,31 @@
 # Task ID: 1
-# Title: Create Unified BacktestEngine Class
-# Status: pending
+# Title: Phase 1: Core Engine & Data Foundation
+# Status: done
 # Dependencies: None
 # Priority: high
-# Description: Design and implement a single BacktestEngine class that serves as the source of truth for all state management
+# Description: Build the foundational components for the v3 backtesting system including BacktestEngine, DataSource abstraction, and IndicatorService
 # Details:
-Create a new BacktestEngine class that consolidates all state management from OrderManager, Strategy, and UI components. This class should manage orders, positions, trades, and all state transitions through a clean API. All state changes must go through this engine to ensure consistency.
+This phase establishes the core architecture with immutable state management, data validation, and efficient indicator calculations. Must adhere to principles of simplicity, immutability, and testability.
 
 # Test Strategy:
-Unit test the BacktestEngine with mock data to ensure state transitions work correctly. Test order submission, position tracking, and trade completion flows.
+Create comprehensive unit tests for each component with mocked dependencies. Test immutability constraints and subscription behaviors.
+
+# Subtasks:
+## 1. Build BacktestEngine with Immutable State Management [done]
+### Dependencies: None
+### Description: Build the BacktestEngine with immutable state management (immer) and a subscription model
+### Details:
+This is the central nervous system of the new architecture. Must implement immutable state updates using immer and provide a subscription model for state changes. Key components: state management, event system, subscription handling.
+
+## 2. Implement DataSource Abstraction and DataValidator [done]
+### Dependencies: None
+### Description: Implement a DataSource abstraction and DataValidator to ensure the engine consumes clean, validated data
+### Details:
+Ensure the engine is decoupled from data sources by creating proper abstractions. DataValidator must validate data integrity, handle missing values, and ensure consistent formats. DataSource provides unified interface for different data providers.
+
+## 3. Create Memoized IndicatorService [done]
+### Dependencies: 1.1
+### Description: Create a memoized IndicatorService to provide efficient, cached indicator calculations to strategies
+### Details:
+Build a service that caches indicator calculations to avoid redundant computation. Must handle cache invalidation, support common technical indicators (SMA, EMA, RSI, MACD, etc.), and provide efficient lookup mechanisms. Should integrate seamlessly with the BacktestEngine.
+

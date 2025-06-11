@@ -1,0 +1,22 @@
+Product Requirements: Backtesting System Refactor
+
+Project Goal: Incrementally refactor the backtesting system based on the detailed implementation plan in `web/docs/REFACTOR_PLAN.md`.
+
+Phase 1: Core Engine & State Management
+- Requirement 1.1: Implement the foundational `BacktestEngine` class in `lib/engine/BacktestEngine.ts` to hold all system state, as detailed in Task 1.1 of the plan.
+- Requirement 1.2: Deprecate `OrderManager` by porting all its logic for order and position management directly into the `BacktestEngine`.
+- Requirement 1.3: Ensure all state-mutating methods within the engine are immutable, using techniques like immer or spreading to prevent direct state mutation.
+
+Phase 2: Advanced Order Execution & Strategy Integration
+- Requirement 2.1: Implement a "Synthetic Tick Simulation" for order matching within the engine's `processBar` method to resolve SL/TP race conditions, following the O-H-L-C/O-L-H-C rule.
+- Requirement 2.2: Add first-class support for bracket orders by implementing an atomic `submitBracketOrder` method in the engine.
+- Requirement 2.3: Deprecate `BaseStrategy` and refactor strategies to be stateless, pure functions that adhere to a new `Strategy` interface.
+
+Phase 3: UI Integration & Developer Experience
+- Requirement 3.1: Create a `BacktestProvider` using React Context to provide a global, singleton instance of the `BacktestEngine` to the UI.
+- Requirement 3.2: Refactor all UI components (`TradeChart`, `AnalysisPanel`, etc.) to consume state from the new React Context hooks, removing all manual state syncing.
+- Requirement 3.3: Enforce full TypeScript type safety by eliminating all `any` types and enabling `strict` mode in `tsconfig.json`.
+
+Phase 4: Advanced Features & Finalization
+- Requirement 4.1: Implement time-travel debugging capabilities within the engine, including state snapshots and a replay function.
+- Requirement 4.2: Update all project documentation, including the main README and a new `MIGRATION_GUIDE.md`, to reflect the new architecture. 

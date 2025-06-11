@@ -2,123 +2,225 @@
   "tasks": [
     {
       "id": 1,
-      "title": "Create Unified BacktestEngine Class",
-      "description": "Design and implement a single BacktestEngine class that serves as the source of truth for all state management",
-      "status": "pending",
+      "title": "Phase 1: Core Engine & Data Foundation",
+      "description": "Build the foundational components for the v3 backtesting system including BacktestEngine, DataSource abstraction, and IndicatorService",
+      "status": "done",
       "priority": "high",
       "dependencies": [],
-      "details": "Create a new BacktestEngine class that consolidates all state management from OrderManager, Strategy, and UI components. This class should manage orders, positions, trades, and all state transitions through a clean API. All state changes must go through this engine to ensure consistency.",
-      "testStrategy": "Unit test the BacktestEngine with mock data to ensure state transitions work correctly. Test order submission, position tracking, and trade completion flows."
+      "details": "This phase establishes the core architecture with immutable state management, data validation, and efficient indicator calculations. Must adhere to principles of simplicity, immutability, and testability.",
+      "testStrategy": "Create comprehensive unit tests for each component with mocked dependencies. Test immutability constraints and subscription behaviors.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Build BacktestEngine with Immutable State Management",
+          "description": "Build the BacktestEngine with immutable state management (immer) and a subscription model",
+          "details": "This is the central nervous system of the new architecture. Must implement immutable state updates using immer and provide a subscription model for state changes. Key components: state management, event system, subscription handling.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 1
+        },
+        {
+          "id": 2,
+          "title": "Implement DataSource Abstraction and DataValidator",
+          "description": "Implement a DataSource abstraction and DataValidator to ensure the engine consumes clean, validated data",
+          "details": "Ensure the engine is decoupled from data sources by creating proper abstractions. DataValidator must validate data integrity, handle missing values, and ensure consistent formats. DataSource provides unified interface for different data providers.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 1
+        },
+        {
+          "id": 3,
+          "title": "Create Memoized IndicatorService",
+          "description": "Create a memoized IndicatorService to provide efficient, cached indicator calculations to strategies",
+          "details": "Build a service that caches indicator calculations to avoid redundant computation. Must handle cache invalidation, support common technical indicators (SMA, EMA, RSI, MACD, etc.), and provide efficient lookup mechanisms. Should integrate seamlessly with the BacktestEngine.",
+          "status": "done",
+          "dependencies": [
+            1
+          ],
+          "parentTaskId": 1
+        }
+      ]
     },
     {
       "id": 2,
-      "title": "Implement Bracket Order Support",
-      "description": "Add first-class support for bracket orders (entry + stop loss + take profit) with a single method call",
-      "status": "pending",
+      "title": "Phase 2: Advanced Execution & Strategy Logic",
+      "description": "Implement synthetic tick order matching, bracket order support, and pure strategy functions",
+      "status": "done",
       "priority": "high",
-      "dependencies": [1],
-      "details": "Create a BracketOrder interface and implement a createBracketOrder method that handles all three orders (entry, stop loss, take profit) atomically. This should eliminate the need for custom properties on trade objects and manual order linking.",
-      "testStrategy": "Test bracket order creation, ensure all three orders are linked correctly, and verify that filling/cancelling one order properly affects the others."
+      "dependencies": [
+        1
+      ],
+      "details": "Focus on realistic order execution, OCO logic, and decoupling strategy logic from execution. Strategies become pure functions that accept state/indicators and return signals.",
+      "testStrategy": "Test order matching scenarios, race conditions, and strategy purity with comprehensive edge cases.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Synthetic Tick Order Matching",
+          "description": "Implement synthetic tick order matching (O-H-L-C model) to provide realistic fill logic and resolve SL/TP race conditions",
+          "details": "Create realistic order execution simulation using OHLC data. Must handle: intrabar price movement simulation, stop loss/take profit race condition resolution, slippage modeling, and partial fills. This ensures backtests more accurately reflect real trading conditions.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 2
+        },
+        {
+          "id": 2,
+          "title": "Add First-Class Bracket Order Support",
+          "description": "Add first-class bracket order support (submitBracketOrder) to the engine, including OCO (One-Cancels-Other) logic for the SL/TP legs",
+          "details": "Implement submitBracketOrder method that creates entry order with attached stop loss and take profit orders. Must include OCO logic where SL and TP orders cancel each other when one is filled. Support both market and limit entry orders with bracket attachments.",
+          "status": "done",
+          "dependencies": [
+            1
+          ],
+          "parentTaskId": 2
+        },
+        {
+          "id": 3,
+          "title": "Refactor Strategies to Pure Functions",
+          "description": "Refactor all strategies to be pure, stateless functions that accept state and indicators, and return signals",
+          "details": "Fully decouple strategy logic from execution by converting strategies to pure functions. Functions should accept (state, indicators, config) and return signals/actions. This makes strategies testable, portable, and eliminates side effects. Remove all internal state from strategy classes.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 2
+        }
+      ]
     },
     {
       "id": 3,
-      "title": "Remove TypeScript 'any' Usage",
-      "description": "Create proper TypeScript interfaces for all entities and eliminate all uses of 'any' type",
-      "status": "pending",
+      "title": "Phase 3: UI/DX and Live Trading Abstraction",
+      "description": "Implement React Context provider, TypeScript strict mode, and common execution interface",
+      "status": "done",
       "priority": "high",
-      "dependencies": [],
-      "details": "Define proper interfaces for Trade, Order, Position, and all other entities. Replace all instances of '(trade as any)' with properly typed objects. Implement strict null checking and ensure full type safety throughout the codebase.",
-      "testStrategy": "Enable strict TypeScript checking and ensure the project compiles without any type errors. All 'any' usages should be eliminated."
+      "dependencies": [
+        1,
+        2
+      ],
+      "details": "Create clean UI state management, eliminate all 'any' types, and define portable strategy interface for future live trading integration.",
+      "testStrategy": "Test React hooks, type safety compliance, and interface compatibility with both backtesting and future live trading scenarios.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement React Context Provider and Custom Hooks",
+          "description": "Implement a React Context provider (BacktestProvider) and custom hooks (useBacktestState) for clean, reactive state management in the UI",
+          "details": "Create BacktestProvider that wraps the UI and provides access to backtest state. Implement hooks like useBacktestState, useBacktestActions, useBacktestResults. This eliminates manual state synchronization and props drilling while providing reactive updates to UI components.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 2,
+          "title": "Enforce TypeScript Strict Mode and Eliminate 'any' Types",
+          "description": "Enforce full TypeScript type safety by enabling strict mode and eliminating all 'any' types",
+          "details": "Enable TypeScript strict mode in tsconfig.json and systematically replace all 'any' types with proper interfaces and types. Create comprehensive type definitions for all data structures, API responses, and component props. This ensures compile-time type safety and better IDE support.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 3,
+          "title": "Define Common IExecutionEngine Interface",
+          "description": "Define a common IExecutionEngine interface to make strategy logic portable between the backtester and future live trading environments",
+          "details": "Create a unified interface that both BacktestEngine and future LiveTradingEngine will implement. This interface should expose common methods like submitOrder, getPositions, getAccountBalance, etc. Ensures strategies can run identically in both environments with just different engine implementations.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        }
+      ]
     },
     {
       "id": 4,
-      "title": "Create React Context for State Management",
-      "description": "Implement React Context or state management library to eliminate manual state sync and props drilling",
-      "status": "pending",
-      "priority": "high",
-      "dependencies": [1],
-      "details": "Create a BacktestProvider component that wraps the UI and provides access to backtest state through React Context. Implement custom hooks like useBacktestState, useOrders, usePositions, etc. This should eliminate the need for manual state synchronization.",
-      "testStrategy": "Test that all UI components can access state through context without props drilling. Verify automatic re-renders when state changes."
+      "title": "Phase 4: Advanced Capabilities",
+      "description": "Create BacktestRunner for parameter optimization and implement time-travel debugging",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "details": "Build parameter sweep orchestration and state snapshotting/replay functionality for debugging complex backtests.",
+      "testStrategy": "Test parameter grid execution, state snapshot consistency, and replay accuracy across different scenarios.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create BacktestRunner for Parameter Optimization",
+          "description": "Create a BacktestRunner class capable of orchestrating parameter optimization sweeps across a grid of strategy inputs",
+          "details": "Build a class that can run multiple backtests with different parameter combinations to find optimal strategy settings. Must support: parameter grids, parallel execution, progress reporting, result aggregation, and performance metrics comparison. Should handle both single-parameter and multi-parameter optimization.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 4
+        },
+        {
+          "id": 2,
+          "title": "Implement Time-Travel Debugging",
+          "description": "Implement time-travel debugging within the engine, with state snapshotting and replay functionality",
+          "details": "Build debugging capabilities that allow stepping through backtest execution step-by-step. Must include: state snapshots at each bar/tick, ability to replay from any point, state inspection tools, and debugging UI components. This helps developers understand strategy behavior and debug complex scenarios.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 4
+        }
+      ]
     },
     {
       "id": 5,
-      "title": "Implement Declarative Strategy API",
-      "description": "Create a declarative API for defining strategies without boilerplate code",
-      "status": "pending",
+      "title": "Phase 5: Trader-Friendly Strategy Layer",
+      "description": "Design declarative strategy schema and UI-based Strategy Builder",
+      "status": "done",
       "priority": "medium",
-      "dependencies": [1, 2],
-      "details": "Design a declarative configuration format for strategies that allows defining entry/exit signals, order types, and risk management rules without writing imperative code. Create a strategy builder that generates the implementation from the configuration.",
-      "testStrategy": "Create a test strategy using only declarative configuration and verify it produces the same results as the imperative version."
+      "dependencies": [
+        2,
+        3
+      ],
+      "details": "Enable non-programmers to create strategies through JSON-like templates and visual UI builder.",
+      "testStrategy": "Test schema validation, condition evaluation, and UI-generated strategy execution against hand-coded equivalents.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Design Declarative Strategy Schema and Executor",
+          "description": "Design and implement a declarative strategy schema, a condition evaluator, and a generic strategy executor that can run strategies from a simple JSON-like template",
+          "details": "Create a JSON schema for defining strategies declaratively including: entry/exit conditions, risk management rules, position sizing, and indicator configurations. Build a condition evaluator that can parse and execute these rules, and a generic executor that runs template-based strategies.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 5
+        },
+        {
+          "id": 2,
+          "title": "Create UI-Based Strategy Builder",
+          "description": "Create a UI-based Strategy Builder that allows non-programmers to create and save these declarative strategy templates",
+          "details": "Build a visual drag-and-drop or form-based interface for creating strategies without coding. Must include: condition builders, indicator selectors, risk management controls, visual preview of strategy logic, and save/load functionality. Should generate and validate the JSON schema from the previous subtask.",
+          "status": "done",
+          "dependencies": [
+            1
+          ],
+          "parentTaskId": 5
+        }
+      ]
     },
     {
       "id": 6,
-      "title": "Build Time-Travel Debugging",
-      "description": "Implement debugging tools that allow replaying specific backtest scenarios",
-      "status": "pending",
-      "priority": "medium",
-      "dependencies": [1],
-      "details": "Record all state changes during backtesting and create an interface to replay the backtest from any point. Allow stepping forward/backward through bars and inspecting state at each point. This should replace console.log debugging.",
-      "testStrategy": "Run a backtest, use time-travel to go to specific bars, and verify the state matches what was recorded during the original run."
-    },
-    {
-      "id": 7,
-      "title": "Optimize Order Matching Performance",
-      "description": "Implement indexed data structures and efficient algorithms for order matching",
-      "status": "pending",
-      "priority": "medium",
-      "dependencies": [1],
-      "details": "Replace linear searches through orders with indexed data structures (Map by price, Map by time). Implement efficient algorithms for finding orders that can be filled at current prices. Add performance metrics to measure improvement.",
-      "testStrategy": "Benchmark order matching performance with 10,000+ orders and verify at least 2x performance improvement over current implementation."
-    },
-    {
-      "id": 8,
-      "title": "Refactor Strategy Base Class",
-      "description": "Convert strategies to pure functions without internal state",
-      "status": "pending",
-      "priority": "medium",
-      "dependencies": [1, 5],
-      "details": "Refactor the BaseStrategy class to remove all internal state. Strategies should be pure functions that take the current state and bar data as input and return signals/orders as output. This makes strategies easier to test and reason about.",
-      "testStrategy": "Test that strategies produce deterministic output given the same input state and bar data. Verify no internal state is maintained."
-    },
-    {
-      "id": 9,
-      "title": "Create Migration Guide",
-      "description": "Document how to migrate existing strategies to the new architecture",
-      "status": "pending",
+      "title": "Phase 6: Code Cleanup & Deprecation",
+      "description": "Systematically remove obsolete code as new counterparts are completed",
+      "status": "done",
       "priority": "low",
-      "dependencies": [1, 2, 3, 4, 5, 8],
-      "details": "Write comprehensive documentation showing how to migrate existing strategies from the old architecture to the new one. Include code examples, common patterns, and a step-by-step migration process.",
-      "testStrategy": "Migrate the existing TrendStartStrategy using the guide and verify it works correctly with the new architecture."
-    },
-    {
-      "id": 10,
-      "title": "Implement Incremental State Updates",
-      "description": "Optimize state calculations to only process changes instead of full recalculation",
-      "status": "pending",
-      "priority": "low",
-      "dependencies": [1, 7],
-      "details": "Implement a delta-based state update system that only recalculates what has changed since the last bar. This should significantly improve performance for long backtests with many trades.",
-      "testStrategy": "Compare performance of incremental updates vs full recalculation on a 10,000 bar backtest with 1000+ trades."
-    },
-    {
-      "id": 11,
-      "title": "Add Visual Debugging Tools",
-      "description": "Create UI components for visual state inspection during debugging",
-      "status": "pending",
-      "priority": "low",
-      "dependencies": [4, 6],
-      "details": "Build React components that visualize the current state, order book, positions, and P&L during debugging. Allow inspecting state at any point during time-travel debugging.",
-      "testStrategy": "Use visual debugging tools to debug a complex strategy and verify all state is correctly displayed."
-    },
-    {
-      "id": 12,
-      "title": "Implement Performance Profiling",
-      "description": "Add performance metrics and profiling throughout the system",
-      "status": "pending",
-      "priority": "low",
-      "dependencies": [1, 7, 10],
-      "details": "Add performance timing to all major operations (bar processing, order matching, state updates). Create a performance dashboard that shows bottlenecks and optimization opportunities.",
-      "testStrategy": "Run performance profiling on various backtest scenarios and verify metrics are accurately captured and displayed."
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "details": "Remove OrderManager, BaseStrategy, old UI syncing logic, and other deprecated components to ensure clean final codebase.",
+      "testStrategy": "Verify no regressions after removal, confirm all functionality is covered by new architecture.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Remove Obsolete Code and Components",
+          "description": "Systematically remove all obsolete code (OrderManager, BaseStrategy, old UI syncing logic, etc.) as their new counterparts are completed and verified",
+          "details": "Ensure a clean final codebase by removing: OrderManager class, BaseStrategy class, old UI state synchronization logic, deprecated API endpoints, unused utility functions, and any other components superseded by the new architecture. Verify no functionality is lost in the process.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 6
+        }
+      ]
     }
   ]
-} 
+}

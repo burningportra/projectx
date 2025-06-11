@@ -1,11 +1,19 @@
 # Task ID: 6
-# Title: Build Time-Travel Debugging
-# Status: pending
-# Dependencies: 1
-# Priority: medium
-# Description: Implement debugging tools that allow replaying specific backtest scenarios
+# Title: Phase 6: Code Cleanup & Deprecation
+# Status: done
+# Dependencies: 1, 2, 3, 4, 5
+# Priority: low
+# Description: Systematically remove obsolete code as new counterparts are completed
 # Details:
-Record all state changes during backtesting and create an interface to replay the backtest from any point. Allow stepping forward/backward through bars and inspecting state at each point. This should replace console.log debugging.
+Remove OrderManager, BaseStrategy, old UI syncing logic, and other deprecated components to ensure clean final codebase.
 
 # Test Strategy:
-Run a backtest, use time-travel to go to specific bars, and verify the state matches what was recorded during the original run.
+Verify no regressions after removal, confirm all functionality is covered by new architecture.
+
+# Subtasks:
+## 1. Remove Obsolete Code and Components [done]
+### Dependencies: None
+### Description: Systematically remove all obsolete code (OrderManager, BaseStrategy, old UI syncing logic, etc.) as their new counterparts are completed and verified
+### Details:
+Ensure a clean final codebase by removing: OrderManager class, BaseStrategy class, old UI state synchronization logic, deprecated API endpoints, unused utility functions, and any other components superseded by the new architecture. Verify no functionality is lost in the process.
+

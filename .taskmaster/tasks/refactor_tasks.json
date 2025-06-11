@@ -1,0 +1,86 @@
+{
+  "project": "Backtesting System Refactor",
+  "description": "Tasks for the incremental refactor of the backtesting system based on the plan in web/docs/REFACTOR_PLAN.md.",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Phase 1: Implement BacktestEngine Core & Immutable State",
+      "description": "Create the foundational `BacktestEngine` class, define the `BacktestState`, and ensure all state mutations are immutable.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "details": "Action: Create `lib/engine/BacktestEngine.ts`. Define the core `BacktestState` interface. Implement the basic `BacktestEngine` class structure and port logic from `OrderManager`. Refactor all state-mutating methods to be immutable using libraries like `immer` or spreading. See Task 1.1-1.3 in REFACTOR_PLAN.md.",
+      "testStrategy": "Unit test the engine's state initialization. Verify that methods like `submitOrder` produce a new state object without mutating the original. Confirm ported `OrderManager` logic functions correctly within the engine."
+    },
+    {
+      "id": 2,
+      "title": "Phase 2: Implement Advanced Order Matching & Bracket Orders",
+      "description": "Implement synthetic tick simulation for realistic order matching and add first-class support for bracket orders.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [1],
+      "details": "Action: Rework `processBar` to use a synthetic O-H-L-C tick sequence for order matching. Implement the `submitBracketOrder` method to atomically create linked entry, stop-loss, and take-profit orders. See Task 2.1 & 2.2 in REFACTOR_PLAN.md.",
+      "testStrategy": "Create a test case with an SL and TP at the same price level to verify the synthetic tick model correctly prioritizes one. Test `submitBracketOrder` and confirm that filling one leg (e.g., TP) automatically cancels the other (SL)."
+    },
+    {
+      "id": 3,
+      "title": "Phase 2: Refactor Strategies to Pure Functions",
+      "description": "Deprecate `BaseStrategy` and refactor strategies to be stateless, pure functions.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [1, 2],
+      "details": "Action: Define a `Strategy` interface with a single `analyze` method. Refactor `TrendStartStrategyRefactored` to conform to this new interface, making it stateless. The engine will now be responsible for calling `analyze` on each bar. See Task 2.3 in REFACTOR_PLAN.md.",
+      "testStrategy": "Verify that the refactored strategy produces the exact same trading signals given the same historical state and bar data. Ensure no state is stored within the strategy object itself."
+    },
+    {
+      "id": 4,
+      "title": "Phase 3: Implement React Context for Global State",
+      "description": "Create a `BacktestProvider` and hooks (`useBacktestEngine`, `useBacktestState`) to provide reactive state to all UI components.",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [1],
+      "details": "Action: Implement a React Context provider that holds the `BacktestEngine` instance. Create custom hooks that allow any component to subscribe to state changes reactively. See Task 3.1 in REFACTOR_PLAN.md.",
+      "testStrategy": "Wrap the main backtester UI in the `BacktestProvider`. Test that a simple component using `useBacktestState` re-renders automatically when a bar is processed and the state changes."
+    },
+    {
+      "id": 5,
+      "title": "Phase 3: Refactor UI Components to Use Context",
+      "description": "Update all UI components to consume data from the new React Context hooks, removing manual state sync and props drilling.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [4],
+      "details": "Action: Refactor `TradeChart`, `AnalysisPanel`, `CompactOrderPanel`, etc., to get all their data from the `useBacktestState` and other related hooks. Remove all `useEffect` blocks that were used for manual state synchronization. See Task 3.2 in REFACTOR_PLAN.md.",
+      "testStrategy": "Confirm that the TradeChart correctly displays price lines for open positions and pending orders fetched via context. Verify the AnalysisPanel updates its P&L stats reactively."
+    },
+    {
+      "id": 6,
+      "title": "Phase 3: Enforce Full TypeScript Type Safety",
+      "description": "Eliminate all uses of the `any` type, create explicit interfaces for all data models, and enable strict mode.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1],
+      "details": "Action: Go through the codebase and replace every instance of `any` with a proper TypeScript `interface` or `type`. Enable `\"strict\": true` in `tsconfig.json` and fix any resulting compilation errors. See Task 3.3 in REFACTOR_PLAN.md.",
+      "testStrategy": "The entire project must compile successfully with the `strict` flag enabled. No linting errors related to `any` type should remain."
+    },
+    {
+      "id": 7,
+      "title": "Phase 4: Implement Time-Travel Debugging",
+      "description": "Implement state snapshots and replay functionality within the `BacktestEngine` for advanced debugging.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [1],
+      "details": "Action: The engine should store a snapshot of its state after each bar. Implement `getStateAt(barIndex)` and `replayFrom(barIndex)` methods. Add UI controls for stepping back and replaying from a specific point. See Task 4.1 in REFACTOR_PLAN.md.",
+      "testStrategy": "Run a 100-bar backtest. Jump to bar 50, verify the state is correct. Modify an order, then replay from bar 50 and confirm the new outcome."
+    },
+    {
+      "id": 8,
+      "title": "Phase 4: Update All Documentation",
+      "description": "Update all READMEs and create a new Migration Guide to reflect the new architecture.",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [1, 2, 3, 4, 5, 6, 7],
+      "details": "Action: Update `BACKTESTING_SYSTEM_README.md` and `UNIFIED_BACKTEST_ENGINE_DESIGN.md`. Create a new `MIGRATION_GUIDE.md` showing developers how to convert old strategies to the new pure-function format. See Task 4.2 in REFACTOR_PLAN.md.",
+      "testStrategy": "Have a new developer follow the migration guide to convert a sample strategy and confirm the documentation is clear and accurate."
+    }
+  ]
+} 
