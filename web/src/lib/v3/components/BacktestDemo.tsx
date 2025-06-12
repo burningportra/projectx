@@ -292,6 +292,22 @@ const PlaybackControls: React.FC = () => {
         </div>
       </div>
 
+      {/* Progressive Configuration */}
+      {playback.currentMode === 'progressive' && (
+        <div style={{ marginTop: '10px', padding: '8px', background: '#fff3cd', borderRadius: '4px' }}>
+          <strong style={{ fontSize: '12px', color: '#856404' }}>🔨 Progressive Bar Formation Settings:</strong>
+          <div style={{ marginTop: '6px', fontSize: '10px', color: '#856404' }}>
+            <div><strong>Auto-Detection:</strong> Enabled - System automatically selects best lower timeframe data</div>
+            <div><strong>Fallback Order:</strong> Primary timeframe → Higher timeframes → Synthetic ticks</div>
+            <div><strong>Enhanced Features:</strong> Realistic price paths, volume distribution, tick-by-tick order fills</div>
+          </div>
+          <div style={{ marginTop: '8px', fontSize: '10px', color: '#495057' }}>
+            💡 <strong>Tip:</strong> If you don't see progressive formation, ensure your database has lower timeframe data available.
+            The system will automatically fall back to synthetic ticks if real data isn't found.
+          </div>
+        </div>
+      )}
+
       <div style={{ marginTop: '15px', padding: '8px', background: '#f8f9f9', borderRadius: '4px', fontSize: '14px' }}>
         <strong>📊 Data Status:</strong> {playback.hasData ? `${playback.totalBars} bars loaded and ready for progressive market replay` : '⚠️ No data loaded - please load market data first'}
       </div>

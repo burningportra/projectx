@@ -12,18 +12,21 @@ export default function Home() {
   const { strategies, isLoading: strategiesLoading } = useStrategies();
   const { positions, isLoading: positionsLoading } = usePositions();
 
+  // Ensure positions is an array
+  const positionsArray = Array.isArray(positions) ? positions : [];
+  
   // Filter active strategies
   const activeStrategies = strategies.filter(s => s.status === 'active');
   
   // Calculate total P&L
-  const totalPnl = positions.reduce((sum, pos) => sum + pos.pnl, 0);
+  const totalPnl = positionsArray.reduce((sum, pos) => sum + pos.pnl, 0);
   
   // Calculate win rate (could be from API in real implementation)
   const winRate = 68;
   
   // Calculate average trade profit
-  const avgTradeProfit = positions.length > 0 
-    ? totalPnl / positions.length 
+  const avgTradeProfit = positionsArray.length > 0 
+    ? totalPnl / positionsArray.length 
     : 42.11; // Default value if no positions
 
   return (
@@ -104,7 +107,7 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {positions.map(position => (
+                {positionsArray.map(position => (
                   <div key={position.id} className="border-t border-gray-200 dark:border-gray-700 py-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -121,7 +124,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-                {positions.length === 0 && (
+                {positionsArray.length === 0 && (
                   <div className="text-center py-6 text-muted-foreground">
                     <p>No open positions</p>
                   </div>

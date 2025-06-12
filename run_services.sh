@@ -34,6 +34,10 @@ else
     exit 1
 fi
 
+# Ensure we're in the project root and set PYTHONPATH
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+export PYTHONPATH="${SCRIPT_DIR}:${PYTHONPATH}"
+
 # Start the live ingester in the background with nohup and output redirection
 echo "Starting live_ingester.py in background (see logs/ingester.log)..."
 nohup python3 -m src.data.ingestion.live_ingester > logs/ingester.log 2>&1 &
@@ -65,6 +69,7 @@ fi
 
 # Start the analyzer service in the foreground
 echo "Starting analyzer_service.py in foreground..."
+cd "${SCRIPT_DIR}"
 python3 -m src.analysis.analyzer_service
 
 echo "Services have been launched (or analyzer_service has finished/terminated)." 

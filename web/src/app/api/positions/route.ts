@@ -1,5 +1,19 @@
 import { NextResponse } from 'next/server';
 
+// Define Position type
+interface Position {
+  id: string;
+  strategyName: string;
+  contract: string;
+  side: 'long' | 'short';
+  entryPrice: number;
+  currentPrice: number;
+  size: number;
+  pnl: number;
+  openTime: string;
+  status: 'open' | 'closing' | 'closed';
+}
+
 /**
  * Positions API Endpoint - v3 Compatible
  * 
@@ -10,13 +24,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Return empty positions array since v3 handles position management internally
-    const mockData = {
-      positions: [],
-      message: "v3 backtesting uses internal position management - no external positions",
-      timestamp: new Date().toISOString()
-    };
+    const mockPositions: Position[] = [];
     
-    return NextResponse.json(mockData);
+    return NextResponse.json(mockPositions);
   } catch (error) {
     console.error('Error in positions endpoint:', error);
     return NextResponse.json(

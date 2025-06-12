@@ -4,6 +4,7 @@ import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { BacktestProvider } from '@/lib/v3/BacktestProvider';
 import BacktestDemo from '@/lib/v3/components/BacktestDemo';
+import TrendAnalysisView from '@/lib/v3/components/TrendAnalysisView';
 import StrategyBuilder from '@/components/strategy-builder/StrategyBuilder';
 import { DeclarativeStrategy } from '@/lib/v3/DeclarativeStrategy';
 
@@ -17,7 +18,7 @@ import { DeclarativeStrategy } from '@/lib/v3/DeclarativeStrategy';
  * - Advanced debugging and optimization tools
  */
 export default function BacktesterV3Page() {
-  const [activeTab, setActiveTab] = React.useState<'demo' | 'builder'>('demo');
+  const [activeTab, setActiveTab] = React.useState<'trends' | 'demo' | 'builder'>('trends');
   const [createdStrategy, setCreatedStrategy] = React.useState<DeclarativeStrategy | null>(null);
 
   const handleStrategyCreated = (strategy: DeclarativeStrategy) => {
@@ -36,13 +37,23 @@ export default function BacktesterV3Page() {
               Backtesting System v3
             </h1>
             <p className="mt-2 text-gray-600">
-              Revolutionary backtesting platform with visual strategy creation and advanced execution simulation
+              Professional trend analysis and backtesting platform with advanced execution simulation
             </p>
           </div>
 
           {/* Tab Navigation */}
           <div className="border-b border-gray-200 mb-8">
             <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('trends')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'trends'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🎯 Trend Analysis
+              </button>
               <button
                 onClick={() => setActiveTab('demo')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
@@ -51,7 +62,7 @@ export default function BacktesterV3Page() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                🚀 Live Backtesting Demo
+                🚀 Strategy Backtesting
               </button>
               <button
                 onClick={() => setActiveTab('builder')}
@@ -67,6 +78,35 @@ export default function BacktesterV3Page() {
           </div>
 
           {/* Content */}
+          {activeTab === 'trends' && (
+            <div className="space-y-6">
+              {/* Info Banner */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="h-5 w-5 text-blue-400">🎯</div>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Professional Trend Analysis
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>
+                        Analyze market data using our proprietary CUS/CDS trend detection algorithm. 
+                        This production-grade system identifies trend start signals with high accuracy.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trend Analysis Component */}
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: '80vh' }}>
+                <TrendAnalysisView />
+              </div>
+            </div>
+          )}
+
           {activeTab === 'demo' && (
             <div className="space-y-6">
               {/* Info Banner */}

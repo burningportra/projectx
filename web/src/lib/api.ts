@@ -124,7 +124,10 @@ export async function getPositions(): Promise<Position[]> {
       throw new Error(`API returned ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle both direct array and object with positions property
+    return Array.isArray(data) ? data : (data.positions || []);
   } catch (error) {
     console.error('Error fetching positions:', error);
     return [];

@@ -21,12 +21,17 @@ export function useStrategies() {
  * Hook for fetching positions
  */
 export function usePositions() {
-  const { data, error, isLoading, mutate } = useSWR<Position[]>('positions', () => getPositions(), {
+  const { data, error, isLoading, mutate } = useSWR<{positions: Position[]}|Position[]>('positions', () => getPositions(), {
     refreshInterval: 5000, // Refresh every 5 seconds
   });
 
+  // Handle both array and object with positions property
+  const positions = Array.isArray(data) 
+    ? data 
+    : (data?.positions || []);
+
   return {
-    positions: data || [],
+    positions,
     isLoading,
     isError: error,
     mutate,

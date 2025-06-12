@@ -1325,8 +1325,41 @@ export class BacktestEngine {
       console.log(`🔨 Found ${relevantBars.length} ${config.sourceTimeframe} bars for this ${config.baseTimeframe} period`);
 
       if (relevantBars.length === 0) {
-        console.warn('🔨 No lower timeframe data found, falling back to synthetic ticks');
-        this.generateProgressiveTicks(targetBar, barEndTime.getTime() - barStartTime.getTime());
+        console.warn(`🔨 No ${config.sourceTimeframe} data found, trying fallback timeframes...`);
+        
+        // Try fallback timeframes in order of preference
+        const fallbackTimeframes = this.getFallbackTimeframes(config.sourceTimeframe);
+        let foundData = false;
+        
+        for (const fallbackTf of fallbackTimeframes) {
+          console.log(`🔨 Trying fallback timeframe: ${fallbackTf}`);
+          try {
+            const fallbackQuery: MarketDataQuery = {
+              ...query,
+              timeframe: fallbackTf,
+            };
+            
+            const fallbackBars = await this.marketDataLoader.loadMarketData(fallbackQuery);
+            const fallbackRelevant = fallbackBars.filter(bar => {
+              const barTime = new Date(bar.time);
+              return barTime >= barStartTime && barTime < barEndTime;
+            });
+            
+            if (fallbackRelevant.length > 0) {
+              console.log(`🔨 Found ${fallbackRelevant.length} bars with fallback timeframe ${fallbackTf}`);
+              this.convertLowerTimeframeBarsToTicks(fallbackRelevant, targetBar);
+              foundData = true;
+              break;
+            }
+          } catch (fallbackError) {
+            console.warn(`🔨 Fallback timeframe ${fallbackTf} failed:`, fallbackError);
+          }
+        }
+        
+        if (!foundData) {
+          console.warn('🔨 All fallback timeframes failed, using enhanced synthetic ticks');
+          this.generateProgressiveTicks(targetBar, barEndTime.getTime() - barStartTime.getTime());
+        }
         return;
       }
 
@@ -1426,24 +1459,25 @@ export class BacktestEngine {
     let sourceTimeframe: string;
     
     // Auto-detect timeframe and choose appropriate source
+    // Use more realistic mappings based on commonly available data
     if (timeDiffMinutes <= 1) {
       detectedTimeframe = '1m';
-      sourceTimeframe = '1s'; // Use seconds for 1-minute bars (if available)
+      sourceTimeframe = '1m'; // Fallback to synthetic for 1-minute bars
     } else if (timeDiffMinutes <= 5) {
       detectedTimeframe = '5m';
       sourceTimeframe = '1m'; // Use 1-minute for 5-minute bars
     } else if (timeDiffMinutes <= 15) {
       detectedTimeframe = '15m';
-      sourceTimeframe = '1m'; // Use 1-minute for 15-minute bars
+      sourceTimeframe = '5m'; // Use 5-minute for 15-minute bars (more likely to exist)
     } else if (timeDiffMinutes <= 30) {
       detectedTimeframe = '30m';
       sourceTimeframe = '5m'; // Use 5-minute for 30-minute bars
     } else if (timeDiffMinutes <= 60) {
       detectedTimeframe = '1h';
-      sourceTimeframe = '5m'; // Use 5-minute for 1-hour bars
+      sourceTimeframe = '15m'; // Use 15-minute for 1-hour bars (more commonly available)
     } else if (timeDiffMinutes <= 240) {
       detectedTimeframe = '4h';
-      sourceTimeframe = '15m'; // Use 15-minute for 4-hour bars
+      sourceTimeframe = '1h'; // Use 1-hour for 4-hour bars (more likely to exist)
     } else if (timeDiffMinutes <= 1440) {
       detectedTimeframe = '1d';
       sourceTimeframe = '1h'; // Use 1-hour for daily bars
@@ -1478,6 +1512,34 @@ export class BacktestEngine {
     });
 
     return config;
+  }
+
+  /**
+   * Get fallback timeframes to try when preferred timeframe data is not available
+   */
+  private getFallbackTimeframes(sourceTimeframe: string): string[] {
+    const timeframeHierarchy = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+    const currentIndex = timeframeHierarchy.indexOf(sourceTimeframe);
+    
+    if (currentIndex === -1) {
+      // Unknown timeframe, return common fallbacks
+      return ['5m', '15m', '1h'];
+    }
+    
+    // Return timeframes in order: same level, then higher levels, then lower levels
+    const fallbacks: string[] = [];
+    
+    // Add higher timeframes first (more likely to exist)
+    for (let i = currentIndex + 1; i < timeframeHierarchy.length; i++) {
+      fallbacks.push(timeframeHierarchy[i]!);
+    }
+    
+    // Add lower timeframes second
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      fallbacks.push(timeframeHierarchy[i]!);
+    }
+    
+    return fallbacks;
   }
 
   /**

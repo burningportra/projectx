@@ -35,6 +35,13 @@ interface BacktestChartProps {
   currentContract?: string;
   availableTimeframes?: Array<{value: string; label: string}>;
   availableContracts?: Array<{id: string; symbol: string; fullName: string}>;
+  additionalData?: {
+    signals?: Array<{
+      time: UTCTimestamp;
+      type: 'CUS' | 'CDS';
+      price: number;
+    }>;
+  };
 }
 
 // Chart styling constants
@@ -80,6 +87,7 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({
     { id: 'YM', symbol: 'YM', fullName: 'E-mini Dow Jones' },
     { id: 'RTY', symbol: 'RTY', fullName: 'E-mini Russell 2000' },
   ],
+  additionalData,
 }) => {
   // Refs for chart management
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -414,6 +422,19 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({
     const markers: SeriesMarker<UTCTimestamp>[] = [];
 
     try {
+      // Add trend signal markers from additionalData
+      if (additionalData?.signals) {
+        additionalData.signals.forEach((signal) => {
+          markers.push({
+            time: signal.time,
+            position: signal.type === 'CUS' ? 'belowBar' : 'aboveBar',
+            color: signal.type === 'CUS' ? '#22c55e' : '#ef4444',
+            shape: signal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
+            size: 2,
+            text: signal.type,
+          });
+        });
+      }
       // Add current position marker
       if (showPositionMarkers && playback.currentBar && state.currentBarIndex < state.bars.length) {
         const currentBar = state.bars[state.currentBarIndex];
@@ -474,7 +495,7 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({
     } catch (err) {
       console.error('Failed to update chart markers:', err);
     }
-  }, [state?.currentBarIndex, state?.bars, orders.recentTrades, playback.currentBar, showTradeMarkers, showPositionMarkers]);
+  }, [state?.currentBarIndex, state?.bars, orders.recentTrades, playback.currentBar, showTradeMarkers, showPositionMarkers, additionalData]);
 
   // Auto-scroll removed - chart now stays fixed for better tick-by-tick observation
 

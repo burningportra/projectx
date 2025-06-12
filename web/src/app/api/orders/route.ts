@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
 
+// Define Order type
+interface Order {
+  id: string;
+  strategyName: string;
+  contract: string;
+  side: 'buy' | 'sell' | 'long' | 'short';
+  price: number;
+  size: number;
+  time: string;
+  status: 'pending' | 'submitted' | 'filled' | 'cancelled' | 'rejected';
+  type: 'market' | 'limit' | 'stop' | 'stop_limit';
+}
+
 /**
  * Orders API Endpoint - v3 Compatible
  * 
@@ -10,13 +23,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Return empty orders array since v3 handles order management internally
-    const mockData = {
-      orders: [],
-      message: "v3 backtesting uses internal order management - no external orders",
-      timestamp: new Date().toISOString()
-    };
+    const mockOrders: Order[] = [];
     
-    return NextResponse.json(mockData);
+    return NextResponse.json(mockOrders);
   } catch (error) {
     console.error('Error in orders endpoint:', error);
     return NextResponse.json(
