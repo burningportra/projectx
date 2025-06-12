@@ -7,13 +7,12 @@ import React, { useRef, useEffect } from 'react';
 import { 
   createChart, 
   IChartApi, 
-  ISeriesApi, 
+  ISeriesApi,
   CandlestickData, 
   UTCTimestamp, 
-  SeriesMarker, 
   CandlestickSeries,
-  LineSeries,
-  CrosshairMode 
+  CrosshairMode,
+  createSeriesMarkers 
 } from 'lightweight-charts';
 import { BacktestBarData } from '../../types/backtester';
 
@@ -46,6 +45,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartApiRef = useRef<IChartApi | null>(null);
   const seriesApiRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const markersApiRef = useRef<any>(null);
 
   // Initialize chart
   useEffect(() => {
@@ -103,6 +103,10 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (markersApiRef.current) {
+        markersApiRef.current.setMarkers([]);
+        markersApiRef.current = null;
+      }
       chart.remove();
       chartApiRef.current = null;
       seriesApiRef.current = null;
@@ -133,66 +137,31 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
   // Update markers for signals
   useEffect(() => {
-    if (!seriesApiRef.current || !signals.length) return;
+    if (!seriesApiRef.current) return;
 
-    const markers: SeriesMarker<UTCTimestamp>[] = signals.map(signal => ({
-      time: signal.time,
-      position: signal.type === 'CUS' ? 'belowBar' : 'aboveBar',
-      color: signal.type === 'CUS' ? CHART_COLORS.cusSignal : CHART_COLORS.cdsSignal,
-      shape: signal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
-      size: 2,
-      text: `${signal.type} @ ${signal.price.toFixed(2)}`,
-    }));
+    // Clean up existing markers
+    if (markersApiRef.current) {
+      markersApiRef.current.setMarkers([]);
+      markersApiRef.current = null;
+    }
 
-    // Note: Lightweight Charts doesn't have a built-in markers API on the series.
-    // We need to use a different approach for markers.
-    // For now, we'll create a line series for each signal type as a workaround
-    
-    // Clear any existing marker series
-    if (chartApiRef.current) {
-      const cusData = signals
-        .filter(s => s.type === 'CUS')
-        .map(s => ({ time: s.time, value: s.price }));
-      
-      const cdsData = signals
-        .filter(s => s.type === 'CDS')
-        .map(s => ({ time: s.time, value: s.price }));
+    if (signals.length === 0) return;
 
-      if (cusData.length > 0) {
-        const cusSeries = chartApiRef.current.addSeries(LineSeries, {
-          color: CHART_COLORS.cusSignal,
-          lineWidth: 0,
-          crosshairMarkerVisible: false,
-          lastValueVisible: false,
-          priceLineVisible: false,
-        });
-        cusSeries.setData(cusData);
-        cusSeries.setMarkers(cusData.map(d => ({
-          time: d.time,
-          position: 'belowBar' as const,
-          color: CHART_COLORS.cusSignal,
-          shape: 'arrowUp' as const,
-          text: 'CUS',
-        })));
-      }
+    try {
+      // Create markers using the new v5 API
+      const markers = signals.map(signal => ({
+        time: signal.time,
+        position: signal.type === 'CUS' ? 'belowBar' : 'aboveBar',
+        color: signal.type === 'CUS' ? CHART_COLORS.cusSignal : CHART_COLORS.cdsSignal,
+        shape: signal.type === 'CUS' ? 'arrowUp' : 'arrowDown',
+        text: `${signal.type}`,
+      }));
 
-      if (cdsData.length > 0) {
-        const cdsSeries = chartApiRef.current.addSeries(LineSeries, {
-          color: CHART_COLORS.cdsSignal,
-          lineWidth: 0,
-          crosshairMarkerVisible: false,
-          lastValueVisible: false,
-          priceLineVisible: false,
-        });
-        cdsSeries.setData(cdsData);
-        cdsSeries.setMarkers(cdsData.map(d => ({
-          time: d.time,
-          position: 'aboveBar' as const,
-          color: CHART_COLORS.cdsSignal,
-          shape: 'arrowDown' as const,
-          text: 'CDS',
-        })));
-      }
+      // Create series markers using the v5 API
+      markersApiRef.current = createSeriesMarkers(seriesApiRef.current, markers);
+      console.log(`✅ Added ${signals.length} trend signal markers to chart`);
+    } catch (err) {
+      console.error('Failed to create markers:', err);
     }
   }, [signals]);
 

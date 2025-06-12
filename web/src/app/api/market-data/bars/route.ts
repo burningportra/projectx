@@ -77,14 +77,14 @@ export async function GET(req: NextRequest) {
     if (bars.length > 0) {
       console.log(`Found ${bars.length} bars in database`);
       console.log("API - First bar:", bars[0]);
-      console.log("API - Most recent timestamp:", bars[0].timestamp);
-      console.log("API - Oldest timestamp in result set:", bars[bars.length - 1].timestamp);
+      console.log("API - Most recent timestamp:", bars[0]?.timestamp);
+      console.log("API - Oldest timestamp in result set:", bars[bars.length - 1]?.timestamp);
       console.log("API - Timeframe:", `${timeframeValue}${timeframeUnit === 2 ? 'm' : timeframeUnit === 3 ? 'h' : timeframeUnit === 4 ? 'd' : timeframeUnit === 5 ? 'w' : 'mo'}`);
       
       // Calculate date range coverage
       if (bars.length > 1) {
-        const firstDate = new Date(bars[bars.length - 1].timestamp);
-        const lastDate = new Date(bars[0].timestamp);
+        const firstDate = new Date(bars[bars.length - 1]?.timestamp || '');
+        const lastDate = new Date(bars[0]?.timestamp || '');
         const rangeDays = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
         console.log(`API - Data spans ${rangeDays.toFixed(1)} days`);
       }
@@ -119,8 +119,8 @@ export async function GET(req: NextRequest) {
         total: totalBarsCount,
         hasMore: !fetchAll && (page + 1) * limit < totalBarsCount,
         page: page,
-        firstTimestamp: serializedBars.length > 0 ? serializedBars[0].timestamp : null,
-        lastTimestamp: serializedBars.length > 0 ? serializedBars[serializedBars.length - 1].timestamp : null
+        firstTimestamp: serializedBars.length > 0 ? serializedBars[0]?.timestamp : null,
+        lastTimestamp: serializedBars.length > 0 ? serializedBars[serializedBars.length - 1]?.timestamp : null
       }
     });
   } catch (error) {

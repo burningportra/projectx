@@ -369,7 +369,7 @@ function detectPattern(bars: Bar[], idx: number, timeframe: string, lookback: nu
   const prev5 = idx > 4 ? bars[idx-5] : null;
   
   // Skip if no previous bar (need context for pattern detection)
-  if (!prev1) {
+  if (!prev1 || !current) {
     return [false, false];
   }
   
@@ -404,7 +404,7 @@ function detectPattern(bars: Bar[], idx: number, timeframe: string, lookback: nu
     minPriceChange = 0.002;  // 0.2%
     scoreThreshold = 2.0;
     // Special case for MES contract which needs finer tuning
-    if (bars[0].contractId?.includes('MES')) {
+    if (bars[0]?.contractId?.includes('MES')) {
       minWickRatio = 0.7;
       scoreThreshold = 1.8;
     }
@@ -447,7 +447,7 @@ function detectPattern(bars: Bar[], idx: number, timeframe: string, lookback: nu
   
   // 3. Support level bounce
   if (prev2 && prev3 && prev4) {
-    const priorLows = [prev2, prev3, prev4, prev5].filter(p => p !== null).map(p => p.low);
+    const priorLows = [prev2, prev3, prev4, prev5].filter(p => p !== null).map(p => p!.low);
     const minPriorLow = Math.min(...priorLows);
     if (Math.abs(current.low - minPriorLow) < barRange * 0.3) {
       if (isBullish) {
@@ -474,7 +474,7 @@ function detectPattern(bars: Bar[], idx: number, timeframe: string, lookback: nu
     // Previous bars showing downtrend
     let isDowntrend = true;
     for (let i = 1; i < 3; i++) {
-      if (idx - i - 1 < 0 || bars[idx - i].close > bars[idx - i - 1].close) {
+      if (idx - i - 1 < 0 || bars[idx - i]?.close > bars[idx - i - 1]?.close) {
         isDowntrend = false;
         break;
       }

@@ -54,262 +54,123 @@ const PlaybackControls: React.FC = () => {
   const playback = useBacktestPlayback();
   
   return (
-    <div className="playback-controls" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '4px' }}>
-      <h3>📊 Market Replay Controls</h3>
-      
-      <div style={{ marginBottom: '15px', padding: '10px', background: '#f8f9fa', borderRadius: '4px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <strong>Status:</strong> 
-            <span style={{ marginLeft: '8px', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', 
-                           backgroundColor: playback.isRunning ? '#d4edda' : playback.isPaused ? '#fff3cd' : '#f8d7da',
-                           color: playback.isRunning ? '#155724' : playback.isPaused ? '#856404' : '#721c24' }}>
+    <div className="space-y-4">
+      {/* Status Section */}
+      <div className="bg-gray-700 rounded-lg p-3">
+        <div className="flex flex-col space-y-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300">Status:</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${
+              playback.isRunning ? 'bg-green-100 text-green-800' : 
+              playback.isPaused ? 'bg-yellow-100 text-yellow-800' : 
+              'bg-red-100 text-red-800'
+            }`}>
               {playback.isRunning ? '▶️ Running' : playback.isPaused ? '⏸️ Paused' : '⏹️ Stopped'}
             </span>
           </div>
-          <div>
-            <strong>Progress:</strong> {playback.progress.toFixed(1)}%
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300">Progress:</span>
+            <span className="text-white font-medium">{playback.progress.toFixed(1)}%</span>
           </div>
-          <div>
-            <strong>Current Price:</strong> {playback.currentBar ? `$${playback.currentBar.close.toFixed(2)}` : 'N/A'}
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300">Current Price:</span>
+            <span className="text-white font-medium">
+              {playback.currentBar ? `$${playback.currentBar.close.toFixed(2)}` : 'N/A'}
+            </span>
           </div>
         </div>
       </div>
       
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', flexWrap: 'wrap' }}>
+      {/* Primary Control Buttons */}
+      <div className="grid grid-cols-2 gap-2">
         <button 
           onClick={playback.actions.start}
           disabled={!playback.hasData || playback.isRunning}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#28a745', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: (!playback.hasData || playback.isRunning) ? 'not-allowed' : 'pointer',
-            opacity: (!playback.hasData || playback.isRunning) ? 0.6 : 1,
-            fontSize: '14px'
-          }}
+          className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+            (!playback.hasData || playback.isRunning) 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          }`}
         >
           ▶️ Start
         </button>
         <button 
           onClick={playback.actions.pause}
           disabled={!playback.isRunning}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#ffc107', 
-            color: '#212529', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: !playback.isRunning ? 'not-allowed' : 'pointer',
-            opacity: !playback.isRunning ? 0.6 : 1,
-            fontSize: '14px'
-          }}
+          className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+            !playback.isRunning 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+          }`}
         >
           ⏸️ Pause
         </button>
         <button 
-          onClick={playback.actions.resume}
-          disabled={!playback.isPaused}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#17a2b8', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: !playback.isPaused ? 'not-allowed' : 'pointer',
-            opacity: !playback.isPaused ? 0.6 : 1,
-            fontSize: '14px'
-          }}
-        >
-          ⏯️ Resume
-        </button>
-        <button 
           onClick={playback.actions.stop}
           disabled={!playback.isActive}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#dc3545', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: !playback.isActive ? 'not-allowed' : 'pointer',
-            opacity: !playback.isActive ? 0.6 : 1,
-            fontSize: '14px'
-          }}
+          className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+            !playback.isActive 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-red-600 hover:bg-red-700 text-white'
+          }`}
         >
           ⏹️ Stop
         </button>
         <button 
           onClick={playback.actions.reset}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#6c757d', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
+          className="px-3 py-2 rounded text-sm font-medium bg-gray-600 hover:bg-gray-700 text-white transition-colors"
         >
           🔄 Reset
         </button>
       </div>
-      
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+
+      {/* Secondary Controls */}
+      <div className="flex gap-2">
         <button 
           onClick={playback.actions.processNext}
           disabled={playback.isRunning || !playback.hasData}
-          style={{ 
-            padding: '6px 12px', 
-            backgroundColor: '#e9ecef', 
-            color: '#495057', 
-            border: '1px solid #ced4da', 
-            borderRadius: '4px',
-            cursor: (playback.isRunning || !playback.hasData) ? 'not-allowed' : 'pointer',
-            opacity: (playback.isRunning || !playback.hasData) ? 0.6 : 1,
-            fontSize: '12px'
-          }}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            (playback.isRunning || !playback.hasData) 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-gray-700 hover:bg-gray-600 text-white'
+          }`}
         >
-          ⏭️ Next Bar
-        </button>
-        <button 
-          onClick={() => playback.actions.processTo?.(50)}
-          disabled={playback.isRunning || !playback.hasData}
-          style={{ 
-            padding: '6px 12px', 
-            backgroundColor: '#e9ecef', 
-            color: '#495057', 
-            border: '1px solid #ced4da', 
-            borderRadius: '4px',
-            cursor: (playback.isRunning || !playback.hasData) ? 'not-allowed' : 'pointer',
-            opacity: (playback.isRunning || !playback.hasData) ? 0.6 : 1,
-            fontSize: '12px'
-          }}
-        >
-          🎯 Jump to Bar 50
+          ⏭️ Next
         </button>
         <button 
           onClick={playback.actions.processToEnd}
           disabled={playback.isRunning || !playback.hasData}
-          style={{ 
-            padding: '6px 12px', 
-            backgroundColor: '#e9ecef', 
-            color: '#495057', 
-            border: '1px solid #ced4da', 
-            borderRadius: '4px',
-            cursor: (playback.isRunning || !playback.hasData) ? 'not-allowed' : 'pointer',
-            opacity: (playback.isRunning || !playback.hasData) ? 0.6 : 1,
-            fontSize: '12px'
-          }}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            (playback.isRunning || !playback.hasData) 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-purple-600 hover:bg-purple-700 text-white'
+          }`}
         >
-          ⏩ Process to End
+          ⏩ End
         </button>
       </div>
       
-      {/* Playback Mode Controls */}
-      <div style={{ marginTop: '10px', padding: '8px', background: '#e9ecef', borderRadius: '4px' }}>
-        <strong style={{ fontSize: '12px', color: '#495057' }}>Replay Mode:</strong>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button
-            onClick={() => {
-              console.log('📊 Bar mode button clicked');
-              playback.actions.setPlaybackMode?.('bar');
-            }}
-            style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              backgroundColor: playback.currentMode === 'bar' || !playback.currentMode ? '#155724' : '#28a745',
-              color: 'white',
-              border: playback.currentMode === 'bar' || !playback.currentMode ? '2px solid #0d4419' : 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              fontWeight: playback.currentMode === 'bar' || !playback.currentMode ? 'bold' : 'normal'
-            }}
-          >
-            📊 Bar Mode {(playback.currentMode === 'bar' || !playback.currentMode) ? '(Active)' : ''}
-          </button>
-          
-          <button
-            onClick={() => {
-              console.log('🔨 Progressive mode button clicked');
-              playback.actions.setPlaybackMode?.('progressive');
-            }}
-            style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              backgroundColor: playback.currentMode === 'progressive' ? '#155724' : '#28a745',
-              color: 'white',
-              border: playback.currentMode === 'progressive' ? '2px solid #0d4419' : 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              fontWeight: playback.currentMode === 'progressive' ? 'bold' : 'normal'
-            }}
-          >
-            🔨 Auto-Progressive Formation {playback.currentMode === 'progressive' ? '(Active)' : ''}
-          </button>
+      {/* Speed Control - Simplified */}
+      <div className="bg-gray-700 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-300">Speed</span>
+          <span className="text-sm text-white font-medium">{playback.currentSpeed}x</span>
         </div>
-
-        <div style={{ marginTop: '6px', fontSize: '10px', color: '#6c757d' }}>
-          💡 Current mode: <strong>{(playback.currentMode || 'bar').toUpperCase()}</strong> - 
-          {playback.currentMode === 'progressive' && ' Automatically uses lower timeframe data from your database for realistic bar formation'}
-          {(playback.currentMode === 'bar' || !playback.currentMode) && ' Traditional complete bar progression mode'}
-        </div>
-      </div>
-
-      {/* Speed Controls */}
-      <div style={{ marginTop: '10px', padding: '8px', background: '#e9ecef', borderRadius: '4px' }}>
-        <strong style={{ fontSize: '12px', color: '#495057' }}>Playback Speed:</strong>
-        <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
-          {[1, 2, 4, 8, 16, 32, 64].map(speed => (
+        <div className="grid grid-cols-4 gap-1">
+          {[1, 2, 4, 8].map(speed => (
             <button
               key={speed}
-              onClick={() => {
-                console.log(`⚡ Setting speed to ${speed}x${playback.isActive ? ' (live change)' : ''}`);
-                playback.actions.setSpeed?.(speed);
-              }}
-              style={{
-                padding: '3px 8px',
-                fontSize: '10px',
-                backgroundColor: playback.currentSpeed === speed ? '#004085' : '#007bff',
-                color: 'white',
-                border: playback.currentSpeed === speed ? '2px solid #002752' : 'none',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                fontWeight: playback.currentSpeed === speed ? 'bold' : 'normal',
-                minWidth: '35px'
-              }}
+              onClick={() => playback.actions.setSpeed?.(speed)}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                playback.currentSpeed === speed 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+              }`}
             >
-              {speed}x {playback.currentSpeed === speed ? '✓' : ''}
+              {speed}x
             </button>
           ))}
         </div>
-        <div style={{ marginTop: '4px', fontSize: '9px', color: '#6c757d' }}>
-          ⚡ Current speed: <strong>{playback.currentSpeed}x</strong> - 
-          {playback.isActive ? ' Can change live during playback!' : ' Higher speeds process data faster'}
-          {playback.isActive && <span style={{ color: '#28a745', fontWeight: 'bold' }}> 🔄 LIVE</span>}
-        </div>
-      </div>
-
-      {/* Progressive Configuration */}
-      {playback.currentMode === 'progressive' && (
-        <div style={{ marginTop: '10px', padding: '8px', background: '#fff3cd', borderRadius: '4px' }}>
-          <strong style={{ fontSize: '12px', color: '#856404' }}>🔨 Progressive Bar Formation Settings:</strong>
-          <div style={{ marginTop: '6px', fontSize: '10px', color: '#856404' }}>
-            <div><strong>Auto-Detection:</strong> Enabled - System automatically selects best lower timeframe data</div>
-            <div><strong>Fallback Order:</strong> Primary timeframe → Higher timeframes → Synthetic ticks</div>
-            <div><strong>Enhanced Features:</strong> Realistic price paths, volume distribution, tick-by-tick order fills</div>
-          </div>
-          <div style={{ marginTop: '8px', fontSize: '10px', color: '#495057' }}>
-            💡 <strong>Tip:</strong> If you don't see progressive formation, ensure your database has lower timeframe data available.
-            The system will automatically fall back to synthetic ticks if real data isn't found.
-          </div>
-        </div>
-      )}
-
-      <div style={{ marginTop: '15px', padding: '8px', background: '#f8f9f9', borderRadius: '4px', fontSize: '14px' }}>
-        <strong>📊 Data Status:</strong> {playback.hasData ? `${playback.totalBars} bars loaded and ready for progressive market replay` : '⚠️ No data loaded - please load market data first'}
       </div>
     </div>
   );
@@ -322,23 +183,44 @@ const PerformanceMetrics: React.FC = () => {
   const performance = useBacktestPerformance();
   
   return (
-    <div className="performance-metrics" style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-      <h3>Performance Metrics</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-        <div>
-          <strong>Total P&L:</strong> ${performance.totalPnL.toFixed(2)}
+    <div className="space-y-3">
+      {/* Key Metrics */}
+      <div className="bg-gray-700 rounded-lg p-3">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-white">
+            ${performance.totalPnL.toFixed(2)}
+          </div>
+          <div className={`text-sm font-medium ${
+            performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'
+          }`}>
+            Total P&L ({performance.returnsPercent.toFixed(1)}%)
+          </div>
         </div>
-        <div>
-          <strong>Win Rate:</strong> {performance.winRate.toFixed(1)}%
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="bg-gray-700 rounded p-2">
+          <div className="text-gray-300">Win Rate</div>
+          <div className="text-white font-medium">{performance.winRate.toFixed(1)}%</div>
         </div>
-        <div>
-          <strong>Total Trades:</strong> {performance.totalTrades}
+        <div className="bg-gray-700 rounded p-2">
+          <div className="text-gray-300">Trades</div>
+          <div className="text-white font-medium">{performance.totalTrades}</div>
         </div>
-        <div>
-          <strong>Returns:</strong> {performance.returnsPercent.toFixed(2)}%
+        <div className="bg-gray-700 rounded p-2">
+          <div className="text-gray-300">Drawdown</div>
+          <div className={`font-medium ${
+            performance.currentDrawdown <= -5 ? 'text-red-400' : 'text-white'
+          }`}>
+            {performance.currentDrawdown.toFixed(1)}%
+          </div>
         </div>
-        <div>
-          <strong>Max Drawdown:</strong> {performance.currentDrawdown.toFixed(2)}%
+        <div className="bg-gray-700 rounded p-2">
+          <div className="text-gray-300">Sharpe</div>
+          <div className="text-white font-medium">
+            {performance.sharpeRatio ? performance.sharpeRatio.toFixed(2) : 'N/A'}
+          </div>
         </div>
       </div>
     </div>
@@ -566,257 +448,58 @@ const EventLog: React.FC = () => {
 };
 
 /**
- * Data Management Component
+ * Data Management Component - Simplified for YouTube-style UI
  */
 const DataManagement: React.FC = () => {
   const actions = useBacktestActions();
   const { state } = useBacktestState();
   const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [availableContracts, setAvailableContracts] = useState<Array<{id: string; symbol: string; fullName: string}>>([]);
-  const [contractsLoading, setContractsLoading] = useState(true);
-  const [selectedContract, setSelectedContract] = useState('ES');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1d'); // Default to 1-day for full market view
-  const [selectedLimit, setSelectedLimit] = useState(1000); // Larger limit for daily data to get full range
-
-  const timeframes = [
-    { value: '1m', label: '1 Minute' },
-    { value: '5m', label: '5 Minutes' },
-    { value: '15m', label: '15 Minutes' },
-    { value: '30m', label: '30 Minutes' },
-    { value: '1h', label: '1 Hour' },
-    { value: '4h', label: '4 Hours' },
-    { value: '1d', label: '1 Day' },
-  ];
-
-  // Fetch available contracts on mount
-  useEffect(() => {
-    const fetchContracts = async () => {
-      setContractsLoading(true);
-      try {
-        const contracts = await getAvailableContracts();
-        setAvailableContracts(contracts);
-        console.log(`📋 Found ${contracts.length} available contracts in database:`, contracts.map(c => c.symbol));
-        
-        // Set default contract to first available if ES not found
-        if (contracts.length > 0) {
-          const hasES = contracts.some(c => c.symbol === 'ES');
-          if (!hasES && contracts[0]) {
-            setSelectedContract(contracts[0].symbol);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Failed to fetch available contracts:', error);
-        setLoadError('Failed to fetch available contracts from database');
-      } finally {
-        setContractsLoading(false);
-      }
-    };
-
-    fetchContracts();
-  }, []);
-
-  const handleLoadDatabaseData = async (query: MarketDataQuery) => {
-    setIsLoading(true);
-    setLoadError(null);
-    
-    try {
-      console.log('🔄 Loading market data from database...', query);
-      const marketData = await loadMarketData(query);
-      actions.loadData(marketData);
-      console.log(`✅ Successfully loaded ${marketData.length} bars from database`);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to load market data';
-      setLoadError(errorMsg);
-      console.error('❌ Error loading market data:', error);
-      
-      // Fall back to sample data
-      console.log('📝 Falling back to sample data...');
-      const sampleData = generateSampleData(100);
-      actions.loadData(sampleData);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLoadSelectedData = () => {
-    handleLoadDatabaseData({
-      contract: selectedContract,
-      timeframe: selectedTimeframe,
-      limit: selectedLimit
-    });
-  };
-
-  const handleTimeframeChange = (timeframe: string) => {
-    setSelectedTimeframe(timeframe);
-    // Auto-reload data when timeframe changes
-    handleLoadDatabaseData({
-      contract: selectedContract,
-      timeframe: timeframe,
-      limit: selectedLimit
-    });
-  };
-
-  const handleContractChange = (contract: string) => {
-    setSelectedContract(contract);
-    // Auto-reload data when contract changes
-    handleLoadDatabaseData({
-      contract: contract,
-      timeframe: selectedTimeframe,
-      limit: selectedLimit
-    });
-  };
   
+  const handleLoadSampleData = () => {
+    const sampleData = generateSampleData(100);
+    actions.loadData(sampleData);
+  };
+
   return (
-    <div className="data-management" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '4px' }}>
-      <h3>📊 Data Management</h3>
-      
-      {/* Current Data Info */}
-      <div style={{ marginBottom: '15px', padding: '8px', background: '#f9f9f9', borderRadius: '4px' }}>
-        <strong>Current Data:</strong> {state?.bars?.length || 0} bars loaded
-        {(() => {
-          const firstBar = state?.bars?.[0];
-          if (!firstBar) return null;
-          const barData = firstBar as any;
-          return (
-            <span style={{ marginLeft: '10px', fontSize: '12px', color: '#666' }}>
-              ({barData?.contractId || 'Unknown Contract'} - {barData?.timeframe || 'Unknown Timeframe'})
-            </span>
-          );
-        })()}
+    <div className="space-y-3 text-sm">
+      {/* Current Data Status */}
+      <div className="bg-gray-700 rounded p-3">
+        <div className="text-gray-300 mb-1">Current Dataset</div>
+        <div className="text-white font-medium">
+          {state?.bars?.length || 0} bars loaded
+        </div>
+        {state?.bars?.[0] && (
+          <div className="text-xs text-gray-400 mt-1">
+            {(state.bars[0] as any)?.contractId || 'Unknown'} - {(state.bars[0] as any)?.timeframe || 'Unknown'}
+          </div>
+        )}
       </div>
-      
-      {/* Error Display */}
-      {loadError && (
-        <div style={{ marginBottom: '15px', padding: '8px', background: '#fee', border: '1px solid #fcc', color: '#c33', borderRadius: '4px' }}>
-          <strong>Error:</strong> {loadError}
-        </div>
-      )}
-
-      {/* Contract Selection */}
-      <div style={{ marginBottom: '15px' }}>
-        <h4 style={{ margin: '0 0 10px 0' }}>📋 Select Market Data</h4>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '10px' }}>
-          {/* Contract Selector */}
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Contract:</label>
-            {contractsLoading ? (
-              <div style={{ padding: '8px', background: '#f0f0f0', borderRadius: '4px', fontSize: '12px' }}>⏳ Loading contracts...</div>
-            ) : (
-              <select 
-                value={selectedContract} 
-                onChange={(e) => setSelectedContract(e.target.value)}
-                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
-                disabled={isLoading}
-              >
-                {availableContracts.map(contract => (
-                  <option key={contract.id} value={contract.symbol}>
-                    {contract.symbol} ({contract.fullName})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* Timeframe Selector */}
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Timeframe:</label>
-            <select 
-              value={selectedTimeframe} 
-              onChange={(e) => setSelectedTimeframe(e.target.value)}
-              style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
-              disabled={isLoading}
-            >
-              {timeframes.map(tf => (
-                <option key={tf.value} value={tf.value}>
-                  {tf.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Limit Selector */}
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Bars Count:</label>
-            <select 
-              value={selectedLimit} 
-              onChange={(e) => setSelectedLimit(parseInt(e.target.value))}
-              style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
-              disabled={isLoading}
-            >
-              <option value={50}>50 bars</option>
-              <option value={100}>100 bars</option>
-              <option value={200}>200 bars</option>
-              <option value={500}>500 bars</option>
-              <option value={1000}>1000 bars</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Load Button */}
-        <button 
-          onClick={handleLoadSelectedData}
-          disabled={isLoading || contractsLoading || availableContracts.length === 0}
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#007bff', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}
-        >
-          {isLoading ? '⏳ Loading Data...' : `📊 Load ${selectedContract} ${selectedTimeframe} (${selectedLimit} bars)`}
-        </button>
-      </div>
-
-      {/* Available Contracts Info */}
-      {!contractsLoading && availableContracts.length > 0 && (
-        <div style={{ marginBottom: '15px', padding: '8px', background: '#f0f8ff', borderRadius: '4px', fontSize: '12px' }}>
-          <strong>Available Contracts in Database:</strong> {availableContracts.map(c => c.symbol).join(', ')} ({availableContracts.length} total)
-        </div>
-      )}
 
       {/* Quick Actions */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <div className="space-y-2">
         <button 
-          onClick={() => {
-            const sampleData = generateSampleData(100);
-            actions.loadData(sampleData);
-          }}
+          onClick={handleLoadSampleData}
           disabled={isLoading}
-          style={{ 
-            padding: '6px 12px', 
-            backgroundColor: '#6c757d', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}
+          className={`w-full px-3 py-2 rounded text-sm font-medium transition-colors ${
+            isLoading 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
         >
-          📝 Load Sample Data (Fallback)
+          {isLoading ? '⏳ Loading...' : '📝 Load Sample Data'}
         </button>
+        
         <button 
           onClick={() => actions.refreshIndicators()}
           disabled={isLoading}
-          style={{ 
-            padding: '6px 12px', 
-            backgroundColor: '#28a745', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}
+          className={`w-full px-3 py-2 rounded text-sm font-medium transition-colors ${
+            isLoading 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          }`}
         >
           🔄 Refresh Indicators
         </button>
-      </div>
-      
-      <div style={{ marginTop: '10px', fontSize: '11px', color: '#666' }}>
-        💡 Market data is loaded directly from your database. Use the dropdowns above to select any available contract and timeframe.
       </div>
     </div>
   );
@@ -829,24 +512,50 @@ const EngineStatus: React.FC = () => {
   const { state, derived, isInitialized, error } = useBacktestState();
   
   return (
-    <div className="engine-status" style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-      <h3>Engine Status</h3>
-      <div>
-        <strong>Initialized:</strong> {isInitialized ? '✅ Yes' : '❌ No'}
-      </div>
-      {error && (
-        <div style={{ color: 'red' }}>
-          <strong>Error:</strong> {error}
+    <div className="space-y-3 text-sm">
+      {/* Status Grid */}
+      <div className="grid grid-cols-1 gap-2">
+        <div className="bg-gray-700 rounded p-2 flex items-center justify-between">
+          <span className="text-gray-300">Status</span>
+          <span className={`font-medium ${isInitialized ? 'text-green-400' : 'text-red-400'}`}>
+            {isInitialized ? '✅ Ready' : '❌ Not Ready'}
+          </span>
         </div>
-      )}
-      <div>
-        <strong>Current Balance:</strong> ${state?.accountBalance.toFixed(2) || 'N/A'}
-      </div>
-      <div>
-        <strong>Initial Balance:</strong> ${state?.initialBalance.toFixed(2) || 'N/A'}
-      </div>
-      <div>
-        <strong>Current Bar Index:</strong> {state?.currentBarIndex || 0}
+        
+        {error && (
+          <div className="bg-red-900 border border-red-700 rounded p-2">
+            <span className="text-red-300 font-medium">Error:</span>
+            <span className="text-red-200 ml-2">{error}</span>
+          </div>
+        )}
+        
+        <div className="bg-gray-700 rounded p-2 flex items-center justify-between">
+          <span className="text-gray-300">Balance</span>
+          <span className="text-white font-medium">
+            ${state?.accountBalance.toFixed(2) || 'N/A'}
+          </span>
+        </div>
+        
+        <div className="bg-gray-700 rounded p-2 flex items-center justify-between">
+          <span className="text-gray-300">P&L</span>
+          <span className={`font-medium ${
+            (state?.accountBalance || 0) >= (state?.initialBalance || 0) 
+              ? 'text-green-400' 
+              : 'text-red-400'
+          }`}>
+            {state?.accountBalance && state?.initialBalance 
+              ? `$${(state.accountBalance - state.initialBalance).toFixed(2)}`
+              : 'N/A'
+            }
+          </span>
+        </div>
+        
+        <div className="bg-gray-700 rounded p-2 flex items-center justify-between">
+          <span className="text-gray-300">Bar</span>
+          <span className="text-white font-medium">
+            {state?.currentBarIndex || 0}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -864,6 +573,9 @@ const BacktestDemoContent: React.FC = () => {
   const [chartTimeframe, setChartTimeframe] = useState('1d');
   const [chartContract, setChartContract] = useState('ES');
   const [availableContracts, setAvailableContracts] = useState<Array<{id: string; symbol: string; fullName: string}>>([]);
+  
+  // UI state for advanced controls
+  const [showAdvanced, setShowAdvanced] = useState(false);
   
   // Available timeframes for chart
   const availableTimeframes = [
@@ -989,35 +701,84 @@ const BacktestDemoContent: React.FC = () => {
   }, [isInitialized]); // Only depend on isInitialized
   
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Backtest Engine v3 Demo</h1>
-      <p>This demo showcases the React Context Provider and custom hooks for the v3 BacktestEngine using <strong>real market data from your database</strong>.</p>
-      
-      <EngineStatus />
-      <DataManagement />
-      
-      {/* Market Replay Chart */}
-      <div style={{ marginBottom: '20px' }}>
-        <h2>📈 Market Replay Chart</h2>
-        <BacktestChart 
-          height={500}
-          showTradeMarkers={true}
-          showPositionMarkers={true}
-          showPerformance={true}
-          onTimeframeChange={handleChartTimeframeChange}
-          onContractChange={handleChartContractChange}
-          currentTimeframe={chartTimeframe}
-          currentContract={chartContract}
-          availableTimeframes={availableTimeframes}
-          availableContracts={availableContracts}
-        />
+    <div className="flex h-screen bg-gray-900 text-white">
+      {/* Main Content Area - YouTube-style */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Strategy Backtesting</h1>
+            <p className="text-gray-400 text-sm">Professional backtesting with real market data simulation</p>
+          </div>
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+          >
+            {showAdvanced ? '🔧 Hide Advanced' : '⚙️ Show Advanced'}
+          </button>
+        </div>
+
+        {/* Main Chart Area */}
+        <div className="flex-1 p-4">
+          <BacktestChart 
+            height={window.innerHeight - 200} // Dynamic height
+            showTradeMarkers={true}
+            showPositionMarkers={true}
+            showPerformance={true}
+            onTimeframeChange={handleChartTimeframeChange}
+            onContractChange={handleChartContractChange}
+            currentTimeframe={chartTimeframe}
+            currentContract={chartContract}
+            availableTimeframes={availableTimeframes}
+            availableContracts={availableContracts}
+          />
+        </div>
       </div>
-      
-      <PlaybackControls />
-      <PerformanceMetrics />
-      <StrategyManagement />
-      <OrdersAndPositions />
-      <EventLog />
+
+      {/* Sidebar - Essential Controls */}
+      <div className="w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto">
+        {/* Playback Controls - Always Visible */}
+        <div className="p-4 border-b border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 text-white">📊 Market Replay</h3>
+          <PlaybackControls />
+        </div>
+
+        {/* Performance Summary - Always Visible */}
+        <div className="p-4 border-b border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 text-white">📈 Performance</h3>
+          <PerformanceMetrics />
+        </div>
+
+        {/* Advanced Controls - Collapsible */}
+        {showAdvanced && (
+          <>
+            <div className="p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-white">🔧 Engine Status</h3>
+              <EngineStatus />
+            </div>
+
+            <div className="p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-white">💾 Data Management</h3>
+              <DataManagement />
+            </div>
+
+            <div className="p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-white">🎯 Strategies</h3>
+              <StrategyManagement />
+            </div>
+
+            <div className="p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-white">📋 Orders & Positions</h3>
+              <OrdersAndPositions />
+            </div>
+
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4 text-white">📝 Event Log</h3>
+              <EventLog />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

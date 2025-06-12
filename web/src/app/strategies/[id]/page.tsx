@@ -22,9 +22,13 @@ interface Strategy {
   };
 }
 
-export default function StrategyDetailPage({ params }: { params: { id: string } }) {
+export default function StrategyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id } = params;
+  const [id, setId] = useState<string>('');
+  
+  useEffect(() => {
+    params.then(({ id }) => setId(id));
+  }, [params]);
   
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +36,8 @@ export default function StrategyDetailPage({ params }: { params: { id: string } 
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
+    
     const fetchStrategy = async () => {
       try {
         const response = await fetch(`/api/strategies/${id}`);

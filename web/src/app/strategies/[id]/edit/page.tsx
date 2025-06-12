@@ -23,15 +23,21 @@ interface Strategy {
   };
 }
 
-export default function EditStrategyPage({ params }: { params: { id: string } }) {
+export default function EditStrategyPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id } = params;
+  const [id, setId] = useState<string>('');
+  
+  useEffect(() => {
+    params.then(({ id }) => setId(id));
+  }, [params]);
   
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) return;
+    
     const fetchStrategy = async () => {
       try {
         const response = await fetch(`/api/strategies/${id}`);

@@ -145,7 +145,7 @@ async function callPythonTrendFinder(input: any): Promise<TrendStartSignal[]> {
             try {
               // Expected format: "Signal 1: {'signal_type': 'CUS', 'bar_index': 5, ...}"
               const match = line.match(/Signal \d+: ({.+})/);
-              if (match) {
+              if (match && match[1]) {
                 // Parse the Python dict-like string to JSON
                 const signalStr = match[1]
                   .replace(/'/g, '"')  // Replace single quotes with double quotes

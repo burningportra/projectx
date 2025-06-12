@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           // Parse the JSON response from Python
           const lines = stdout.trim().split('\n');
           const jsonOutput = lines[lines.length - 1]; // Last line should be JSON
-          const result = JSON.parse(jsonOutput);
+          const result = JSON.parse(jsonOutput || '{}');
           
           console.log(`[Forward Batch API] Success! Found ${result.batch_signals?.length || 0} total signals for batch ${start_bar_index}-${end_bar_index}`);
           resolve(result);
