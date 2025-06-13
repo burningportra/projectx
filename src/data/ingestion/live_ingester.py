@@ -3,6 +3,9 @@ import os
 import sys
 import time
 import datetime
+
+# Add project root to Python path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import decimal # For precise arithmetic with prices
 import requests
 import yaml

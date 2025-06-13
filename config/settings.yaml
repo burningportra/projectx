@@ -18,10 +18,10 @@ database:
   default_analysis_db: local_timescaledb # ADDED: For analyzer service to select its DB config
   local_timescaledb:
     host: "localhost"
-    port: 5434 # Using test database port
+    port: 5433 # Using production database port
     user: "postgres" # Default for many postgres images
     password_env_var: "LOCAL_DB_PASSWORD" # Specifies the ENV VAR for the password
-    dbname: "projectx_test" # Using test database
+    dbname: "projectx" # Using production database
     # Template for constructing the DSN if individual parts are used
     dsn_template: "postgresql://{user}:{password}@{host}:{port}/{dbname}"
   railway_timescaledb:

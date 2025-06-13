@@ -18,7 +18,7 @@ sys.stderr.flush()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("OHLCBroadcaster")
 logger.info("Broadcaster.py: Logging configured.") # This uses the logger
-logger.setLevel(logging.ERROR) # Set level for OHLCBroadcaster to ERROR to silence INFO logs
+logger.setLevel(logging.INFO) # Set level for OHLCBroadcaster to INFO to see connection logs
 
 # --- Add File Handler ---
 log_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'logs', 'broadcaster.log')

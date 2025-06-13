@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file with override to ensure fresh values
+load_dotenv(override=True)
 
 class Config:
     """Configuration handler for the automated trading system."""
@@ -101,7 +101,7 @@ class Config:
         """Get the ProjectX RTC market hub URL."""
         url = os.getenv(
             "PROJECTX_RTC_MARKET_URL", 
-            self.settings.get("api", {}).get("rtc_market_url", "https://gateway-rtc-demo.s2f.projectx.com/hubs/market")
+            self.settings.get("api", {}).get("rtc_market_url", "https://rtc.topstepx.com/hubs/market")
         )
         # Convert HTTPS to WS for WebSocket connection
         return url.replace("https://", "wss://")
